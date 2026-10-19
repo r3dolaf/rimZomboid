@@ -3,7 +3,10 @@ import { expect, test } from 'vitest';
 import { TICKS_PER_DAY } from '../src/sim/balance';
 import { checkInvariants } from '../src/sim/invariants';
 import { step } from '../src/sim/step';
+import { isEmpty } from '../src/sim/items';
+import { issue } from '../src/sim/orders';
 import { createWorld } from '../src/sim/world';
+import { targetContainerId } from '../src/sim/work';
 
 const DAYS = Number(process.env.SOAK_DAYS || 30);
 
@@ -34,6 +37,25 @@ test.each([1, 2, 3])(
       );
     }
     expect(w.tick).toBe(DAYS * TICKS_PER_DAY);
+  },
+  120_000,
+);
+
+test.each([1, 2, 3])(
+  `semilla %i: ${DAYS} días con todas las casas marcadas — el mapa se vacía sin romper nada`,
+  (seed) => {
+    const w = createWorld(seed);
+    for (const h of w.houses) issue(w, { type: 'designateHouse', houseId: h.id, on: true });
+    for (let i = 0; i < DAYS * TICKS_PER_DAY; i++) {
+      step(w);
+      const problems = checkInvariants(w);
+      if (problems.length > 0) expect(problems, `tick ${w.tick}`).toEqual([]);
+      const targets = w.survivors.map(targetContainerId).filter((id) => id !== null);
+      if (new Set(targets).size !== targets.length)
+        expect(targets, `tick ${w.tick}`).toEqual('únicos');
+    }
+    for (const c of w.containers) expect(isEmpty(c.items), `contenedor ${c.id}`).toBe(true);
+    for (const s of w.survivors) expect(isEmpty(s.carrying), s.name).toBe(true);
   },
   120_000,
 );

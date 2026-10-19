@@ -82,4 +82,3 @@ export const UNLOAD_TICKS = 20;
 export const REFUSE_CHANCE = 0.5; // al límite, probabilidad de negarse a un trabajo
 export const REFUSE_TICKS = TICKS_PER_HOUR;
 export const SCARED_OUTSIDE_MOOD = -10; // Cobarde fuera de la base
-export const MIN_ITEM_WEIGHT_KG = 0.1;

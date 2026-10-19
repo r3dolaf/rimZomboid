@@ -188,3 +188,29 @@ test('registrar un contenedor sin espacio deja lo que no cabe y sigue marcado', 
   expect(c.designated).toBe(true);
   expect(c.searched).toBe(true);
 });
+
+test('si lo que queda en los contenedores no le cabe, va a descargar (sin bucles)', () => {
+  const w = createWorld(5);
+  w.survivors.forEach(happy);
+  const s = w.survivors[0]!;
+  issue(w, { type: 'designateHouse', houseId: w.houses[0]!.id, on: true });
+  step(w);
+  for (const c of w.containers) c.items = { ...emptyInventory(), food: 3 };
+  s.carrying = { ...emptyInventory(), food: 15, bandage: 4 }; // 7,9 kg: no cabe ni una lata
+  s.action = { type: 'idle', ticksLeft: 0 };
+  const a = brains.ai.decide(s, w);
+  expect(a?.type === 'moveTo' && a.then?.type === 'unload').toBe(true);
+});
+
+test('un bate que no cabe no le hace volver al mismo contenedor una y otra vez', () => {
+  const w = createWorld(5);
+  w.survivors.forEach(happy);
+  const s = w.survivors[0]!;
+  issue(w, { type: 'designateHouse', houseId: w.houses[0]!.id, on: true });
+  step(w);
+  for (const c of w.containers) c.items = { ...emptyInventory(), bat: 1 };
+  s.carrying = { ...emptyInventory(), food: 14 }; // 7 kg: el bate (1,5) no cabe
+  s.action = { type: 'idle', ticksLeft: 0 };
+  const a = brains.ai.decide(s, w);
+  expect(a?.type === 'moveTo' && a.then?.type === 'unload').toBe(true);
+});

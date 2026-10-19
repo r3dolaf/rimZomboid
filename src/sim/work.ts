@@ -1,6 +1,6 @@
 // Trabajo de saqueo: elegir contenedor, reservar, descargar en el almacén.
-import { CARRY_CAPACITY_KG, MIN_ITEM_WEIGHT_KG } from './balance';
-import { isEmpty, weightOf } from './items';
+import { CARRY_CAPACITY_KG, ITEM_WEIGHT_KG } from './balance';
+import { isEmpty, ITEM_KINDS, weightOf } from './items';
 import { regionOf } from './path/astar';
 import { pick } from './rng';
 import type { Action, Container, Survivor, World } from './types';
@@ -21,6 +21,17 @@ function available(c: Container, s: Survivor): boolean {
   );
 }
 
+/**
+ * ¿Merece la pena ir? Solo si puede coger algo de lo que hay, o si nadie lo ha registrado y
+ * está vacío (registrarlo lo desmarca). Sin esto, quien va casi lleno volvería una y otra vez
+ * a un contenedor del que no puede coger nada, sin descargar nunca.
+ */
+function canTakeSomething(c: Container, s: Survivor): boolean {
+  if (isEmpty(c.items)) return !c.searched;
+  const room = CARRY_CAPACITY_KG - weightOf(s.carrying) + 1e-9;
+  return ITEM_KINDS.some((k) => c.items[k] > 0 && ITEM_WEIGHT_KG[k] <= room);
+}
+
 /** El contenedor disponible y alcanzable más cercano en línea recta. */
 function nearestContainer(s: Survivor, w: World): Container | null {
   const sx = Math.floor(s.pos.x);
@@ -29,7 +40,8 @@ function nearestContainer(s: Survivor, w: World): Container | null {
   let best: Container | null = null;
   let bestD = Infinity;
   for (const c of w.containers) {
-    if (!available(c, s) || regionOf(w.grid, c.pos.x, c.pos.y) !== region) continue;
+    if (!available(c, s) || !canTakeSomething(c, s)) continue;
+    if (regionOf(w.grid, c.pos.x, c.pos.y) !== region) continue;
     const d = (c.pos.x - sx) ** 2 + (c.pos.y - sy) ** 2;
     if (d < bestD) {
       best = c;
@@ -44,13 +56,12 @@ function goUnload(w: World): Action {
 }
 
 /**
- * El trabajo que toca ahora, o `null` si no hay. Descargar va primero si está lleno, si no
- * queda nada que saquear o si ya no tiene permiso (lo que lleva no se pierde).
+ * El trabajo que toca ahora, o `null` si no hay. Si lleva algo y no queda ningún contenedor
+ * del que pueda coger algo (porque no le cabe o no hay), o si ya no tiene permiso, descarga.
  */
 export function findWork(s: Survivor, w: World): Action | null {
   const carrying = !isEmpty(s.carrying);
-  const full = weightOf(s.carrying) > CARRY_CAPACITY_KG - MIN_ITEM_WEIGHT_KG + 1e-9;
-  if (carrying && (full || !s.work.loot)) return goUnload(w);
+  if (carrying && !s.work.loot) return goUnload(w);
   if (!s.work.loot) return null;
   const c = nearestContainer(s, w);
   if (!c) return carrying ? goUnload(w) : null;
@@ -62,7 +73,7 @@ export function stillWorthIt(s: Survivor, w: World): boolean {
   const id = targetContainerId(s);
   if (id === null || s.action.type === 'search') return true;
   const c = w.containers.find((x) => x.id === id);
-  return c !== undefined && s.work.loot && available(c, s);
+  return c !== undefined && s.work.loot && available(c, s) && canTakeSomething(c, s);
 }
 
 /** Libera las reservas de quien ya no va a ese contenedor. */

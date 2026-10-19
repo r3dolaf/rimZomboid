@@ -9,11 +9,11 @@ export function formatDayTime(t: GameTime): string {
 
 const SPEEDS: readonly Speed[] = [0, 1, 2, 3];
 
-/** Barra superior: hora, velocidad y semilla. */
+/** Barra superior: hora, velocidad, comida del almacén y semilla. */
 export function mountHud(
   root: HTMLElement,
   opts: { seed: number; time: TimeController },
-): { update(t: GameTime): void } {
+): { update(t: GameTime, food: number): void } {
   const bar = document.createElement('div');
   bar.className = 'hud-bar';
 
@@ -38,12 +38,16 @@ export function mountHud(
     return b;
   });
 
+  const food = document.createElement('span');
+  food.className = 'hud-food';
+  food.dataset.testid = 'hud-food';
+
   const seed = document.createElement('span');
   seed.className = 'hud-seed';
   seed.dataset.testid = 'hud-seed';
   seed.textContent = es.seed(opts.seed);
 
-  bar.append(time, speeds, seed);
+  bar.append(time, speeds, food, seed);
   root.append(bar);
 
   let shownSpeed: Speed | null = null;
@@ -55,9 +59,11 @@ export function mountHud(
   refreshSpeed();
 
   return {
-    update(t) {
+    update(t, foodCount) {
       const text = formatDayTime(t);
       if (time.textContent !== text) time.textContent = text;
+      const foodText = es.food(foodCount);
+      if (food.textContent !== foodText) food.textContent = foodText;
       refreshSpeed(); // la velocidad también puede cambiar con el teclado
     },
   };

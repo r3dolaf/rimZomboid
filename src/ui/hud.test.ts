@@ -24,7 +24,7 @@ test('update cambia la hora y refleja cambios de velocidad hechos con el teclado
   const time = createTimeController();
   const hud = mountHud(root, { seed: 1, time });
   time.togglePause();
-  hud.update({ day: 2, hour: 13, minute: 30 });
+  hud.update({ day: 2, hour: 13, minute: 30 }, 35);
   expect(root.querySelector('[data-testid="hud-time"]')!.textContent).toBe('Día 2, 13:30');
   expect(root.querySelector('[data-speed="0"]')!.classList.contains('active')).toBe(true);
 });
@@ -44,4 +44,11 @@ test('al pulsar un botón de velocidad, este pierde el foco (Espacio no lo vuelv
   b.click();
   expect(document.activeElement).not.toBe(b);
   root.remove();
+});
+
+test('muestra la comida del almacén', () => {
+  const root = document.createElement('div');
+  const hud = mountHud(root, { seed: 1, time: createTimeController() });
+  hud.update({ day: 1, hour: 8, minute: 0 }, 12);
+  expect(root.querySelector('[data-testid="hud-food"]')!.textContent).toBe('Comida: 12');
 });

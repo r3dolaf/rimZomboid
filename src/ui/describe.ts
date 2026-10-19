@@ -1,0 +1,55 @@
+// Traducciones del estado de la simulación a textos e indicadores para la interfaz.
+import { es } from '../i18n/es';
+import { MOOD_CRISIS, MOOD_EDGE, TICKS_PER_HOUR } from '../sim/balance';
+import type { MoodModifier } from '../sim/mood';
+import type { Survivor } from '../sim/types';
+
+export function activityText(s: Survivor): string {
+  const a = s.action;
+  const t = es.activities;
+  switch (a.type) {
+    case 'eat':
+      return t.eat;
+    case 'sleep':
+      return a.inBed ? t.sleepInBed : t.sleepOnFloor;
+    case 'crisis':
+      return t.crisis;
+    case 'moveTo':
+      if (a.then?.type === 'eat') return t.goEat;
+      if (a.then?.type === 'sleep') return t.goSleep;
+      if (a.then?.type === 'crisis') return t.crisis;
+      return t.wander;
+    case 'idle':
+      return t.wander;
+  }
+}
+
+/** El icono más importante para la tarjeta, o `null` si no hay nada que destacar. */
+export function statusIcon(s: Survivor): { icon: string; label: string } | null {
+  const a = s.action;
+  if (a.type === 'crisis' || (a.type === 'moveTo' && a.then?.type === 'crisis'))
+    return es.status.crisis;
+  if (a.type === 'sleep') return es.status.sleeping;
+  if (a.type === 'eat') return es.status.eating;
+  if (s.needs.mood < MOOD_EDGE) return es.status.edge;
+  return null;
+}
+
+export type BarLevel = 'ok' | 'warn' | 'bad';
+
+/** Color de una barra: amarilla o roja cuando el valor es bajo. */
+export function barLevel(value: number, kind: 'need' | 'mood'): BarLevel {
+  const [warn, bad] = kind === 'mood' ? [MOOD_EDGE, MOOD_CRISIS] : [35, 15];
+  if (value < bad) return 'bad';
+  if (value < warn) return 'warn';
+  return 'ok';
+}
+
+/** "Hambriento −10" o "Comió +5 (quedan 3 h)". */
+export function formatModifier(m: MoodModifier, tick: number): string {
+  const sign = m.value > 0 ? '+' : '−';
+  let text = `${es.modifiers[m.id]} ${sign}${Math.abs(m.value)}`;
+  if (m.expiresAt !== undefined)
+    text += ` (${es.hoursLeft(Math.ceil((m.expiresAt - tick) / TICKS_PER_HOUR))})`;
+  return text;
+}

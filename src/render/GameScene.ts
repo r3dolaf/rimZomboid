@@ -3,6 +3,7 @@ import { runTicks } from '../game/runTicks';
 import type { TimeController } from '../game/timeController';
 import { getTile } from '../sim/map/grid';
 import type { World } from '../sim/types';
+import type { Selection } from '../ui/selection';
 import { SURVIVOR_COLOR, SURVIVOR_OUTLINE, TILE_COLORS } from './colors';
 
 export const TILE_PX = 16;
@@ -15,6 +16,7 @@ const ZOOM_STEP = 1.1;
 export interface GameSceneData {
   world: World;
   time: TimeController;
+  selection: Selection;
   onFrame?: () => void;
 }
 

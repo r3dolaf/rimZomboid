@@ -1,7 +1,10 @@
 import { es } from '../i18n/es';
+import { CARRY_CAPACITY_KG } from '../sim/balance';
+import { weightOf } from '../sim/items';
 import { moodModifiers, moodTarget } from '../sim/mood';
+import { issue } from '../sim/orders';
 import type { World } from '../sim/types';
-import { activityText, formatModifier } from './describe';
+import { activityText, formatItems, formatModifier } from './describe';
 import type { Selection } from './selection';
 import './panels.css';
 
@@ -33,8 +36,24 @@ export function mountSheet(
   x.setAttribute('aria-label', es.close);
   x.addEventListener('click', close);
   head.append(title, x);
+
+  // La casilla de trabajo también es fija, por lo mismo que la ✕.
+  const work = document.createElement('label');
+  work.className = 'work';
+  const loot = document.createElement('input');
+  loot.type = 'checkbox';
+  loot.dataset.testid = 'sheet-loot';
+  loot.addEventListener('change', () => {
+    const id = opts.selection.id;
+    if (id !== null)
+      issue(opts.world, { type: 'setWork', survivorId: id, work: 'loot', enabled: loot.checked });
+  });
+  work.append(loot, document.createTextNode(es.workLoot));
+  const carrying = document.createElement('p');
+  carrying.className = 'carrying';
+
   const body = document.createElement('div');
-  panel.append(head, body);
+  panel.append(head, work, carrying, body);
 
   let shown = ''; // firma de lo pintado, para no rehacer el DOM en cada fotograma
 
@@ -63,6 +82,17 @@ export function mountSheet(
         ),
         mods,
       };
+      // La casilla refleja el permiso real, salvo justo cuando el jugador la acaba de cambiar
+      // y la orden aún no se ha aplicado.
+      const pending = world.orders.some((o) => o.type === 'setWork' && o.survivorId === s.id);
+      if (!pending) loot.checked = s.work.loot;
+      const carryText = es.carrying(
+        formatItems(s.carrying),
+        weightOf(s.carrying).toFixed(1).replace('.', ','),
+        CARRY_CAPACITY_KG,
+      );
+      if (carrying.textContent !== carryText) carrying.textContent = carryText;
+
       const key = JSON.stringify(view);
       panel.hidden = false;
       if (key === shown) return;

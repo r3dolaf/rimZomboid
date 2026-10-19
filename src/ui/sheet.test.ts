@@ -85,3 +85,34 @@ test('la ✕ no se reconstruye al cambiar los datos (si no, un clic puede perder
   expect(root.querySelector('[data-testid="sheet-close"]')).toBe(before);
   root.remove();
 });
+
+test('muestra lo que lleva encima y su peso', () => {
+  const { root, world, selection, sheet } = setup();
+  const s = world.survivors[0]!;
+  s.carrying = { food: 6, bandage: 1, knife: 0, bat: 0 };
+  selection.set(s.id);
+  sheet.update();
+  expect(sheetEl(root).textContent).toContain('Lleva: 6 latas y 1 venda (3,1 / 8 kg)');
+  root.remove();
+});
+
+test('la casilla Saquear da la orden y no se reconstruye', () => {
+  const { root, world, selection, sheet } = setup();
+  const s = world.survivors[0]!;
+  s.work.loot = true;
+  selection.set(s.id);
+  sheet.update();
+  const box = root.querySelector('[data-testid="sheet-loot"]') as HTMLInputElement;
+  expect(box.checked).toBe(true);
+  box.click();
+  expect(world.orders).toContainEqual({
+    type: 'setWork',
+    survivorId: s.id,
+    work: 'loot',
+    enabled: false,
+  });
+  s.needs.hunger = 2;
+  sheet.update();
+  expect(root.querySelector('[data-testid="sheet-loot"]')).toBe(box);
+  root.remove();
+});

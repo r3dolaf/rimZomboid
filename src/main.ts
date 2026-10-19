@@ -6,21 +6,36 @@ import { GameScene, type GameSceneData } from './render/GameScene';
 import { gameTime } from './sim/clock';
 import { createWorld } from './sim/world';
 import { mountCards } from './ui/cards';
+import { mountHousePanel } from './ui/housePanel';
 import { mountHud } from './ui/hud';
 import { bindTimeKeys } from './ui/keys';
+import { mountLog } from './ui/logPanel';
 import { createSelection } from './ui/selection';
 import { mountSheet } from './ui/sheet';
+import { createTool } from './ui/tool';
 
 const seed = parseSeed(location.search, randomSeed);
 const world = createWorld(seed);
 const time = createTimeController();
 const ui = document.getElementById('hud')!;
 const selection = createSelection();
-const hud = mountHud(ui, { seed, time });
+const houseSelection = createSelection();
+const tool = createTool();
+const hud = mountHud(ui, { seed, time, tool });
 const cards = mountCards(ui, { world, selection });
 const sheet = mountSheet(ui, { world, selection });
+const housePanel = mountHousePanel(ui, { world, selection: houseSelection });
+const log = mountLog(ui, { world });
 
-bindTimeKeys(window, time);
+// Solo una ficha abierta a la vez: superviviente o casa.
+selection.onChange((id) => id !== null && houseSelection.set(null));
+houseSelection.onChange((id) => id !== null && selection.set(null));
+// Esc también cierra la ficha de la casa (la del superviviente ya lo hace por su cuenta).
+window.addEventListener('keydown', (e) => e.key === 'Escape' && houseSelection.set(null));
+// El cursor indica que la herramienta Saquear está activa.
+tool.onChange((on) => document.body.classList.toggle('tool-loot', on));
+
+bindTimeKeys(window, time, tool);
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,
@@ -34,10 +49,15 @@ const data: GameSceneData = {
   world,
   time,
   selection,
+  houseSelection,
+  tool,
+  debug: new URLSearchParams(location.search).get('debug') === '1',
   onFrame: () => {
-    hud.update(gameTime(world.tick), world.storage.items.food);
+    hud.update(gameTime(world.tick), world.storage.items);
     cards.update();
     sheet.update();
+    housePanel.update();
+    log.update();
   },
 };
 game.scene.add('game', GameScene, true, data);

@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { createWorld } from '../sim/world';
-import { survivorAt } from './pick';
+import { containerAt, houseAt, survivorAt } from './pick';
 
 test('encuentra al superviviente más cercano dentro del radio', () => {
   const w = createWorld(2);
@@ -11,4 +11,20 @@ test('encuentra al superviviente más cercano dentro del radio', () => {
 test('fuera del radio no encuentra a nadie', () => {
   const w = createWorld(2);
   expect(survivorAt(w, 0, 0, 0.6)).toBeNull();
+});
+
+test('houseAt devuelve la casa que contiene la casilla, muros incluidos', () => {
+  const w = createWorld(2);
+  const h = w.houses[1]!;
+  expect(houseAt(w, h.rect.x, h.rect.y)?.id).toBe(h.id);
+  expect(houseAt(w, h.rect.x + 1, h.rect.y + 1)?.id).toBe(h.id);
+  expect(houseAt(w, w.base.rect.x + 1, w.base.rect.y + 1)).toBeNull(); // la base no es una casa
+  expect(houseAt(w, 0, 0)).toBeNull();
+});
+
+test('containerAt devuelve el contenedor de esa casilla', () => {
+  const w = createWorld(2);
+  const c = w.containers[2]!;
+  expect(containerAt(w, c.pos.x, c.pos.y)?.id).toBe(c.id);
+  expect(containerAt(w, 0, 0)).toBeNull();
 });

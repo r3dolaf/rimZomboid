@@ -1,12 +1,20 @@
 import Phaser from 'phaser';
-import { survivorAt } from '../game/pick';
+import { containerAt, houseAt, survivorAt } from '../game/pick';
 import { runTicks } from '../game/runTicks';
 import type { TimeController } from '../game/timeController';
 import { getTile } from '../sim/map/grid';
+import { isEmpty } from '../sim/items';
+import { issue } from '../sim/orders';
 import type { World } from '../sim/types';
+import { visibleTiles } from '../sim/vision';
 import type { Selection } from '../ui/selection';
+import type { Tool } from '../ui/tool';
 import {
   BED_COLOR,
+  CONTAINER_COLORS,
+  CONTAINER_EDGE,
+  DESIGNATION,
+  HOUSE_SELECTED,
   NIGHT_COLOR,
   PILLOW_COLOR,
   SELECTION_RING,
@@ -26,11 +34,17 @@ const ZOOM_MAX = 4;
 const ZOOM_STEP = 1.1;
 const PICK_RADIUS = 0.6; // casillas
 const SLEEPING_ALPHA = 0.45;
+const FOG_SEEN_ALPHA = 140; // 0–255: penumbra de lo visto pero no visible ahora
+const FOG_EVERY_FRAMES = 4;
 
 export interface GameSceneData {
   world: World;
   time: TimeController;
   selection: Selection;
+  houseSelection: Selection;
+  tool: Tool;
+  /** Con `?debug=1`: expone `window.rimzomboid` para los tests de navegador. */
+  debug?: boolean;
   onFrame?: () => void;
 }
 
@@ -39,8 +53,14 @@ export class GameScene extends Phaser.Scene {
   private world!: World;
   private clock!: TimeController;
   private selection!: Selection;
+  private houseSelection!: Selection;
+  private tool!: Tool;
   private onFrame?: () => void;
   private actors!: Phaser.GameObjects.Graphics;
+  private furniture!: Phaser.GameObjects.Graphics;
+  private fog!: Phaser.Textures.CanvasTexture;
+  private fogPixels!: ImageData;
+  private frame = 0;
   private night!: Phaser.GameObjects.Rectangle;
   private keys!: Record<
     'W' | 'A' | 'S' | 'D' | 'UP' | 'LEFT' | 'DOWN' | 'RIGHT',
@@ -63,14 +83,23 @@ export class GameScene extends Phaser.Scene {
     this.world = data.world;
     this.clock = data.time;
     this.selection = data.selection;
+    this.houseSelection = data.houseSelection;
+    this.tool = data.tool;
     this.onFrame = data.onFrame;
+    if (data.debug) this.exposeDebug();
   }
 
   create(): void {
     this.drawMap();
+    this.furniture = this.add.graphics();
     this.actors = this.add.graphics();
-    // La capa de noche cubre todo el mapa (la cámara nunca sale de él).
     const { width, height } = this.world.grid;
+    // Niebla: una textura de 1 píxel por casilla, escalada al tamaño del mapa.
+    this.fog = this.textures.createCanvas('fog', width, height)!;
+    this.fogPixels = this.fog.context.createImageData(width, height);
+    this.add.image(0, 0, 'fog').setOrigin(0, 0).setScale(TILE_PX);
+    this.drawFog();
+    // La capa de noche cubre todo el mapa (la cámara nunca sale de él).
     this.night = this.add
       .rectangle(0, 0, width * TILE_PX, height * TILE_PX, NIGHT_COLOR, 1)
       .setOrigin(0, 0)
@@ -86,7 +115,9 @@ export class GameScene extends Phaser.Scene {
   update(_now: number, dtMs: number): void {
     runTicks(this.world, this.clock.advance(dtMs), this.onProblems);
     this.panWithKeys(dtMs);
+    this.drawFurniture();
     this.drawActors();
+    if (++this.frame % FOG_EVERY_FRAMES === 0) this.drawFog();
     this.night.setAlpha(nightAlpha(this.world.tick));
     this.onFrame?.();
   }
@@ -159,13 +190,92 @@ export class GameScene extends Phaser.Scene {
     this.scale.on('resize', () => cam.setZoom(Math.max(cam.zoom, this.minZoom())));
   }
 
-  /** Clic izquierdo: selecciona al superviviente que haya debajo, o deselecciona. */
+  /**
+   * Clic izquierdo. Con la herramienta Saquear: marca o desmarca el contenedor (si se ha visto)
+   * o la casa. Sin ella: selecciona superviviente o casa vista, o deselecciona.
+   */
   private setupSelection(): void {
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
       if (!p.leftButtonDown()) return;
-      const s = survivorAt(this.world, p.worldX / TILE_PX, p.worldY / TILE_PX, PICK_RADIUS);
-      this.selection.set(s?.id ?? null);
+      const w = this.world;
+      const tx = Math.floor(p.worldX / TILE_PX);
+      const ty = Math.floor(p.worldY / TILE_PX);
+      const seen = w.seen[ty * w.grid.width + tx] === 1;
+      if (this.tool.active) {
+        const c = seen ? containerAt(w, tx, ty) : null;
+        if (c) {
+          issue(w, { type: 'designateContainer', containerId: c.id, on: !c.designated });
+          return;
+        }
+        const h = houseAt(w, tx, ty);
+        if (h) {
+          const marked = w.containers.some((x) => x.houseId === h.id && x.designated);
+          issue(w, { type: 'designateHouse', houseId: h.id, on: !marked });
+        }
+        return;
+      }
+      const s = survivorAt(w, p.worldX / TILE_PX, p.worldY / TILE_PX, PICK_RADIUS);
+      if (s) {
+        this.selection.set(s.id);
+        return;
+      }
+      const h = seen ? houseAt(w, tx, ty) : null;
+      this.selection.set(null);
+      this.houseSelection.set(h?.id ?? null);
     });
+  }
+
+  /** Contenedores vistos, marcas de saqueo y la casa seleccionada. */
+  private drawFurniture(): void {
+    const g = this.furniture;
+    const w = this.world;
+    g.clear();
+    for (const c of w.containers) {
+      if (w.seen[c.pos.y * w.grid.width + c.pos.x] !== 1) continue;
+      const [x, y] = [c.pos.x * TILE_PX, c.pos.y * TILE_PX];
+      g.fillStyle(CONTAINER_EDGE);
+      g.fillRect(x + 2, y + 2, TILE_PX - 4, TILE_PX - 4);
+      g.fillStyle(CONTAINER_COLORS[c.kind], c.searched && isEmpty(c.items) ? 0.35 : 1);
+      g.fillRect(x + 3, y + 3, TILE_PX - 6, TILE_PX - 6);
+      if (c.designated) {
+        g.lineStyle(2, DESIGNATION, 1);
+        g.strokeRect(x + 1, y + 1, TILE_PX - 2, TILE_PX - 2);
+      }
+    }
+    for (const h of w.houses) {
+      const marked = w.containers.some((c) => c.houseId === h.id && c.designated);
+      const selected = this.houseSelection.id === h.id;
+      if (!marked && !selected) continue;
+      g.lineStyle(selected ? 2 : 3, selected ? HOUSE_SELECTED : DESIGNATION, 0.9);
+      g.strokeRect(h.rect.x * TILE_PX, h.rect.y * TILE_PX, h.rect.w * TILE_PX, h.rect.h * TILE_PX);
+    }
+  }
+
+  /** Niebla: negro donde no se ha visto nunca, penumbra en lo visto y nada en lo visible. */
+  private drawFog(): void {
+    const w = this.world;
+    const visible = visibleTiles(w);
+    const data = this.fogPixels.data;
+    for (let i = 0; i < w.seen.length; i++) {
+      data[i * 4 + 3] = visible[i] ? 0 : w.seen[i] ? FOG_SEEN_ALPHA : 255;
+    }
+    this.fog.putData(this.fogPixels, 0, 0);
+    this.fog.refresh();
+  }
+
+  /** Para los tests de navegador: el mundo y cómo pasar de casilla a píxel de pantalla. */
+  private exposeDebug(): void {
+    const tileToScreen = (x: number, y: number) => {
+      const cam = this.cameras.main;
+      return {
+        x: ((x + 0.5) * TILE_PX - cam.worldView.x) * cam.zoom,
+        y: ((y + 0.5) * TILE_PX - cam.worldView.y) * cam.zoom,
+      };
+    };
+    (window as unknown as { rimzomboid: unknown }).rimzomboid = {
+      world: this.world,
+      tileToScreen,
+    };
   }
 
   /** Zoom mínimo para que el mapa siempre llene la pantalla. */

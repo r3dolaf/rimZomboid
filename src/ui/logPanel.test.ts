@@ -1,0 +1,45 @@
+// @vitest-environment jsdom
+import { expect, test } from 'vitest';
+import { logEvent } from '../sim/log';
+import { createWorld } from '../sim/world';
+import { formatItems, formatLogEntry } from './describe';
+import { mountLog } from './logPanel';
+
+test('formatItems: plurales y lista legible', () => {
+  expect(formatItems({ food: 4, bandage: 1, knife: 0, bat: 2 })).toBe('4 latas, 1 venda y 2 bates');
+  expect(formatItems({ food: 1, bandage: 0, knife: 1, bat: 0 })).toBe('1 lata y 1 cuchillo');
+  expect(formatItems({ food: 0, bandage: 0, knife: 0, bat: 0 })).toBe('nada');
+});
+
+test('cada suceso se convierte en una frase con día y hora', () => {
+  const w = createWorld(2);
+  const s = w.survivors[0]!;
+  w.tick = 300 * 2 + 5 * 14; // Día 1, 10:14
+  logEvent(w, {
+    kind: 'found',
+    survivorId: s.id,
+    houseId: 3,
+    items: { food: 4, bandage: 1, knife: 0, bat: 0 },
+  });
+  expect(formatLogEntry(w.log.at(-1)!, w)).toBe(
+    `Día 1, 10:14 · ${s.name} ha encontrado 4 latas y 1 venda en la casa 3`,
+  );
+  logEvent(w, { kind: 'houseEmptied', houseId: 3 });
+  expect(formatLogEntry(w.log.at(-1)!, w)).toBe('Día 1, 10:14 · Casa 3 vaciada');
+  logEvent(w, { kind: 'refused', survivorId: s.id });
+  expect(formatLogEntry(w.log.at(-1)!, w)).toContain(`${s.name} se niega a trabajar`);
+  logEvent(w, { kind: 'outOfFood' });
+  expect(formatLogEntry(w.log.at(-1)!, w)).toContain('El almacén se ha quedado sin comida');
+});
+
+test('el panel muestra los sucesos, el más reciente abajo', () => {
+  const root = document.createElement('div');
+  const w = createWorld(2);
+  const panel = mountLog(root, { world: w });
+  logEvent(w, { kind: 'houseEmptied', houseId: 1 });
+  logEvent(w, { kind: 'houseEmptied', houseId: 2 });
+  panel.update();
+  const items = [...root.querySelectorAll('[data-testid="log"] li')].map((li) => li.textContent);
+  expect(items).toHaveLength(2);
+  expect(items[1]).toContain('Casa 2 vaciada');
+});

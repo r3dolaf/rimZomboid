@@ -1,5 +1,6 @@
 // Textos visibles del juego en español. Todo texto de la interfaz sale de aquí.
 import type { MoodModifierId } from '../sim/mood';
+import type { ItemKind } from '../sim/items';
 import type { TraitId } from '../sim/types';
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -9,11 +10,41 @@ export const es = {
   dayTime: (day: number, hour: number, minute: number) => `Día ${day}, ${pad(hour)}:${pad(minute)}`,
   seed: (s: number) => `Semilla: ${s}`,
   food: (n: number) => `Comida: ${n}`,
+  bandages: (n: number) => `Vendas: ${n}`,
+  lootTool: 'Saquear',
+  lootToolHint: 'Marcar casas o contenedores para saquear (L)',
   pause: 'Pausa',
   pauseIcon: '⏸',
   speed: (n: number) => `x${n}`,
   speedLabel: (n: number) => `Velocidad x${n}`,
   close: 'Cerrar',
+  logTitle: 'Sucesos',
+  carrying: (what: string, kg: string, max: number) => `Lleva: ${what} (${kg} / ${max} kg)`,
+  workLoot: 'Saquear',
+  house: (id: number) => `Casa ${id}`,
+  houseMarked: 'Marcada para saquear',
+  houseUnmarked: 'Sin marcar',
+  houseSearched: (n: number, total: number) => `Registrados: ${n} de ${total}`,
+  houseEmpty: (n: number) => `Vacíos: ${n}`,
+  nothing: 'nada',
+  and: 'y',
+  items: {
+    food: ['lata', 'latas'],
+    bandage: ['venda', 'vendas'],
+    knife: ['cuchillo', 'cuchillos'],
+    bat: ['bate', 'bates'],
+  } satisfies Record<ItemKind, [string, string]>,
+  log: {
+    found: (who: string, what: string, house: number) =>
+      `${who} ha encontrado ${what} en la casa ${house}`,
+    emptyContainer: (who: string, house: number) => `${who} no encuentra nada en la casa ${house}`,
+    houseEmptied: (house: number) => `Casa ${house} vaciada`,
+    refused: (who: string) => `${who} se niega a trabajar`,
+    crisis: (who: string) => `${who} entra en crisis`,
+    vented: (who: string) => `${who} se ha desahogado`,
+    collapsed: (who: string) => `${who} se ha desplomado de sueño`,
+    outOfFood: 'El almacén se ha quedado sin comida',
+  },
 
   needs: { hunger: 'Hambre', sleep: 'Sueño', mood: 'Ánimo' },
   traitsTitle: 'Rasgos',

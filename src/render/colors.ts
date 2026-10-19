@@ -20,3 +20,7 @@ export const PILLOW_COLOR = 0xe8e6e3;
 export const STORAGE_COLOR = 0x8a6a3a;
 export const STORAGE_EDGE = 0x5a4424;
 export const NIGHT_COLOR = 0x0a1030;
+export const CONTAINER_COLORS = { fridge: 0xd8e4ea, wardrobe: 0x6b4a2e, shelf: 0x9a7b4f } as const;
+export const CONTAINER_EDGE = 0x1a1a1a;
+export const DESIGNATION = 0xe08a2c;
+export const HOUSE_SELECTED = 0xffffff;

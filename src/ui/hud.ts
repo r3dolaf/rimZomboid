@@ -1,6 +1,8 @@
 import type { Speed, TimeController } from '../game/timeController';
 import { es } from '../i18n/es';
 import type { GameTime } from '../sim/clock';
+import type { Inventory } from '../sim/items';
+import type { Tool } from './tool';
 import './hud.css';
 
 export function formatDayTime(t: GameTime): string {
@@ -9,11 +11,11 @@ export function formatDayTime(t: GameTime): string {
 
 const SPEEDS: readonly Speed[] = [0, 1, 2, 3];
 
-/** Barra superior: hora, velocidad, comida del almacén y semilla. */
+/** Barra superior: hora, velocidad, comida y vendas del almacén, herramienta Saquear y semilla. */
 export function mountHud(
   root: HTMLElement,
-  opts: { seed: number; time: TimeController },
-): { update(t: GameTime, food: number): void } {
+  opts: { seed: number; time: TimeController; tool?: Tool },
+): { update(t: GameTime, stock: Inventory): void } {
   const bar = document.createElement('div');
   bar.className = 'hud-bar';
 
@@ -42,12 +44,30 @@ export function mountHud(
   food.className = 'hud-food';
   food.dataset.testid = 'hud-food';
 
+  const bandages = document.createElement('span');
+  bandages.className = 'hud-bandages';
+  bandages.dataset.testid = 'hud-bandages';
+
+  const loot = document.createElement('button');
+  loot.type = 'button';
+  loot.className = 'hud-tool';
+  loot.dataset.testid = 'hud-loot-tool';
+  loot.textContent = es.lootTool;
+  loot.title = es.lootToolHint;
+  loot.addEventListener('click', () => {
+    opts.tool?.toggle();
+    loot.blur();
+  });
+  const refreshTool = () => loot.classList.toggle('active', opts.tool?.active ?? false);
+  opts.tool?.onChange(refreshTool);
+  if (!opts.tool) loot.hidden = true;
+
   const seed = document.createElement('span');
   seed.className = 'hud-seed';
   seed.dataset.testid = 'hud-seed';
   seed.textContent = es.seed(opts.seed);
 
-  bar.append(time, speeds, food, seed);
+  bar.append(time, speeds, food, bandages, loot, seed);
   root.append(bar);
 
   let shownSpeed: Speed | null = null;
@@ -59,11 +79,13 @@ export function mountHud(
   refreshSpeed();
 
   return {
-    update(t, foodCount) {
+    update(t, stock) {
       const text = formatDayTime(t);
       if (time.textContent !== text) time.textContent = text;
-      const foodText = es.food(foodCount);
+      const foodText = es.food(stock.food);
       if (food.textContent !== foodText) food.textContent = foodText;
+      const bandagesText = es.bandages(stock.bandage);
+      if (bandages.textContent !== bandagesText) bandages.textContent = bandagesText;
       refreshSpeed(); // la velocidad también puede cambiar con el teclado
     },
   };

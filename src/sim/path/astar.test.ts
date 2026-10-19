@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import { createGrid, isWalkable, setTile } from '../map/grid';
 import { Tile, type Grid } from '../types';
-import { findPath } from './astar';
+import { findPath, invalidateRegions, regionOf } from './astar';
 
 /** Mapa en texto: '.' hierba, '#' muro. */
 function grid(...rows: string[]): Grid {
@@ -61,4 +61,30 @@ test('el camino es de coste mínimo en un laberinto', () => {
   const p = findPath(g, { x: 0, y: 0 }, { x: 4, y: 2 })!;
   expect(p.at(-1)).toEqual({ x: 4, y: 2 });
   expect(p).toHaveLength(10);
+});
+
+test('regiones: casillas conectadas comparten región y las aisladas no', () => {
+  const g = grid('..#..', '..#..', '..#..');
+  expect(regionOf(g, 0, 0)).toBe(regionOf(g, 1, 2));
+  expect(regionOf(g, 0, 0)).not.toBe(regionOf(g, 4, 0));
+  expect(regionOf(g, 2, 0)).toBe(-1); // muro
+});
+
+test('un destino encerrado en un mapa grande se descarta al momento', () => {
+  const g = createGrid(100, 100, Tile.Grass);
+  for (let dy = -1; dy <= 1; dy++)
+    for (let dx = -1; dx <= 1; dx++) if (dx || dy) setTile(g, 90 + dx, 90 + dy, Tile.Wall);
+  invalidateRegions(g);
+  findPath(g, { x: 0, y: 0 }, { x: 5, y: 5 }); // calentar
+  const t0 = performance.now();
+  for (let i = 0; i < 100; i++) expect(findPath(g, { x: 0, y: 0 }, { x: 90, y: 90 })).toBeNull();
+  expect(performance.now() - t0).toBeLessThan(20); // 100 búsquedas
+});
+
+test('tras cambiar el mapa, invalidateRegions recalcula las regiones', () => {
+  const g = grid('.#.');
+  expect(findPath(g, { x: 0, y: 0 }, { x: 2, y: 0 })).toBeNull();
+  setTile(g, 1, 0, Tile.Floor);
+  invalidateRegions(g);
+  expect(findPath(g, { x: 0, y: 0 }, { x: 2, y: 0 })).toHaveLength(2);
 });

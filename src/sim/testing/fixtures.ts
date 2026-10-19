@@ -1,4 +1,5 @@
 // Ayudas para los tests de la simulación.
+import { emptyInventory } from '../items';
 import { createGrid, setTile } from '../map/grid';
 import { createRng } from '../rng';
 import { Tile, type Point, type World } from '../types';
@@ -26,10 +27,11 @@ export function emptyWorld(width: number, height: number): World {
         traits: [],
         memories: [],
         bedId: 1,
+        carrying: emptyInventory(),
       },
     ],
     beds: [{ id: 1, pos: { x: width - 1, y: 0 }, ownerId: 1 }],
-    storage: { tiles: [{ x: 0, y: height - 1 }], food: 10 },
+    storage: { tiles: [{ x: 0, y: height - 1 }], items: { ...emptyInventory(), food: 10 } },
     nextId: 2,
   };
 }

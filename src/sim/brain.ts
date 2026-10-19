@@ -25,16 +25,19 @@ const AiBrain: Brain = {
     const goingTo = a.type === 'moveTo' ? a.then?.type : undefined;
     const inCrisis = a.type === 'crisis' || goingTo === 'crisis';
 
+    // Si la comida se acaba mientras va a comer o come, lo deja.
+    if ((a.type === 'eat' || goingTo === 'eat') && w.storage.items.food === 0)
+      return { type: 'idle', ticksLeft: 0 };
     // Comer y dormir se terminan; la crisis solo se corta por algo urgente.
     if (a.type === 'eat' || a.type === 'sleep' || goingTo === 'eat' || goingTo === 'sleep')
       return null;
     // (desplomarse, que también la corta, lo decide decisionsSystem)
     if (inCrisis) {
-      if (s.needs.hunger < CRISIS_BREAK_HUNGER && w.storage.food > 0) return goEat(w);
+      if (s.needs.hunger < CRISIS_BREAK_HUNGER && w.storage.items.food > 0) return goEat(w);
       return null;
     }
 
-    if (s.needs.hunger < EAT_BELOW && w.storage.food > 0) return goEat(w);
+    if (s.needs.hunger < EAT_BELOW && w.storage.items.food > 0) return goEat(w);
     if (wantsToSleep(s, w)) return goSleep(s, w);
     // Tras desahogarse el ánimo tarda en subir: sin esta guarda, encadenaría otra crisis al momento.
     const vented = s.memories.some((m) => m.id === 'vented' && m.expiresAt > w.tick);

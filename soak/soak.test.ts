@@ -27,7 +27,7 @@ test.each([1, 2, 3])(
         });
       }
       // H2: con ~10 días de comida, el almacén está vacío antes del día 15
-      if (day === 15) expect(w.storage.food, 'comida el día 15').toBe(0);
+      if (day === 15) expect(w.storage.items.food, 'comida el día 15').toBe(0);
       // sin bloqueos: cada superviviente se ha movido en algún momento del día
       w.survivors.forEach((s, j) =>
         expect(moved[j], `día ${day}: ${s.name} no se ha movido`).toBe(true),

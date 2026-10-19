@@ -10,8 +10,8 @@ export function activitiesSystem(w: World): void {
     if (a.type === 'eat') {
       if (--a.ticksLeft > 0) continue;
       // Puede que otro se haya comido la última lata mientras tanto.
-      if (w.storage.food > 0) {
-        w.storage.food--;
+      if (w.storage.items.food > 0) {
+        w.storage.items.food--;
         s.needs.hunger = Math.min(100, s.needs.hunger + EAT_RESTORE);
         addMemory(s, 'ate', w.tick);
       }

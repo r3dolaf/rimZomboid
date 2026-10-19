@@ -1,13 +1,23 @@
 // Comportamiento de los supervivientes (H2): comer, dormir, crisis.
 import { expect, test } from 'vitest';
-import { CRISIS_TICKS, EAT_TICKS, TICKS_PER_DAY, TICKS_PER_HOUR } from './balance';
+import {
+  CRISIS_TICKS,
+  EAT_TICKS,
+  NO_PATH_RETRY_TICKS,
+  START_FOOD,
+  TICKS_PER_DAY,
+  TICKS_PER_HOUR,
+} from './balance';
 import { brains } from './brain';
 import { addMemory, moodModifiers } from './mood';
+import { invalidateRegions } from './path/astar';
 import { step } from './step';
 import { activitiesSystem } from './systems/activities';
 import { decisionsSystem } from './systems/decisions';
 import type { Survivor, World } from './types';
 import { createWorld, tileOf } from './world';
+
+const originalAi = brains.ai;
 
 /** Tick de una hora del día 1 (la partida empieza a las 08:00). */
 const at = (hour: number) => ((hour - 8 + 24) % 24) * TICKS_PER_HOUR;
@@ -30,7 +40,7 @@ test('con hambre baja va al almacén y come: −1 lata, +60 de hambre y "Comió"
   w.survivors.forEach(rested);
   const s = w.survivors[0]!;
   s.needs.hunger = 30;
-  expect(runUntil(w, () => w.storage.food === 34, 2 * TICKS_PER_HOUR)).toBe(true);
+  expect(runUntil(w, () => w.storage.items.food === START_FOOD - 1, 2 * TICKS_PER_HOUR)).toBe(true);
   expect(s.needs.hunger).toBeGreaterThan(85);
   expect(s.memories.some((m) => m.id === 'ate')).toBe(true);
   expect(w.storage.tiles).toContainEqual(tileOf(s.pos));
@@ -41,7 +51,7 @@ test('sin comida en el almacén no va a comer', () => {
   const s = w.survivors[0]!;
   rested(s);
   s.needs.hunger = 30;
-  w.storage.food = 0;
+  w.storage.items.food = 0;
   const a = brains.ai.decide(s, w);
   expect(a?.type === 'moveTo' && a.then?.type === 'eat').toBe(false);
 });
@@ -51,11 +61,11 @@ test('si dos se comen la última lata a la vez, la comida queda en 0 y solo uno 
   const [a, b] = w.survivors;
   a!.needs.hunger = 10;
   b!.needs.hunger = 10;
-  w.storage.food = 1;
+  w.storage.items.food = 1;
   a!.action = { type: 'eat', ticksLeft: 1 };
   b!.action = { type: 'eat', ticksLeft: 1 };
   activitiesSystem(w);
-  expect(w.storage.food).toBe(0);
+  expect(w.storage.items.food).toBe(0);
   expect([a!.needs.hunger, b!.needs.hunger].sort((x, y) => x - y)).toEqual([10, 70]);
   expect(a!.action.type).toBe('idle');
   expect(b!.action.type).toBe('idle');
@@ -146,9 +156,9 @@ test('el hambre extrema corta la crisis si hay comida, y no si no la hay', () =>
   const s = w.survivors[0]!;
   s.action = { type: 'crisis', ticksLeft: 100 };
   s.needs.hunger = 5;
-  w.storage.food = 0;
+  w.storage.items.food = 0;
   expect(brains.ai.decide(s, w)).toBeNull();
-  w.storage.food = 3;
+  w.storage.items.food = 3;
   const a = brains.ai.decide(s, w);
   expect(a?.type === 'moveTo' && a.then?.type === 'eat').toBe(true);
 });
@@ -200,8 +210,47 @@ test('escenario: a las 23:00 del día 1 los tres duermen en su cama', () => {
 
 test('escenario: con el almacén vacío, a los 2 días todos están desnutridos', () => {
   const w = createWorld(7);
-  w.storage.food = 0;
+  w.storage.items.food = 0;
   runUntil(w, () => false, 2 * TICKS_PER_DAY);
   for (const s of w.survivors)
     expect(moodModifiers(s, w.tick).map((m) => m.id)).toContain('starving');
+});
+
+test('"sin camino": durante la espera no se vuelve a consultar al cerebro', () => {
+  const w = createWorld(3);
+  const s = w.survivors[0]!;
+  w.survivors = [s];
+  w.beds = w.beds.filter((b) => b.ownerId === s.id);
+  let calls = 0;
+  brains.ai = { decide: () => (calls++, { type: 'moveTo', target: { x: 0, y: 0 } }) };
+  try {
+    // (0,0) es hierba fuera del mapa útil pero alcanzable o no: forzamos que no lo sea
+    w.grid.tiles[0] = 3; // muro
+    invalidateRegions(w.grid);
+    decisionsSystem(w);
+    expect(s.action).toMatchObject({ type: 'idle', wait: 'noPath' });
+    for (let i = 0; i < NO_PATH_RETRY_TICKS - 1; i++) decisionsSystem(w);
+    expect(calls).toBe(1);
+  } finally {
+    brains.ai = originalAi;
+  }
+});
+
+test('si se acaba la comida mientras va a comer, se da la vuelta', () => {
+  const w = createWorld(3);
+  const s = w.survivors[0]!;
+  s.action = { type: 'moveTo', target: w.storage.tiles[0]!, then: { type: 'eat' } };
+  s.path = [{ x: 1, y: 1 }];
+  w.storage.items.food = 0;
+  decisionsSystem(w);
+  expect(s.action.type === 'moveTo' && s.action.then?.type === 'eat').toBe(false);
+});
+
+test('si se acaba la comida mientras come, lo deja', () => {
+  const w = createWorld(3);
+  const s = w.survivors[0]!;
+  s.action = { type: 'eat', ticksLeft: 20 };
+  w.storage.items.food = 0;
+  decisionsSystem(w);
+  expect(s.action.type).not.toBe('eat');
 });

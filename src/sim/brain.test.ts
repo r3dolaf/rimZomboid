@@ -52,7 +52,7 @@ test('sin camino posible espera NO_PATH_RETRY_TICKS', () => {
   brains.ai = { decide: () => ({ type: 'moveTo', target: { x: 0, y: 0 } }) };
   try {
     decisionsSystem(w);
-    expect(s.action).toEqual({ type: 'idle', ticksLeft: NO_PATH_RETRY_TICKS });
+    expect(s.action).toEqual({ type: 'idle', ticksLeft: NO_PATH_RETRY_TICKS, wait: 'noPath' });
   } finally {
     brains.ai = originalAi;
   }

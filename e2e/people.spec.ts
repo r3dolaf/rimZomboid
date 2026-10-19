@@ -10,7 +10,7 @@ test('tarjetas, ficha del superviviente y comida', async ({ page }) => {
   await page.goto('/?seed=4242');
   const cards = page.locator('[data-testid^="card-"]');
   await expect(cards).toHaveCount(3);
-  await expect(page.getByTestId('hud-food')).toHaveText('Comida: 35');
+  await expect(page.getByTestId('hud-food')).toHaveText('Comida: 10');
 
   const sheet = page.getByTestId('sheet');
   await expect(sheet).toBeHidden();

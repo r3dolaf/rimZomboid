@@ -22,7 +22,7 @@ export const NO_PATH_RETRY_TICKS = 10;
 // Personas (H2)
 export const NEED_START_MIN = 60;
 export const NEED_START_MAX = 100;
-export const START_FOOD = 35; // ~10 días para 3 supervivientes; en H3 bajará
+export const START_FOOD = 10; // ~3 días; el resto hay que saquearlo (H3)
 export const MOOD_BASE = 50;
 export const HUNGER_PER_DAY = 70;
 export const HUNGER_PER_TICK = HUNGER_PER_DAY / TICKS_PER_DAY;
@@ -61,3 +61,7 @@ export const SLEEP_AT_NIGHT_BELOW = 95;
 export const SLEEP_ANYTIME_BELOW = 10;
 export const CRISIS_TICKS = 2 * TICKS_PER_HOUR;
 export const CRISIS_BREAK_HUNGER = 10;
+
+// Objetos y saqueo (H3)
+export const ITEM_WEIGHT_KG = { food: 0.5, bandage: 0.1, knife: 0.5, bat: 1.5 } as const;
+export const CARRY_CAPACITY_KG = 8;

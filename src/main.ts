@@ -35,7 +35,7 @@ const data: GameSceneData = {
   time,
   selection,
   onFrame: () => {
-    hud.update(gameTime(world.tick), world.storage.food);
+    hud.update(gameTime(world.tick), world.storage.items.food);
     cards.update();
     sheet.update();
   },

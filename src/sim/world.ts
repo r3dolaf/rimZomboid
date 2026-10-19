@@ -1,4 +1,5 @@
 import { NEED_START_MAX, NEED_START_MIN, START_FOOD, SURVIVOR_COUNT } from './balance';
+import { emptyInventory } from './items';
 import { generateMap } from './map/generate';
 import { getTile } from './map/grid';
 import { moodTarget } from './mood';
@@ -38,6 +39,7 @@ export function createWorld(seed: number): World {
     traits: rollTraits(rng),
     memories: [],
     bedId: i + 1,
+    carrying: emptyInventory(),
   }));
 
   for (const s of survivors) s.needs.mood = moodTarget(s, 0);
@@ -54,7 +56,7 @@ export function createWorld(seed: number): World {
       { x: r.x + 7, y: r.y + r.h - 2 },
       { x: r.x + 8, y: r.y + r.h - 2 },
     ],
-    food: START_FOOD,
+    items: { ...emptyInventory(), food: START_FOOD },
   };
 
   return {

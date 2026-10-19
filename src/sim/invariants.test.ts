@@ -51,7 +51,7 @@ test.each(['hunger', 'sleep', 'mood'] as const)('detecta %s fuera de 0–100 o n
 test('detecta comida negativa o no entera', () => {
   for (const bad of [-1, 1.5]) {
     const w = createWorld(1);
-    w.storage.food = bad;
+    w.storage.items.food = bad;
     expect(checkInvariants(w).length).toBeGreaterThan(0);
   }
 });
@@ -59,5 +59,22 @@ test('detecta comida negativa o no entera', () => {
 test('detecta una cama cuyo dueño no existe', () => {
   const w = createWorld(1);
   w.beds[0]!.ownerId = 999;
+  expect(checkInvariants(w).length).toBeGreaterThan(0);
+});
+
+test('detecta objetos negativos o no enteros en el almacén y en la carga', () => {
+  for (const bad of [-1, 0.5]) {
+    const w = createWorld(1);
+    w.storage.items.bandage = bad;
+    expect(checkInvariants(w).length).toBeGreaterThan(0);
+    const w2 = createWorld(1);
+    w2.survivors[0]!.carrying.food = bad;
+    expect(checkInvariants(w2).length).toBeGreaterThan(0);
+  }
+});
+
+test('detecta a quien carga más de 8 kg', () => {
+  const w = createWorld(1);
+  w.survivors[0]!.carrying.food = 17;
   expect(checkInvariants(w).length).toBeGreaterThan(0);
 });

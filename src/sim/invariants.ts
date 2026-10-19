@@ -1,3 +1,5 @@
+import { CARRY_CAPACITY_KG } from './balance';
+import { ITEM_KINDS, weightOf, type Inventory } from './items';
 import { inBounds, isWalkable } from './map/grid';
 import type { World } from './types';
 import { tileOf } from './world';
@@ -22,6 +24,9 @@ export function checkInvariants(w: World): string[] {
       if (!Number.isFinite(v) || v < 0 || v > 100)
         problems.push(`${who}: ${k} fuera de 0–100 (${v})`);
     }
+    checkInventory(problems, `${who}: carga`, s.carrying);
+    if (weightOf(s.carrying) > CARRY_CAPACITY_KG + 1e-9)
+      problems.push(`${who}: carga ${weightOf(s.carrying)} kg > ${CARRY_CAPACITY_KG}`);
     if (!w.beds.some((b) => b.id === s.bedId))
       problems.push(`${who}: su cama ${s.bedId} no existe`);
     const t = tileOf(s.pos);
@@ -29,9 +34,14 @@ export function checkInvariants(w: World): string[] {
     else if (!isWalkable(w.grid, t.x, t.y))
       problems.push(`${who}: en una casilla no transitable (${t.x}, ${t.y})`);
   }
-  const food = w.storage.food;
-  if (!Number.isInteger(food) || food < 0) problems.push(`comida no válida: ${food}`);
+  checkInventory(problems, 'almacén', w.storage.items);
   for (const b of w.beds)
     if (!ids.has(b.ownerId)) problems.push(`cama ${b.id}: su dueño ${b.ownerId} no existe`);
   return problems;
+}
+
+function checkInventory(problems: string[], where: string, inv: Inventory): void {
+  for (const k of ITEM_KINDS)
+    if (!Number.isInteger(inv[k]) || inv[k] < 0)
+      problems.push(`${where}: ${k} no válido (${inv[k]})`);
 }

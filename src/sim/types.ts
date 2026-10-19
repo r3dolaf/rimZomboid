@@ -1,4 +1,5 @@
 // Tipos de datos de la simulación. Solo datos simples, para poder guardarlos con JSON.
+import type { Inventory } from './items';
 import type { RngState } from './rng';
 
 export interface Point {
@@ -62,7 +63,8 @@ export interface Memory {
 export type Activity = { type: 'eat' } | { type: 'sleep' } | { type: 'crisis' };
 
 export type Action =
-  | { type: 'idle'; ticksLeft: number }
+  /** `wait`: esperando tras no encontrar camino (no se consulta al cerebro) o tras negarse a trabajar. */
+  | { type: 'idle'; ticksLeft: number; wait?: 'noPath' | 'refused' }
   | { type: 'moveTo'; target: Point; then?: Activity }
   | { type: 'eat'; ticksLeft: number }
   | { type: 'sleep'; inBed: boolean }
@@ -81,6 +83,8 @@ export interface Survivor {
   traits: TraitId[];
   memories: Memory[];
   bedId: number;
+  /** Lo que lleva encima (como máximo CARRY_CAPACITY_KG). */
+  carrying: Inventory;
 }
 
 export interface Bed {
@@ -89,10 +93,10 @@ export interface Bed {
   ownerId: number;
 }
 
-/** Almacén de la base. En H2 la comida es solo un contador de latas. */
+/** Almacén de la base. */
 export interface Storage {
   tiles: Point[];
-  food: number;
+  items: Inventory;
 }
 
 export interface World {

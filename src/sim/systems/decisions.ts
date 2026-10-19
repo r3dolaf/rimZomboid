@@ -12,14 +12,18 @@ export function decisionsSystem(w: World): void {
       s.path = [];
       continue;
     }
-    if (s.action.type === 'idle' && s.action.ticksLeft > 0) s.action.ticksLeft--;
+    if (s.action.type === 'idle' && s.action.ticksLeft > 0) {
+      s.action.ticksLeft--;
+      // Tras no encontrar camino, espera sin volver a decidir (si no, A* correría cada tick).
+      if (s.action.wait === 'noPath') continue;
+    }
 
     const action = brains[s.brain].decide(s, w);
     if (action === null) continue;
     if (action.type === 'moveTo') {
       const path = findPath(w.grid, tileOf(s.pos), action.target);
       if (path === null) {
-        s.action = { type: 'idle', ticksLeft: NO_PATH_RETRY_TICKS };
+        s.action = { type: 'idle', ticksLeft: NO_PATH_RETRY_TICKS, wait: 'noPath' };
         s.path = [];
         continue;
       }

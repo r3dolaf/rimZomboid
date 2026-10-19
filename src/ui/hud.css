@@ -1,0 +1,45 @@
+.hud-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 6px 12px;
+  background: rgba(15, 17, 20, 0.8);
+  color: #e8e6e3;
+  font:
+    14px/1.2 system-ui,
+    sans-serif;
+  pointer-events: none;
+  user-select: none;
+}
+.hud-time {
+  min-width: 110px;
+  font-variant-numeric: tabular-nums;
+}
+.hud-speeds {
+  display: flex;
+  gap: 4px;
+}
+.hud-speeds button {
+  pointer-events: auto;
+  min-width: 36px;
+  padding: 3px 8px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #2a2d31;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.hud-speeds button.active {
+  background: #c9a227;
+  border-color: #c9a227;
+  color: #111;
+}
+.hud-seed {
+  margin-left: auto;
+  opacity: 0.7;
+}

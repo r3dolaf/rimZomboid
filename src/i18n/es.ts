@@ -17,6 +17,7 @@ export const es = {
 
   needs: { hunger: 'Hambre', sleep: 'Sueño', mood: 'Ánimo' },
   traitsTitle: 'Rasgos',
+  needsTitle: 'Necesidades',
   moodTitle: 'Ánimo',
   moodReasonsTitle: 'Por qué',
   noReasons: 'Nada especial',

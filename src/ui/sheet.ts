@@ -90,6 +90,7 @@ function render(
   }
   f.append(traits);
 
+  f.append(el('h3', es.needsTitle));
   const needs = el('ul', undefined, 'needs');
   for (const n of v.needs) needs.append(el('li', n));
   f.append(needs);

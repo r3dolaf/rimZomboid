@@ -15,7 +15,7 @@ export function movementSystem(w: World): void {
     const ty = next.y + 0.5;
     const dx = tx - s.pos.x;
     const dy = ty - s.pos.y;
-    const dist = Math.hypot(dx, dy);
+    const dist = Math.sqrt(dx * dx + dy * dy); // sqrt es exacto en todos los navegadores; hypot no
     if (dist <= SURVIVOR_WALK_SPEED) {
       s.pos = { x: tx, y: ty };
       s.path.shift();

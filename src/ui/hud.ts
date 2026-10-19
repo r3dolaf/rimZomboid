@@ -27,7 +27,7 @@ export function mountHud(
     const b = document.createElement('button');
     b.type = 'button';
     b.dataset.speed = String(s);
-    b.textContent = s === 0 ? '⏸' : es.speed(s);
+    b.textContent = s === 0 ? es.pauseIcon : es.speed(s);
     b.setAttribute('aria-label', s === 0 ? es.pause : es.speedLabel(s));
     b.addEventListener('click', () => {
       opts.time.setSpeed(s);

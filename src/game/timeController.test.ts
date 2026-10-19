@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest';
-import { createTimeController } from './timeController';
+import { TICKS_PER_SECOND } from '../sim/balance';
+import { createTimeController, MS_PER_TICK } from './timeController';
 
 test('empieza a x1', () => expect(createTimeController().speed).toBe(1));
 
@@ -52,4 +53,15 @@ test('un dt negativo o NaN no avanza ni rompe el acumulador', () => {
   expect(t.advance(-50)).toBe(0);
   expect(t.advance(NaN)).toBe(0);
   expect(t.advance(100)).toBe(1);
+});
+
+test('togglePause funciona como callback suelto', () => {
+  const t = createTimeController();
+  const { togglePause } = t;
+  togglePause();
+  expect(t.speed).toBe(0);
+});
+
+test('MS_PER_TICK sale de TICKS_PER_SECOND', () => {
+  expect(MS_PER_TICK).toBe(1000 / TICKS_PER_SECOND);
 });

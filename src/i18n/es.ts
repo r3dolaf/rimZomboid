@@ -7,6 +7,7 @@ export const es = {
   dayTime: (day: number, hour: number, minute: number) => `Día ${day}, ${pad(hour)}:${pad(minute)}`,
   seed: (s: number) => `Semilla: ${s}`,
   pause: 'Pausa',
+  pauseIcon: '⏸',
   speed: (n: number) => `x${n}`,
   speedLabel: (n: number) => `Velocidad x${n}`,
 };

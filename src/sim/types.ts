@@ -29,3 +29,10 @@ export interface Grid {
   height: number;
   tiles: Tile[];
 }
+
+/** Un edificio: `rect` incluye los muros; `door` es la casilla de la puerta, en el muro. */
+export interface Building {
+  id: number;
+  rect: Rect;
+  door: Point;
+}

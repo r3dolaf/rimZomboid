@@ -1,4 +1,10 @@
-import { START_HOUR, TICKS_PER_DAY, TICKS_PER_HOUR } from './balance';
+import {
+  NIGHT_END_HOUR,
+  NIGHT_START_HOUR,
+  START_HOUR,
+  TICKS_PER_DAY,
+  TICKS_PER_HOUR,
+} from './balance';
 
 export interface GameTime {
   day: number;
@@ -17,4 +23,10 @@ export function gameTime(tick: number): GameTime {
     hour: Math.floor(inDay / TICKS_PER_HOUR),
     minute: Math.floor((inDay % TICKS_PER_HOUR) / TICKS_PER_MINUTE),
   };
+}
+
+/** De 22:00 a 06:00. */
+export function isNight(tick: number): boolean {
+  const { hour } = gameTime(tick);
+  return hour >= NIGHT_START_HOUR || hour < NIGHT_END_HOUR;
 }

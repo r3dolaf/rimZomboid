@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { TICKS_PER_HOUR } from './balance';
+import { INITIAL_REVEAL, TICKS_PER_HOUR } from './balance';
 import { createGrid, setTile } from './map/grid';
 import { emptyWorld } from './testing/fixtures';
 import { Tile, type Grid } from './types';
@@ -109,4 +109,13 @@ test('la visión se actualiza cada 5 ticks', () => {
   w.tick = 5;
   visionSystem(w);
   expect(w.seen.some((v) => v === 1)).toBe(true);
+});
+
+test('al empezar se conocen la base entera y sus alrededores', () => {
+  expect(INITIAL_REVEAL).toBe(8);
+  const w = createWorld(3);
+  const r = w.base.rect;
+  for (let y = r.y - INITIAL_REVEAL; y < r.y + r.h + INITIAL_REVEAL; y++)
+    for (let x = r.x - INITIAL_REVEAL; x < r.x + r.w + INITIAL_REVEAL; x++)
+      expect(w.seen[y * w.grid.width + x], `(${x}, ${y})`).toBe(1);
 });

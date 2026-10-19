@@ -1,4 +1,10 @@
-import { NEED_START_MAX, NEED_START_MIN, START_FOOD, SURVIVOR_COUNT } from './balance';
+import {
+  NEED_START_MAX,
+  NEED_START_MIN,
+  START_FOOD,
+  SURVIVOR_COUNT,
+  INITIAL_REVEAL,
+} from './balance';
 import { emptyInventory } from './items';
 import { placeContainers } from './loot';
 import { revealFromSurvivors } from './vision';
@@ -83,6 +89,10 @@ export function createWorld(seed: number): World {
     log: [],
     nextId: survivors.length + 1,
   };
+  // Los supervivientes conocen su base y los alrededores.
+  for (let y = r.y - INITIAL_REVEAL; y < r.y + r.h + INITIAL_REVEAL; y++)
+    for (let x = r.x - INITIAL_REVEAL; x < r.x + r.w + INITIAL_REVEAL; x++)
+      if (x >= 0 && y >= 0 && x < grid.width && y < grid.height) world.seen[y * grid.width + x] = 1;
   revealFromSurvivors(world);
   return world;
 }

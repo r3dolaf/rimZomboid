@@ -22,14 +22,14 @@ funciona, con intención de publicarlo (itch.io y, más adelante, Steam).
 
 ## 2. Decisiones tomadas
 
-| Tema | Decisión ahora | Preparado para después |
-|---|---|---|
-| Control | Órdenes indirectas a la colonia (estilo RimWorld) | Tomar el control directo de un superviviente (estilo Zomboid), mediante cerebros intercambiables |
-| Tecnología | Juego web: TypeScript + Phaser + Vite | Empaquetar para Steam con Electron/Tauri |
-| Vista | Cenital 2D sobre cuadrícula | Vista isométrica (solo cambia la capa de dibujado) |
-| Final de partida | Sin fin: se juega hasta que muere el último superviviente | Objetivos de victoria (p. ej. rescate) |
-| Arte | Provisional: formas y colores simples | Arte definitivo |
-| Idioma | Español, con los textos centralizados para poder traducirlos | Otros idiomas |
+| Tema             | Decisión ahora                                               | Preparado para después                                                                           |
+| ---------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| Control          | Órdenes indirectas a la colonia (estilo RimWorld)            | Tomar el control directo de un superviviente (estilo Zomboid), mediante cerebros intercambiables |
+| Tecnología       | Juego web: TypeScript + Phaser + Vite                        | Empaquetar para Steam con Electron/Tauri                                                         |
+| Vista            | Cenital 2D sobre cuadrícula                                  | Vista isométrica (solo cambia la capa de dibujado)                                               |
+| Final de partida | Sin fin: se juega hasta que muere el último superviviente    | Objetivos de victoria (p. ej. rescate)                                                           |
+| Arte             | Provisional: formas y colores simples                        | Arte definitivo                                                                                  |
+| Idioma           | Español, con los textos centralizados para poder traducirlos | Otros idiomas                                                                                    |
 
 ## 3. Arquitectura
 
@@ -90,14 +90,14 @@ La partida empieza con **3 supervivientes**, cada uno con nombre, necesidades,
 
 ### 4.2 Rasgos (1–2 al azar, sin contradicciones entre sí)
 
-| Rasgo | Efecto |
-|---|---|
-| Valiente | Tolera más zombis cerca antes de huir |
-| Cobarde | Huye antes; penalización de ánimo al saquear |
-| Glotón | El hambre baja más rápido |
-| Dormilón | El sueño baja más rápido |
-| Optimista | +10 al objetivo de ánimo |
-| Pesimista | −10 al objetivo de ánimo |
+| Rasgo     | Efecto                                       |
+| --------- | -------------------------------------------- |
+| Valiente  | Tolera más zombis cerca antes de huir        |
+| Cobarde   | Huye antes; penalización de ánimo al saquear |
+| Glotón    | El hambre baja más rápido                    |
+| Dormilón  | El sueño baja más rápido                     |
+| Optimista | +10 al objetivo de ánimo                     |
+| Pesimista | −10 al objetivo de ánimo                     |
 
 Pares incompatibles: Valiente/Cobarde, Optimista/Pesimista.
 

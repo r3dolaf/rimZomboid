@@ -37,10 +37,12 @@
 ### Task 1: Proyecto y herramientas
 
 **Files:**
+
 - Create: `package.json`, `tsconfig.json`, `vite.config.ts`, `eslint.config.js`, `.prettierrc.json`, `.gitignore`, `index.html`, `src/main.ts`, `src/sanity.test.ts`
 - Modify: `README.md`
 
 **Interfaces:**
+
 - Produces: scripts `npm run dev`, `build`, `preview`, `test`, `lint`, `typecheck`, `format`, `soak` (Tarea 11) y `e2e` (Tarea 10).
 
 - [ ] **Step 1:** Crear `package.json` (`"type": "module"`, `"private": true`) con las dependencias exactas de Tech Stack (`phaser` en `dependencies`, el resto en `devDependencies`) y estos scripts: `dev: vite`, `build: tsc --noEmit && vite build`, `preview: vite preview`, `test: vitest run`, `lint: eslint .`, `typecheck: tsc --noEmit`, `format: prettier --write .`. Ejecutar `npm install`.
@@ -62,11 +64,13 @@ test('vitest funciona', () => expect(1 + 1).toBe(2));
 ### Task 2: Azar con semilla, ajustes y reloj
 
 **Files:**
+
 - Create: `src/sim/rng.ts`, `src/sim/balance.ts`, `src/sim/clock.ts`
 - Test: `src/sim/rng.test.ts`, `src/sim/clock.test.ts`
 - Delete: `src/sanity.test.ts`
 
 **Interfaces:**
+
 - Produces:
   - `interface RngState { s: number }` — estado serializable (entero de 32 bits sin signo).
   - `createRng(seed: number): RngState`
@@ -81,7 +85,8 @@ test('vitest funciona', () => expect(1 + 1).toBe(2));
 ```ts
 // rng.test.ts
 test('misma semilla, misma secuencia', () => {
-  const a = createRng(42), b = createRng(42);
+  const a = createRng(42),
+    b = createRng(42);
   const sa = Array.from({ length: 5 }, () => nextFloat(a));
   const sb = Array.from({ length: 5 }, () => nextFloat(b));
   expect(sa).toEqual(sb);
@@ -91,15 +96,20 @@ test('semillas distintas, secuencias distintas', () => {
 });
 test('nextFloat siempre en [0,1)', () => {
   const r = createRng(7);
-  for (let i = 0; i < 10_000; i++) { const v = nextFloat(r); expect(v >= 0 && v < 1).toBe(true); }
+  for (let i = 0; i < 10_000; i++) {
+    const v = nextFloat(r);
+    expect(v >= 0 && v < 1).toBe(true);
+  }
 });
 test('nextInt incluye ambos extremos y nada fuera', () => {
-  const r = createRng(3); const seen = new Set<number>();
+  const r = createRng(3);
+  const seen = new Set<number>();
   for (let i = 0; i < 2000; i++) seen.add(nextInt(r, 6, 10));
   expect([...seen].sort()).toEqual([6, 7, 8, 9, 10]);
 });
 test('el estado sobrevive a JSON', () => {
-  const r = createRng(9); nextFloat(r);
+  const r = createRng(9);
+  nextFloat(r);
   const copia = JSON.parse(JSON.stringify(r)) as RngState;
   expect(nextFloat(copia)).toBe(nextFloat(r));
 });
@@ -108,10 +118,12 @@ test('pick con lista vacía lanza error', () => {
 });
 
 // clock.test.ts
-test('el tick 0 es el Día 1 a las 08:00', () => expect(gameTime(0)).toEqual({ day: 1, hour: 8, minute: 0 }));
+test('el tick 0 es el Día 1 a las 08:00', () =>
+  expect(gameTime(0)).toEqual({ day: 1, hour: 8, minute: 0 }));
 test('una hora son 300 ticks', () => expect(gameTime(300)).toEqual({ day: 1, hour: 9, minute: 0 }));
 test('5 ticks son 1 minuto', () => expect(gameTime(5)).toEqual({ day: 1, hour: 8, minute: 1 }));
-test('a medianoche cambia el día', () => expect(gameTime(16 * 300)).toEqual({ day: 2, hour: 0, minute: 0 }));
+test('a medianoche cambia el día', () =>
+  expect(gameTime(16 * 300)).toEqual({ day: 2, hour: 0, minute: 0 }));
 ```
 
 - [ ] **Step 2:** `npx vitest run src/sim` → FAIL (los módulos no existen).
@@ -124,10 +136,12 @@ test('a medianoche cambia el día', () => expect(gameTime(16 * 300)).toEqual({ d
 ### Task 3: Cuadrícula y casillas
 
 **Files:**
+
 - Create: `src/sim/types.ts`, `src/sim/map/grid.ts`
 - Test: `src/sim/map/grid.test.ts`
 
 **Interfaces:**
+
 - Produces:
   - `types.ts`: `interface Point { x: number; y: number }`, `interface Rect { x: number; y: number; w: number; h: number }`.
   - `Tile = { Grass: 0, Floor: 1, Road: 2, Wall: 3, Door: 4, Window: 5, Tree: 6 } as const` y `type Tile = (typeof Tile)[keyof typeof Tile]`.
@@ -158,8 +172,13 @@ test('fuera de los límites se comporta como muro', () => {
   expect(isWalkable(g, 4, 0)).toBe(false);
 });
 test.each([
-  [Tile.Grass, true], [Tile.Floor, true], [Tile.Road, true], [Tile.Door, true],
-  [Tile.Wall, false], [Tile.Window, false], [Tile.Tree, false],
+  [Tile.Grass, true],
+  [Tile.Floor, true],
+  [Tile.Road, true],
+  [Tile.Door, true],
+  [Tile.Wall, false],
+  [Tile.Window, false],
+  [Tile.Tree, false],
 ])('transitabilidad de la casilla %i = %s', (t, esperado) => {
   const g = createGrid(1, 1, t);
   expect(isWalkable(g, 0, 0)).toBe(esperado);
@@ -176,10 +195,12 @@ test.each([
 ### Task 4: Búsqueda de caminos (A*)
 
 **Files:**
+
 - Create: `src/sim/path/astar.ts`
 - Test: `src/sim/path/astar.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Grid`, `isWalkable` (Tarea 3), `Point`.
 - Produces: `findPath(g: Grid, from: Point, to: Point): Point[] | null` — lista de casillas desde la siguiente a `from` hasta `to`, ambas incluidas en ese orden; `[]` si `from` y `to` son la misma casilla; `null` si no hay camino o `to` no es transitable. Movimiento en 8 direcciones (coste 1 en recto y √2 en diagonal); una diagonal solo se permite si las dos casillas rectas que la rodean son transitables (no se cortan esquinas de muros). Heurística octil. Desempate determinista: con igual coste, gana el nodo insertado antes.
 
@@ -187,12 +208,17 @@ test.each([
 
 ```ts
 // mapas en texto: '.' hierba, '#' muro
-function grid(...rows: string[]): Grid { /* construye la cuadrícula con createGrid y setTile */ }
+function grid(...rows: string[]): Grid {
+  /* construye la cuadrícula con createGrid y setTile */
+}
 
 test('camino recto', () => {
   const g = grid('.....');
   expect(findPath(g, { x: 0, y: 0 }, { x: 4, y: 0 })).toEqual([
-    { x: 1, y: 0 }, { x: 2, y: 0 }, { x: 3, y: 0 }, { x: 4, y: 0 },
+    { x: 1, y: 0 },
+    { x: 2, y: 0 },
+    { x: 3, y: 0 },
+    { x: 4, y: 0 },
   ]);
 });
 test('misma casilla devuelve camino vacío', () => {
@@ -207,7 +233,10 @@ test('rodea un muro', () => {
 test('no corta esquinas en diagonal', () => {
   const g = grid('.#', '..');
   // de (0,0) a (1,1): la diagonal está prohibida porque (1,0) es muro
-  expect(findPath(g, { x: 0, y: 0 }, { x: 1, y: 1 })).toEqual([{ x: 0, y: 1 }, { x: 1, y: 1 }]);
+  expect(findPath(g, { x: 0, y: 0 }, { x: 1, y: 1 })).toEqual([
+    { x: 0, y: 1 },
+    { x: 1, y: 1 },
+  ]);
 });
 test('destino encerrado devuelve null', () => {
   const g = grid('.....', '.###.', '.#.#.', '.###.', '.....');
@@ -234,10 +263,12 @@ test('cruza un mapa de 100x100 vacío en menos de 50 ms', () => {
 ### Task 5: Generación del mapa
 
 **Files:**
+
 - Create: `src/sim/map/generate.ts`
 - Test: `src/sim/map/generate.test.ts`
 
 **Interfaces:**
+
 - Consumes: `RngState`, `nextInt`, `nextFloat` (Tarea 2); `Grid`, `Tile`, `createGrid`, `setTile`, `getTile` (Tarea 3); `findPath` (Tarea 4); `MAP_SIZE`, `HOUSE_COUNT_MIN/MAX`, `TREE_DENSITY`.
 - Produces:
   - `interface Building { id: number; rect: Rect; door: Point }` — `rect` incluye los muros; `door` es la casilla de la puerta, situada en el muro.
@@ -245,6 +276,7 @@ test('cruza un mapa de 100x100 vacío en menos de 50 ms', () => {
   - `generateMap(rng: RngState): GeneratedMap`
 
 Algoritmo (decisiones fijas):
+
 1. Todo hierba. Dos carreteras de 3 casillas de ancho que se cruzan en el centro (filas y columnas 49–51).
 2. **Base:** edificio de 12×10 con su esquina inferior derecha en (46, 46), es decir, `rect = { x: 35, y: 37, w: 12, h: 10 }`, y la puerta en el centro del muro inferior, mirando a la carretera horizontal.
 3. **Casas:** objetivo `nextInt(rng, 6, 10)`. Cada intento genera un rectángulo de 8–12 × 7–10 en una posición aleatoria, dentro de un margen de 3 casillas desde el borde del mapa. Se descarta si se acerca a menos de 2 casillas de otro edificio o de una carretera. Máximo 2000 intentos. La puerta se pone en el centro del muro que mira a la carretera más cercana.
@@ -272,9 +304,10 @@ test.each(SEEDS)('semilla %i: todas las puertas alcanzables desde la base', (s) 
 test.each(SEEDS)('semilla %i: los edificios no se solapan ni pisan carreteras', (s) => {
   const m = generateMap(createRng(s));
   const all = [m.base, ...m.houses];
-  for (const b of all) for (let y = b.rect.y; y < b.rect.y + b.rect.h; y++)
-    for (let x = b.rect.x; x < b.rect.x + b.rect.w; x++)
-      expect(getTile(m.grid, x, y)).not.toBe(Tile.Road);
+  for (const b of all)
+    for (let y = b.rect.y; y < b.rect.y + b.rect.h; y++)
+      for (let x = b.rect.x; x < b.rect.x + b.rect.w; x++)
+        expect(getTile(m.grid, x, y)).not.toBe(Tile.Road);
   // ningún par de rects se solapa (helper overlaps(a, b) en el test)
 });
 test('la base está en el centro y su puerta es una puerta', () => {
@@ -282,7 +315,9 @@ test('la base está en el centro y su puerta es una puerta', () => {
   expect(m.base.rect).toEqual({ x: 35, y: 37, w: 12, h: 10 });
   expect(getTile(m.grid, m.base.door.x, m.base.door.y)).toBe(Tile.Door);
 });
-test('ningún árbol pegado a un edificio', () => { /* para la semilla 5, ninguna casilla Tree a ≤2 casillas de un rect */ });
+test('ningún árbol pegado a un edificio', () => {
+  /* para la semilla 5, ninguna casilla Tree a ≤2 casillas de un rect */
+});
 ```
 
 - [ ] **Step 2:** `npx vitest run src/sim/map/generate.test.ts` → FAIL.
@@ -295,10 +330,12 @@ test('ningún árbol pegado a un edificio', () => { /* para la semilla 5, ningun
 ### Task 6: El mundo, los supervivientes e invariantes
 
 **Files:**
+
 - Create: `src/sim/world.ts`, `src/sim/names.ts`, `src/sim/invariants.ts`
 - Test: `src/sim/world.test.ts`, `src/sim/invariants.test.ts`
 
 **Interfaces:**
+
 - Consumes: `generateMap`, `GeneratedMap`, `Building` (Tarea 5); `RngState` (Tarea 2).
 - Produces:
   - `type BrainId = 'ai'`
@@ -337,15 +374,18 @@ test('mundo recién creado sin problemas, para 20 semillas', () => {
 
 // invariants.test.ts
 test('detecta NaN', () => {
-  const w = createWorld(1); w.survivors[0]!.pos.x = NaN;
+  const w = createWorld(1);
+  w.survivors[0]!.pos.x = NaN;
   expect(checkInvariants(w)).toHaveLength(1);
 });
 test('detecta un superviviente dentro de un muro', () => {
-  const w = createWorld(1); w.survivors[0]!.pos = { x: w.base.rect.x + 0.5, y: w.base.rect.y + 0.5 };
+  const w = createWorld(1);
+  w.survivors[0]!.pos = { x: w.base.rect.x + 0.5, y: w.base.rect.y + 0.5 };
   expect(checkInvariants(w).length).toBeGreaterThan(0);
 });
 test('detecta ids repetidos', () => {
-  const w = createWorld(1); w.survivors[1]!.id = w.survivors[0]!.id;
+  const w = createWorld(1);
+  w.survivors[1]!.id = w.survivors[0]!.id;
   expect(checkInvariants(w).length).toBeGreaterThan(0);
 });
 ```
@@ -360,10 +400,12 @@ test('detecta ids repetidos', () => {
 ### Task 7: Cerebros, movimiento y paso de simulación
 
 **Files:**
+
 - Create: `src/sim/brain.ts`, `src/sim/systems/decisions.ts`, `src/sim/systems/movement.ts`, `src/sim/step.ts`
 - Test: `src/sim/brain.test.ts`, `src/sim/systems/movement.test.ts`, `src/sim/step.test.ts`
 
 **Interfaces:**
+
 - Consumes: `World`, `Survivor`, `Action`, `BrainId`, `tileOf` (Tarea 6); `findPath` (Tarea 4); `nextInt`, `pick` (Tarea 2).
 - Produces:
   - `interface Brain { decide(s: Survivor, w: World): Action }`
@@ -381,14 +423,20 @@ test('avanza SURVIVOR_WALK_SPEED casillas por tick hacia la siguiente casilla', 
   const w = mundoVacio(10, 10); // helper: cuadrícula de hierba con 1 superviviente en (0.5, 0.5)
   const s = w.survivors[0]!;
   s.action = { type: 'moveTo', target: { x: 3, y: 0 } };
-  s.path = [{ x: 1, y: 0 }, { x: 2, y: 0 }, { x: 3, y: 0 }];
+  s.path = [
+    { x: 1, y: 0 },
+    { x: 2, y: 0 },
+    { x: 3, y: 0 },
+  ];
   movementSystem(w);
   expect(s.pos.x).toBeCloseTo(0.5 + SURVIVOR_WALK_SPEED);
   expect(s.pos.y).toBeCloseTo(0.5);
 });
 test('al llegar al destino pasa a idle entre IDLE_TICKS_MIN y IDLE_TICKS_MAX', () => {
-  const w = mundoVacio(10, 10); const s = w.survivors[0]!;
-  s.action = { type: 'moveTo', target: { x: 1, y: 0 } }; s.path = [{ x: 1, y: 0 }];
+  const w = mundoVacio(10, 10);
+  const s = w.survivors[0]!;
+  s.action = { type: 'moveTo', target: { x: 1, y: 0 } };
+  s.path = [{ x: 1, y: 0 }];
   for (let i = 0; i < 20; i++) movementSystem(w);
   expect(tileOf(s.pos)).toEqual({ x: 1, y: 0 });
   expect(s.action.type).toBe('idle');
@@ -407,7 +455,8 @@ test('AiBrain siempre elige una casilla Floor dentro de la base', () => {
   }
 });
 test('sin camino posible espera NO_PATH_RETRY_TICKS y no rompe nada', () => {
-  const w = createWorld(3); const s = w.survivors[0]!;
+  const w = createWorld(3);
+  const s = w.survivors[0]!;
   // encerrar al superviviente: muros en sus 8 vecinas
   encerrar(w, tileOf(s.pos));
   for (let i = 0; i < 100; i++) step(w);
@@ -416,14 +465,23 @@ test('sin camino posible espera NO_PATH_RETRY_TICKS y no rompe nada', () => {
 });
 
 // step.test.ts
-test('step incrementa el tick', () => { const w = createWorld(1); step(w); expect(w.tick).toBe(1); });
+test('step incrementa el tick', () => {
+  const w = createWorld(1);
+  step(w);
+  expect(w.tick).toBe(1);
+});
 test('determinista: misma semilla, mismo mundo tras 2000 ticks', () => {
-  const a = createWorld(77), b = createWorld(77);
-  for (let i = 0; i < 2000; i++) { step(a); step(b); }
+  const a = createWorld(77),
+    b = createWorld(77);
+  for (let i = 0; i < 2000; i++) {
+    step(a);
+    step(b);
+  }
   expect(a).toEqual(b);
 });
 test('tras 2000 ticks alguien se ha movido y no hay problemas', () => {
-  const w = createWorld(77); const antes = w.survivors.map((s) => ({ ...s.pos }));
+  const w = createWorld(77);
+  const antes = w.survivors.map((s) => ({ ...s.pos }));
   for (let i = 0; i < 2000; i++) step(w);
   expect(w.survivors.some((s, i) => s.pos.x !== antes[i]!.x || s.pos.y !== antes[i]!.y)).toBe(true);
   expect(checkInvariants(w)).toEqual([]);
@@ -440,10 +498,12 @@ test('tras 2000 ticks alguien se ha movido y no hay problemas', () => {
 ### Task 8: Control del tiempo y semilla de la URL
 
 **Files:**
+
 - Create: `src/game/timeController.ts`, `src/game/seed.ts`
 - Test: `src/game/timeController.test.ts`, `src/game/seed.test.ts`
 
 **Interfaces:**
+
 - Produces:
   - `type Speed = 0 | 1 | 2 | 3`
   - `interface TimeController { readonly speed: Speed; setSpeed(s: Speed): void; togglePause(): void; advance(dtMs: number): number }`
@@ -456,29 +516,53 @@ test('tras 2000 ticks alguien se ha movido y no hay problemas', () => {
 
 ```ts
 // timeController.test.ts
-test('a x1, 100 ms son 1 tick', () => { const t = createTimeController(); expect(t.advance(100)).toBe(1); });
-test('a x3, 100 ms son 3 ticks', () => { const t = createTimeController(); t.setSpeed(3); expect(t.advance(100)).toBe(3); });
+test('a x1, 100 ms son 1 tick', () => {
+  const t = createTimeController();
+  expect(t.advance(100)).toBe(1);
+});
+test('a x3, 100 ms son 3 ticks', () => {
+  const t = createTimeController();
+  t.setSpeed(3);
+  expect(t.advance(100)).toBe(3);
+});
 test('acumula fracciones', () => {
   const t = createTimeController();
   expect(t.advance(60)).toBe(0);
   expect(t.advance(60)).toBe(1);
 });
-test('en pausa no avanza', () => { const t = createTimeController(); t.setSpeed(0); expect(t.advance(1000)).toBe(0); });
+test('en pausa no avanza', () => {
+  const t = createTimeController();
+  t.setSpeed(0);
+  expect(t.advance(1000)).toBe(0);
+});
 test('togglePause recuerda la última velocidad', () => {
-  const t = createTimeController(); t.setSpeed(2); t.togglePause(); expect(t.speed).toBe(0);
-  t.togglePause(); expect(t.speed).toBe(2);
+  const t = createTimeController();
+  t.setSpeed(2);
+  t.togglePause();
+  expect(t.speed).toBe(0);
+  t.togglePause();
+  expect(t.speed).toBe(2);
 });
 test('un dt enorme (pestaña en segundo plano) se limita', () => {
-  const t = createTimeController(); t.setSpeed(3);
+  const t = createTimeController();
+  t.setSpeed(3);
   expect(t.advance(5 * 60_000)).toBe(7); // floor(250 * 3 / 100)
 });
 
 // seed.test.ts
 const fb = () => 999;
 test.each([
-  ['?seed=12345', 12345], ['?seed=0', 0], ['?seed=4294967295', 4294967295],
-  ['', 999], ['?seed=', 999], ['?seed=abc', 999], ['?seed=-5', 999],
-  ['?seed=1.5', 999], ['?seed=4294967296', 999], ['?seed=1e5', 999], ['?otro=1', 999],
+  ['?seed=12345', 12345],
+  ['?seed=0', 0],
+  ['?seed=4294967295', 4294967295],
+  ['', 999],
+  ['?seed=', 999],
+  ['?seed=abc', 999],
+  ['?seed=-5', 999],
+  ['?seed=1.5', 999],
+  ['?seed=4294967296', 999],
+  ['?seed=1e5', 999],
+  ['?otro=1', 999],
 ])('parseSeed(%s) = %i', (q, esperado) => expect(parseSeed(q, fb)).toBe(esperado));
 ```
 
@@ -492,11 +576,13 @@ test.each([
 ### Task 9: Dibujado con Phaser, cámara y barra superior
 
 **Files:**
+
 - Create: `src/render/GameScene.ts`, `src/render/colors.ts`, `src/ui/hud.ts`, `src/ui/hud.css`, `src/i18n/es.ts`
 - Modify: `src/main.ts`, `index.html`
 - Test: `src/ui/hud.test.ts`
 
 **Interfaces:**
+
 - Consumes: `createWorld`, `step`, `World` (Tareas 6–7); `gameTime` (Tarea 2); `createTimeController`, `parseSeed`, `randomSeed` (Tarea 8).
 - Produces:
   - `es.ts`: `export const es = { dayTime: (d: number, h: number, m: number) => string /* "Día 1, 08:00" */, seed: (s: number) => string /* "Semilla: 123" */, pause: 'Pausa', speed: (n: number) => string /* "x2" */ }`.
@@ -512,7 +598,8 @@ test('formatDayTime rellena con ceros', () => {
   expect(formatDayTime({ day: 3, hour: 7, minute: 5 })).toBe('Día 3, 07:05');
 });
 test('el HUD muestra la semilla y marca la velocidad activa', () => {
-  const root = document.createElement('div'); const time = createTimeController();
+  const root = document.createElement('div');
+  const time = createTimeController();
   mountHud(root, { seed: 42, time });
   expect(root.querySelector('[data-testid="hud-seed"]')!.textContent).toBe('Semilla: 42');
   (root.querySelector('[data-speed="3"]') as HTMLButtonElement).click();
@@ -539,10 +626,12 @@ test('update cambia la hora', () => {
 ### Task 10: Test del juego en el navegador
 
 **Files:**
+
 - Create: `playwright.config.ts`, `e2e/smoke.spec.ts`
 - Modify: `package.json` (script `e2e: playwright test`), `vite.config.ts` (excluir `e2e/` de Vitest si hiciera falta)
 
 **Interfaces:**
+
 - Consumes: `data-testid` y `data-speed` del HUD (Tarea 9).
 
 - [ ] **Step 1:** `playwright.config.ts`: `webServer: { command: 'npm run build && npm run preview -- --port 4173 --strictPort', port: 4173 }`, `use.baseURL: 'http://localhost:4173'`, un único proyecto Chromium con `launchOptions.executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH` (si no está definida, se usa el Chromium de Playwright).
@@ -551,7 +640,9 @@ test('update cambia la hora', () => {
 ```ts
 test('el juego carga sin errores y responde a la velocidad', async ({ page }) => {
   const errores: string[] = [];
-  page.on('console', (m) => { if (m.type() === 'error') errores.push(m.text()); });
+  page.on('console', (m) => {
+    if (m.type() === 'error') errores.push(m.text());
+  });
   page.on('pageerror', (e) => errores.push(e.message));
   await page.goto('/?seed=4242');
   await expect(page.locator('canvas')).toBeVisible();
@@ -576,24 +667,30 @@ test('el juego carga sin errores y responde a la velocidad', async ({ page }) =>
 ### Task 11: Partida larga automática y publicación
 
 **Files:**
+
 - Create: `soak/soak.test.ts`, `vitest.soak.config.ts`, `.github/workflows/deploy.yml`
 - Modify: `package.json` (script `soak: vitest run --config vitest.soak.config.ts`), `README.md`
 
 **Interfaces:**
+
 - Consumes: `createWorld`, `step`, `checkInvariants` (Tareas 6–7); `TICKS_PER_DAY` (Tarea 2).
 
 - [ ] **Step 1: Test**
 
 ```ts
 const DAYS = Number(process.env.SOAK_DAYS ?? 30);
-test.each([1, 2, 3])(`semilla %i: ${DAYS} días sin romper invariantes`, (seed) => {
-  const w = createWorld(seed);
-  for (let i = 0; i < DAYS * TICKS_PER_DAY; i++) {
-    step(w);
-    if (i % 600 === 0) expect(checkInvariants(w), `tick ${w.tick}`).toEqual([]);
-  }
-  expect(checkInvariants(w)).toEqual([]);
-}, 120_000);
+test.each([1, 2, 3])(
+  `semilla %i: ${DAYS} días sin romper invariantes`,
+  (seed) => {
+    const w = createWorld(seed);
+    for (let i = 0; i < DAYS * TICKS_PER_DAY; i++) {
+      step(w);
+      if (i % 600 === 0) expect(checkInvariants(w), `tick ${w.tick}`).toEqual([]);
+    }
+    expect(checkInvariants(w)).toEqual([]);
+  },
+  120_000,
+);
 ```
 
 `vitest.soak.config.ts` incluye solo `soak/**/*.test.ts`.

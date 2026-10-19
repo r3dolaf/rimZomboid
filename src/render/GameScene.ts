@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
+import { runTicks } from '../game/runTicks';
 import type { TimeController } from '../game/timeController';
 import { getTile } from '../sim/map/grid';
-import { step } from '../sim/step';
 import type { World } from '../sim/types';
 import { SURVIVOR_COLOR, SURVIVOR_OUTLINE, TILE_COLORS } from './colors';
 
@@ -29,6 +29,14 @@ export class GameScene extends Phaser.Scene {
     Phaser.Input.Keyboard.Key
   >;
 
+  /** Solo en desarrollo: avisa en cuanto se rompe una invariante y pausa para poder investigar. */
+  private onProblems = import.meta.env.DEV
+    ? (problems: string[]) => {
+        console.error(`[invariantes] tick ${this.world.tick}:`, problems);
+        this.clock.setSpeed(0);
+      }
+    : undefined;
+
   constructor() {
     super('game');
   }
@@ -50,8 +58,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   update(_now: number, dtMs: number): void {
-    const ticks = this.clock.advance(dtMs);
-    for (let i = 0; i < ticks; i++) step(this.world);
+    runTicks(this.world, this.clock.advance(dtMs), this.onProblems);
     this.panWithKeys(dtMs);
     this.drawActors();
     this.onFrame?.();

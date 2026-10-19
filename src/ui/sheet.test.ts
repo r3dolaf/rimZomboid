@@ -72,3 +72,16 @@ test('la ✕ y la tecla Esc cierran la ficha', () => {
   expect(selection.id).toBeNull();
   root.remove();
 });
+
+test('la ✕ no se reconstruye al cambiar los datos (si no, un clic puede perderse)', () => {
+  const { root, world, selection, sheet } = setup();
+  const s = world.survivors[0]!;
+  selection.set(s.id);
+  sheet.update();
+  const before = root.querySelector('[data-testid="sheet-close"]');
+  s.action = { type: 'sleep', inBed: true };
+  s.needs.hunger = 3;
+  sheet.update();
+  expect(root.querySelector('[data-testid="sheet-close"]')).toBe(before);
+  root.remove();
+});

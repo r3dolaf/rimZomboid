@@ -14,3 +14,15 @@ estado que se puede probar o jugar.
 | **H4. Zombis**           | Zombis con visión y estados, ruido, puertas que se rompen, aparición por los bordes, noche más peligrosa, combate y modo combate                                             | Los zombis persiguen; los supervivientes pelean o huyen                         | 5.4, 6, 7, 8.1, 8.3                                  |
 | **H5. Heridas y muerte** | Heridas por parte del cuerpo, sangre, vendas, infección, muerte, reanimación, fin de partida                                                                                 | Un mordisco acaba en zombi; la partida termina con el resumen                   | 4.3, 4.4, 9 (fin de partida)                         |
 | **H6. Pulido**           | Modo depuración F3, partida automática de 30 días con todas las reglas, ajuste de `balance.ts`                                                                               | El prototipo cumple el criterio de éxito (spec §12)                             | 9 (F3), 10, 12                                       |
+
+## Pendientes de la revisión de H1
+
+Hallazgos menores de la revisión final de H1, aplazados. Se tienen en cuenta al planificar el hito indicado.
+
+- **Antes de H2:** reforzar en ESLint la frontera de `src/sim/`: prohibir importar `render/`, `ui/` y `game/`, y los globales `Date`, `performance`, `process`, `globalThis`, `self`, `navigator` y `localStorage`. Los tests necesitan una excepción.
+- **Antes de H2:** derivar `MS_PER_TICK` de `TICKS_PER_SECOND` (`balance.ts`), para que la velocidad del juego tenga una sola fuente.
+- **Antes de H2:** sacar el glifo de pausa `⏸` a `es.ts`, y hacer que `togglePause` no dependa de `this`.
+- **Antes de H3/H4:** A* recorre todo el mapa cuando el destino es inalcanzable (~6 ms por llamada). Hay que añadir etiquetas de regiones conectadas o un límite de nodos, y reutilizar los buffers.
+- **Antes de H4:** usar `Math.sqrt(dx*dx + dy*dy)` en vez de `Math.hypot` en `src/sim/`, porque `hypot` puede variar entre navegadores y romper la repetición exacta de partidas. Valorar un test de determinismo con hash.
+- **CI:** añadir `prettier --check`, y `cancel-in-progress` solo en pull requests, para no cancelar despliegues en `main`.
+- **Plan H1:** las versiones de Tech Stack del plan ya no coinciden con `package.json`. Las válidas son las de `package.json`.

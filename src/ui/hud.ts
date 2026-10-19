@@ -32,6 +32,7 @@ export function mountHud(
     b.addEventListener('click', () => {
       opts.time.setSpeed(s);
       refreshSpeed();
+      b.blur(); // si no, Espacio volvería a pulsar este botón en vez de pausar
     });
     speeds.append(b);
     return b;

@@ -1,25 +1,19 @@
 import Phaser from 'phaser';
 import { parseSeed, randomSeed } from './game/seed';
-import { createTimeController, type Speed } from './game/timeController';
+import { createTimeController } from './game/timeController';
 import { BACKGROUND } from './render/colors';
 import { GameScene, type GameSceneData } from './render/GameScene';
 import { gameTime } from './sim/clock';
 import { createWorld } from './sim/world';
 import { mountHud } from './ui/hud';
+import { bindTimeKeys } from './ui/keys';
 
 const seed = parseSeed(location.search, randomSeed);
 const world = createWorld(seed);
 const time = createTimeController();
 const hud = mountHud(document.getElementById('hud')!, { seed, time });
 
-window.addEventListener('keydown', (e) => {
-  if (e.code === 'Space') {
-    e.preventDefault();
-    time.togglePause();
-  } else if (e.key === '1' || e.key === '2' || e.key === '3') {
-    time.setSpeed(Number(e.key) as Speed);
-  }
-});
+bindTimeKeys(window, time);
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,

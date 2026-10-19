@@ -34,3 +34,14 @@ test('el botón de pausa tiene un nombre accesible', () => {
   mountHud(root, { seed: 1, time: createTimeController() });
   expect(root.querySelector('[data-speed="0"]')!.getAttribute('aria-label')).toBe('Pausa');
 });
+
+test('al pulsar un botón de velocidad, este pierde el foco (Espacio no lo vuelve a pulsar)', () => {
+  const root = document.createElement('div');
+  document.body.append(root);
+  mountHud(root, { seed: 1, time: createTimeController() });
+  const b = root.querySelector('[data-speed="2"]') as HTMLButtonElement;
+  b.focus();
+  b.click();
+  expect(document.activeElement).not.toBe(b);
+  root.remove();
+});

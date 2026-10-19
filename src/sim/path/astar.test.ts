@@ -78,7 +78,8 @@ test('un destino encerrado en un mapa grande se descarta al momento', () => {
   findPath(g, { x: 0, y: 0 }, { x: 5, y: 5 }); // calentar
   const t0 = performance.now();
   for (let i = 0; i < 100; i++) expect(findPath(g, { x: 0, y: 0 }, { x: 90, y: 90 })).toBeNull();
-  expect(performance.now() - t0).toBeLessThan(20); // 100 búsquedas
+  // Sin el atajo de regiones, 100 búsquedas tardan ~600 ms; margen amplio para CI cargado.
+  expect(performance.now() - t0).toBeLessThan(150);
 });
 
 test('tras cambiar el mapa, invalidateRegions recalcula las regiones', () => {

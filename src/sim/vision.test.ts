@@ -119,3 +119,26 @@ test('al empezar se conocen la base entera y sus alrededores', () => {
     for (let x = r.x - INITIAL_REVEAL; x < r.x + r.w + INITIAL_REVEAL; x++)
       expect(w.seen[y * w.grid.width + x], `(${x}, ${y})`).toBe(1);
 });
+
+test('al empezar se conocen las carreteras y el exterior de los edificios, pero no su interior', () => {
+  for (const seed of [3, 7, 11]) {
+    const w = createWorld(seed);
+    const seen = (x: number, y: number) => w.seen[y * w.grid.width + x] === 1;
+    for (let i = 0; i < w.grid.tiles.length; i++)
+      if (w.grid.tiles[i] === Tile.Road) expect(w.seen[i], `carretera ${i}`).toBe(1);
+    for (const h of w.houses) {
+      const { x, y, w: rw, h: rh } = h.rect;
+      for (let i = x; i < x + rw; i++) expect(seen(i, y) && seen(i, y + rh - 1)).toBe(true);
+      for (let j = y; j < y + rh; j++) expect(seen(x, j) && seen(x + rw - 1, j)).toBe(true);
+    }
+    const far = [...w.houses].sort(
+      (a, b) =>
+        Math.hypot(b.door.x - w.base.door.x, b.door.y - w.base.door.y) -
+        Math.hypot(a.door.x - w.base.door.x, a.door.y - w.base.door.y),
+    )[0]!;
+    const unseenInside = w.containers.filter(
+      (c) => c.houseId === far.id && !seen(c.pos.x, c.pos.y),
+    );
+    expect(unseenInside.length, `semilla ${seed}`).toBeGreaterThan(0);
+  }
+});

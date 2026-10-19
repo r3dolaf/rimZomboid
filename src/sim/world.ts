@@ -93,6 +93,21 @@ export function createWorld(seed: number): World {
   for (let y = r.y - INITIAL_REVEAL; y < r.y + r.h + INITIAL_REVEAL; y++)
     for (let x = r.x - INITIAL_REVEAL; x < r.x + r.w + INITIAL_REVEAL; x++)
       if (x >= 0 && y >= 0 && x < grid.width && y < grid.height) world.seen[y * grid.width + x] = 1;
+  // Se conoce el pueblo (spec general §5.1): carreteras y exterior de los edificios.
+  // Lo de dentro y lo que pasa fuera solo se ve con la línea de visión.
+  const reveal = (x: number, y: number) => (world.seen[y * grid.width + x] = 1);
+  for (let i = 0; i < grid.tiles.length; i++) if (grid.tiles[i] === Tile.Road) world.seen[i] = 1;
+  for (const b of [base, ...houses]) {
+    const { x, y, w, h } = b.rect;
+    for (let i = x; i < x + w; i++) {
+      reveal(i, y);
+      reveal(i, y + h - 1);
+    }
+    for (let j = y; j < y + h; j++) {
+      reveal(x, j);
+      reveal(x + w - 1, j);
+    }
+  }
   revealFromSurvivors(world);
   return world;
 }

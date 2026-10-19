@@ -1,10 +1,11 @@
 import Phaser from 'phaser';
+import { toggleContainer, toggleHouse } from '../game/designate';
 import { containerAt, houseAt, survivorAt } from '../game/pick';
 import { runTicks } from '../game/runTicks';
 import type { TimeController } from '../game/timeController';
 import { getTile } from '../sim/map/grid';
 import { isEmpty } from '../sim/items';
-import { issue } from '../sim/orders';
+import { effectiveDesignated, houseMarked } from '../sim/orders';
 import type { World } from '../sim/types';
 import { visibleTiles } from '../sim/vision';
 import type { Selection } from '../ui/selection';
@@ -58,6 +59,7 @@ export class GameScene extends Phaser.Scene {
   private onFrame?: () => void;
   private actors!: Phaser.GameObjects.Graphics;
   private furniture!: Phaser.GameObjects.Graphics;
+  private marks!: Phaser.GameObjects.Graphics;
   private fog!: Phaser.Textures.CanvasTexture;
   private fogPixels!: ImageData;
   private frame = 0;
@@ -99,6 +101,8 @@ export class GameScene extends Phaser.Scene {
     this.fogPixels = this.fog.context.createImageData(width, height);
     this.add.image(0, 0, 'fog').setOrigin(0, 0).setScale(TILE_PX);
     this.drawFog();
+    // Marcas de saqueo y casa seleccionada: encima de la niebla, para verlas también en lo no visto.
+    this.marks = this.add.graphics();
     // La capa de noche cubre todo el mapa (la cámara nunca sale de él).
     this.night = this.add
       .rectangle(0, 0, width * TILE_PX, height * TILE_PX, NIGHT_COLOR, 1)
@@ -204,14 +208,11 @@ export class GameScene extends Phaser.Scene {
       if (this.tool.active) {
         const c = seen ? containerAt(w, tx, ty) : null;
         if (c) {
-          issue(w, { type: 'designateContainer', containerId: c.id, on: !c.designated });
+          toggleContainer(w, c.id);
           return;
         }
         const h = houseAt(w, tx, ty);
-        if (h) {
-          const marked = w.containers.some((x) => x.houseId === h.id && x.designated);
-          issue(w, { type: 'designateHouse', houseId: h.id, on: !marked });
-        }
+        if (h) toggleHouse(w, h.id);
         return;
       }
       const s = survivorAt(w, p.worldX / TILE_PX, p.worldY / TILE_PX, PICK_RADIUS);
@@ -225,11 +226,13 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  /** Contenedores vistos, marcas de saqueo y la casa seleccionada. */
+  /** Contenedores vistos (bajo la niebla) y, encima de ella, marcas y casa seleccionada. */
   private drawFurniture(): void {
     const g = this.furniture;
+    const m = this.marks;
     const w = this.world;
     g.clear();
+    m.clear();
     for (const c of w.containers) {
       if (w.seen[c.pos.y * w.grid.width + c.pos.x] !== 1) continue;
       const [x, y] = [c.pos.x * TILE_PX, c.pos.y * TILE_PX];
@@ -237,17 +240,17 @@ export class GameScene extends Phaser.Scene {
       g.fillRect(x + 2, y + 2, TILE_PX - 4, TILE_PX - 4);
       g.fillStyle(CONTAINER_COLORS[c.kind], c.searched && isEmpty(c.items) ? 0.35 : 1);
       g.fillRect(x + 3, y + 3, TILE_PX - 6, TILE_PX - 6);
-      if (c.designated) {
-        g.lineStyle(2, DESIGNATION, 1);
-        g.strokeRect(x + 1, y + 1, TILE_PX - 2, TILE_PX - 2);
+      if (effectiveDesignated(w, c)) {
+        m.lineStyle(2, DESIGNATION, 1);
+        m.strokeRect(x + 1, y + 1, TILE_PX - 2, TILE_PX - 2);
       }
     }
     for (const h of w.houses) {
-      const marked = w.containers.some((c) => c.houseId === h.id && c.designated);
+      const marked = houseMarked(w, h.id);
       const selected = this.houseSelection.id === h.id;
       if (!marked && !selected) continue;
-      g.lineStyle(selected ? 2 : 3, selected ? HOUSE_SELECTED : DESIGNATION, 0.9);
-      g.strokeRect(h.rect.x * TILE_PX, h.rect.y * TILE_PX, h.rect.w * TILE_PX, h.rect.h * TILE_PX);
+      m.lineStyle(selected ? 2 : 3, selected ? HOUSE_SELECTED : DESIGNATION, 0.9);
+      m.strokeRect(h.rect.x * TILE_PX, h.rect.y * TILE_PX, h.rect.w * TILE_PX, h.rect.h * TILE_PX);
     }
   }
 

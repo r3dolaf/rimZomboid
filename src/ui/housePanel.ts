@@ -1,5 +1,6 @@
 import { es } from '../i18n/es';
 import { isEmpty } from '../sim/items';
+import { houseMarked } from '../sim/orders';
 import type { World } from '../sim/types';
 import type { Selection } from './selection';
 import './panels.css';
@@ -39,7 +40,7 @@ export function mountHousePanel(
       }
       const cs = opts.world.containers.filter((c) => c.houseId === house.id);
       const lines = [
-        cs.some((c) => c.designated) ? es.houseMarked : es.houseUnmarked,
+        houseMarked(opts.world, house.id) ? es.houseMarked : es.houseUnmarked,
         es.houseSearched(cs.filter((c) => c.searched).length, cs.length),
         es.houseEmpty(cs.filter((c) => c.searched && isEmpty(c.items)).length),
       ];

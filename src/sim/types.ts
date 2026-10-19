@@ -1,4 +1,5 @@
 // Tipos de datos de la simulación. Solo datos simples, para poder guardarlos con JSON.
+import type { RngState } from './rng';
 
 export interface Point {
   x: number;
@@ -35,4 +36,31 @@ export interface Building {
   id: number;
   rect: Rect;
   door: Point;
+}
+
+/** Qué cerebro decide por un superviviente. En la fase 2 se añadirá 'player'. */
+export type BrainId = 'ai';
+
+export type Action = { type: 'idle'; ticksLeft: number } | { type: 'moveTo'; target: Point };
+
+export interface Survivor {
+  id: number;
+  name: string;
+  /** Posición continua: el centro de la casilla (i, j) es (i + 0.5, j + 0.5). */
+  pos: Point;
+  brain: BrainId;
+  action: Action;
+  /** Casillas que le quedan por recorrer, la siguiente primero. */
+  path: Point[];
+}
+
+export interface World {
+  seed: number;
+  tick: number;
+  rng: RngState;
+  grid: Grid;
+  base: Building;
+  houses: Building[];
+  survivors: Survivor[];
+  nextId: number;
 }

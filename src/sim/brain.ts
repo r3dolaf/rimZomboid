@@ -1,5 +1,6 @@
 import {
   CRISIS_BREAK_HUNGER,
+  EAT_TICKS,
   EAT_BELOW,
   MOOD_CRISIS,
   MOOD_EDGE,
@@ -31,18 +32,21 @@ const AiBrain: Brain = {
     const inCrisis = a.type === 'crisis' || goingTo === 'crisis';
 
     // Si la comida se acaba mientras va a comer o come, lo deja.
-    if ((a.type === 'eat' || goingTo === 'eat') && w.storage.items.food === 0)
+    if (((a.type === 'eat' && !a.fromPack) || goingTo === 'eat') && w.storage.items.food === 0)
       return { type: 'idle', ticksLeft: 0 };
     // Comer y dormir se terminan; la crisis solo se corta por algo urgente.
     if (a.type === 'eat' || a.type === 'sleep' || goingTo === 'eat' || goingTo === 'sleep')
       return null;
     // (desplomarse, que también la corta, lo decide decisionsSystem)
     if (inCrisis) {
-      if (s.needs.hunger < CRISIS_BREAK_HUNGER && w.storage.items.food > 0) return goEat(w);
+      if (s.needs.hunger < CRISIS_BREAK_HUNGER) return eatSomething(s, w);
       return null;
     }
 
-    if (s.needs.hunger < EAT_BELOW && w.storage.items.food > 0) return goEat(w);
+    if (s.needs.hunger < EAT_BELOW) {
+      const eat = eatSomething(s, w);
+      if (eat) return eat;
+    }
     if (wantsToSleep(s, w)) return goSleep(s, w);
     // Tras desahogarse el ánimo tarda en subir: sin esta guarda, encadenaría otra crisis al momento.
     const vented = s.memories.some((m) => m.id === 'vented' && m.expiresAt > w.tick);
@@ -73,6 +77,13 @@ const AiBrain: Brain = {
 function wantsToSleep(s: Survivor, w: World): boolean {
   const limit = isNight(w.tick) ? SLEEP_AT_NIGHT_BELOW : SLEEP_ANYTIME_BELOW;
   return s.needs.sleep < limit;
+}
+
+/** Come de lo que lleva encima si puede; si no, va al almacén si queda comida. */
+function eatSomething(s: Survivor, w: World): Action | null {
+  if (s.carrying.food > 0) return { type: 'eat', ticksLeft: EAT_TICKS, fromPack: true };
+  if (w.storage.items.food > 0) return goEat(w);
+  return null;
 }
 
 function goEat(w: World): Action {

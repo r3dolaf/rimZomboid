@@ -11,10 +11,11 @@ export function activitiesSystem(w: World): void {
     const a = s.action;
     if (a.type === 'eat') {
       if (--a.ticksLeft > 0) continue;
-      // Puede que otro se haya comido la última lata mientras tanto.
-      if (w.storage.items.food > 0) {
-        w.storage.items.food--;
-        if (w.storage.items.food === 0) logEvent(w, { kind: 'outOfFood' });
+      // Puede que otro se haya comido la última lata del almacén mientras tanto.
+      const source = a.fromPack ? s.carrying : w.storage.items;
+      if (source.food > 0) {
+        source.food--;
+        if (!a.fromPack && source.food === 0) logEvent(w, { kind: 'outOfFood' });
         s.needs.hunger = Math.min(100, s.needs.hunger + EAT_RESTORE);
         addMemory(s, 'ate', w.tick);
       }

@@ -214,3 +214,28 @@ test('un bate que no cabe no le hace volver al mismo contenedor una y otra vez',
   const a = brains.ai.decide(s, w);
   expect(a?.type === 'moveTo' && a.then?.type === 'unload').toBe(true);
 });
+
+test('con hambre y comida encima, se come una lata de las que lleva', () => {
+  const w = createWorld(5);
+  const s = w.survivors[0]!;
+  happy(s);
+  w.storage.items.food = 0;
+  s.carrying = { ...emptyInventory(), food: 5 };
+  s.needs.hunger = 20;
+  for (let i = 0; i < 60; i++) step(w);
+  expect(s.carrying.food).toBe(4);
+  expect(s.needs.hunger).toBeGreaterThan(70);
+});
+
+test('con el almacén sin comida, quien lleva comida va primero a descargarla', () => {
+  const w = createWorld(5);
+  w.survivors.forEach(happy);
+  const s = w.survivors[0]!;
+  issue(w, { type: 'designateHouse', houseId: w.houses[0]!.id, on: true });
+  step(w);
+  w.storage.items.food = 0;
+  s.carrying = { ...emptyInventory(), food: 2 };
+  s.action = { type: 'idle', ticksLeft: 0 };
+  const a = brains.ai.decide(s, w);
+  expect(a?.type === 'moveTo' && a.then?.type === 'unload').toBe(true);
+});

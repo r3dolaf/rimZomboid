@@ -62,6 +62,8 @@ function goUnload(w: World): Action {
 export function findWork(s: Survivor, w: World): Action | null {
   const carrying = !isEmpty(s.carrying);
   if (carrying && !s.work.loot) return goUnload(w);
+  // Si en el almacén no queda comida y él lleva, lo primero es llevarla para que coman todos.
+  if (s.carrying.food > 0 && w.storage.items.food === 0) return goUnload(w);
   if (!s.work.loot) return null;
   const c = nearestContainer(s, w);
   if (!c) return carrying ? goUnload(w) : null;

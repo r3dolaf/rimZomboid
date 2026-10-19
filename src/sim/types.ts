@@ -73,7 +73,8 @@ export type Action =
   /** `wait`: esperando tras no encontrar camino (no se consulta al cerebro) o tras negarse a trabajar. */
   | { type: 'idle'; ticksLeft: number; wait?: 'noPath' | 'refused' }
   | { type: 'moveTo'; target: Point; then?: Activity }
-  | { type: 'eat'; ticksLeft: number }
+  /** `fromPack`: se come una lata de las que lleva encima, sin ir al almacén. */
+  | { type: 'eat'; ticksLeft: number; fromPack?: boolean }
   | { type: 'sleep'; inBed: boolean }
   | { type: 'crisis'; ticksLeft: number }
   | { type: 'search'; containerId: number; ticksLeft: number }

@@ -9,20 +9,34 @@ estado que se puede probar o jugar.
 | Hito                     | Qué se construye                                                                                                                                                             | Qué se puede ver al terminar                                                    | Secciones del spec                                   |
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------- |
 | **H1. Cimientos**        | Proyecto, simulación por ticks con semilla, mapa generado, caminos, 3 supervivientes que pasean, dibujado con Phaser, cámara, velocidad y pausa, publicación en GitHub Pages | Un enlace con un mapa aleatorio y 3 supervivientes moviéndose; pausa y x1/x2/x3 | 3, 5.1, 5.2 (reloj), 9 (barra superior y cámara), 10 |
-| **H2. Personas**         | Hambre, sueño, ánimo con modificadores, rasgos, camas, comida del almacén, día y noche                                                                                       | Los supervivientes comen, duermen y cambian de ánimo; crisis de ánimo           | 4.1, 4.2, 5.2                                        |
-| **H3. Saqueo**           | Objetos, contenedores, niebla de guerra, peso de carga, órdenes (cola), herramienta Saquear, prioridades, transportar, tarjetas, ficha y registro de sucesos                 | Marcas una casa y traen comida y vendas al almacén                              | 3 (órdenes), 5.1 (niebla), 5.3, 8.2, 8.3, 9          |
+| **H2. Personas**         | Hambre, sueño, ánimo con modificadores, rasgos, camas, comida del almacén, día y noche, **tarjetas y ficha** (adelantadas de H3)                                             | Los supervivientes comen, duermen y cambian de ánimo; crisis de ánimo           | 4.1, 4.2, 5.2                                        |
+| **H3. Saqueo**           | Objetos, contenedores, niebla de guerra, peso de carga, órdenes (cola), herramienta Saquear, prioridades, transportar y registro de sucesos                                  | Marcas una casa y traen comida y vendas al almacén                              | 3 (órdenes), 5.1 (niebla), 5.3, 8.2, 8.3, 9          |
 | **H4. Zombis**           | Zombis con visión y estados, ruido, puertas que se rompen, aparición por los bordes, noche más peligrosa, combate y modo combate                                             | Los zombis persiguen; los supervivientes pelean o huyen                         | 5.4, 6, 7, 8.1, 8.3                                  |
 | **H5. Heridas y muerte** | Heridas por parte del cuerpo, sangre, vendas, infección, muerte, reanimación, fin de partida                                                                                 | Un mordisco acaba en zombi; la partida termina con el resumen                   | 4.3, 4.4, 9 (fin de partida)                         |
 | **H6. Pulido**           | Modo depuración F3, partida automática de 30 días con todas las reglas, ajuste de `balance.ts`                                                                               | El prototipo cumple el criterio de éxito (spec §12)                             | 9 (F3), 10, 12                                       |
 
-## Pendientes de la revisión de H1
+## Pendientes
 
-Hallazgos menores de la revisión final de H1, aplazados. Se tienen en cuenta al planificar el hito indicado.
+Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al planificar el hito indicado.
 
-- **Antes de H2:** reforzar en ESLint la frontera de `src/sim/`: prohibir importar `render/`, `ui/` y `game/`, y los globales `Date`, `performance`, `process`, `globalThis`, `self`, `navigator` y `localStorage`. Los tests necesitan una excepción.
-- **Antes de H2:** derivar `MS_PER_TICK` de `TICKS_PER_SECOND` (`balance.ts`), para que la velocidad del juego tenga una sola fuente.
-- **Antes de H2:** sacar el glifo de pausa `⏸` a `es.ts`, y hacer que `togglePause` no dependa de `this`.
-- **Antes de H3/H4:** A* recorre todo el mapa cuando el destino es inalcanzable (~6 ms por llamada). Hay que añadir etiquetas de regiones conectadas o un límite de nodos, y reutilizar los buffers.
-- **Antes de H4:** usar `Math.sqrt(dx*dx + dy*dy)` en vez de `Math.hypot` en `src/sim/`, porque `hypot` puede variar entre navegadores y romper la repetición exacta de partidas. Valorar un test de determinismo con hash.
-- **CI:** añadir `prettier --check`, y `cancel-in-progress` solo en pull requests, para no cancelar despliegues en `main`.
-- **Plan H1:** las versiones de Tech Stack del plan ya no coinciden con `package.json`. Las válidas son las de `package.json`.
+**Hechos en H2:** frontera de `src/sim/` en ESLint, `MS_PER_TICK` derivado de `TICKS_PER_SECOND`, `⏸` en `es.ts`, `togglePause` sin `this`, `Math.sqrt` en vez de `Math.hypot`, y en CI `prettier --check` y `cancel-in-progress` solo en pull requests.
+
+**Para H3:**
+
+- **A\* con destinos inalcanzables.** Recorre todo el mapa (~6 ms por llamada). Hay que añadir etiquetas de regiones conectadas o un límite de nodos, y reutilizar los buffers.
+- **"Sin camino" no espera en acciones urgentes.** En comer, dormir y crisis, `NO_PATH_RETRY_TICKS` solo se respeta al pasear, así que con destinos inalcanzables se recalcula el camino en cada tick. Hay que guardar un tick de reintento.
+- **Comida en H3.** Bajar `START_FOOD` a "unos pocos días", porque ya se podrá saquear.
+- **Ir a comer con el almacén vacío.** Si la comida se acaba mientras alguien va a comer, ahora llega y "come" 30 ticks sin comer. Mejor que se dé la vuelta.
+
+**Para H5 (muertes):**
+
+- Las tarjetas se crean una vez al empezar; habrá que quitar las de los muertos.
+- La invariante "cada cama tiene un dueño vivo" y `goSleep`, que lanza un error si falta la cama, tendrán que contemplar las muertes.
+- Probar el desplome en plena crisis de principio a fin.
+
+**Para H6 (pulido):**
+
+- `cards.ts` reescribe la clase de las barras en cada fotograma.
+- El color de los motivos del ánimo en la ficha se deduce del texto (`−`), en vez de usar el signo del valor.
+- Los Dormilones pasan unas 12 h en la cama (se acuestan hacia las 18 h). Revisar al ajustar el equilibrio.
+- Plan H1: sus versiones de Tech Stack no coinciden con `package.json`; las válidas son las de `package.json`.

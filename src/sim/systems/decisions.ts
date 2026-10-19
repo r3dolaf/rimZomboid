@@ -30,6 +30,12 @@ export function decisionsSystem(w: World): void {
         continue;
       }
       s.path = path;
+      // Reserva el contenedor en cuanto sabe que puede llegar.
+      if (action.then?.type === 'search') {
+        const id = action.then.containerId;
+        const c = w.containers.find((x) => x.id === id);
+        if (c) c.reservedBy = s.id;
+      }
     } else {
       s.path = [];
     }

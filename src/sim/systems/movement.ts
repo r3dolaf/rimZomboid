@@ -3,7 +3,9 @@ import {
   EAT_TICKS,
   IDLE_TICKS_MAX,
   IDLE_TICKS_MIN,
+  SEARCH_TICKS,
   SURVIVOR_WALK_SPEED,
+  UNLOAD_TICKS,
 } from '../balance';
 import { logEvent } from '../log';
 import { nextInt } from '../rng';
@@ -46,6 +48,10 @@ function startActivity(s: Survivor, activity: Activity, w: World): Action {
     case 'crisis':
       logEvent(w, { kind: 'crisis', survivorId: s.id });
       return { type: 'crisis', ticksLeft: CRISIS_TICKS };
+    case 'search':
+      return { type: 'search', containerId: activity.containerId, ticksLeft: SEARCH_TICKS };
+    case 'unload':
+      return { type: 'unload', ticksLeft: UNLOAD_TICKS };
     case 'sleep': {
       const bed = w.beds.find((b) => b.id === s.bedId);
       const t = tileOf(s.pos);

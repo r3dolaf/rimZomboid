@@ -39,6 +39,7 @@ export const es = {
     tired: 'Cansado',
     optimist: 'Optimista',
     pessimist: 'Pesimista',
+    scaredOutside: 'Asustado fuera',
     sleptInBed: 'Durmió en una cama',
     sleptOnFloor: 'Durmió en el suelo',
     ate: 'Comió',
@@ -53,7 +54,14 @@ export const es = {
     sleepInBed: 'Durmiendo en su cama',
     sleepOnFloor: 'Durmiendo en el suelo',
     crisis: 'En crisis: encerrado en la base',
+    goLoot: (house: number) => `Va a saquear la casa ${house}`,
+    search: (what: string) => `Registrando ${what}`,
+    goUnload: 'Llevando cosas al almacén',
+    unload: 'Dejando cosas en el almacén',
+    refused: 'Se niega a trabajar',
+    noPath: 'No puede llegar',
   },
+  containers: { fridge: 'una nevera', wardrobe: 'un armario', shelf: 'una estantería' },
 
   status: {
     crisis: { icon: '🌀', label: 'En crisis' },

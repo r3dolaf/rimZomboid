@@ -6,6 +6,7 @@ import { movementSystem } from './systems/movement';
 import { needsSystem } from './systems/needs';
 import type { World } from './types';
 import { visionSystem } from './vision';
+import { reservationsSystem } from './work';
 
 /** Avanza la simulación un tick. Orden del spec §3, limitado a los sistemas que ya existen. */
 export function step(w: World): void {
@@ -15,6 +16,7 @@ export function step(w: World): void {
   decisionsSystem(w);
   movementSystem(w);
   activitiesSystem(w);
+  reservationsSystem(w);
   visionSystem(w);
   w.tick++;
 }

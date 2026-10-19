@@ -2,12 +2,17 @@ import {
   CRISIS_BREAK_HUNGER,
   EAT_BELOW,
   MOOD_CRISIS,
+  MOOD_EDGE,
+  REFUSE_CHANCE,
+  REFUSE_TICKS,
   SLEEP_ANYTIME_BELOW,
   SLEEP_AT_NIGHT_BELOW,
 } from './balance';
 import { isNight } from './clock';
 import { getTile } from './map/grid';
-import { pick } from './rng';
+import { logEvent } from './log';
+import { nextFloat, pick } from './rng';
+import { findWork, stillWorthIt } from './work';
 import { Tile, type Action, type BrainId, type Point, type Survivor, type World } from './types';
 
 /**
@@ -18,7 +23,7 @@ export interface Brain {
   decide(s: Survivor, w: World): Action | null;
 }
 
-/** Prioridades del spec §8.1 sin peligro (H4) ni trabajo (H3): comer, dormir, crisis, pasear. */
+/** Prioridades del spec §8.1 sin peligro (H4): comer, dormir, crisis, trabajo, pasear. */
 const AiBrain: Brain = {
   decide(s, w) {
     const a = s.action;
@@ -43,6 +48,22 @@ const AiBrain: Brain = {
     const vented = s.memories.some((m) => m.id === 'vented' && m.expiresAt > w.tick);
     if (s.needs.mood < MOOD_CRISIS && !vented)
       return { type: 'moveTo', target: pick(w.rng, baseFloor(w)), then: { type: 'crisis' } };
+
+    // Trabajo en curso: sigue salvo que haya dejado de tener sentido.
+    const working =
+      a.type === 'search' || a.type === 'unload' || goingTo === 'search' || goingTo === 'unload';
+    if (working) return stillWorthIt(s, w) ? null : { type: 'idle', ticksLeft: 0 };
+    // Tras negarse a trabajar espera; solo le sacan de ahí las urgencias (arriba).
+    if (a.type === 'idle' && a.wait === 'refused' && a.ticksLeft > 0) return null;
+
+    const job = findWork(s, w);
+    if (job) {
+      if (s.needs.mood < MOOD_EDGE && nextFloat(w.rng) < REFUSE_CHANCE) {
+        logEvent(w, { kind: 'refused', survivorId: s.id });
+        return { type: 'idle', ticksLeft: REFUSE_TICKS, wait: 'refused' };
+      }
+      return job;
+    }
     if (a.type === 'idle' && a.ticksLeft === 0)
       return { type: 'moveTo', target: pick(w.rng, baseFloor(w)) };
     return null;

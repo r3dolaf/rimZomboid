@@ -47,7 +47,7 @@ export function createWorld(seed: number): World {
   // El Cobarde no sale a saquear salvo que el jugador lo permita.
   for (const s of survivors) s.work.loot = !s.traits.includes('coward');
 
-  for (const s of survivors) s.needs.mood = moodTarget(s, 0);
+  for (const s of survivors) s.needs.mood = moodTarget(s, 0, base.rect);
 
   // Muebles de la base (spec H2 §7): camas arriba, almacén abajo junto a la puerta.
   const r = base.rect;

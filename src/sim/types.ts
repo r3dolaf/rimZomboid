@@ -62,7 +62,12 @@ export interface Memory {
 }
 
 /** Lo que se hace al llegar al destino de un `moveTo`. */
-export type Activity = { type: 'eat' } | { type: 'sleep' } | { type: 'crisis' };
+export type Activity =
+  | { type: 'eat' }
+  | { type: 'sleep' }
+  | { type: 'crisis' }
+  | { type: 'search'; containerId: number }
+  | { type: 'unload' };
 
 export type Action =
   /** `wait`: esperando tras no encontrar camino (no se consulta al cerebro) o tras negarse a trabajar. */
@@ -70,7 +75,9 @@ export type Action =
   | { type: 'moveTo'; target: Point; then?: Activity }
   | { type: 'eat'; ticksLeft: number }
   | { type: 'sleep'; inBed: boolean }
-  | { type: 'crisis'; ticksLeft: number };
+  | { type: 'crisis'; ticksLeft: number }
+  | { type: 'search'; containerId: number; ticksLeft: number }
+  | { type: 'unload'; ticksLeft: number };
 
 export interface Survivor {
   id: number;

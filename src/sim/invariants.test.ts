@@ -84,3 +84,9 @@ test('detecta objetos no válidos en un contenedor', () => {
   w.containers[0]!.items.food = -2;
   expect(checkInvariants(w).length).toBeGreaterThan(0);
 });
+
+test('detecta una reserva de un superviviente que no existe', () => {
+  const w = createWorld(1);
+  w.containers[0]!.reservedBy = 999;
+  expect(checkInvariants(w).length).toBeGreaterThan(0);
+});

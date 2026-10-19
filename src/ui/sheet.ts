@@ -47,15 +47,20 @@ export function mountSheet(
         shown = '';
         return;
       }
-      const mods = moodModifiers(s, world.tick).map((m) => formatModifier(m, world.tick));
+      const mods = moodModifiers(s, world.tick, world.base.rect).map((m) =>
+        formatModifier(m, world.tick),
+      );
       const view = {
         name: s.name,
-        doing: activityText(s),
+        doing: activityText(s, world),
         traits: s.traits.map((t) => es.traits[t]),
         needs: (['hunger', 'sleep'] as const).map(
           (k) => `${es.needs[k]}: ${Math.round(s.needs[k])}`,
         ),
-        mood: es.moodArrow(Math.round(s.needs.mood), Math.round(moodTarget(s, world.tick))),
+        mood: es.moodArrow(
+          Math.round(s.needs.mood),
+          Math.round(moodTarget(s, world.tick, world.base.rect)),
+        ),
         mods,
       };
       const key = JSON.stringify(view);

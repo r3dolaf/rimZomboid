@@ -2,9 +2,10 @@
 import { es } from '../i18n/es';
 import { MOOD_CRISIS, MOOD_EDGE, TICKS_PER_HOUR } from '../sim/balance';
 import type { MoodModifier } from '../sim/mood';
-import type { Survivor } from '../sim/types';
+import type { Survivor, World } from '../sim/types';
 
-export function activityText(s: Survivor): string {
+export function activityText(s: Survivor, w?: World): string {
+  const container = (id: number) => w?.containers.find((c) => c.id === id);
   const a = s.action;
   const t = es.activities;
   switch (a.type) {
@@ -14,12 +15,22 @@ export function activityText(s: Survivor): string {
       return a.inBed ? t.sleepInBed : t.sleepOnFloor;
     case 'crisis':
       return t.crisis;
+    case 'search': {
+      const c = container(a.containerId);
+      return t.search(c ? es.containers[c.kind] : es.containers.shelf);
+    }
+    case 'unload':
+      return t.unload;
     case 'moveTo':
+      if (a.then?.type === 'search') return t.goLoot(container(a.then.containerId)?.houseId ?? 0);
+      if (a.then?.type === 'unload') return t.goUnload;
       if (a.then?.type === 'eat') return t.goEat;
       if (a.then?.type === 'sleep') return t.goSleep;
       if (a.then?.type === 'crisis') return t.crisis;
       return t.wander;
     case 'idle':
+      if (a.wait === 'refused' && a.ticksLeft > 0) return t.refused;
+      if (a.wait === 'noPath' && a.ticksLeft > 0) return t.noPath;
       return t.wander;
   }
 }

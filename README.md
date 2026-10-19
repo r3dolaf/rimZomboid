@@ -29,8 +29,13 @@ En tu ordenador, instala antes el navegador con `npx playwright install chromium
 Cada partida se genera a partir de una semilla, que aparece arriba a la derecha.
 Para repetir una partida exacta, añade `?seed=NÚMERO` a la dirección.
 
-Controles: `Espacio` pausa · `1` `2` `3` velocidad · `WASD` o flechas mover la cámara ·
-arrastrar con el botón derecho · rueda para el zoom.
+Controles:
+
+- `Espacio` pausa · `1` `2` `3` velocidad.
+- `WASD` o flechas mueven la cámara · arrastrar con el botón derecho · rueda para el zoom.
+- Clic izquierdo en un superviviente (o en su tarjeta) abre su ficha; en una casa, la ficha de la casa.
+- `L` o el botón **Saquear** activan la herramienta: clic en una casa (o en un contenedor ya visto)
+  para marcarla o desmarcarla. `Esc` sale de la herramienta y cierra las fichas.
 
 ## Publicar en GitHub Pages
 

@@ -28,12 +28,15 @@ export function emptyWorld(width: number, height: number): World {
         memories: [],
         bedId: 1,
         carrying: emptyInventory(),
+        work: { loot: true },
       },
     ],
     beds: [{ id: 1, pos: { x: width - 1, y: 0 }, ownerId: 1 }],
     storage: { tiles: [{ x: 0, y: height - 1 }], items: { ...emptyInventory(), food: 10 } },
     containers: [],
     seen: new Array<number>(width * height).fill(0),
+    orders: [],
+    log: [],
     nextId: 2,
   };
 }

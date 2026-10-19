@@ -76,3 +76,4 @@ export const BAT_CHANCE = 0.06;
 export const VISION_DAY = 12;
 export const VISION_NIGHT = 6;
 export const VISION_EVERY_TICKS = 5;
+export const LOG_MAX = 100;

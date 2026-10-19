@@ -5,6 +5,7 @@ import {
   IDLE_TICKS_MIN,
   SURVIVOR_WALK_SPEED,
 } from '../balance';
+import { logEvent } from '../log';
 import { nextInt } from '../rng';
 import type { Action, Activity, Survivor, World } from '../types';
 import { tileOf } from '../world';
@@ -43,6 +44,7 @@ function startActivity(s: Survivor, activity: Activity, w: World): Action {
     case 'eat':
       return { type: 'eat', ticksLeft: EAT_TICKS };
     case 'crisis':
+      logEvent(w, { kind: 'crisis', survivorId: s.id });
       return { type: 'crisis', ticksLeft: CRISIS_TICKS };
     case 'sleep': {
       const bed = w.beds.find((b) => b.id === s.bedId);

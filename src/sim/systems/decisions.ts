@@ -1,5 +1,6 @@
 import { NO_PATH_RETRY_TICKS } from '../balance';
 import { brains } from '../brain';
+import { logEvent } from '../log';
 import { findPath } from '../path/astar';
 import type { World } from '../types';
 import { tileOf } from '../world';
@@ -10,6 +11,7 @@ export function decisionsSystem(w: World): void {
     if (s.needs.sleep <= 0 && s.action.type !== 'sleep') {
       s.action = { type: 'sleep', inBed: false };
       s.path = [];
+      logEvent(w, { kind: 'collapsed', survivorId: s.id });
       continue;
     }
     if (s.action.type === 'idle' && s.action.ticksLeft > 0) {

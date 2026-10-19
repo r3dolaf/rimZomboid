@@ -1,5 +1,7 @@
 // Tipos de datos de la simulación. Solo datos simples, para poder guardarlos con JSON.
 import type { Inventory } from './items';
+import type { LogEntry } from './log';
+import type { Order } from './orders';
 import type { RngState } from './rng';
 
 export interface Point {
@@ -85,6 +87,8 @@ export interface Survivor {
   bedId: number;
   /** Lo que lleva encima (como máximo CARRY_CAPACITY_KG). */
   carrying: Inventory;
+  /** Trabajos permitidos (prioridades del jugador). */
+  work: { loot: boolean };
 }
 
 export interface Bed {
@@ -129,5 +133,9 @@ export interface World {
   containers: Container[];
   /** 1 si la casilla se ha visto alguna vez (niebla de guerra), por índice y·ancho + x. */
   seen: number[];
+  /** Órdenes del jugador pendientes de aplicar en el siguiente tick. */
+  orders: Order[];
+  /** Registro de sucesos (los últimos LOG_MAX). */
+  log: LogEntry[];
   nextId: number;
 }

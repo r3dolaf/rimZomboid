@@ -42,7 +42,10 @@ export function createWorld(seed: number): World {
     memories: [],
     bedId: i + 1,
     carrying: emptyInventory(),
+    work: { loot: true },
   }));
+  // El Cobarde no sale a saquear salvo que el jugador lo permita.
+  for (const s of survivors) s.work.loot = !s.traits.includes('coward');
 
   for (const s of survivors) s.needs.mood = moodTarget(s, 0);
 
@@ -76,6 +79,8 @@ export function createWorld(seed: number): World {
     storage,
     containers,
     seen: new Array<number>(grid.width * grid.height).fill(0),
+    orders: [],
+    log: [],
     nextId: survivors.length + 1,
   };
   revealFromSurvivors(world);

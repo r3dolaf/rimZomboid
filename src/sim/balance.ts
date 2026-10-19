@@ -71,3 +71,8 @@ export const CONTAINERS_MIN = 2;
 export const CONTAINERS_MAX = 5;
 export const KNIFE_CHANCE = 0.08; // × (0,5 + distancia normalizada)
 export const BAT_CHANCE = 0.06;
+
+// Visión (H3)
+export const VISION_DAY = 12;
+export const VISION_NIGHT = 6;
+export const VISION_EVERY_TICKS = 5;

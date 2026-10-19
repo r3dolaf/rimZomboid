@@ -30,3 +30,12 @@ export function isNight(tick: number): boolean {
   const { hour } = gameTime(tick);
   return hour >= NIGHT_START_HOUR || hour < NIGHT_END_HOUR;
 }
+
+/** Oscuridad de 0 (día) a 1 (noche): oscurece de 19 a 21 h y aclara de 05 a 07 h. */
+export function darkness(tick: number): number {
+  const hour = (((tick + START_HOUR * TICKS_PER_HOUR) % TICKS_PER_DAY) / TICKS_PER_HOUR + 24) % 24;
+  if (hour >= 21 || hour < 5) return 1;
+  if (hour >= 19) return (hour - 19) / 2;
+  if (hour < 7) return (7 - hour) / 2;
+  return 0;
+}

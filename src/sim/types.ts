@@ -127,5 +127,7 @@ export interface World {
   beds: Bed[];
   storage: Storage;
   containers: Container[];
+  /** 1 si la casilla se ha visto alguna vez (niebla de guerra), por índice y·ancho + x. */
+  seen: number[];
   nextId: number;
 }

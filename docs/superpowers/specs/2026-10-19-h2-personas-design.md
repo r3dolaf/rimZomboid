@@ -27,8 +27,9 @@ Todas las cifras en `src/sim/balance.ts`; son valores iniciales.
   - Va a comer si el hambre es menor que 35 **y** queda comida en el almacén.
   - Comer: caminar a una casilla del almacén y estar 30 ticks (6 min de juego) comiendo. Al terminar, si queda comida: −1 lata, +60 de hambre (máximo 100) y el recuerdo "Comió".
 - **Sueño:** despierto baja 100 en 16 h (×1,3 si es Dormilón). Durmiendo sube 100 en 8 h en cama, o al 75 % de esa velocidad en el suelo.
-  - Se acuesta de noche (22:00–06:00) si el sueño es menor que 50, o a cualquier hora si es menor que 10. Va a **su** cama.
-  - Se despierta cuando el sueño llega a 100. Al despertar gana el recuerdo "Durmió en una cama" o "Durmió en el suelo".
+  - Se acuesta de noche (22:00–06:00) si el sueño es menor que 95, o a cualquier hora si es menor que 10 (siesta). Va a **su** cama.
+  - Se despierta cuando el sueño llega a 100, **pero nunca de noche**: de noche sigue en la cama hasta las 06:00. Al despertar gana el recuerdo "Durmió en una cama" o "Durmió en el suelo".
+  - _Cambio durante la implementación:_ con "< 50" y despertar a cualquier hora, quien echaba una siesta de tarde se despertaba de madrugada y nunca volvía a dormir de noche.
   - Si el sueño llega a 0 sin estar durmiendo, **se desploma**: duerme en el suelo donde esté, interrumpiendo cualquier cosa.
 - Valores iniciales: hambre y sueño al azar entre 60 y 100; ánimo igual a su objetivo.
 

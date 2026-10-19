@@ -16,8 +16,8 @@ test('AiBrain siempre elige una casilla Floor dentro de la base', () => {
   const w = createWorld(3);
   for (let i = 0; i < 100; i++) {
     const a = brains.ai.decide(w.survivors[0]!, w);
-    expect(a.type).toBe('moveTo');
-    if (a.type === 'moveTo') {
+    expect(a?.type).toBe('moveTo');
+    if (a?.type === 'moveTo') {
       expect(getTile(w.grid, a.target.x, a.target.y)).toBe(Tile.Floor);
       expect(contains(w.base.rect, a.target)).toBe(true);
     }

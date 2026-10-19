@@ -50,3 +50,13 @@ export const MEMORY_EFFECTS = {
   ate: { value: 5, hours: 6 },
   vented: { value: 15, hours: 24 },
 } as const;
+export const EAT_BELOW = 35;
+export const EAT_RESTORE = 60;
+export const EAT_TICKS = 30; // 6 minutos de juego
+// De noche casi todos se acuestan (< 95) y nadie se levanta hasta las 06:00: así los ritmos se
+// sincronizan con la noche aunque alguien eche una siesta de día (< 10).
+export const SLEEP_AT_NIGHT_BELOW = 95;
+export const SLEEP_ANYTIME_BELOW = 10;
+export const CRISIS_TICKS = 4 * TICKS_PER_HOUR;
+export const CRISIS_BREAK_HUNGER = 10;
+export const CRISIS_BREAK_SLEEP = 10;

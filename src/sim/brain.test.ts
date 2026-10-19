@@ -61,6 +61,7 @@ test('encerrado durante 100 ticks no rompe nada', () => {
   const w = createWorld(3);
   const s = w.survivors[0]!;
   w.survivors = [s]; // los muros nuevos podrían caer encima de los demás
+  w.beds = w.beds.filter((b) => b.ownerId === s.id);
   const start = { ...s.pos };
   encloseTile(w, tileOf(s.pos));
   for (let i = 0; i < 100; i++) step(w);

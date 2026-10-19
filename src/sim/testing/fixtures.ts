@@ -22,8 +22,14 @@ export function emptyWorld(width: number, height: number): World {
         brain: 'ai',
         action: { type: 'idle', ticksLeft: 0 },
         path: [],
+        needs: { hunger: 100, sleep: 100, mood: 50 },
+        traits: [],
+        memories: [],
+        bedId: 1,
       },
     ],
+    beds: [{ id: 1, pos: { x: width - 1, y: 0 }, ownerId: 1 }],
+    storage: { tiles: [{ x: 0, y: height - 1 }], food: 10 },
     nextId: 2,
   };
 }

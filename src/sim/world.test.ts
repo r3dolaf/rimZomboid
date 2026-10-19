@@ -47,3 +47,42 @@ test('mundo recién creado sin problemas, para 20 semillas', () => {
 test('tileOf redondea hacia abajo', () => {
   expect(tileOf({ x: 3.99, y: 0.01 })).toEqual({ x: 3, y: 0 });
 });
+
+test('3 camas sobre suelo de la base, cada una con su dueño', () => {
+  const w = createWorld(10);
+  expect(w.beds).toHaveLength(3);
+  const r = w.base.rect;
+  expect(w.beds.map((b) => b.pos)).toEqual([
+    { x: r.x + 2, y: r.y + 1 },
+    { x: r.x + 5, y: r.y + 1 },
+    { x: r.x + 9, y: r.y + 1 },
+  ]);
+  w.survivors.forEach((s, i) => {
+    expect(w.beds[i]!.ownerId).toBe(s.id);
+    expect(s.bedId).toBe(w.beds[i]!.id);
+  });
+  for (const b of w.beds) expect(getTile(w.grid, b.pos.x, b.pos.y)).toBe(Tile.Floor);
+});
+
+test('almacén de 2 casillas junto a la puerta, con 35 latas', () => {
+  const w = createWorld(10);
+  const r = w.base.rect;
+  expect(w.storage.tiles).toEqual([
+    { x: r.x + 7, y: r.y + r.h - 2 },
+    { x: r.x + 8, y: r.y + r.h - 2 },
+  ]);
+  for (const t of w.storage.tiles) expect(getTile(w.grid, t.x, t.y)).toBe(Tile.Floor);
+  expect(w.storage.food).toBe(35);
+});
+
+test('necesidades iniciales entre 60 y 100, sin recuerdos y con 1–2 rasgos', () => {
+  for (let seed = 1; seed <= 20; seed++)
+    for (const s of createWorld(seed).survivors) {
+      expect(s.needs.hunger).toBeGreaterThanOrEqual(60);
+      expect(s.needs.hunger).toBeLessThanOrEqual(100);
+      expect(s.needs.sleep).toBeGreaterThanOrEqual(60);
+      expect(s.needs.sleep).toBeLessThanOrEqual(100);
+      expect(s.memories).toEqual([]);
+      expect(s.traits.length).toBeGreaterThanOrEqual(1);
+    }
+});

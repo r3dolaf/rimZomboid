@@ -18,3 +18,9 @@ export const SURVIVOR_WALK_SPEED = 0.15; // casillas por tick
 export const IDLE_TICKS_MIN = 20;
 export const IDLE_TICKS_MAX = 80;
 export const NO_PATH_RETRY_TICKS = 10;
+
+// Personas (H2)
+export const NEED_START_MIN = 60;
+export const NEED_START_MAX = 100;
+export const START_FOOD = 35; // ~10 días para 3 supervivientes; en H3 bajará
+export const MOOD_BASE = 50;

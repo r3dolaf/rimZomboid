@@ -41,7 +41,32 @@ export interface Building {
 /** Qué cerebro decide por un superviviente. En la fase 2 se añadirá 'player'. */
 export type BrainId = 'ai';
 
-export type Action = { type: 'idle'; ticksLeft: number } | { type: 'moveTo'; target: Point };
+export type TraitId = 'brave' | 'coward' | 'glutton' | 'sleepyhead' | 'optimist' | 'pessimist';
+
+/** Necesidades de 0 a 100 (100 = bien). */
+export interface Needs {
+  hunger: number;
+  sleep: number;
+  mood: number;
+}
+
+export type MemoryId = 'sleptInBed' | 'sleptOnFloor' | 'ate' | 'vented';
+
+/** Recuerdo con efecto en el ánimo hasta el tick `expiresAt`. */
+export interface Memory {
+  id: MemoryId;
+  expiresAt: number;
+}
+
+/** Lo que se hace al llegar al destino de un `moveTo`. */
+export type Activity = { type: 'eat' } | { type: 'sleep' } | { type: 'crisis' };
+
+export type Action =
+  | { type: 'idle'; ticksLeft: number }
+  | { type: 'moveTo'; target: Point; then?: Activity }
+  | { type: 'eat'; ticksLeft: number }
+  | { type: 'sleep'; inBed: boolean }
+  | { type: 'crisis'; ticksLeft: number };
 
 export interface Survivor {
   id: number;
@@ -52,6 +77,22 @@ export interface Survivor {
   action: Action;
   /** Casillas que le quedan por recorrer, la siguiente primero. */
   path: Point[];
+  needs: Needs;
+  traits: TraitId[];
+  memories: Memory[];
+  bedId: number;
+}
+
+export interface Bed {
+  id: number;
+  pos: Point;
+  ownerId: number;
+}
+
+/** Almacén de la base. En H2 la comida es solo un contador de latas. */
+export interface Storage {
+  tiles: Point[];
+  food: number;
 }
 
 export interface World {
@@ -62,5 +103,7 @@ export interface World {
   base: Building;
   houses: Building[];
   survivors: Survivor[];
+  beds: Bed[];
+  storage: Storage;
   nextId: number;
 }

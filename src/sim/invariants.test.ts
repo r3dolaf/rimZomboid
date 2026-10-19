@@ -39,3 +39,25 @@ test('detecta un tick no válido', () => {
   w.tick = 1.5;
   expect(checkInvariants(w).length).toBeGreaterThan(0);
 });
+
+test.each(['hunger', 'sleep', 'mood'] as const)('detecta %s fuera de 0–100 o no finito', (k) => {
+  for (const bad of [-1, 101, NaN]) {
+    const w = createWorld(1);
+    w.survivors[0]!.needs[k] = bad;
+    expect(checkInvariants(w).length).toBeGreaterThan(0);
+  }
+});
+
+test('detecta comida negativa o no entera', () => {
+  for (const bad of [-1, 1.5]) {
+    const w = createWorld(1);
+    w.storage.food = bad;
+    expect(checkInvariants(w).length).toBeGreaterThan(0);
+  }
+});
+
+test('detecta una cama cuyo dueño no existe', () => {
+  const w = createWorld(1);
+  w.beds[0]!.ownerId = 999;
+  expect(checkInvariants(w).length).toBeGreaterThan(0);
+});

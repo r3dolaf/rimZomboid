@@ -1,9 +1,10 @@
-import { SURVIVOR_COUNT } from './balance';
+import { MOOD_BASE, NEED_START_MAX, NEED_START_MIN, START_FOOD, SURVIVOR_COUNT } from './balance';
 import { generateMap } from './map/generate';
 import { getTile } from './map/grid';
 import { NAMES } from './names';
 import { createRng, nextInt, type RngState } from './rng';
-import { Tile, type Point, type Survivor, type World } from './types';
+import { rollTraits } from './traits';
+import { Tile, type Bed, type Point, type Storage, type Survivor, type World } from './types';
 
 /** Casilla en la que está una posición continua. */
 export function tileOf(p: Point): Point {
@@ -28,9 +29,43 @@ export function createWorld(seed: number): World {
     brain: 'ai',
     action: { type: 'idle', ticksLeft: 0 },
     path: [],
+    needs: {
+      hunger: nextInt(rng, NEED_START_MIN, NEED_START_MAX),
+      sleep: nextInt(rng, NEED_START_MIN, NEED_START_MAX),
+      mood: MOOD_BASE,
+    },
+    traits: rollTraits(rng),
+    memories: [],
+    bedId: i + 1,
   }));
 
-  return { seed, tick: 0, rng, grid, base, houses, survivors, nextId: survivors.length + 1 };
+  // Muebles de la base (spec H2 §7): camas arriba, almacén abajo junto a la puerta.
+  const r = base.rect;
+  const beds: Bed[] = [r.x + 2, r.x + 5, r.x + 9].map((x, i) => ({
+    id: i + 1,
+    pos: { x, y: r.y + 1 },
+    ownerId: survivors[i]!.id,
+  }));
+  const storage: Storage = {
+    tiles: [
+      { x: r.x + 7, y: r.y + r.h - 2 },
+      { x: r.x + 8, y: r.y + r.h - 2 },
+    ],
+    food: START_FOOD,
+  };
+
+  return {
+    seed,
+    tick: 0,
+    rng,
+    grid,
+    base,
+    houses,
+    survivors,
+    beds,
+    storage,
+    nextId: survivors.length + 1,
+  };
 }
 
 /** Elige `n` elementos distintos al azar. */

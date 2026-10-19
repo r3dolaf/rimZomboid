@@ -33,3 +33,20 @@ export const FLOOR_SLEEP_FACTOR = 0.75;
 export const SLEEPYHEAD_SLEEP_MULT = 1.3;
 export const NIGHT_START_HOUR = 22;
 export const NIGHT_END_HOUR = 6;
+export const MOOD_RATE_PER_TICK = 10 / TICKS_PER_HOUR; // 10 puntos por hora de juego
+export const MOOD_EDGE = 25; // al límite
+export const MOOD_CRISIS = 10;
+export const HUNGRY_BELOW = 25;
+export const HUNGRY_MOOD = -10;
+export const STARVING_MOOD = -25;
+export const TIRED_BELOW = 20;
+export const TIRED_MOOD = -10;
+export const OPTIMIST_MOOD = 10;
+export const PESSIMIST_MOOD = -10;
+/** Efecto en el ánimo y duración (horas de juego) de cada recuerdo. */
+export const MEMORY_EFFECTS = {
+  sleptInBed: { value: 5, hours: 12 },
+  sleptOnFloor: { value: -5, hours: 12 },
+  ate: { value: 5, hours: 6 },
+  vented: { value: 15, hours: 24 },
+} as const;

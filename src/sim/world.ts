@@ -1,6 +1,7 @@
-import { MOOD_BASE, NEED_START_MAX, NEED_START_MIN, START_FOOD, SURVIVOR_COUNT } from './balance';
+import { NEED_START_MAX, NEED_START_MIN, START_FOOD, SURVIVOR_COUNT } from './balance';
 import { generateMap } from './map/generate';
 import { getTile } from './map/grid';
+import { moodTarget } from './mood';
 import { NAMES } from './names';
 import { createRng, nextInt, type RngState } from './rng';
 import { rollTraits } from './traits';
@@ -32,12 +33,14 @@ export function createWorld(seed: number): World {
     needs: {
       hunger: nextInt(rng, NEED_START_MIN, NEED_START_MAX),
       sleep: nextInt(rng, NEED_START_MIN, NEED_START_MAX),
-      mood: MOOD_BASE,
+      mood: 0, // se fija abajo con su objetivo
     },
     traits: rollTraits(rng),
     memories: [],
     bedId: i + 1,
   }));
+
+  for (const s of survivors) s.needs.mood = moodTarget(s, 0);
 
   // Muebles de la base (spec H2 §7): camas arriba, almacén abajo junto a la puerta.
   const r = base.rect;

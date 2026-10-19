@@ -65,3 +65,9 @@ export const CRISIS_BREAK_HUNGER = 10;
 // Objetos y saqueo (H3)
 export const ITEM_WEIGHT_KG = { food: 0.5, bandage: 0.1, knife: 0.5, bat: 1.5 } as const;
 export const CARRY_CAPACITY_KG = 8;
+export const LOOT_FOOD_TOTAL = 80; // + START_FOOD ≈ 25 días para 3 supervivientes
+export const LOOT_BANDAGE_TOTAL = 15;
+export const CONTAINERS_MIN = 2;
+export const CONTAINERS_MAX = 5;
+export const KNIFE_CHANCE = 0.08; // × (0,5 + distancia normalizada)
+export const BAT_CHANCE = 0.06;

@@ -1,5 +1,6 @@
 import { NEED_START_MAX, NEED_START_MIN, START_FOOD, SURVIVOR_COUNT } from './balance';
 import { emptyInventory } from './items';
+import { placeContainers } from './loot';
 import { generateMap } from './map/generate';
 import { getTile } from './map/grid';
 import { moodTarget } from './mood';
@@ -59,6 +60,9 @@ export function createWorld(seed: number): World {
     items: { ...emptyInventory(), food: START_FOOD },
   };
 
+  // Después de los supervivientes, para no cambiar partidas anteriores con la misma semilla.
+  const containers = placeContainers(grid, base, houses, rng);
+
   return {
     seed,
     tick: 0,
@@ -69,6 +73,7 @@ export function createWorld(seed: number): World {
     survivors,
     beds,
     storage,
+    containers,
     nextId: survivors.length + 1,
   };
 }

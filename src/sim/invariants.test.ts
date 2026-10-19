@@ -78,3 +78,9 @@ test('detecta a quien carga más de 8 kg', () => {
   w.survivors[0]!.carrying.food = 17;
   expect(checkInvariants(w).length).toBeGreaterThan(0);
 });
+
+test('detecta objetos no válidos en un contenedor', () => {
+  const w = createWorld(1);
+  w.containers[0]!.items.food = -2;
+  expect(checkInvariants(w).length).toBeGreaterThan(0);
+});

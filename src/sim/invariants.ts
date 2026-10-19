@@ -35,6 +35,7 @@ export function checkInvariants(w: World): string[] {
       problems.push(`${who}: en una casilla no transitable (${t.x}, ${t.y})`);
   }
   checkInventory(problems, 'almacén', w.storage.items);
+  for (const c of w.containers) checkInventory(problems, `contenedor ${c.id}`, c.items);
   for (const b of w.beds)
     if (!ids.has(b.ownerId)) problems.push(`cama ${b.id}: su dueño ${b.ownerId} no existe`);
   return problems;

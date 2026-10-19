@@ -99,6 +99,23 @@ export interface Storage {
   items: Inventory;
 }
 
+export type ContainerKind = 'fridge' | 'wardrobe' | 'shelf';
+
+/** Mueble de una casa con objetos. Transitable: se registra de pie sobre él. */
+export interface Container {
+  id: number;
+  houseId: number;
+  pos: Point;
+  kind: ContainerKind;
+  items: Inventory;
+  /** Alguien ya lo ha registrado (se sabe lo que queda). */
+  searched: boolean;
+  /** Marcado para saquear. */
+  designated: boolean;
+  /** Superviviente que va a registrarlo, para que no vayan dos. */
+  reservedBy: number | null;
+}
+
 export interface World {
   seed: number;
   tick: number;
@@ -109,5 +126,6 @@ export interface World {
   survivors: Survivor[];
   beds: Bed[];
   storage: Storage;
+  containers: Container[];
   nextId: number;
 }

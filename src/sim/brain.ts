@@ -1,6 +1,5 @@
 import {
   CRISIS_BREAK_HUNGER,
-  CRISIS_BREAK_SLEEP,
   EAT_BELOW,
   MOOD_CRISIS,
   SLEEP_ANYTIME_BELOW,
@@ -29,15 +28,17 @@ const AiBrain: Brain = {
     // Comer y dormir se terminan; la crisis solo se corta por algo urgente.
     if (a.type === 'eat' || a.type === 'sleep' || goingTo === 'eat' || goingTo === 'sleep')
       return null;
+    // (desplomarse, que también la corta, lo decide decisionsSystem)
     if (inCrisis) {
       if (s.needs.hunger < CRISIS_BREAK_HUNGER && w.storage.food > 0) return goEat(w);
-      if (s.needs.sleep < CRISIS_BREAK_SLEEP) return goSleep(s, w);
       return null;
     }
 
     if (s.needs.hunger < EAT_BELOW && w.storage.food > 0) return goEat(w);
     if (wantsToSleep(s, w)) return goSleep(s, w);
-    if (s.needs.mood < MOOD_CRISIS)
+    // Tras desahogarse el ánimo tarda en subir: sin esta guarda, encadenaría otra crisis al momento.
+    const vented = s.memories.some((m) => m.id === 'vented' && m.expiresAt > w.tick);
+    if (s.needs.mood < MOOD_CRISIS && !vented)
       return { type: 'moveTo', target: pick(w.rng, baseFloor(w)), then: { type: 'crisis' } };
     if (a.type === 'idle' && a.ticksLeft === 0)
       return { type: 'moveTo', target: pick(w.rng, baseFloor(w)) };

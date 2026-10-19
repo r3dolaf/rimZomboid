@@ -27,7 +27,9 @@ export const MOOD_BASE = 50;
 export const HUNGER_PER_DAY = 70;
 export const HUNGER_PER_TICK = HUNGER_PER_DAY / TICKS_PER_DAY;
 export const GLUTTON_HUNGER_MULT = 1.5;
-export const SLEEP_DRAIN_PER_TICK = 100 / (16 * TICKS_PER_HOUR); // 16 h despierto
+// 18 h despierto: quien se levanta a las 06:00 llega a las 22:00 sin desplomarse y se acuesta por la
+// regla de noche (con 16 h todos llegaban a < 10 cada tarde y las crisis nunca podían terminar).
+export const SLEEP_DRAIN_PER_TICK = 100 / (18 * TICKS_PER_HOUR);
 export const SLEEP_GAIN_PER_TICK = 100 / (8 * TICKS_PER_HOUR); // 8 h en cama
 export const FLOOR_SLEEP_FACTOR = 0.75;
 export const SLEEPYHEAD_SLEEP_MULT = 1.3;
@@ -57,6 +59,5 @@ export const EAT_TICKS = 30; // 6 minutos de juego
 // sincronizan con la noche aunque alguien eche una siesta de día (< 10).
 export const SLEEP_AT_NIGHT_BELOW = 95;
 export const SLEEP_ANYTIME_BELOW = 10;
-export const CRISIS_TICKS = 4 * TICKS_PER_HOUR;
+export const CRISIS_TICKS = 2 * TICKS_PER_HOUR;
 export const CRISIS_BREAK_HUNGER = 10;
-export const CRISIS_BREAK_SLEEP = 10;

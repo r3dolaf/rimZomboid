@@ -22,13 +22,13 @@ test('el Glotón pierde el hambre 1,5 veces más rápido', () => {
   expect(s.needs.hunger).toBeCloseTo(100 - 70 * 0.5 * 1.5, 5);
 });
 
-test('despierto, el sueño se vacía en 16 h', () => {
-  expect(run(16 * TICKS_PER_HOUR).needs.sleep).toBeCloseTo(0, 5);
-  expect(run(8 * TICKS_PER_HOUR).needs.sleep).toBeCloseTo(50, 5);
+test('despierto, el sueño se vacía en 18 h', () => {
+  expect(run(18 * TICKS_PER_HOUR).needs.sleep).toBeCloseTo(0, 5);
+  expect(run(9 * TICKS_PER_HOUR).needs.sleep).toBeCloseTo(50, 5);
 });
 
 test('el Dormilón se cansa 1,3 veces más rápido', () => {
-  const s = run(8 * TICKS_PER_HOUR, (w) => (w.survivors[0]!.traits = ['sleepyhead']));
+  const s = run(9 * TICKS_PER_HOUR, (w) => (w.survivors[0]!.traits = ['sleepyhead']));
   expect(s.needs.sleep).toBeCloseTo(100 - 50 * 1.3, 5);
 });
 

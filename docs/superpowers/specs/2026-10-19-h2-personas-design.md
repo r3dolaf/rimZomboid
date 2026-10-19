@@ -26,7 +26,7 @@ Todas las cifras en `src/sim/balance.ts`; son valores iniciales.
 - **Hambre:** baja 70 puntos por día de juego (×1,5 si es Glotón).
   - Va a comer si el hambre es menor que 35 **y** queda comida en el almacén.
   - Comer: caminar a una casilla del almacén y estar 30 ticks (6 min de juego) comiendo. Al terminar, si queda comida: −1 lata, +60 de hambre (máximo 100) y el recuerdo "Comió".
-- **Sueño:** despierto baja 100 en 16 h (×1,3 si es Dormilón). Durmiendo sube 100 en 8 h en cama, o al 75 % de esa velocidad en el suelo.
+- **Sueño:** despierto baja 100 en 18 h (×1,3 si es Dormilón). Durmiendo sube 100 en 8 h en cama, o al 75 % de esa velocidad en el suelo.
   - Se acuesta de noche (22:00–06:00) si el sueño es menor que 95, o a cualquier hora si es menor que 10 (siesta). Va a **su** cama.
   - Se despierta cuando el sueño llega a 100, **pero nunca de noche**: de noche sigue en la cama hasta las 06:00. Al despertar gana el recuerdo "Durmió en una cama" o "Durmió en el suelo".
   - _Cambio durante la implementación:_ con "< 50" y despertar a cualquier hora, quien echaba una siesta de tarde se despertaba de madrugada y nunca volvía a dormir de noche.
@@ -49,8 +49,10 @@ Todas las cifras en `src/sim/balance.ts`; son valores iniciales.
   - Comió: +5 (6 h).
   - Se desahogó: +15 (24 h).
 - **Al límite:** ánimo < 25.
-- **Crisis:** ánimo < 10. Va a una casilla de suelo al azar de la base y se queda 4 h. Al terminar gana "Se desahogó".
-  - La crisis solo se interrumpe por desplomarse, por hambre < 10 con comida, o por sueño < 10. Si se interrumpe, no gana el recuerdo.
+- **Crisis:** ánimo < 10. Va a una casilla de suelo al azar de la base y se queda 2 h. Al terminar gana "Se desahogó".
+  - La crisis solo se interrumpe por desplomarse o por hambre < 10 con comida. Si se interrumpe, no gana el recuerdo.
+  - Mientras dura "Se desahogó" no puede empezar otra crisis.
+  - _Cambio tras la revisión:_ con 16 h de sueño, 4 h de crisis y corte por sueño < 10, ninguna crisis podía terminar en una partida real (0 de 533). Con 18 h, 2 h y sin ese corte, terminan 194 de 214 en 20 partidas de 30 días.
 
 ## 5. Rasgos
 

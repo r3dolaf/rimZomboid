@@ -2,11 +2,11 @@
 import { expect, test } from 'vitest';
 import { CRISIS_TICKS, EAT_TICKS, TICKS_PER_DAY, TICKS_PER_HOUR } from './balance';
 import { brains } from './brain';
-import { moodModifiers } from './mood';
+import { addMemory, moodModifiers } from './mood';
 import { step } from './step';
 import { activitiesSystem } from './systems/activities';
 import { decisionsSystem } from './systems/decisions';
-import type { Action, Survivor, World } from './types';
+import type { Survivor, World } from './types';
 import { createWorld, tileOf } from './world';
 
 /** Tick de una hora del día 1 (la partida empieza a las 08:00). */
@@ -130,14 +130,63 @@ test('con ánimo por debajo de 10 entra en crisis 4 h y después se desahoga', (
   expect(s.memories.map((m) => m.id)).toContain('vented');
 });
 
-test('la crisis se interrumpe si el sueño baja de 10', () => {
+test('el sueño bajo ya no corta la crisis; desplomarse sí', () => {
   const w = createWorld(3);
   const s = w.survivors[0]!;
   s.action = { type: 'crisis', ticksLeft: 100 };
   s.needs.sleep = 5;
+  expect(brains.ai.decide(s, w)).toBeNull();
+  s.needs.sleep = 0;
   decisionsSystem(w);
-  const a = s.action as Action; // TS no sabe que decisionsSystem la ha cambiado
-  expect(a.type === 'moveTo' && a.then?.type === 'sleep').toBe(true);
+  expect(s.action).toEqual({ type: 'sleep', inBed: false });
+});
+
+test('el hambre extrema corta la crisis si hay comida, y no si no la hay', () => {
+  const w = createWorld(3);
+  const s = w.survivors[0]!;
+  s.action = { type: 'crisis', ticksLeft: 100 };
+  s.needs.hunger = 5;
+  w.storage.food = 0;
+  expect(brains.ai.decide(s, w)).toBeNull();
+  w.storage.food = 3;
+  const a = brains.ai.decide(s, w);
+  expect(a?.type === 'moveTo' && a.then?.type === 'eat').toBe(true);
+});
+
+test('una crisis interrumpida no da "Se desahogó"', () => {
+  const w = createWorld(3);
+  const s = w.survivors[0]!;
+  s.action = { type: 'crisis', ticksLeft: 100 };
+  s.needs.sleep = 0;
+  for (let i = 0; i < 200; i++) step(w);
+  expect(s.memories.map((m) => m.id)).not.toContain('vented');
+});
+
+test('mientras dura "Se desahogó" no entra en otra crisis', () => {
+  const w = createWorld(3);
+  const s = w.survivors[0]!;
+  rested(s);
+  s.needs.mood = 5;
+  addMemory(s, 'vented', w.tick);
+  const a = brains.ai.decide(s, w);
+  expect(a?.type === 'moveTo' && a.then?.type === 'crisis').toBe(false);
+});
+
+test('en partidas reales las crisis llegan a terminar con "Se desahogó"', () => {
+  // semilla 5: dos Pesimistas; la comida se acaba hacia el día 9
+  const w = createWorld(5);
+  let vented = 0;
+  const had = new Set<number>();
+  for (let i = 0; i < 20 * TICKS_PER_DAY; i++) {
+    step(w);
+    for (const s of w.survivors) {
+      const has = s.memories.some((m) => m.id === 'vented');
+      if (has && !had.has(s.id)) vented++;
+      if (has) had.add(s.id);
+      else had.delete(s.id);
+    }
+  }
+  expect(vented).toBeGreaterThan(0);
 });
 
 test('escenario: a las 23:00 del día 1 los tres duermen en su cama', () => {

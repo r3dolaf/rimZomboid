@@ -36,6 +36,6 @@ arrastrar con el botón derecho · rueda para el zoom.
 
 Cada push a `main` comprueba el juego y lo publica automáticamente. La primera vez hay que
 activarlo en GitHub: **Settings → Pages → Source: GitHub Actions**.
-El juego quedará en `https://r3dolaf.github.io/rimzomboid/`.
+El juego quedará en `https://r3dolaf.github.io/rimZomboid/`.
 
 Diseño: `docs/superpowers/specs/2026-10-19-rimzomboid-design.md`

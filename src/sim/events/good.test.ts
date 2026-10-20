@@ -197,8 +197,21 @@ test('alijo: 3–6 latas en un mueble sin registrar y se ve el interior de la ca
   expect(checkInvariants(w)).toEqual([]);
 });
 
-test('alijo: sin muebles por registrar no sale', () => {
+test('alijo en una casa ya saqueada: una despensa escondida que vuelve a estar por registrar', () => {
   const { w } = calm(12);
-  for (const c of w.containers) c.searched = true;
+  for (const c of w.containers) {
+    c.searched = true;
+    c.items = { food: 0, bandage: 0, knife: 0, bat: 0 };
+  }
+  expect(cacheEvent.canHappen(w)).toBe(true);
+  cacheEvent.happen(w);
+  const c = w.containers.find((x) => x.items.food > 0)!;
+  expect(c.searched).toBe(false);
+  expect(checkInvariants(w)).toEqual([]);
+});
+
+test('alijo: sin muebles no sale', () => {
+  const { w } = calm(12);
+  w.containers = [];
   expect(cacheEvent.canHappen(w)).toBe(false);
 });

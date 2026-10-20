@@ -31,7 +31,14 @@ export type LogEvent =
   | { kind: 'clash'; survivorId: number; otherId: number }
   | { kind: 'grief'; survivorId: number }
   | { kind: 'foodFight' }
-  | { kind: 'gossip'; survivorId: number; listenerId: number; otherId: number; found: boolean };
+  | { kind: 'gossip'; survivorId: number; listenerId: number; otherId: number; found: boolean }
+  /** `arguedIds`: los dos que acabaron discutiendo, o `null` si salió bien. */
+  | { kind: 'storyNight'; arguedIds: [number, number] | null }
+  | { kind: 'birthday'; survivorId: number }
+  | { kind: 'birthdayParty'; survivorId: number }
+  | { kind: 'birthdayRuined'; survivorId: number; otherId: number }
+  | { kind: 'birthdaySkipped'; survivorId: number }
+  | { kind: 'cache'; survivorId: number; houseId: number; cans: number };
 
 export type LogEntry = LogEvent & { tick: number };
 

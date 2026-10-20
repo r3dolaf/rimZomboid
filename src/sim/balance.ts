@@ -223,3 +223,15 @@ export const FOOD_FIGHT_OPINION = 5;
 export const GOSSIP_OPINION = 15;
 export const GOSSIP_FOUND_CHANCE = 0.3;
 export const GOSSIP_FOUND_OPINION = 20;
+// Sucesos buenos (H3c §3.2)
+export const STORY_NIGHT_FROM_HOUR = 19;
+export const STORY_NIGHT_TO_HOUR = 23; // sin incluir
+export const STORY_NIGHT_OPINION = 3;
+export const STORY_NIGHT_RUIN_CHANCE = 0.4;
+export const STORY_NIGHT_ARGUE_OPINION = 10;
+export const BIRTHDAY_CANS = 2;
+export const BIRTHDAY_OPINION = 5;
+export const BIRTHDAY_RUIN_CHANCE = 0.3;
+export const BIRTHDAY_RUIN_OPINION = 15;
+export const CACHE_CANS_MIN = 3;
+export const CACHE_CANS_MAX = 6;

@@ -1,6 +1,7 @@
 // Qué pasa al contestar (o al caducar) cada decisión.
 import { logEvent } from '../log';
 import { acceptStrangers, leaveStrangers } from '../systems/strangers';
+import { resolveBirthday } from './birthday';
 import { resolveTheft } from './theft';
 import type { Decision, World } from '../types';
 
@@ -17,7 +18,7 @@ const RESOLVERS: Record<Decision['kind'], Resolver> = {
     leaveStrangers(w);
   },
   theft: (w, d, option) => resolveTheft(w, d, option),
-  birthday: () => {},
+  birthday: (w, d, option) => resolveBirthday(w, d, option),
   flu: () => {},
 };
 

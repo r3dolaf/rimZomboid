@@ -80,6 +80,15 @@ export const es = {
     gossip: (teller: string, listener: string, victim: string, found: boolean) =>
       `${teller} le cuenta a ${listener} cosas de ${victim}` +
       (found ? `, y ${victim} se entera` : ''),
+    storyNight: 'Noche de historias en la base',
+    storyNightRuined: (a: string, b: string) =>
+      `La noche de historias acaba en discusión entre ${a} y ${b}`,
+    birthday: (who: string) => `Hoy es el cumpleaños de ${who}`,
+    birthdayParty: (who: string) => `Celebráis el cumpleaños de ${who}`,
+    birthdayRuined: (who: string, rival: string) => `${rival} le amarga el cumpleaños a ${who}`,
+    birthdaySkipped: (who: string) => `Nadie celebra el cumpleaños de ${who}`,
+    cache: (who: string, house: number, cans: number) =>
+      `${who} recuerda una despensa en la casa ${house}: ${cans} latas`,
   },
 
   needs: { hunger: 'Hambre', sleep: 'Sueño', mood: 'Ánimo', social: 'Social' },

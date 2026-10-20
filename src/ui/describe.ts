@@ -194,6 +194,26 @@ export function formatLogEntry(e: LogEntry, w: World): string {
     case 'gossip':
       text = l.gossip(name(e.survivorId), name(e.listenerId), name(e.otherId), e.found);
       break;
+    case 'storyNight':
+      text = e.arguedIds
+        ? l.storyNightRuined(name(e.arguedIds[0]), name(e.arguedIds[1]))
+        : l.storyNight;
+      break;
+    case 'birthday':
+      text = l.birthday(name(e.survivorId));
+      break;
+    case 'birthdayParty':
+      text = l.birthdayParty(name(e.survivorId));
+      break;
+    case 'birthdayRuined':
+      text = l.birthdayRuined(name(e.survivorId), name(e.otherId));
+      break;
+    case 'birthdaySkipped':
+      text = l.birthdaySkipped(name(e.survivorId));
+      break;
+    case 'cache':
+      text = l.cache(name(e.survivorId), e.houseId, e.cans);
+      break;
   }
   return `${es.dayTime(t.day, t.hour, t.minute)} · ${text}`;
 }

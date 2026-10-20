@@ -59,3 +59,32 @@ test.each([1, 2, 3])(
   },
   120_000,
 );
+
+test.each([1, 2, 3])(
+  `semilla %i: ${DAYS} días aceptando a todos los desconocidos — relaciones sanas y sin bloqueos`,
+  (seed) => {
+    const w = createWorld(seed);
+    for (const h of w.houses) issue(w, { type: 'designateHouse', houseId: h.id, on: true });
+    for (let day = 1; day <= DAYS; day++) {
+      const present = new Set(w.survivors.map((s) => s.id));
+      const moved = new Set<number>();
+      for (let i = 0; i < TICKS_PER_DAY; i++) {
+        if (w.stranger && !w.stranger.leaving && w.orders.length === 0)
+          issue(w, { type: 'acceptStranger' });
+        const before = new Map(w.survivors.map((s) => [s.id, { ...s.pos }]));
+        step(w);
+        const problems = checkInvariants(w);
+        if (problems.length > 0) expect(problems, `tick ${w.tick}`).toEqual([]);
+        for (const s of w.survivors) {
+          const b = before.get(s.id);
+          if (b && (b.x !== s.pos.x || b.y !== s.pos.y)) moved.add(s.id);
+        }
+      }
+      for (const s of w.survivors)
+        if (present.has(s.id))
+          expect(moved.has(s.id), `día ${day}: ${s.name} no se ha movido`).toBe(true);
+    }
+    if (DAYS >= 10) expect(w.survivors.length, 'han llegado y se han unido').toBeGreaterThan(3);
+  },
+  240_000,
+);

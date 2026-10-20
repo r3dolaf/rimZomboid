@@ -3,6 +3,7 @@ import {
   CHAT_LOW_MOOD_ARGUE,
   CHAT_LOW_MOOD_INSULT,
   CHAT_OPINION_ARGUE,
+  CHAT_OPINION_INSULT,
   CHAT_OPINION_PLEASANT,
   CHAT_OPTIMIST_PLEASANT,
   CHAT_PESSIMIST_ARGUE,
@@ -43,7 +44,7 @@ export function chatWeights(a: Survivor, b: Survivor): Record<ChatKind, number> 
   const low = a.needs.mood < MOOD_EDGE || b.needs.mood < MOOD_EDGE;
   let pleasant: number = CHAT_WEIGHTS.pleasant + CHAT_OPINION_PLEASANT * o;
   let argue: number = CHAT_WEIGHTS.argue + CHAT_OPINION_ARGUE * o;
-  let insult: number = CHAT_WEIGHTS.insult;
+  let insult: number = CHAT_WEIGHTS.insult + CHAT_OPINION_INSULT * Math.min(0, o);
   if (low) {
     argue += CHAT_LOW_MOOD_ARGUE;
     insult += CHAT_LOW_MOOD_INSULT;

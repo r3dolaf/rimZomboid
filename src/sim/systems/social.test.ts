@@ -34,8 +34,8 @@ test('la opinión sube lo agradable y baja la discusión', () => {
   a.opinions[b.id] = 50;
   expect(chatWeights(a, b)).toEqual({ pleasant: 75, neutral: 30, argue: 5, insult: 0 });
   a.opinions[b.id] = -100;
-  // agradable 60 − 30 = 30; discusión 10 + 10 = 20
-  expect(chatWeights(a, b)).toEqual({ pleasant: 30, neutral: 30, argue: 20, insult: 0 });
+  // agradable 60 − 30 = 30; discusión 10 + 10 = 20; insulto 0 + 10 (le cae mal)
+  expect(chatWeights(a, b)).toEqual({ pleasant: 30, neutral: 30, argue: 20, insult: 10 });
 });
 
 test('con alguien al límite hay más discusiones e insultos (si cabe insultar)', () => {
@@ -44,7 +44,7 @@ test('con alguien al límite hay más discusiones e insultos (si cabe insultar)'
   // El que inicia está bien y no tiene mala opinión: no insulta.
   expect(chatWeights(a, b)).toEqual({ pleasant: 60, neutral: 30, argue: 25, insult: 0 });
   a.opinions[b.id] = -10;
-  expect(chatWeights(a, b)).toEqual({ pleasant: 57, neutral: 30, argue: 26, insult: 10 });
+  expect(chatWeights(a, b)).toEqual({ pleasant: 57, neutral: 30, argue: 26, insult: 11 });
   a.opinions[b.id] = 0;
   a.needs.mood = 20;
   expect(chatWeights(a, b).insult).toBe(10);
@@ -208,13 +208,14 @@ test('la necesidad social baja 50 al día y por debajo de 20 da "Solo" −10', (
   expect(moodModifiers(s, w.tick)).toContainEqual({ id: 'lonely', value: -10 });
 });
 
-test('cada día la opinión se acerca a 0 un 10 % y al menos 1 punto', () => {
+test('cada día la opinión se acerca a 0 un 10 % (lo malo, un 3 %) y al menos 1 punto', () => {
   const { w, a, b } = pair();
   b.nextChatAt = a.nextChatAt = 1e9;
   a.opinions[b.id] = 10;
   b.opinions[a.id] = -3;
   a.opinions[99] = 0;
   a.opinions[98] = -60;
+  a.opinions[96] = 60;
   a.opinions[97] = 0.5;
   w.tick = TICKS_PER_DAY - 1;
   socialSystem(w);
@@ -224,7 +225,8 @@ test('cada día la opinión se acerca a 0 un 10 % y al menos 1 punto', () => {
   expect(opinionOf(a, b.id)).toBe(9);
   expect(opinionOf(b, a.id)).toBe(-2);
   expect(opinionOf(a, 99)).toBe(0);
-  expect(opinionOf(a, 98)).toBe(-54);
+  expect(opinionOf(a, 98)).toBeCloseTo(-58.2, 9);
+  expect(opinionOf(a, 96)).toBe(54);
   expect(opinionOf(a, 97)).toBe(0);
 });
 

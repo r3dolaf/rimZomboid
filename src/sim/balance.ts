@@ -98,9 +98,11 @@ export const OPINION_LIMIT = 100; // de −100 a 100
 export const START_OPINION_MIN = -10;
 export const START_OPINION_MAX = 20;
 // Cada día la opinión se acerca a 0 un 10 % (al menos 1 punto): sin esto, en un grupo pequeño
-// que charla a diario todos acababan en 100 con todos en una semana.
+// que charla a diario todos acababan en 100 con todos en una semana. Lo malo se olvida más
+// despacio (3 %): si no, nunca llegaba a haber rivales.
 export const OPINION_DECAY_PER_DAY = 1;
 export const OPINION_DECAY_FRACTION = 0.1;
+export const OPINION_DECAY_FRACTION_NEGATIVE = 0.03;
 export const FRIEND_OPINION = 40;
 export const RIVAL_OPINION = -40;
 export const SOCIAL_PER_TICK = 50 / TICKS_PER_DAY;
@@ -114,6 +116,7 @@ export const CHAT_RETRY_TICKS = 30;
 export const CHAT_WEIGHTS = { pleasant: 60, neutral: 30, argue: 10, insult: 0 } as const;
 export const CHAT_OPINION_PLEASANT = 0.3; // × opinión
 export const CHAT_OPINION_ARGUE = -0.1; // × opinión
+export const CHAT_OPINION_INSULT = -0.1; // × opinión, solo si es negativa
 export const CHAT_LOW_MOOD_ARGUE = 15;
 export const CHAT_LOW_MOOD_INSULT = 10;
 export const CHAT_OPTIMIST_PLEASANT = 15;

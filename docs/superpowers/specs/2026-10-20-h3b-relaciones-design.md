@@ -11,7 +11,7 @@ Los colonos charlan, se hacen amigos o rivales, discuten, se pelean, se consuela
 
 - `Survivor.opinions: Record<string, number>`: opinión de este colono sobre cada uno de los demás, por id. Va de −100 a 100 y si no hay entrada vale 0. No tiene por qué ser mutua.
 - **Al empezar:** los 3 colonos iniciales tienen una opinión al azar de −10 a +20 entre ellos. Los recién llegados empiezan en 0 en ambos sentidos.
-- **Se diluye:** cada día de juego, cada opinión se acerca a 0 un 10 % (y al menos 1 punto). Ajustado al implementar: con solo 1 punto al día, en un grupo de 3 todos acababan en 100 con todos en una semana; así cada pareja de colonos se estabiliza según sus rasgos y su ánimo.
+- **Se diluye:** cada día de juego, cada opinión positiva se acerca a 0 un 10 % y cada negativa un 3 % (y siempre al menos 1 punto). Ajustado al implementar: con solo 1 punto al día, en un grupo de 3 todos acababan en 100 con todos en una semana; con el 10 % para todo, nunca llegaba a haber rivales. Así cada pareja de colonos se estabiliza según sus rasgos y su ánimo, y lo malo se olvida más despacio.
 - **Etiquetas:** Amigo si es ≥ 40; Rival si es ≤ −40; Pareja si `partnerId` apunta a esa persona.
 
 ## 3. Charlas y necesidad social
@@ -23,7 +23,7 @@ Los colonos charlan, se hacen amigos o rivales, discuten, se pelean, se consuela
   - **Base:** agradable 60, neutra 30, discusión 10, insulto 0.
   - **Opinión** `o` de quien inicia sobre el otro: agradable + 0,3·o, discusión − 0,1·o.
   - **Ánimo** de cualquiera de los dos por debajo de 25: discusión +15 e insulto +10.
-  - **Insulto** solo es posible si `o` < 0 o si el que inicia tiene el ánimo por debajo de 25.
+  - **Insulto** solo es posible si `o` < 0 o si el que inicia tiene el ánimo por debajo de 25. Con `o` < 0, insulto − 0,1·o (añadido al implementar: si no, quien cae mal solo recibía insultos con alguien al límite).
   - **Optimista** (el que inicia): agradable +15. **Pesimista:** agradable −10 y discusión +10.
   - Los pesos negativos cuentan como 0.
 

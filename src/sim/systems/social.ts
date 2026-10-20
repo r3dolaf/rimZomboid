@@ -15,6 +15,7 @@ import {
   ITEM_WEIGHT_KG,
   MOOD_EDGE,
   OPINION_DECAY_FRACTION,
+  OPINION_DECAY_FRACTION_NEGATIVE,
   OPINION_DECAY_PER_DAY,
   PARTNER_CHANCE,
   PARTNER_OPINION,
@@ -179,7 +180,8 @@ export function setBubble(w: World, s: Survivor, kind: BubbleKind): void {
 function decayOpinions(w: World): void {
   for (const s of w.survivors)
     for (const [id, v] of Object.entries(s.opinions)) {
-      const step = Math.max(OPINION_DECAY_PER_DAY, Math.abs(v) * OPINION_DECAY_FRACTION);
+      const fraction = v > 0 ? OPINION_DECAY_FRACTION : OPINION_DECAY_FRACTION_NEGATIVE;
+      const step = Math.max(OPINION_DECAY_PER_DAY, Math.abs(v) * fraction);
       s.opinions[id] = Math.abs(v) <= step ? 0 : v - Math.sign(v) * step;
     }
 }

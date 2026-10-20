@@ -330,3 +330,101 @@ test('la pelea corta el registro de un contenedor y libera la reserva', () => {
   expect(w.containers[0]!.reservedBy).toBeNull();
   expect(checkInvariants(w)).toEqual([]);
 });
+
+/** Dos que se aprecian mucho y no tienen pareja. */
+function lovers() {
+  const x = pair();
+  x.a.opinions[x.b.id] = 60;
+  x.b.opinions[x.a.id] = 60;
+  return x;
+}
+
+test('tras una charla agradable entre dos que se tienen ≥ 60, un 10 % se hacen pareja', () => {
+  let couples = 0;
+  for (let i = 0; i < 2000; i++) {
+    const { w, a, b } = lovers();
+    w.rng = { s: i * 104729 };
+    applyChat(w, a, b, 'pleasant');
+    if (a.partnerId === b.id) {
+      couples++;
+      expect(b.partnerId).toBe(a.id);
+      expect(a.bubble?.kind).toBe('love');
+      expect(w.log).toEqual([{ tick: 0, kind: 'couple', survivorId: a.id, otherId: b.id }]);
+      expect(checkInvariants(w)).toEqual([]);
+    }
+  }
+  expect(couples).toBeGreaterThan(150);
+  expect(couples).toBeLessThan(250);
+});
+
+test('no se hacen pareja si alguno ya tiene, si no llegan a 60 o si la charla no es agradable', () => {
+  for (let i = 0; i < 300; i++) {
+    const taken = lovers();
+    taken.w.rng = { s: i };
+    const c = addSurvivor(taken.w, { x: 9, y: 9 }, 'Carla');
+    taken.b.partnerId = c.id;
+    c.partnerId = taken.b.id;
+    applyChat(taken.w, taken.a, taken.b, 'pleasant');
+    expect(taken.a.partnerId).toBeNull();
+
+    const low = lovers();
+    low.w.rng = { s: i };
+    low.b.opinions[low.a.id] = 57; // + 2 = 59
+    applyChat(low.w, low.a, low.b, 'pleasant');
+    expect(low.a.partnerId).toBeNull();
+
+    const neutral = lovers();
+    neutral.w.rng = { s: i };
+    applyChat(neutral.w, neutral.a, neutral.b, 'neutral');
+    expect(neutral.a.partnerId).toBeNull();
+  }
+});
+
+test('rompen si la opinión de alguno baja de 20: "Ruptura" y −20 de opinión', () => {
+  const { w, a, b } = pair();
+  a.nextChatAt = 1e9;
+  a.partnerId = b.id;
+  b.partnerId = a.id;
+  a.opinions[b.id] = 50;
+  b.opinions[a.id] = 20;
+  socialSystem(w);
+  expect(a.partnerId).toBe(b.id);
+  b.opinions[a.id] = 19;
+  socialSystem(w);
+  expect(a.partnerId).toBeNull();
+  expect(b.partnerId).toBeNull();
+  expect(opinionOf(a, b.id)).toBe(30);
+  expect(opinionOf(b, a.id)).toBe(-1);
+  expect(a.memories).toEqual([{ id: 'breakup', expiresAt: 72 * 300, otherId: b.id }]);
+  expect(b.memories).toEqual([{ id: 'breakup', expiresAt: 72 * 300, otherId: a.id }]);
+  expect(w.log).toEqual([{ tick: 0, kind: 'breakup', survivorId: a.id, otherId: b.id }]);
+  expect(checkInvariants(w)).toEqual([]);
+});
+
+test('al despertar con su pareja aún dormida, los dos ganan "Durmió con su pareja"', () => {
+  const { w, a, b } = pair();
+  a.partnerId = b.id;
+  b.partnerId = a.id;
+  w.tick = 3 * 300; // 11:00, de día
+  a.action = { type: 'sleep', inBed: false };
+  b.action = { type: 'sleep', inBed: false };
+  a.needs.sleep = 100;
+  b.needs.sleep = 50;
+  activitiesSystem(w);
+  expect(a.action.type).toBe('idle');
+  const ids = (s: typeof a) => s.memories.map((m) => m.id);
+  expect(ids(a)).toContain('sleptWithPartner');
+  expect(ids(b)).toEqual(['sleptWithPartner']);
+  expect(b.memories[0]!.otherId).toBe(a.id);
+});
+
+test('sin pareja o con la pareja despierta, no hay "Durmió con su pareja"', () => {
+  const { w, a, b } = pair();
+  w.tick = 3 * 300;
+  a.action = { type: 'sleep', inBed: false };
+  b.action = { type: 'sleep', inBed: false };
+  a.needs.sleep = 100;
+  b.needs.sleep = 50;
+  activitiesSystem(w);
+  expect(a.memories.map((m) => m.id)).toEqual(['sleptOnFloor']);
+});

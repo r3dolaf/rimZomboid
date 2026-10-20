@@ -136,6 +136,10 @@ export const CONSOLE_OPINION = 20; // opinión mínima para ir a consolar (salvo
 export const CONSOLE_RANGE = 2;
 export const CONSOLE_TICKS = 30;
 export const CONSOLE_OPINION_GAIN = 3;
+export const PARTNER_OPINION = 60; // los dos se tienen al menos esto
+export const PARTNER_CHANCE = 0.1; // tras una charla agradable
+export const BREAKUP_BELOW = 20;
+export const BREAKUP_OPINION_LOSS = 20;
 export const BUBBLE_TICKS = 30;
 /** Cama de cada colono por orden de llegada, relativa a la esquina de la base. */
 export const BED_SLOTS: readonly { dx: number; dy: number }[] = [

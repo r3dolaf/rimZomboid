@@ -25,6 +25,12 @@ export function activitiesSystem(w: World): void {
       // Con el sueño lleno se levanta, pero nunca de noche.
       if (s.needs.sleep < 100 || isNight(w.tick)) continue;
       addMemory(s, a.inBed ? 'sleptInBed' : 'sleptOnFloor', w.tick);
+      // Si su pareja sigue durmiendo, han dormido juntos: los dos lo recuerdan.
+      const p = w.survivors.find((x) => x.id === s.partnerId);
+      if (p?.action.type === 'sleep') {
+        addMemory(s, 'sleptWithPartner', w.tick, p.id);
+        addMemory(p, 'sleptWithPartner', w.tick, s.id);
+      }
       s.action = { type: 'idle', ticksLeft: 0 };
     } else if (a.type === 'search') {
       if (--a.ticksLeft > 0) continue;

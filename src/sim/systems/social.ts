@@ -1,4 +1,6 @@
 import {
+  BREAKUP_BELOW,
+  BREAKUP_OPINION_LOSS,
   BUBBLE_TICKS,
   CARRY_CAPACITY_KG,
   CHAT_EFFECTS,
@@ -14,6 +16,8 @@ import {
   MOOD_EDGE,
   OPINION_DECAY_FRACTION,
   OPINION_DECAY_PER_DAY,
+  PARTNER_CHANCE,
+  PARTNER_OPINION,
   SHARE_HUNGER_BELOW,
   SHARE_OPINION,
   TICKS_PER_DAY,
@@ -27,7 +31,7 @@ import type { BubbleKind, Survivor, World } from '../types';
 import { computeFov } from '../vision';
 import { tileOf } from '../world';
 
-/** Charlas, globos y el olvido diario de las opiniones. */
+/** Charlas, globos, rupturas y el olvido diario de las opiniones. */
 export function socialSystem(w: World): void {
   if (w.tick > 0 && w.tick % TICKS_PER_DAY === 0) decayOpinions(w);
   for (const s of w.survivors) {
@@ -41,6 +45,11 @@ export function socialSystem(w: World): void {
     applyChat(w, s, other, weightedPick(w.rng, chatWeights(s, other)));
     s.nextChatAt = w.tick + nextInt(w.rng, CHAT_EVERY_MIN, CHAT_EVERY_MAX);
     other.nextChatAt = w.tick + nextInt(w.rng, CHAT_EVERY_MIN, CHAT_EVERY_MAX);
+  }
+  for (const s of w.survivors) {
+    const p = s.partnerId === null ? undefined : w.survivors.find((x) => x.id === s.partnerId);
+    if (p && (opinionOf(s, p.id) < BREAKUP_BELOW || opinionOf(p, s.id) < BREAKUP_BELOW))
+      breakUp(w, s, p);
   }
 }
 
@@ -89,6 +98,7 @@ export function applyChat(w: World, a: Survivor, b: Survivor, kind: ChatKind): v
   if (kind === 'pleasant') {
     addMemory(a, 'goodChat', w.tick, b.id);
     addMemory(b, 'goodChat', w.tick, a.id);
+    maybeCouple(w, a, b);
   } else if (kind === 'argue') {
     addMemory(a, 'argued', w.tick, b.id);
     addMemory(b, 'argued', w.tick, a.id);
@@ -134,6 +144,31 @@ export function startFight(w: World, a: Survivor, b: Survivor): void {
     setBubble(w, x, 'fight');
   }
   logEvent(w, { kind: 'fight', survivorId: a.id, otherId: b.id });
+}
+
+/** Dos sin pareja que se tienen ≥ PARTNER_OPINION pueden hacerse pareja. */
+function maybeCouple(w: World, a: Survivor, b: Survivor): void {
+  if (a.partnerId !== null || b.partnerId !== null) return;
+  if (opinionOf(a, b.id) < PARTNER_OPINION || opinionOf(b, a.id) < PARTNER_OPINION) return;
+  if (nextFloat(w.rng) >= PARTNER_CHANCE) return;
+  a.partnerId = b.id;
+  b.partnerId = a.id;
+  setBubble(w, a, 'love');
+  setBubble(w, b, 'love');
+  logEvent(w, { kind: 'couple', survivorId: a.id, otherId: b.id });
+}
+
+function breakUp(w: World, a: Survivor, b: Survivor): void {
+  a.partnerId = null;
+  b.partnerId = null;
+  for (const [x, y] of [
+    [a, b],
+    [b, a],
+  ] as const) {
+    changeOpinion(x, y.id, -BREAKUP_OPINION_LOSS);
+    addMemory(x, 'breakup', w.tick, y.id);
+  }
+  logEvent(w, { kind: 'breakup', survivorId: a.id, otherId: b.id });
 }
 
 export function setBubble(w: World, s: Survivor, kind: BubbleKind): void {

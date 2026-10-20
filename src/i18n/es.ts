@@ -49,6 +49,8 @@ export const es = {
     sharedFood: (who: string, other: string) => `${who} ha compartido su comida con ${other}`,
     fight: (who: string, other: string) => `${who} y ${other} se han peleado`,
     consoled: (who: string, other: string) => `${who} ha consolado a ${other}`,
+    couple: (who: string, other: string) => `${who} y ${other} ahora son pareja`,
+    breakup: (who: string, other: string) => `${who} y ${other} lo han dejado`,
   },
 
   needs: { hunger: 'Hambre', sleep: 'Sueño', mood: 'Ánimo', social: 'Social' },

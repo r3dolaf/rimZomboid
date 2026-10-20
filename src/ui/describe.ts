@@ -132,6 +132,12 @@ export function formatLogEntry(e: LogEntry, w: World): string {
     case 'consoled':
       text = l.consoled(name(e.survivorId), name(e.otherId));
       break;
+    case 'couple':
+      text = l.couple(name(e.survivorId), name(e.otherId));
+      break;
+    case 'breakup':
+      text = l.breakup(name(e.survivorId), name(e.otherId));
+      break;
   }
   return `${es.dayTime(t.day, t.hour, t.minute)} · ${text}`;
 }

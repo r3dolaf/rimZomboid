@@ -1,6 +1,9 @@
 import { expect, test } from 'vitest';
 import { LOOT_BANDAGE_TOTAL, LOOT_FOOD_TOTAL } from './balance';
 import { contains } from './geom';
+import { emptyInventory } from './items';
+import { distributeLoot } from './loot';
+import { createRng } from './rng';
 import { getTile } from './map/grid';
 import { Tile, type World } from './types';
 import { createWorld } from './world';
@@ -77,4 +80,15 @@ test('añadir contenedores no cambia a los supervivientes de partidas anteriores
     'Nuria:pessimist',
     'Raúl:pessimist',
   ]);
+});
+
+test('si una casa no tuviera contenedores, su botín va a las demás (no se pierde)', () => {
+  const w = createWorld(4);
+  const [h1, h2] = w.houses;
+  const containers = w.containers.filter((c) => c.houseId === h2!.id);
+  for (const c of containers) c.items = emptyInventory();
+  const rng = createRng(1);
+  distributeLoot(w.base, [h1!, h2!], containers.length ? containers : [], rng);
+  const sum = containers.reduce((n, c) => n + c.items.food, 0);
+  expect(sum).toBe(LOOT_FOOD_TOTAL); // h1 no tiene contenedores en la lista: todo va a h2
 });

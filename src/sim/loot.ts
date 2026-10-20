@@ -64,8 +64,11 @@ function candidateSpots(grid: Grid, h: Building): Point[] {
   return out;
 }
 
-/** Más botín cuanto más lejos de la base: cada casa pesa 1 + 2·d (d de 0 a 1). */
-function distributeLoot(
+/**
+ * Más botín cuanto más lejos de la base: cada casa pesa 1 + 2·d (d de 0 a 1). Una casa sin
+ * contenedores pesa 0, para que su parte no se pierda.
+ */
+export function distributeLoot(
   base: Building,
   houses: Building[],
   containers: Container[],
@@ -76,8 +79,9 @@ function distributeLoot(
   );
   const maxDist = Math.max(...dist, 1);
   const d = dist.map((x) => x / maxDist);
-  const weights = d.map((x) => 1 + 2 * x);
   const byHouse = houses.map((h) => containers.filter((c) => c.houseId === h.id));
+  const weights = d.map((x, i) => (byHouse[i]!.length > 0 ? 1 + 2 * x : 0));
+  if (weights.every((x) => x === 0)) return;
 
   const spread = (total: number, kind: 'food' | 'bandage') => {
     const shares = largestRemainder(total, weights);

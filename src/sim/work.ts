@@ -21,14 +21,17 @@ function available(c: Container, s: Survivor): boolean {
   );
 }
 
+/** Lo más ligero que se puede encontrar (una venda). */
+const LIGHTEST_KG = Math.min(...ITEM_KINDS.map((k) => ITEM_WEIGHT_KG[k]));
+
 /**
- * ¿Merece la pena ir? Solo si puede coger algo de lo que hay, o si nadie lo ha registrado y
- * está vacío (registrarlo lo desmarca). Sin esto, quien va casi lleno volvería una y otra vez
- * a un contenedor del que no puede coger nada, sin descargar nunca.
+ * ¿Merece la pena ir? Si nadie lo ha registrado no se sabe qué tiene: vale la pena si cabe al
+ * menos lo más ligero. Si ya está registrado, solo si cabe algo de lo que queda. Sin esto, quien
+ * va casi lleno volvería una y otra vez a un contenedor del que no puede coger nada.
  */
 function canTakeSomething(c: Container, s: Survivor): boolean {
-  if (isEmpty(c.items)) return !c.searched;
   const room = CARRY_CAPACITY_KG - weightOf(s.carrying) + 1e-9;
+  if (!c.searched) return room >= LIGHTEST_KG;
   return ITEM_KINDS.some((k) => c.items[k] > 0 && ITEM_WEIGHT_KG[k] <= room);
 }
 

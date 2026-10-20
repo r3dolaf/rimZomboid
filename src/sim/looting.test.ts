@@ -195,7 +195,10 @@ test('si lo que queda en los contenedores no le cabe, va a descargar (sin bucles
   const s = w.survivors[0]!;
   issue(w, { type: 'designateHouse', houseId: w.houses[0]!.id, on: true });
   step(w);
-  for (const c of w.containers) c.items = { ...emptyInventory(), food: 3 };
+  for (const c of w.containers) {
+    c.items = { ...emptyInventory(), food: 3 };
+    c.searched = true; // se sabe lo que hay
+  }
   s.carrying = { ...emptyInventory(), food: 15, bandage: 4 }; // 7,9 kg: no cabe ni una lata
   s.action = { type: 'idle', ticksLeft: 0 };
   const a = brains.ai.decide(s, w);
@@ -208,7 +211,10 @@ test('un bate que no cabe no le hace volver al mismo contenedor una y otra vez',
   const s = w.survivors[0]!;
   issue(w, { type: 'designateHouse', houseId: w.houses[0]!.id, on: true });
   step(w);
-  for (const c of w.containers) c.items = { ...emptyInventory(), bat: 1 };
+  for (const c of w.containers) {
+    c.items = { ...emptyInventory(), bat: 1 };
+    c.searched = true;
+  }
   s.carrying = { ...emptyInventory(), food: 14 }; // 7 kg: el bate (1,5) no cabe
   s.action = { type: 'idle', ticksLeft: 0 };
   const a = brains.ai.decide(s, w);
@@ -235,6 +241,32 @@ test('con el almacén sin comida, quien lleva comida va primero a descargarla', 
   step(w);
   w.storage.items.food = 0;
   s.carrying = { ...emptyInventory(), food: 2 };
+  s.action = { type: 'idle', ticksLeft: 0 };
+  const a = brains.ai.decide(s, w);
+  expect(a?.type === 'moveTo' && a.then?.type === 'unload').toBe(true);
+});
+
+test('un contenedor sin registrar no se sabe qué tiene: merece el viaje si cabe lo más ligero', () => {
+  const w = createWorld(5);
+  w.survivors.forEach(happy);
+  const s = w.survivors[0]!;
+  issue(w, { type: 'designateHouse', houseId: w.houses[0]!.id, on: true });
+  step(w);
+  for (const c of w.containers) c.items = { ...emptyInventory(), food: 3 }; // sin registrar
+  s.carrying = { ...emptyInventory(), food: 15, bandage: 4 }; // 7,9 kg: cabe una venda
+  s.action = { type: 'idle', ticksLeft: 0 };
+  const a = brains.ai.decide(s, w);
+  expect(a?.type === 'moveTo' && a.then?.type === 'search').toBe(true);
+});
+
+test('lleno del todo (8 kg), no va a contenedores sin registrar: descarga', () => {
+  const w = createWorld(5);
+  w.survivors.forEach(happy);
+  const s = w.survivors[0]!;
+  issue(w, { type: 'designateHouse', houseId: w.houses[0]!.id, on: true });
+  step(w);
+  for (const c of w.containers) c.items = emptyInventory(); // sin registrar y vacíos
+  s.carrying = { ...emptyInventory(), food: 16 };
   s.action = { type: 'idle', ticksLeft: 0 };
   const a = brains.ai.decide(s, w);
   expect(a?.type === 'moveTo' && a.then?.type === 'unload').toBe(true);

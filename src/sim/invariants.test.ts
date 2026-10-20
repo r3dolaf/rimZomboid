@@ -90,3 +90,22 @@ test('detecta una reserva de un superviviente que no existe', () => {
   w.containers[0]!.reservedBy = 999;
   expect(checkInvariants(w).length).toBeGreaterThan(0);
 });
+
+test('detecta una reserva de alguien que no va a ese contenedor', () => {
+  const w = createWorld(1);
+  w.containers[0]!.reservedBy = w.survivors[0]!.id;
+  expect(checkInvariants(w).length).toBeGreaterThan(0);
+});
+
+test('detecta a quien va a un contenedor sin tenerlo reservado', () => {
+  const w = createWorld(1);
+  const c = w.containers[0]!;
+  w.survivors[0]!.action = {
+    type: 'moveTo',
+    target: c.pos,
+    then: { type: 'search', containerId: c.id },
+  };
+  expect(checkInvariants(w).length).toBeGreaterThan(0);
+  c.reservedBy = w.survivors[0]!.id;
+  expect(checkInvariants(w)).toEqual([]);
+});

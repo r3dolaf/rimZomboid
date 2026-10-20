@@ -1,6 +1,7 @@
 import { CARRY_CAPACITY_KG } from './balance';
 import { ITEM_KINDS, weightOf, type Inventory } from './items';
 import { inBounds, isWalkable } from './map/grid';
+import { targetContainerId } from './work';
 import type { World } from './types';
 import { tileOf } from './world';
 
@@ -37,8 +38,19 @@ export function checkInvariants(w: World): string[] {
   checkInventory(problems, 'almacén', w.storage.items);
   for (const c of w.containers) {
     checkInventory(problems, `contenedor ${c.id}`, c.items);
-    if (c.reservedBy !== null && !ids.has(c.reservedBy))
-      problems.push(`contenedor ${c.id}: reservado por ${c.reservedBy}, que no existe`);
+    if (c.reservedBy !== null) {
+      const holder = w.survivors.find((s) => s.id === c.reservedBy);
+      if (!holder)
+        problems.push(`contenedor ${c.id}: reservado por ${c.reservedBy}, que no existe`);
+      else if (targetContainerId(holder) !== c.id)
+        problems.push(`contenedor ${c.id}: reservado por ${holder.name}, que no va a él`);
+    }
+  }
+  for (const s of w.survivors) {
+    const id = targetContainerId(s);
+    const c = id === null ? undefined : w.containers.find((x) => x.id === id);
+    if (id !== null && c?.reservedBy !== s.id)
+      problems.push(`${s.name}: va al contenedor ${id} sin tenerlo reservado`);
   }
   for (const b of w.beds)
     if (!ids.has(b.ownerId)) problems.push(`cama ${b.id}: su dueño ${b.ownerId} no existe`);

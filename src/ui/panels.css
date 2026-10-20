@@ -176,7 +176,9 @@
   top: 44px;
   left: 12px;
   width: 300px;
-  max-height: calc(100vh - 270px); /* por encima del registro y las tarjetas */
+  max-height: calc(
+    100vh - 310px
+  ); /* por encima del registro (hasta 100vh − 260 px) y las tarjetas */
   overflow-y: auto;
   display: flex;
   flex-direction: column;

@@ -251,3 +251,38 @@ test('en tensión, cuanto mejor va la colonia, más duros los sucesos', () => {
   };
   expect(count('high')).toBeGreaterThan(2);
 });
+
+test('el plan B nunca da un suceso malo cuando está prohibido (Tranquilo < 40 y respiro)', () => {
+  for (const style of ['calm', 'balanced'] as const) {
+    const w = createWorld(4, style);
+    setMood(w, 'low');
+    w.tick = 5 * TICKS_PER_DAY;
+    w.narrator.phase = 'calm';
+    w.narrator.phaseEndsAt = 1e9;
+    w.narrator.nextEventAt = w.tick;
+    const good = fake('cache', 'good', { can: () => false });
+    const bad = fake('storm', 'bad');
+    narratorSystem(w, [good.ev, bad.ev]);
+    expect(bad.fired).toEqual([]);
+    expect(w.narrator.nextEventAt).toBe(w.tick + TICKS_PER_HOUR);
+  }
+});
+
+test('en tensión con la colonia mal, los sucesos leves pesan más', () => {
+  const hard = fake('theft', 'bad', { severity: 3 });
+  const soft = fake('storm', 'bad', { severity: 1 });
+  for (let i = 0; i < 600; i++) {
+    const w = createWorld(4);
+    w.survivors.forEach((s) => (s.needs.mood = 30));
+    w.storage.items.food = 0;
+    w.rng = { s: i * 7919 + 1 };
+    w.tick = 5 * TICKS_PER_DAY + 7; // fuera de la hora en punto: la tensión no se corta
+    w.narrator.phase = 'tension';
+    w.narrator.phaseEndsAt = 1e9;
+    w.narrator.nextEventAt = w.tick;
+    expect(wellbeing(w)).toBeLessThan(40);
+    expect(wellbeing(w)).toBeGreaterThanOrEqual(25);
+    narratorSystem(w, [hard.ev, soft.ev]);
+  }
+  expect(soft.fired.length / hard.fired.length).toBeGreaterThan(2);
+});

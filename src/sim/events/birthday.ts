@@ -42,13 +42,13 @@ export function resolveBirthday(w: World, d: Decision, option: 0 | 1): void {
   }
   w.storage.items.food -= BIRTHDAY_CANS;
   const others = w.survivors.filter((o) => o !== s);
+  // El peor rival puede amargárselo (se mira antes del +5 de la fiesta).
+  let rival = others.find((o) => opinionOf(o, s.id) <= RIVAL_OPINION);
+  for (const o of others) if (rival && opinionOf(o, s.id) < opinionOf(rival, s.id)) rival = o;
   for (const o of others) {
     addMemory(o, 'party', w.tick);
     changeOpinion(o, s.id, BIRTHDAY_OPINION);
   }
-  // El peor rival puede amargárselo.
-  let rival = others.find((o) => opinionOf(o, s.id) <= RIVAL_OPINION);
-  for (const o of others) if (rival && opinionOf(o, s.id) < opinionOf(rival, s.id)) rival = o;
   if (rival && nextFloat(w.rng) < BIRTHDAY_RUIN_CHANCE) {
     addMemory(s, 'ruinedBirthday', w.tick, rival.id);
     changeOpinion(s, rival.id, -BIRTHDAY_RUIN_OPINION);

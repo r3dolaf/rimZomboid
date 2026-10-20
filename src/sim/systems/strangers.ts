@@ -141,6 +141,7 @@ export function acceptStrangers(w: World): void {
   const st = w.stranger;
   if (st === null || st.leaving) return;
   if (w.survivors.length + st.survivors.length > COLONY_MAX) {
+    logEvent(w, { kind: 'strangerLeft', names: st.survivors.map((s) => s.name) });
     leaveStrangers(w);
     return;
   }

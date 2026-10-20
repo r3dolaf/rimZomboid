@@ -1,6 +1,6 @@
 import type { TimeController } from '../game/timeController';
 import { es } from '../i18n/es';
-import { TICKS_PER_DAY } from '../sim/balance';
+import { BIRTHDAY_CANS, TICKS_PER_DAY } from '../sim/balance';
 import { decisionAnswered } from '../sim/decisions';
 import type { LogEntry } from '../sim/log';
 import { issue } from '../sim/orders';
@@ -143,7 +143,7 @@ export function mountNotices(
         }
         const answered = decisionAnswered(w, id);
         if (x.el.hidden !== answered) x.el.hidden = answered;
-        if (d.kind === 'birthday') x.buttons[0]!.disabled = w.storage.items.food < 2;
+        if (d.kind === 'birthday') x.buttons[0]!.disabled = w.storage.items.food < BIRTHDAY_CANS;
       }
     },
   };

@@ -1,4 +1,5 @@
 // Textos visibles del juego en español. Todo texto de la interfaz sale de aquí.
+import { BIRTHDAY_CANS } from '../sim/balance';
 import type { MoodModifierId } from '../sim/mood';
 import type { ItemKind } from '../sim/items';
 import type { RelationLabel } from '../sim/social';
@@ -45,6 +46,8 @@ export const es = {
     theftPunished: 'Castigo',
     birthdayParty: 'Cumpleaños',
     birthdayRuined: 'Cumpleaños amargado',
+    birthdaySkipped: 'Sin fiesta',
+    theftIgnored: 'Desconfianza',
     strangerAccepted: 'Caras nuevas',
     strangerLeft: 'Se marchan',
   },
@@ -57,7 +60,7 @@ export const es = {
     birthday: {
       title: 'Cumpleaños',
       text: (who: string) => `Hoy es el cumpleaños de ${who}. ¿Lo celebráis?`,
-      options: ['Celebrarlo con 2 latas', 'No hay para fiestas'],
+      options: [`Celebrarlo con ${BIRTHDAY_CANS} latas`, 'No hay para fiestas'],
     },
     flu: {
       title: 'Gripe',
@@ -115,7 +118,7 @@ export const es = {
     strangerArrived: (names: string[]) =>
       names.length === 1
         ? `Alguien se acerca a la base: ${names[0]}`
-        : `Se acercan a la base ${list(names)}, que van juntos`,
+        : `Se acercan a la base ${list(names)}, que llegan en pareja`,
     strangerAccepted: (names: string[]) =>
       `${list(names)} ${names.length === 1 ? 'se une' : 'se unen'} al grupo`,
     strangerRejected: (names: string[]) =>

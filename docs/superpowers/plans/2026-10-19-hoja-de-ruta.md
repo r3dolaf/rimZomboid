@@ -44,6 +44,9 @@ Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al p
 
 **Para H6 (pulido):**
 
+- Narrador: en partidas largas se acaban los sucesos buenos y mixtos (cumpleaños uno por colono, desconocidos hasta 8, noche de historias solo de 19 a 23 h) y las fases de calma se quedan casi vacías. Añadir uno o dos sucesos buenos que se repitan y una partida automática de más de 30 días.
+- Las partidas automáticas contestan cada decisión al momento: la caducidad y la gripe "sin decidir" solo las prueban los tests unitarios.
+
 - Relaciones en colonias de 6–8: con el olvido del 10 % diario y las charlas repartidas entre más gente, casi todas las opiniones quedan neutras; quien llega tarde no pasa de +20 y nadie le consuela, y las peleas casi no salen en partidas normales. Ajustar el olvido o la frecuencia de charla según el tamaño de la colonia.
 - Un desconocido rechazado puede volver más tarde con el mismo nombre (solo se evitan los de los colonos actuales).
 - Si el consuelo de alguien en crisis se corta (el que consuela se desploma), vuelve a entrar en crisis desde cero y el registro lo dice dos veces.

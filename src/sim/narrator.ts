@@ -129,7 +129,14 @@ export function chooseEvent(w: World, catalog: readonly GameEvent[]): GameEvent 
     );
   });
   const harsh = w.narrator.style === 'balanced' && w.narrator.phase === 'tension';
-  for (const tone of FALLBACK[wantedTone(w, wb)]) {
+  // El Tranquilo con la colonia mal y el respiro del Equilibrado nunca dan uno malo, ni de plan B:
+  // si no hay buenos ni mixtos, se reintenta en 1 h.
+  const n = w.narrator;
+  const noBad =
+    (n.style === 'calm' && wb < CALM_NO_BAD_BELOW) ||
+    (n.style === 'balanced' && n.phase === 'calm' && wb < RESPITE_BELOW);
+  const tones = FALLBACK[wantedTone(w, wb)].filter((t) => !(noBad && t === 'bad'));
+  for (const tone of tones) {
     const options = ready.filter((e) => e.tone === tone);
     if (options.length === 0) continue;
     if (options.length === 1) return options[0]!;

@@ -156,6 +156,20 @@ test('un rival puede amargarlo (30 %): "Le amargaron el cumpleaños" y −15 al 
   expect(ruined).toBeLessThan(190);
 });
 
+test('el rival que amarga el cumpleaños se mira antes del +5 de la fiesta', () => {
+  let ruined = 0;
+  for (let i = 0; i < 400; i++) {
+    const { w, a, c, d } = birthday();
+    w.storage.items.food = 5;
+    a.opinions[c.id] = -42; // con el +5 quedaría en −37, pero ya era rival
+    w.rng = { s: i * 7 + 1 };
+    issue(w, { type: 'decide', decisionId: d.id, option: 0 });
+    step(w);
+    if (has(c, 'ruinedBirthday')) ruined++;
+  }
+  expect(ruined).toBeGreaterThan(80);
+});
+
 test('No hay para fiestas (o sin 2 latas, o si caduca): "Nadie celebró su cumpleaños"', () => {
   for (const how of ['no', 'sinComida', 'caduca'] as const) {
     const { w, c, d } = birthday();

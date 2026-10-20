@@ -1,9 +1,9 @@
+import { seedFromText } from '../game/seed';
 import { es } from '../i18n/es';
 import type { NarratorStyle } from '../sim/types';
 import './start.css';
 
 const STYLES: readonly NarratorStyle[] = ['calm', 'balanced', 'chaotic'];
-const MAX_SEED = 4294967295;
 
 /** Portada (spec H3c §5.1): elegir narrador y semilla, y Empezar. */
 export function mountStartScreen(
@@ -76,9 +76,8 @@ export function mountStartScreen(
   go.textContent = es.start.go;
   go.dataset.testid = 'start-go';
   go.addEventListener('click', () => {
-    const raw = input.value.trim();
-    const n = Number(raw);
-    if (!/^\d+$/.test(raw) || n > MAX_SEED) {
+    const n = seedFromText(input.value.trim());
+    if (n === null) {
       input.classList.add('invalid');
       return;
     }

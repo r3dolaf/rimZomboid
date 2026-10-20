@@ -132,3 +132,14 @@ test('las decisiones resueltas desaparecen', () => {
   notices.update();
   expect(root.querySelector('[data-testid="decision-flu"]')).toBeNull();
 });
+
+test('lo que se aplica al dejar pasar una decisión también se avisa, en amarillo y sin pausa', () => {
+  const { world, time, notices, all } = setup();
+  const s = world.survivors[0]!;
+  logEvent(world, { kind: 'theftIgnored', suspectId: s.id });
+  logEvent(world, { kind: 'birthdaySkipped', survivorId: s.id });
+  notices.update();
+  expect(all()).toHaveLength(2);
+  for (const n of all()) expect(n.classList.contains('mixed')).toBe(true);
+  expect(time.speed).toBe(1);
+});

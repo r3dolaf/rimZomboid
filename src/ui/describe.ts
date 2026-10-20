@@ -277,6 +277,11 @@ export function noticeFor(e: LogEntry): NoticeInfo | null {
       return { tone: 'good', title: t.birthdayParty, focusId: e.survivorId };
     case 'birthdayRuined':
       return { tone: 'bad', title: t.birthdayRuined, focusId: e.survivorId };
+    // También si la decisión caducó: así se ve qué se aplicó por defecto.
+    case 'birthdaySkipped':
+      return { tone: 'mixed', title: t.birthdaySkipped, focusId: e.survivorId };
+    case 'theftIgnored':
+      return { tone: 'mixed', title: t.theftIgnored, focusId: e.suspectId };
     case 'strangerAccepted':
       return { tone: 'good', title: t.strangerAccepted, focusId: null };
     case 'strangerLeft':

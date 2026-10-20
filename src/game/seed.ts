@@ -3,11 +3,16 @@ import type { NarratorStyle } from '../sim/types';
 
 const MAX_SEED = 4294967295;
 
+/** La semilla escrita como texto, o `null` si no es un entero de 0 a 2³² − 1. */
+export function seedFromText(raw: string): number | null {
+  if (!/^\d+$/.test(raw)) return null;
+  const n = Number(raw);
+  return n <= MAX_SEED ? n : null;
+}
+
 export function parseSeed(search: string, fallback: () => number): number {
   const raw = new URLSearchParams(search).get('seed');
-  if (raw === null || !/^\d+$/.test(raw)) return fallback();
-  const n = Number(raw);
-  return n <= MAX_SEED ? n : fallback();
+  return (raw === null ? null : seedFromText(raw)) ?? fallback();
 }
 
 export function randomSeed(): number {

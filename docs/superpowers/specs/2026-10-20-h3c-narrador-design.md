@@ -53,6 +53,7 @@ Todo es serializable y usa el generador con semilla del mundo: la misma semilla 
 3. Sortea uno según su peso (todos pesan 1 salvo lo dicho en la dureza).
 4. Si no hay ninguno, prueba el tono más cercano: desde bueno, mixto y luego malo; desde malo, mixto y luego bueno; desde mixto, bueno y luego malo.
 5. Si no hay ninguno de ningún tono, lo reintenta en 1 hora.
+6. Cuando el estilo no permite sucesos malos (Tranquilo con bienestar < 40, respiro del Equilibrado), el plan B tampoco los usa: si no hay buenos ni mixtos, se reintenta en 1 hora. (Ajustado tras la revisión: en partidas largas se acaban los buenos y caía en uno malo justo entonces.)
 
 **Inicio:** el primer día y medio no hay sucesos (`nextEventAt` = 1,5 días). El Equilibrado empieza en calma hasta el día 2–3.
 

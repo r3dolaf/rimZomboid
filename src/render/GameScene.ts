@@ -314,10 +314,10 @@ export class GameScene extends Phaser.Scene {
         y: ((y + 0.5) * TILE_PX - cam.worldView.y) * cam.zoom,
       };
     };
-    /** Saca ya un suceso del narrador, sin mirar requisitos ni esperas. */
+    /** Saca ya un suceso del narrador si se puede dar (sin mirar su espera). */
     const forceEvent = (id: string): boolean => {
       const ev = CATALOG.find((e) => e.id === id);
-      if (!ev) return false;
+      if (!ev || !ev.canHappen(this.world)) return false;
       ev.happen(this.world);
       this.world.narrator.lastAt[ev.id] = this.world.tick;
       return true;

@@ -7,3 +7,11 @@ export const NIGHT_ALPHA = 0.55;
 export function nightAlpha(tick: number): number {
   return darkness(tick) * NIGHT_ALPHA;
 }
+
+/** Lo que se oscurece además con tormenta. */
+export const STORM_ALPHA = 0.25;
+
+/** Oscuridad de la capa del cielo: la noche y, si la hay, la tormenta. */
+export function skyAlpha(tick: number, storm: boolean): number {
+  return nightAlpha(tick) + (storm ? STORM_ALPHA : 0);
+}

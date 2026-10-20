@@ -3,6 +3,7 @@ import { toggleContainer, toggleHouse } from '../game/designate';
 import { containerAt, houseAt, survivorAt } from '../game/pick';
 import { runTicks } from '../game/runTicks';
 import type { TimeController } from '../game/timeController';
+import { CATALOG } from '../sim/events/catalog';
 import { getTile } from '../sim/map/grid';
 import { isEmpty } from '../sim/items';
 import { effectiveDesignated, houseMarked } from '../sim/orders';
@@ -27,7 +28,7 @@ import {
   TILE_COLORS,
 } from './colors';
 import { bubbleIcon } from './bubbles';
-import { nightAlpha } from './daylight';
+import { skyAlpha } from './daylight';
 
 export const TILE_PX = 16;
 const SURVIVOR_RADIUS = 5;
@@ -130,7 +131,7 @@ export class GameScene extends Phaser.Scene {
     this.drawActors();
     this.drawBubbles();
     if (++this.frame % FOG_EVERY_FRAMES === 0) this.drawFog();
-    this.night.setAlpha(nightAlpha(this.world.tick));
+    this.night.setAlpha(skyAlpha(this.world.tick, this.world.tick < this.world.stormUntil));
     this.onFrame?.();
   }
 
@@ -313,9 +314,18 @@ export class GameScene extends Phaser.Scene {
         y: ((y + 0.5) * TILE_PX - cam.worldView.y) * cam.zoom,
       };
     };
+    /** Saca ya un suceso del narrador, sin mirar requisitos ni esperas. */
+    const forceEvent = (id: string): boolean => {
+      const ev = CATALOG.find((e) => e.id === id);
+      if (!ev) return false;
+      ev.happen(this.world);
+      this.world.narrator.lastAt[ev.id] = this.world.tick;
+      return true;
+    };
     (window as unknown as { rimzomboid: unknown }).rimzomboid = {
       world: this.world,
       tileToScreen,
+      forceEvent,
     };
   }
 

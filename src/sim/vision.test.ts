@@ -3,7 +3,7 @@ import { INITIAL_REVEAL, TICKS_PER_HOUR } from './balance';
 import { createGrid, setTile } from './map/grid';
 import { emptyWorld } from './testing/fixtures';
 import { Tile, type Grid } from './types';
-import { computeFov, visibleTiles, visionRadius, visionSystem } from './vision';
+import { computeFov, isOpaque, visibleTiles, visionRadius, visionSystem } from './vision';
 import { createWorld } from './world';
 
 const at = (hour: number) => ((hour - 8 + 24) % 24) * TICKS_PER_HOUR;
@@ -140,5 +140,35 @@ test('al empezar se conocen las carreteras y el exterior de los edificios, pero 
       (c) => c.houseId === far.id && !seen(c.pos.x, c.pos.y),
     );
     expect(unseenInside.length, `semilla ${seed}`).toBeGreaterThan(0);
+  }
+});
+
+test('no se ve a través de un hueco diagonal entre dos muros', () => {
+  const g = createGrid(12, 12, Tile.Grass);
+  setTile(g, 5, 4, Tile.Wall);
+  setTile(g, 4, 5, Tile.Wall);
+  const v = fov(g, 3, 3, 10);
+  expect(v.has('5,5')).toBe(false);
+  expect(v.has('6,6')).toBe(false);
+  expect(v.has('7,7')).toBe(false);
+});
+
+test('la visión es recíproca: si A ve a B, B ve a A (casillas no opacas)', () => {
+  for (const seed of [1, 4]) {
+    const w = createWorld(seed);
+    const g = w.grid;
+    const r = 12;
+    // zona alrededor de una casa, donde hay muros, puertas y ventanas
+    const h = w.houses[0]!;
+    const cells: [number, number][] = [];
+    for (let y = h.rect.y - 4; y < h.rect.y + h.rect.h + 4; y++)
+      for (let x = h.rect.x - 4; x < h.rect.x + h.rect.w + 4; x++)
+        if (x >= 0 && y >= 0 && x < g.width && y < g.height && !isOpaque(g, x, y))
+          cells.push([x, y]);
+    const sees = new Map<string, Set<string>>();
+    for (const [x, y] of cells) sees.set(`${x},${y}`, fov(g, x, y, r));
+    let asym = 0;
+    for (const [a, va] of sees) for (const b of va) if (sees.has(b) && !sees.get(b)!.has(a)) asym++;
+    expect(asym, `semilla ${seed}`).toBe(0);
   }
 });

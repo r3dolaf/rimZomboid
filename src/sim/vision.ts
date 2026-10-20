@@ -1,4 +1,4 @@
-// Línea de visión con shadowcasting recursivo por octantes.
+// Línea de visión con shadowcasting simétrico por cuadrantes.
 import { VISION_DAY, VISION_EVERY_TICKS, VISION_NIGHT } from './balance';
 import { darkness } from './clock';
 import { getTile, inBounds } from './map/grid';
@@ -14,19 +14,22 @@ export function visionRadius(tick: number): number {
   return Math.round(VISION_DAY - (VISION_DAY - VISION_NIGHT) * darkness(tick));
 }
 
-// Transformaciones de los 8 octantes: [xx, xy, yx, yy].
-const OCTANTS: readonly [number, number, number, number][] = [
-  [1, 0, 0, 1],
-  [0, 1, 1, 0],
-  [0, -1, 1, 0],
-  [-1, 0, 0, 1],
-  [-1, 0, 0, -1],
-  [0, -1, -1, 0],
-  [0, 1, -1, 0],
-  [1, 0, 0, -1],
-];
+// Shadowcasting simétrico (Albert Ford, 2020): si A ve a B, B ve a A. Además, no se ve a través
+// de huecos diagonales entre casillas opacas. Las pendientes son fracciones exactas n/d (d > 0)
+// para no depender del redondeo de los decimales.
 
-/** Llama a `mark` con cada casilla visible desde (ox, oy), incluidas las que tapan. */
+interface Slope {
+  n: number;
+  d: number;
+}
+
+/** Pendiente del borde izquierdo de la casilla `col` en la fila `depth`: (2·col − 1) / (2·depth). */
+const slopeAt = (depth: number, col: number): Slope => ({ n: 2 * col - 1, d: 2 * depth });
+
+/**
+ * Llama a `mark` con cada casilla visible desde (ox, oy) dentro de `radius`, incluidas las
+ * opacas que se ven (muros, árboles, puertas).
+ */
 export function computeFov(
   g: Grid,
   ox: number,
@@ -35,53 +38,40 @@ export function computeFov(
   mark: (x: number, y: number) => void,
 ): void {
   if (inBounds(g, ox, oy)) mark(ox, oy);
-  for (const [xx, xy, yx, yy] of OCTANTS)
-    castLight(g, ox, oy, radius, 1, 1, 0, xx, xy, yx, yy, mark);
-}
-
-function castLight(
-  g: Grid,
-  ox: number,
-  oy: number,
-  radius: number,
-  row: number,
-  start: number,
-  end: number,
-  xx: number,
-  xy: number,
-  yx: number,
-  yy: number,
-  mark: (x: number, y: number) => void,
-): void {
-  if (start < end) return;
   const r2 = radius * radius;
-  let newStart = 0;
-  for (let j = row; j <= radius; j++) {
-    let blocked = false;
-    for (let dx = -j; dx <= 0; dx++) {
-      const dy = -j;
-      const x = ox + dx * xx + dy * xy;
-      const y = oy + dx * yx + dy * yy;
-      const leftSlope = (dx - 0.5) / (dy + 0.5);
-      const rightSlope = (dx + 0.5) / (dy - 0.5);
-      if (start < rightSlope) continue;
-      if (end > leftSlope) break;
-      if (dx * dx + dy * dy <= r2 && inBounds(g, x, y)) mark(x, y);
-      const opaque = isOpaque(g, x, y);
-      if (blocked) {
-        if (opaque) {
-          newStart = rightSlope;
-        } else {
-          blocked = false;
-          start = newStart;
-        }
-      } else if (opaque && j < radius) {
-        blocked = true;
-        castLight(g, ox, oy, radius, j + 1, start, leftSlope, xx, xy, yx, yy, mark);
-        newStart = rightSlope;
+
+  for (let q = 0; q < 4; q++) {
+    // Cuadrantes norte, este, sur y oeste: (fila, columna) → (x, y).
+    const toX = (row: number, col: number) =>
+      q === 0 || q === 2 ? ox + col : q === 1 ? ox + row : ox - row;
+    const toY = (row: number, col: number) => (q === 0 ? oy - row : q === 2 ? oy + row : oy + col);
+
+    const scan = (depth: number, start: Slope, end: Slope): void => {
+      if (depth > radius) return;
+      // Columnas cuyo centro cae en el sector (redondeando las mitades hacia dentro).
+      const minCol = Math.floor((2 * depth * start.n + start.d) / (2 * start.d));
+      const maxCol = Math.ceil((2 * depth * end.n - end.d) / (2 * end.d));
+      let prev: 'none' | 'wall' | 'floor' = 'none';
+      for (let col = minCol; col <= maxCol; col++) {
+        const x = toX(depth, col);
+        const y = toY(depth, col);
+        const opaque = isOpaque(g, x, y);
+        // Hueco diagonal: si las dos vecinas hacia el observador son opacas, no se ve a través.
+        const sx = Math.sign(x - ox);
+        const sy = Math.sign(y - oy);
+        const corner =
+          !opaque && sx !== 0 && sy !== 0 && isOpaque(g, x - sx, y) && isOpaque(g, x, y - sy);
+        const wall = opaque || corner;
+        const symmetric = col * start.d >= depth * start.n && col * end.d <= depth * end.n;
+        const visible = opaque || (!corner && symmetric);
+        if (visible && inBounds(g, x, y) && col * col + depth * depth <= r2) mark(x, y);
+        if (prev === 'wall' && !wall) start = slopeAt(depth, col);
+        if (prev === 'floor' && wall) scan(depth + 1, start, slopeAt(depth, col));
+        prev = wall ? 'wall' : 'floor';
       }
-    }
-    if (blocked) break;
+      if (prev === 'floor') scan(depth + 1, start, end);
+    };
+    scan(1, { n: -1, d: 1 }, { n: 1, d: 1 });
   }
 }
 

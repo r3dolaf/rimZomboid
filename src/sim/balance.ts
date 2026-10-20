@@ -51,6 +51,15 @@ export const MEMORY_EFFECTS = {
   sleptOnFloor: { value: -5, hours: 12 },
   ate: { value: 5, hours: 6 },
   vented: { value: 15, hours: 24 },
+  goodChat: { value: 3, hours: 6 },
+  argued: { value: -5, hours: 12 },
+  insulted: { value: -8, hours: 12 },
+  fought: { value: -10, hours: 24 },
+  consoled: { value: 10, hours: 12 },
+  consoledByPartner: { value: 15, hours: 12 },
+  sharedFood: { value: 5, hours: 12 },
+  breakup: { value: -15, hours: 72 },
+  sleptWithPartner: { value: 5, hours: 12 },
 } as const;
 export const EAT_BELOW = 35;
 export const EAT_RESTORE = 60;
@@ -83,3 +92,30 @@ export const REFUSE_CHANCE = 0.5; // al límite, probabilidad de negarse a un tr
 export const REFUSE_TICKS = TICKS_PER_HOUR;
 export const SCARED_OUTSIDE_MOOD = -10; // Cobarde fuera de la base
 export const INITIAL_REVEAL = 8; // casillas alrededor de la base que se conocen al empezar
+
+// Relaciones (H3b)
+export const OPINION_LIMIT = 100; // de −100 a 100
+export const START_OPINION_MIN = -10;
+export const START_OPINION_MAX = 20;
+export const OPINION_DECAY_PER_DAY = 1; // cada opinión se acerca a 0
+export const FRIEND_OPINION = 40;
+export const RIVAL_OPINION = -40;
+export const SOCIAL_PER_TICK = 50 / TICKS_PER_DAY;
+export const LONELY_BELOW = 20;
+export const LONELY_MOOD = -10;
+export const CHAT_RANGE = 6;
+export const CHAT_EVERY_MIN = 450;
+export const CHAT_EVERY_MAX = 750;
+export const CHAT_RETRY_TICKS = 30;
+export const BUBBLE_TICKS = 30;
+/** Cama de cada colono por orden de llegada, relativa a la esquina de la base. */
+export const BED_SLOTS: readonly { dx: number; dy: number }[] = [
+  { dx: 2, dy: 1 },
+  { dx: 5, dy: 1 },
+  { dx: 9, dy: 1 },
+  { dx: 2, dy: 3 },
+  { dx: 9, dy: 3 },
+];
+export const COLONY_MAX = 8;
+export const STRANGER_EVERY_DAYS_MIN = 3;
+export const STRANGER_EVERY_DAYS_MAX = 6;

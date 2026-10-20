@@ -47,7 +47,7 @@ export const es = {
     outOfFood: 'El almacén se ha quedado sin comida',
   },
 
-  needs: { hunger: 'Hambre', sleep: 'Sueño', mood: 'Ánimo' },
+  needs: { hunger: 'Hambre', sleep: 'Sueño', mood: 'Ánimo', social: 'Social' },
   traitsTitle: 'Rasgos',
   needsTitle: 'Necesidades',
   moodTitle: 'Ánimo',
@@ -76,6 +76,15 @@ export const es = {
     sleptOnFloor: 'Durmió en el suelo',
     ate: 'Comió',
     vented: 'Se desahogó',
+    goodChat: 'Buena charla',
+    argued: 'Discutió',
+    insulted: 'Insultado',
+    fought: 'Se peleó',
+    consoled: 'Consolado',
+    consoledByPartner: 'Consolado por su pareja',
+    sharedFood: 'Le compartieron comida',
+    breakup: 'Ruptura',
+    sleptWithPartner: 'Durmió con su pareja',
   } satisfies Record<MoodModifierId, string>,
 
   activities: {

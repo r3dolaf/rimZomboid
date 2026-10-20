@@ -90,10 +90,11 @@ function goEat(w: World): Action {
   return { type: 'moveTo', target: pick(w.rng, w.storage.tiles), then: { type: 'eat' } };
 }
 
+/** A su cama; si no tiene, a cualquier sitio del suelo de la base. */
 function goSleep(s: Survivor, w: World): Action {
   const bed = w.beds.find((b) => b.id === s.bedId);
-  if (!bed) throw new Error(`${s.name} no tiene cama`);
-  return { type: 'moveTo', target: bed.pos, then: { type: 'sleep' } };
+  const target = bed ? bed.pos : pick(w.rng, baseFloor(w));
+  return { type: 'moveTo', target, then: { type: 'sleep' } };
 }
 
 function baseFloor(w: World): Point[] {

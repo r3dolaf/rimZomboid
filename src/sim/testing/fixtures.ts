@@ -23,12 +23,16 @@ export function emptyWorld(width: number, height: number): World {
         brain: 'ai',
         action: { type: 'idle', ticksLeft: 0 },
         path: [],
-        needs: { hunger: 100, sleep: 100, mood: 50 },
+        needs: { hunger: 100, sleep: 100, mood: 50, social: 100 },
         traits: [],
         memories: [],
         bedId: 1,
         carrying: emptyInventory(),
         work: { loot: true },
+        opinions: {},
+        partnerId: null,
+        nextChatAt: 0,
+        bubble: null,
       },
     ],
     beds: [{ id: 1, pos: { x: width - 1, y: 0 }, ownerId: 1 }],
@@ -38,6 +42,8 @@ export function emptyWorld(width: number, height: number): World {
     orders: [],
     log: [],
     nextId: 2,
+    stranger: null,
+    nextStrangerAt: Number.MAX_SAFE_INTEGER, // sin desconocidos salvo que el test los pida
   };
 }
 

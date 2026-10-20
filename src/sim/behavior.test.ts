@@ -254,3 +254,18 @@ test('si se acaba la comida mientras come, lo deja', () => {
   decisionsSystem(w);
   expect(s.action.type).not.toBe('eat');
 });
+
+test('sin cama, de noche duerme en el suelo de la base', () => {
+  const w = createWorld(3);
+  w.tick = at(22);
+  const s = w.survivors[0]!;
+  w.beds = w.beds.filter((b) => b.ownerId !== s.id);
+  s.bedId = null;
+  rested(s);
+  s.needs.sleep = 40;
+  expect(runUntil(w, () => s.action.type === 'sleep', TICKS_PER_HOUR)).toBe(true);
+  expect(s.action).toEqual({ type: 'sleep', inBed: false });
+  const t = tileOf(s.pos);
+  const r = w.base.rect;
+  expect(t.x >= r.x && t.y >= r.y && t.x < r.x + r.w && t.y < r.y + r.h).toBe(true);
+});

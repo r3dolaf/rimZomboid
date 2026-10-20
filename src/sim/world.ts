@@ -1,9 +1,16 @@
 import {
+  BED_SLOTS,
+  CHAT_EVERY_MAX,
+  INITIAL_REVEAL,
   NEED_START_MAX,
   NEED_START_MIN,
   START_FOOD,
+  START_OPINION_MAX,
+  START_OPINION_MIN,
+  STRANGER_EVERY_DAYS_MAX,
+  STRANGER_EVERY_DAYS_MIN,
   SURVIVOR_COUNT,
-  INITIAL_REVEAL,
+  TICKS_PER_DAY,
 } from './balance';
 import { emptyInventory } from './items';
 import { placeContainers } from './loot';
@@ -43,24 +50,27 @@ export function createWorld(seed: number): World {
       hunger: nextInt(rng, NEED_START_MIN, NEED_START_MAX),
       sleep: nextInt(rng, NEED_START_MIN, NEED_START_MAX),
       mood: 0, // se fija abajo con su objetivo
+      social: 0, // se sortea abajo, después de los contenedores
     },
     traits: rollTraits(rng),
     memories: [],
     bedId: i + 1,
     carrying: emptyInventory(),
     work: { loot: true },
+    opinions: {},
+    partnerId: null,
+    nextChatAt: 0,
+    bubble: null,
   }));
   // El Cobarde no sale a saquear salvo que el jugador lo permita.
   for (const s of survivors) s.work.loot = !s.traits.includes('coward');
 
-  for (const s of survivors) s.needs.mood = moodTarget(s, 0, base.rect);
-
   // Muebles de la base (spec H2 §7): camas arriba, almacén abajo junto a la puerta.
   const r = base.rect;
-  const beds: Bed[] = [r.x + 2, r.x + 5, r.x + 9].map((x, i) => ({
+  const beds: Bed[] = survivors.map((s, i) => ({
     id: i + 1,
-    pos: { x, y: r.y + 1 },
-    ownerId: survivors[i]!.id,
+    pos: { x: r.x + BED_SLOTS[i]!.dx, y: r.y + BED_SLOTS[i]!.dy },
+    ownerId: s.id,
   }));
   const storage: Storage = {
     tiles: [
@@ -72,6 +82,20 @@ export function createWorld(seed: number): World {
 
   // Después de los supervivientes, para no cambiar partidas anteriores con la misma semilla.
   const containers = placeContainers(grid, base, houses, rng);
+
+  // Relaciones (H3b), también después para no cambiar partidas anteriores.
+  for (const s of survivors) {
+    s.needs.social = nextInt(rng, NEED_START_MIN, NEED_START_MAX);
+    s.nextChatAt = nextInt(rng, 0, CHAT_EVERY_MAX);
+    for (const o of survivors)
+      if (o !== s) s.opinions[o.id] = nextInt(rng, START_OPINION_MIN, START_OPINION_MAX);
+  }
+  for (const s of survivors) s.needs.mood = moodTarget(s, 0, base.rect);
+  const nextStrangerAt = nextInt(
+    rng,
+    STRANGER_EVERY_DAYS_MIN * TICKS_PER_DAY,
+    STRANGER_EVERY_DAYS_MAX * TICKS_PER_DAY,
+  );
 
   const world: World = {
     seed,
@@ -88,6 +112,8 @@ export function createWorld(seed: number): World {
     orders: [],
     log: [],
     nextId: survivors.length + 1,
+    stranger: null,
+    nextStrangerAt,
   };
   // Los supervivientes conocen su base y los alrededores.
   for (let y = r.y - INITIAL_REVEAL; y < r.y + r.h + INITIAL_REVEAL; y++)

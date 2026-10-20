@@ -51,15 +51,34 @@ export interface Needs {
   hunger: number;
   sleep: number;
   mood: number;
+  /** Ganas de compañía: baja con el tiempo y sube al charlar. */
+  social: number;
 }
 
-export type MemoryId = 'sleptInBed' | 'sleptOnFloor' | 'ate' | 'vented';
+export type MemoryId =
+  | 'sleptInBed'
+  | 'sleptOnFloor'
+  | 'ate'
+  | 'vented'
+  | 'goodChat'
+  | 'argued'
+  | 'insulted'
+  | 'fought'
+  | 'consoled'
+  | 'consoledByPartner'
+  | 'sharedFood'
+  | 'breakup'
+  | 'sleptWithPartner';
 
-/** Recuerdo con efecto en el ánimo hasta el tick `expiresAt`. */
+/** Recuerdo con efecto en el ánimo hasta el tick `expiresAt`; `otherId`, con quién fue. */
 export interface Memory {
   id: MemoryId;
   expiresAt: number;
+  otherId?: number;
 }
+
+/** Icono sobre la cabeza: charla, discusión o insulto, pelea, consuelo, compartir y pareja. */
+export type BubbleKind = 'chat' | 'argue' | 'fight' | 'console' | 'share' | 'love';
 
 /** Lo que se hace al llegar al destino de un `moveTo`. */
 export type Activity =
@@ -92,11 +111,27 @@ export interface Survivor {
   needs: Needs;
   traits: TraitId[];
   memories: Memory[];
-  bedId: number;
+  /** Su cama, o `null` si no hay sitio (duerme en el suelo de la base). */
+  bedId: number | null;
   /** Lo que lleva encima (como máximo CARRY_CAPACITY_KG). */
   carrying: Inventory;
   /** Trabajos permitidos (prioridades del jugador). */
   work: { loot: boolean };
+  /** Opinión sobre cada uno de los demás, por id, de −100 a 100 (sin entrada, 0). */
+  opinions: Record<string, number>;
+  partnerId: number | null;
+  /** Tick en que intentará charlar con alguien. */
+  nextChatAt: number;
+  bubble: { kind: BubbleKind; until: number } | null;
+}
+
+/** Superviviente que espera a la puerta a que el jugador lo acepte o lo rechace. */
+export interface Stranger {
+  survivor: Survivor;
+  /** Si nadie contesta antes de este tick, se marcha. */
+  expiresAt: number;
+  /** Ya se va hacia el borde del mapa. */
+  leaving: boolean;
 }
 
 export interface Bed {
@@ -146,4 +181,7 @@ export interface World {
   /** Registro de sucesos (los últimos LOG_MAX). */
   log: LogEntry[];
   nextId: number;
+  stranger: Stranger | null;
+  /** Tick de la siguiente llegada de un desconocido. */
+  nextStrangerAt: number;
 }

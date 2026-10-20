@@ -109,3 +109,30 @@ test('detecta a quien va a un contenedor sin tenerlo reservado', () => {
   c.reservedBy = w.survivors[0]!.id;
   expect(checkInvariants(w)).toEqual([]);
 });
+
+test('detecta opiniones fuera de [−100, 100] y social fuera de rango', () => {
+  const w = createWorld(1);
+  const [a, b] = w.survivors;
+  a!.opinions[b!.id] = 150;
+  expect(checkInvariants(w).length).toBeGreaterThan(0);
+  const w2 = createWorld(1);
+  w2.survivors[0]!.needs.social = -3;
+  expect(checkInvariants(w2).length).toBeGreaterThan(0);
+});
+
+test('detecta parejas que no son mutuas', () => {
+  const w = createWorld(1);
+  const [a, b] = w.survivors;
+  a!.partnerId = b!.id;
+  expect(checkInvariants(w).length).toBeGreaterThan(0);
+  b!.partnerId = a!.id;
+  expect(checkInvariants(w)).toEqual([]);
+});
+
+test('no tener cama (bedId nulo) es válido', () => {
+  const w = createWorld(1);
+  const s = w.survivors[0]!;
+  w.beds = w.beds.filter((b) => b.ownerId !== s.id);
+  s.bedId = null;
+  expect(checkInvariants(w)).toEqual([]);
+});

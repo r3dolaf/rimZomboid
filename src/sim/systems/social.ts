@@ -6,7 +6,12 @@ import {
   CHAT_EVERY_MIN,
   CHAT_RANGE,
   CHAT_RETRY_TICKS,
+  FIGHT_CHANCE,
+  FIGHT_OPINION,
+  FIGHT_OPINION_LOSS,
+  FIGHT_TICKS,
   ITEM_WEIGHT_KG,
+  MOOD_EDGE,
   OPINION_DECAY_FRACTION,
   OPINION_DECAY_PER_DAY,
   SHARE_HUNGER_BELOW,
@@ -16,7 +21,7 @@ import {
 import { weightOf } from '../items';
 import { logEvent } from '../log';
 import { addMemory } from '../mood';
-import { nextInt, weightedPick } from '../rng';
+import { nextFloat, nextInt, weightedPick } from '../rng';
 import { changeOpinion, chatWeights, opinionOf, type ChatKind } from '../social';
 import type { BubbleKind, Survivor, World } from '../types';
 import { computeFov } from '../vision';
@@ -42,7 +47,7 @@ export function socialSystem(w: World): void {
 /** Despierto, sin crisis (ni yendo a tenerla) y sin pelear. */
 function available(s: Survivor): boolean {
   const a = s.action;
-  if (a.type === 'sleep' || a.type === 'crisis') return false;
+  if (a.type === 'sleep' || a.type === 'crisis' || a.type === 'fight') return false;
   return !(a.type === 'moveTo' && a.then?.type === 'crisis');
 }
 
@@ -89,6 +94,7 @@ export function applyChat(w: World, a: Survivor, b: Survivor, kind: ChatKind): v
   } else if (kind === 'insult') {
     addMemory(b, 'insulted', w.tick, a.id);
     logEvent(w, { kind: 'insult', survivorId: a.id, otherId: b.id });
+    maybeFight(w, a, b);
   }
   if (kind === 'pleasant' || kind === 'neutral') maybeShareFood(w, a, b);
 }
@@ -105,6 +111,28 @@ function maybeShareFood(w: World, a: Survivor, b: Survivor): void {
   addMemory(b, 'sharedFood', w.tick, a.id);
   setBubble(w, a, 'share');
   logEvent(w, { kind: 'sharedFood', survivorId: a.id, otherId: b.id });
+}
+
+/** Tras un insulto: si son rivales y alguno está al límite, puede haber pelea. */
+function maybeFight(w: World, a: Survivor, b: Survivor): void {
+  const rivals = opinionOf(a, b.id) <= FIGHT_OPINION || opinionOf(b, a.id) <= FIGHT_OPINION;
+  const edge = a.needs.mood < MOOD_EDGE || b.needs.mood < MOOD_EDGE;
+  if (rivals && edge && nextFloat(w.rng) < FIGHT_CHANCE) startFight(w, a, b);
+}
+
+/** Los dos dejan lo que hacían y se pelean (spec H3b §4). */
+export function startFight(w: World, a: Survivor, b: Survivor): void {
+  for (const [x, y] of [
+    [a, b],
+    [b, a],
+  ] as const) {
+    x.action = { type: 'fight', otherId: y.id, ticksLeft: FIGHT_TICKS };
+    x.path = [];
+    changeOpinion(x, y.id, -FIGHT_OPINION_LOSS);
+    addMemory(x, 'fought', w.tick, y.id);
+    setBubble(w, x, 'fight');
+  }
+  logEvent(w, { kind: 'fight', survivorId: a.id, otherId: b.id });
 }
 
 export function setBubble(w: World, s: Survivor, kind: BubbleKind): void {

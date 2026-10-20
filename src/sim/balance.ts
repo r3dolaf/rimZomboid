@@ -128,6 +128,10 @@ export const CHAT_EFFECTS = {
 } as const;
 export const SHARE_HUNGER_BELOW = 35;
 export const SHARE_OPINION = 5;
+export const FIGHT_OPINION = -40; // rivales: alguno tiene al otro aquí o por debajo
+export const FIGHT_CHANCE = 0.3;
+export const FIGHT_TICKS = 30;
+export const FIGHT_OPINION_LOSS = 15;
 export const BUBBLE_TICKS = 30;
 /** Cama de cada colono por orden de llegada, relativa a la esquina de la base. */
 export const BED_SLOTS: readonly { dx: number; dy: number }[] = [

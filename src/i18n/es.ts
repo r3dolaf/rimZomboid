@@ -47,6 +47,7 @@ export const es = {
     outOfFood: 'El almacén se ha quedado sin comida',
     insult: (who: string, other: string) => `${who} ha insultado a ${other}`,
     sharedFood: (who: string, other: string) => `${who} ha compartido su comida con ${other}`,
+    fight: (who: string, other: string) => `${who} y ${other} se han peleado`,
   },
 
   needs: { hunger: 'Hambre', sleep: 'Sueño', mood: 'Ánimo', social: 'Social' },
@@ -104,11 +105,13 @@ export const es = {
     unload: 'Dejando cosas en el almacén',
     refused: 'Se niega a trabajar',
     noPath: 'No puede llegar',
+    fight: (other: string) => `Peleándose con ${other}`,
   },
   containers: { fridge: 'una nevera', wardrobe: 'un armario', shelf: 'una estantería' },
 
   status: {
     crisis: { icon: '🌀', label: 'En crisis' },
+    fighting: { icon: '🥊', label: 'Peleando' },
     sleeping: { icon: '💤', label: 'Durmiendo' },
     eating: { icon: '🍽', label: 'Comiendo' },
     edge: { icon: '⚠', label: 'Al límite' },

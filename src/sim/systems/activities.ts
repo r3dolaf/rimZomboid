@@ -5,7 +5,7 @@ import { addMemory } from '../mood';
 import { addInto, isEmpty, takeUpTo } from '../items';
 import type { Survivor, World } from '../types';
 
-/** Avanzan y terminan las actividades: comer, dormir, crisis, registrar y descargar. */
+/** Avanzan y terminan las actividades: comer, dormir, crisis, registrar, descargar y pelear. */
 export function activitiesSystem(w: World): void {
   for (const s of w.survivors) {
     const a = s.action;
@@ -32,6 +32,12 @@ export function activitiesSystem(w: World): void {
     } else if (a.type === 'unload') {
       if (--a.ticksLeft > 0) continue;
       addInto(w.storage.items, s.carrying);
+      s.action = { type: 'idle', ticksLeft: 0 };
+    } else if (a.type === 'fight') {
+      // Termina a su tiempo o en cuanto el otro deja de pelear con él (p. ej., se desploma).
+      const o = w.survivors.find((x) => x.id === a.otherId);
+      const mutual = o?.action.type === 'fight' && o.action.otherId === s.id;
+      if (--a.ticksLeft > 0 && mutual) continue;
       s.action = { type: 'idle', ticksLeft: 0 };
     } else if (a.type === 'crisis') {
       if (--a.ticksLeft > 0) continue;

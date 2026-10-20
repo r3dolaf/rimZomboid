@@ -1,12 +1,17 @@
 import { expect, test } from 'vitest';
 import { CHAT_EVERY_MAX, CHAT_EVERY_MIN, CHAT_RETRY_TICKS, TICKS_PER_DAY } from '../balance';
+import { brains } from '../brain';
+import { checkInvariants } from '../invariants';
+import { emptyInventory } from '../items';
 import { setTile } from '../map/grid';
 import { moodModifiers } from '../mood';
 import { chatWeights, opinionOf } from '../social';
 import { addSurvivor, emptyWorld } from '../testing/fixtures';
 import { Tile } from '../types';
+import { reservationsSystem } from '../work';
+import { activitiesSystem } from './activities';
 import { needsSystem } from './needs';
-import { applyChat, socialSystem } from './social';
+import { applyChat, socialSystem, startFight } from './social';
 
 /** Ana en (0, 0) y Bea a `dx` casillas a la derecha, en un mapa de hierba. */
 function pair(dx = 2) {
@@ -230,4 +235,98 @@ test('los globos caducan', () => {
   w.tick = 5;
   socialSystem(w);
   expect(a.bubble).toBeNull();
+});
+
+/** Rivales y alguien al límite: el insulto puede acabar en pelea. */
+function rivals() {
+  const x = pair();
+  x.a.opinions[x.b.id] = -40;
+  x.b.needs.mood = 20;
+  return x;
+}
+
+test('tras un insulto entre rivales con alguien al límite, un 30 % acaba en pelea', () => {
+  let fights = 0;
+  for (let i = 0; i < 1000; i++) {
+    const { w, a, b } = rivals();
+    w.rng = { s: i * 7919 };
+    applyChat(w, a, b, 'insult');
+    if (a.action.type === 'fight') fights++;
+  }
+  expect(fights).toBeGreaterThan(250);
+  expect(fights).toBeLessThan(350);
+});
+
+test('sin rivalidad o sin nadie al límite, el insulto no acaba en pelea', () => {
+  for (let i = 0; i < 200; i++) {
+    const calm = rivals();
+    calm.w.rng = { s: i };
+    calm.b.needs.mood = 25;
+    applyChat(calm.w, calm.a, calm.b, 'insult');
+    expect(calm.a.action.type).toBe('idle');
+    const mild = rivals();
+    mild.w.rng = { s: i };
+    mild.a.opinions[mild.b.id] = -31; // −31 − 8 del insulto = −39
+    applyChat(mild.w, mild.a, mild.b, 'insult');
+    expect(mild.a.action.type).toBe('idle');
+  }
+});
+
+test('la pelea: 30 ticks los dos, −15 de opinión, "Se peleó" y al registro', () => {
+  const { w, a, b } = pair();
+  a.action = { type: 'moveTo', target: { x: 9, y: 9 } };
+  a.path = [{ x: 1, y: 1 }];
+  startFight(w, a, b);
+  expect(a.action).toEqual({ type: 'fight', otherId: b.id, ticksLeft: 30 });
+  expect(b.action).toEqual({ type: 'fight', otherId: a.id, ticksLeft: 30 });
+  expect(a.path).toEqual([]);
+  expect(opinionOf(a, b.id)).toBe(-15);
+  expect(opinionOf(b, a.id)).toBe(-15);
+  expect(a.memories).toEqual([{ id: 'fought', expiresAt: 24 * 300, otherId: b.id }]);
+  expect(b.memories).toEqual([{ id: 'fought', expiresAt: 24 * 300, otherId: a.id }]);
+  expect(a.bubble?.kind).toBe('fight');
+  expect(w.log).toEqual([{ tick: 0, kind: 'fight', survivorId: a.id, otherId: b.id }]);
+  for (let i = 0; i < 29; i++) activitiesSystem(w);
+  expect(a.action.type).toBe('fight');
+  activitiesSystem(w);
+  expect(a.action.type).toBe('idle');
+  expect(b.action.type).toBe('idle');
+});
+
+test('mientras pelea el cerebro no le cambia de acción ni charla', () => {
+  const { w, a, b } = pair();
+  startFight(w, a, b);
+  a.needs.hunger = 20;
+  expect(brains.ai.decide(a, w)).toBeNull();
+  a.nextChatAt = 0;
+  const social = a.needs.social;
+  socialSystem(w);
+  expect(a.needs.social).toBe(social);
+});
+
+test('si el otro deja de pelear (se desploma), él también para', () => {
+  const { w, a, b } = pair();
+  startFight(w, a, b);
+  b.action = { type: 'sleep', inBed: false };
+  activitiesSystem(w);
+  expect(a.action.type).toBe('idle');
+});
+
+test('la pelea corta el registro de un contenedor y libera la reserva', () => {
+  const { w, a, b } = pair();
+  w.containers.push({
+    id: 50,
+    houseId: 1,
+    pos: { x: 5, y: 5 },
+    kind: 'shelf',
+    items: { ...emptyInventory(), food: 2 },
+    searched: false,
+    designated: true,
+    reservedBy: a.id,
+  });
+  a.action = { type: 'search', containerId: 50, ticksLeft: 10 };
+  startFight(w, a, b);
+  reservationsSystem(w);
+  expect(w.containers[0]!.reservedBy).toBeNull();
+  expect(checkInvariants(w)).toEqual([]);
 });

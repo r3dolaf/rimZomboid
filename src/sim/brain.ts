@@ -34,9 +34,10 @@ const AiBrain: Brain = {
     // Si la comida se acaba mientras va a comer o come, lo deja.
     if (((a.type === 'eat' && !a.fromPack) || goingTo === 'eat') && w.storage.items.food === 0)
       return { type: 'idle', ticksLeft: 0 };
-    // Comer y dormir se terminan; la crisis solo se corta por algo urgente.
+    // Comer, dormir y pelear se terminan; la crisis solo se corta por algo urgente.
     if (a.type === 'eat' || a.type === 'sleep' || goingTo === 'eat' || goingTo === 'sleep')
       return null;
+    if (a.type === 'fight') return null;
     // (desplomarse, que también la corta, lo decide decisionsSystem)
     if (inCrisis) {
       if (s.needs.hunger < CRISIS_BREAK_HUNGER) return eatSomething(s, w);

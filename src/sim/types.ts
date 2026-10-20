@@ -97,7 +97,8 @@ export type Action =
   | { type: 'sleep'; inBed: boolean }
   | { type: 'crisis'; ticksLeft: number }
   | { type: 'search'; containerId: number; ticksLeft: number }
-  | { type: 'unload'; ticksLeft: number };
+  | { type: 'unload'; ticksLeft: number }
+  | { type: 'fight'; otherId: number; ticksLeft: number };
 
 export interface Survivor {
   id: number;

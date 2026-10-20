@@ -73,3 +73,11 @@ test('textos del saqueo', () => {
   x.action = { type: 'idle', ticksLeft: 5, wait: 'noPath' };
   expect(activityText(x, w)).toBe('No puede llegar');
 });
+
+test('pelea: actividad con el nombre del otro e icono 🥊', () => {
+  const w = createWorld(3);
+  const [x, y] = w.survivors;
+  x!.action = { type: 'fight', otherId: y!.id, ticksLeft: 5 };
+  expect(activityText(x!, w)).toBe(`Peleándose con ${y!.name}`);
+  expect(statusIcon(x!)?.icon).toBe('🥊');
+});

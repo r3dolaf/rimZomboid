@@ -24,6 +24,8 @@ export function activityText(s: Survivor, w?: World): string {
     }
     case 'unload':
       return t.unload;
+    case 'fight':
+      return t.fight(w?.survivors.find((o) => o.id === a.otherId)?.name ?? '?');
     case 'moveTo':
       if (a.then?.type === 'search') return t.goLoot(container(a.then.containerId)?.houseId ?? 0);
       if (a.then?.type === 'unload') return t.goUnload;
@@ -43,6 +45,7 @@ export function statusIcon(s: Survivor): { icon: string; label: string } | null 
   const a = s.action;
   if (a.type === 'crisis' || (a.type === 'moveTo' && a.then?.type === 'crisis'))
     return es.status.crisis;
+  if (a.type === 'fight') return es.status.fighting;
   if (a.type === 'sleep') return es.status.sleeping;
   if (a.type === 'eat') return es.status.eating;
   if (s.needs.mood < MOOD_EDGE) return es.status.edge;
@@ -115,6 +118,9 @@ export function formatLogEntry(e: LogEntry, w: World): string {
       break;
     case 'sharedFood':
       text = l.sharedFood(name(e.survivorId), name(e.otherId));
+      break;
+    case 'fight':
+      text = l.fight(name(e.survivorId), name(e.otherId));
       break;
   }
   return `${es.dayTime(t.day, t.hour, t.minute)} · ${text}`;

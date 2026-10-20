@@ -92,3 +92,12 @@ test('muestra el icono de estado', () => {
   cards.update();
   expect(root.querySelector(`[data-testid="card-${s.id}"] .status`)!.textContent).toBe('💤');
 });
+
+test('el nombre de la tarjeta es solo el nombre (el 💕 va aparte)', () => {
+  const { root, world, cards } = setup();
+  const [a, b] = world.survivors;
+  a!.partnerId = b!.id;
+  b!.partnerId = a!.id;
+  cards.update();
+  expect(root.querySelector(`[data-testid="card-${a!.id}"] .name`)!.textContent).toBe(a!.name);
+});

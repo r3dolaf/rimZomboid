@@ -43,10 +43,11 @@ export function mountCards(
     love.textContent = '💕';
     love.title = es.hasPartner;
     love.hidden = true;
-    name.append(love);
     const status = document.createElement('span');
     status.className = 'status';
-    head.append(name, status);
+    const who = document.createElement('span');
+    who.append(name, love);
+    head.append(who, status);
     card.append(head);
 
     const fills = NEEDS.map((k) => {

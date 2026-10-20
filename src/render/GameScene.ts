@@ -6,7 +6,7 @@ import type { TimeController } from '../game/timeController';
 import { getTile } from '../sim/map/grid';
 import { isEmpty } from '../sim/items';
 import { effectiveDesignated, houseMarked } from '../sim/orders';
-import type { World } from '../sim/types';
+import type { Survivor, World } from '../sim/types';
 import { visibleTiles } from '../sim/vision';
 import type { Selection } from '../ui/selection';
 import type { Tool } from '../ui/tool';
@@ -21,10 +21,12 @@ import {
   SELECTION_RING,
   STORAGE_COLOR,
   STORAGE_EDGE,
+  STRANGER_COLOR,
   SURVIVOR_COLOR,
   SURVIVOR_OUTLINE,
   TILE_COLORS,
 } from './colors';
+import { bubbleIcon } from './bubbles';
 import { nightAlpha } from './daylight';
 
 export const TILE_PX = 16;
@@ -37,6 +39,7 @@ const PICK_RADIUS = 0.6; // casillas
 const SLEEPING_ALPHA = 0.45;
 const FOG_SEEN_ALPHA = 140; // 0–255: penumbra de lo visto pero no visible ahora
 const FOG_EVERY_FRAMES = 4;
+const BUBBLE_PX = 10;
 
 export interface GameSceneData {
   world: World;
@@ -58,6 +61,9 @@ export class GameScene extends Phaser.Scene {
   private tool!: Tool;
   private onFrame?: () => void;
   private actors!: Phaser.GameObjects.Graphics;
+  /** Globos sobre la cabeza, uno por superviviente que lo lleva (se reutilizan). */
+  private bubbleLayer!: Phaser.GameObjects.Container;
+  private bubbles = new Map<number, Phaser.GameObjects.Text>();
   private furniture!: Phaser.GameObjects.Graphics;
   private marks!: Phaser.GameObjects.Graphics;
   private fog!: Phaser.Textures.CanvasTexture;
@@ -95,6 +101,7 @@ export class GameScene extends Phaser.Scene {
     this.drawMap();
     this.furniture = this.add.graphics();
     this.actors = this.add.graphics();
+    this.bubbleLayer = this.add.container(0, 0);
     const { width, height } = this.world.grid;
     // Niebla: una textura de 1 píxel por casilla, escalada al tamaño del mapa.
     this.fog = this.textures.createCanvas('fog', width, height)!;
@@ -121,27 +128,22 @@ export class GameScene extends Phaser.Scene {
     this.panWithKeys(dtMs);
     this.drawFurniture();
     this.drawActors();
+    this.drawBubbles();
     if (++this.frame % FOG_EVERY_FRAMES === 0) this.drawFog();
     this.night.setAlpha(nightAlpha(this.world.tick));
     this.onFrame?.();
   }
 
-  /** El mapa y los muebles no cambian todavía: se dibujan una vez en una textura. */
+  /** El mapa y el almacén no cambian: se dibujan una vez en una textura. (Las camas, no: llegan
+   * colonos nuevos.) */
   private drawMap(): void {
-    const { grid, beds, storage } = this.world;
+    const { grid, storage } = this.world;
     const g = this.make.graphics({}, false);
     for (let y = 0; y < grid.height; y++)
       for (let x = 0; x < grid.width; x++) {
         g.fillStyle(TILE_COLORS[getTile(grid, x, y)]);
         g.fillRect(x * TILE_PX, y * TILE_PX, TILE_PX, TILE_PX);
       }
-    for (const b of beds) {
-      const [x, y] = [b.pos.x * TILE_PX, b.pos.y * TILE_PX];
-      g.fillStyle(BED_COLOR);
-      g.fillRect(x + 2, y + 1, TILE_PX - 4, TILE_PX - 2);
-      g.fillStyle(PILLOW_COLOR);
-      g.fillRect(x + 3, y + 2, TILE_PX - 6, 4);
-    }
     for (const t of storage.tiles) {
       const [x, y] = [t.x * TILE_PX, t.y * TILE_PX];
       g.fillStyle(STORAGE_EDGE);
@@ -159,16 +161,45 @@ export class GameScene extends Phaser.Scene {
     g.clear();
     for (const s of this.world.survivors) {
       const [x, y] = [s.pos.x * TILE_PX, s.pos.y * TILE_PX];
-      const alpha = s.action.type === 'sleep' ? SLEEPING_ALPHA : 1;
       if (s.id === this.selection.id) {
         g.lineStyle(2, SELECTION_RING, 1);
         g.strokeCircle(x, y, SURVIVOR_RADIUS + 4);
       }
-      g.fillStyle(SURVIVOR_OUTLINE, alpha);
-      g.fillCircle(x, y, SURVIVOR_RADIUS + 1);
-      g.fillStyle(SURVIVOR_COLOR, alpha);
-      g.fillCircle(x, y, SURVIVOR_RADIUS);
+      this.drawPerson(g, s, SURVIVOR_COLOR);
     }
+    // El desconocido, en gris, hasta que lo aceptan.
+    if (this.world.stranger) this.drawPerson(g, this.world.stranger.survivor, STRANGER_COLOR);
+  }
+
+  private drawPerson(g: Phaser.GameObjects.Graphics, s: Survivor, color: number): void {
+    const [x, y] = [s.pos.x * TILE_PX, s.pos.y * TILE_PX];
+    const alpha = s.action.type === 'sleep' ? SLEEPING_ALPHA : 1;
+    g.fillStyle(SURVIVOR_OUTLINE, alpha);
+    g.fillCircle(x, y, SURVIVOR_RADIUS + 1);
+    g.fillStyle(color, alpha);
+    g.fillCircle(x, y, SURVIVOR_RADIUS);
+  }
+
+  /** Iconos sobre la cabeza (charla, pelea…): se reutilizan los textos para no crearlos cada vez. */
+  private drawBubbles(): void {
+    const w = this.world;
+    const live = new Set<number>();
+    for (const s of w.survivors) {
+      const icon = bubbleIcon(s, w.tick);
+      if (icon === null) continue;
+      live.add(s.id);
+      let t = this.bubbles.get(s.id);
+      if (!t) {
+        t = this.add.text(0, 0, icon, { fontSize: `${BUBBLE_PX}px` }).setOrigin(0.5, 1);
+        t.setResolution(4); // nítido con zoom
+        this.bubbleLayer.add(t);
+        this.bubbles.set(s.id, t);
+      }
+      if (t.text !== icon) t.setText(icon);
+      t.setPosition(s.pos.x * TILE_PX, s.pos.y * TILE_PX - SURVIVOR_RADIUS - 1);
+      t.setVisible(true);
+    }
+    for (const [id, t] of this.bubbles) if (!live.has(id)) t.setVisible(false);
   }
 
   private setupCamera(): void {
@@ -226,13 +257,20 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  /** Contenedores vistos (bajo la niebla) y, encima de ella, marcas y casa seleccionada. */
+  /** Camas, contenedores vistos (bajo la niebla) y, encima de ella, marcas y casa seleccionada. */
   private drawFurniture(): void {
     const g = this.furniture;
     const m = this.marks;
     const w = this.world;
     g.clear();
     m.clear();
+    for (const b of w.beds) {
+      const [x, y] = [b.pos.x * TILE_PX, b.pos.y * TILE_PX];
+      g.fillStyle(BED_COLOR);
+      g.fillRect(x + 2, y + 1, TILE_PX - 4, TILE_PX - 2);
+      g.fillStyle(PILLOW_COLOR);
+      g.fillRect(x + 3, y + 2, TILE_PX - 6, 4);
+    }
     for (const c of w.containers) {
       if (w.seen[c.pos.y * w.grid.width + c.pos.x] !== 1) continue;
       const [x, y] = [c.pos.x * TILE_PX, c.pos.y * TILE_PX];

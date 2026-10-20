@@ -13,6 +13,7 @@ export const TILE_COLORS: Record<Tile, number> = {
 
 export const SURVIVOR_COLOR = 0xf2c641;
 export const SURVIVOR_OUTLINE = 0x111111;
+export const STRANGER_COLOR = 0x9a9a9a;
 export const BACKGROUND = 0x111111;
 export const SELECTION_RING = 0xffffff;
 export const BED_COLOR = 0x4f6f96;

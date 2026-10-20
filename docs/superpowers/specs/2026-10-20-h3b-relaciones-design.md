@@ -11,7 +11,7 @@ Los colonos charlan, se hacen amigos o rivales, discuten, se pelean, se consuela
 
 - `Survivor.opinions: Record<string, number>`: opinión de este colono sobre cada uno de los demás, por id. Va de −100 a 100 y si no hay entrada vale 0. No tiene por qué ser mutua.
 - **Al empezar:** los 3 colonos iniciales tienen una opinión al azar de −10 a +20 entre ellos. Los recién llegados empiezan en 0 en ambos sentidos.
-- **Se diluye:** cada día de juego, cada opinión se acerca 1 punto a 0.
+- **Se diluye:** cada día de juego, cada opinión se acerca a 0 un 10 % (y al menos 1 punto). Ajustado al implementar: con solo 1 punto al día, en un grupo de 3 todos acababan en 100 con todos en una semana; así cada pareja de colonos se estabiliza según sus rasgos y su ánimo.
 - **Etiquetas:** Amigo si es ≥ 40; Rival si es ≤ −40; Pareja si `partnerId` apunta a esa persona.
 
 ## 3. Charlas y necesidad social
@@ -29,10 +29,12 @@ Los colonos charlan, se hacen amigos o rivales, discuten, se pelean, se consuela
 
 | Charla    | Opinión (ambos) | Social (ambos) | Recuerdo (24 h si no se indica)           |
 | --------- | --------------- | -------------- | ----------------------------------------- |
-| Agradable | +4              | +15            | ambos: "Buena charla con X" +3 (6 h)      |
+| Agradable | +2              | +15            | ambos: "Buena charla con X" +3 (6 h)      |
 | Neutra    | +1              | +8             | —                                         |
-| Discusión | −5              | +3             | ambos: "Discutió con X" −5 (12 h)         |
-| Insulto   | −10             | +3             | el insultado: "Insultado por X" −8 (12 h) |
+| Discusión | −4              | +3             | ambos: "Discutió con X" −5 (12 h)         |
+| Insulto   | −8              | +3             | el insultado: "Insultado por X" −8 (12 h) |
+
+(Opinión de la tabla ajustada al implementar, desde +4/+1/−5/−10: con la cifra original las amistades llegaban al máximo en días.)
 
 - **Necesidad Social** (`needs.social`, de 0 a 100, empieza al azar entre 60 y 100):
   - baja 50 puntos por día;

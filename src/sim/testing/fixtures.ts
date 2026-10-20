@@ -2,7 +2,7 @@
 import { emptyInventory } from '../items';
 import { createGrid, setTile } from '../map/grid';
 import { createRng } from '../rng';
-import { Tile, type Point, type World } from '../types';
+import { Tile, type Point, type Survivor, type World } from '../types';
 
 /** Mundo de hierba sin edificios, con un superviviente en el centro de la casilla (0, 0). */
 export function emptyWorld(width: number, height: number): World {
@@ -45,6 +45,29 @@ export function emptyWorld(width: number, height: number): World {
     stranger: null,
     nextStrangerAt: Number.MAX_SAFE_INTEGER, // sin desconocidos salvo que el test los pida
   };
+}
+
+/** Añade un superviviente (sin cama) en el centro de la casilla `t`. */
+export function addSurvivor(w: World, t: Point, name = 'Bea'): Survivor {
+  const s: Survivor = {
+    ...structuredClone(w.survivors[0]!),
+    id: w.nextId++,
+    name,
+    pos: { x: t.x + 0.5, y: t.y + 0.5 },
+    action: { type: 'idle', ticksLeft: 0 },
+    path: [],
+    needs: { hunger: 100, sleep: 100, mood: 50, social: 100 },
+    traits: [],
+    memories: [],
+    bedId: null,
+    carrying: emptyInventory(),
+    opinions: {},
+    partnerId: null,
+    nextChatAt: 0,
+    bubble: null,
+  };
+  w.survivors.push(s);
+  return s;
 }
 
 /** Pone muros en las 8 casillas vecinas. */

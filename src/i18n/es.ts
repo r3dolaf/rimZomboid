@@ -45,6 +45,8 @@ export const es = {
     vented: (who: string) => `${who} se ha desahogado`,
     collapsed: (who: string) => `${who} se ha desplomado de sueño`,
     outOfFood: 'El almacén se ha quedado sin comida',
+    insult: (who: string, other: string) => `${who} ha insultado a ${other}`,
+    sharedFood: (who: string, other: string) => `${who} ha compartido su comida con ${other}`,
   },
 
   needs: { hunger: 'Hambre', sleep: 'Sueño', mood: 'Ánimo', social: 'Social' },
@@ -69,6 +71,7 @@ export const es = {
     hungry: 'Hambriento',
     starving: 'Desnutrido',
     tired: 'Cansado',
+    lonely: 'Solo',
     optimist: 'Optimista',
     pessimist: 'Pesimista',
     scaredOutside: 'Asustado fuera',

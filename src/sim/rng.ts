@@ -27,3 +27,19 @@ export function pick<T>(rng: RngState, items: readonly T[]): T {
   if (items.length === 0) throw new Error('pick: la lista está vacía');
   return items[nextInt(rng, 0, items.length - 1)]!;
 }
+
+/** Una clave al azar con probabilidad proporcional a su peso (los pesos ≤ 0 no salen). */
+export function weightedPick<K extends string>(rng: RngState, weights: Record<K, number>): K {
+  const keys = Object.keys(weights) as K[];
+  const total = keys.reduce((acc, k) => acc + Math.max(0, weights[k]), 0);
+  if (total <= 0) throw new Error('weightedPick: todos los pesos son 0');
+  let r = nextFloat(rng) * total;
+  let last = keys[0]!;
+  for (const k of keys) {
+    if (weights[k] <= 0) continue;
+    last = k;
+    r -= weights[k];
+    if (r < 0) return k;
+  }
+  return last; // por redondeo, r puede quedarse en 0 al final
+}

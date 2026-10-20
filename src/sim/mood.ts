@@ -1,6 +1,8 @@
 import {
   HUNGRY_BELOW,
   HUNGRY_MOOD,
+  LONELY_BELOW,
+  LONELY_MOOD,
   MEMORY_EFFECTS,
   MOOD_BASE,
   OPTIMIST_MOOD,
@@ -12,16 +14,24 @@ import {
   TIRED_MOOD,
 } from './balance';
 import { contains } from './geom';
-import type { MemoryId, Rect, Survivor } from './types';
+import type { Memory, MemoryId, Rect, Survivor } from './types';
 
 export type MoodModifierId =
-  'hungry' | 'starving' | 'tired' | 'optimist' | 'pessimist' | 'scaredOutside' | MemoryId;
+  | 'hungry'
+  | 'starving'
+  | 'tired'
+  | 'lonely'
+  | 'optimist'
+  | 'pessimist'
+  | 'scaredOutside'
+  | MemoryId;
 
-/** Un motivo del ánimo. Los recuerdos llevan su tick de caducidad. */
+/** Un motivo del ánimo. Los recuerdos llevan su tick de caducidad y con quién fueron. */
 export interface MoodModifier {
   id: MoodModifierId;
   value: number;
   expiresAt?: number;
+  otherId?: number;
 }
 
 /**
@@ -33,13 +43,21 @@ export function moodModifiers(s: Survivor, tick: number, base?: Rect): MoodModif
   if (s.needs.hunger <= 0) mods.push({ id: 'starving', value: STARVING_MOOD });
   else if (s.needs.hunger < HUNGRY_BELOW) mods.push({ id: 'hungry', value: HUNGRY_MOOD });
   if (s.needs.sleep < TIRED_BELOW) mods.push({ id: 'tired', value: TIRED_MOOD });
+  if (s.needs.social < LONELY_BELOW) mods.push({ id: 'lonely', value: LONELY_MOOD });
   if (s.traits.includes('optimist')) mods.push({ id: 'optimist', value: OPTIMIST_MOOD });
   if (s.traits.includes('pessimist')) mods.push({ id: 'pessimist', value: PESSIMIST_MOOD });
   if (base && s.traits.includes('coward') && !contains(base, tileOf(s.pos)))
     mods.push({ id: 'scaredOutside', value: SCARED_OUTSIDE_MOOD });
   for (const m of s.memories)
-    if (m.expiresAt > tick)
-      mods.push({ id: m.id, value: MEMORY_EFFECTS[m.id].value, expiresAt: m.expiresAt });
+    if (m.expiresAt > tick) {
+      const mod: MoodModifier = {
+        id: m.id,
+        value: MEMORY_EFFECTS[m.id].value,
+        expiresAt: m.expiresAt,
+      };
+      if (m.otherId !== undefined) mod.otherId = m.otherId;
+      mods.push(mod);
+    }
   return mods;
 }
 
@@ -49,10 +67,12 @@ export function moodTarget(s: Survivor, tick: number, base?: Rect): number {
   return Math.min(100, Math.max(0, sum));
 }
 
-/** Añade un recuerdo; si ya tenía uno del mismo tipo, lo sustituye. */
-export function addMemory(s: Survivor, id: MemoryId, tick: number): void {
+/** Añade un recuerdo (con quién, si es con otra persona); uno anterior del mismo tipo se sustituye. */
+export function addMemory(s: Survivor, id: MemoryId, tick: number, otherId?: number): void {
   s.memories = s.memories.filter((m) => m.id !== id);
-  s.memories.push({ id, expiresAt: tick + MEMORY_EFFECTS[id].hours * TICKS_PER_HOUR });
+  const m: Memory = { id, expiresAt: tick + MEMORY_EFFECTS[id].hours * TICKS_PER_HOUR };
+  if (otherId !== undefined) m.otherId = otherId;
+  s.memories.push(m);
 }
 
 /** Casilla en la que está una posición continua (copia local para no depender de world.ts). */

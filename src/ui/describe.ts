@@ -110,6 +110,12 @@ export function formatLogEntry(e: LogEntry, w: World): string {
     case 'outOfFood':
       text = l.outOfFood;
       break;
+    case 'insult':
+      text = l.insult(name(e.survivorId), name(e.otherId));
+      break;
+    case 'sharedFood':
+      text = l.sharedFood(name(e.survivorId), name(e.otherId));
+      break;
   }
   return `${es.dayTime(t.day, t.hour, t.minute)} · ${text}`;
 }

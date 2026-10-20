@@ -97,7 +97,10 @@ export const INITIAL_REVEAL = 8; // casillas alrededor de la base que se conocen
 export const OPINION_LIMIT = 100; // de −100 a 100
 export const START_OPINION_MIN = -10;
 export const START_OPINION_MAX = 20;
-export const OPINION_DECAY_PER_DAY = 1; // cada opinión se acerca a 0
+// Cada día la opinión se acerca a 0 un 10 % (al menos 1 punto): sin esto, en un grupo pequeño
+// que charla a diario todos acababan en 100 con todos en una semana.
+export const OPINION_DECAY_PER_DAY = 1;
+export const OPINION_DECAY_FRACTION = 0.1;
 export const FRIEND_OPINION = 40;
 export const RIVAL_OPINION = -40;
 export const SOCIAL_PER_TICK = 50 / TICKS_PER_DAY;
@@ -107,6 +110,24 @@ export const CHAT_RANGE = 6;
 export const CHAT_EVERY_MIN = 450;
 export const CHAT_EVERY_MAX = 750;
 export const CHAT_RETRY_TICKS = 30;
+/** Pesos de cada tipo de charla y cuánto los mueven la opinión, el ánimo y los rasgos. */
+export const CHAT_WEIGHTS = { pleasant: 60, neutral: 30, argue: 10, insult: 0 } as const;
+export const CHAT_OPINION_PLEASANT = 0.3; // × opinión
+export const CHAT_OPINION_ARGUE = -0.1; // × opinión
+export const CHAT_LOW_MOOD_ARGUE = 15;
+export const CHAT_LOW_MOOD_INSULT = 10;
+export const CHAT_OPTIMIST_PLEASANT = 15;
+export const CHAT_PESSIMIST_PLEASANT = -10;
+export const CHAT_PESSIMIST_ARGUE = 10;
+/** Lo que cambia una charla en la opinión y en la necesidad social de los dos. */
+export const CHAT_EFFECTS = {
+  pleasant: { opinion: 2, social: 15 },
+  neutral: { opinion: 1, social: 8 },
+  argue: { opinion: -4, social: 3 },
+  insult: { opinion: -8, social: 3 },
+} as const;
+export const SHARE_HUNGER_BELOW = 35;
+export const SHARE_OPINION = 5;
 export const BUBBLE_TICKS = 30;
 /** Cama de cada colono por orden de llegada, relativa a la esquina de la base. */
 export const BED_SLOTS: readonly { dx: number; dy: number }[] = [

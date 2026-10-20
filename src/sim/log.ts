@@ -11,7 +11,9 @@ export type LogEvent =
   | { kind: 'crisis'; survivorId: number }
   | { kind: 'vented'; survivorId: number }
   | { kind: 'collapsed'; survivorId: number }
-  | { kind: 'outOfFood' };
+  | { kind: 'outOfFood' }
+  | { kind: 'insult'; survivorId: number; otherId: number }
+  | { kind: 'sharedFood'; survivorId: number; otherId: number };
 
 export type LogEntry = LogEvent & { tick: number };
 

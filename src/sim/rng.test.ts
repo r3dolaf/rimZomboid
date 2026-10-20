@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { createRng, nextFloat, nextInt, pick, type RngState } from './rng';
+import { createRng, nextFloat, nextInt, pick, weightedPick, type RngState } from './rng';
 
 test('misma semilla, misma secuencia', () => {
   const a = createRng(42);
@@ -42,4 +42,13 @@ test('pick con lista vacía lanza error', () => {
 test('pick devuelve un elemento de la lista', () => {
   const r = createRng(4);
   for (let i = 0; i < 100; i++) expect(['a', 'b', 'c']).toContain(pick(r, ['a', 'b', 'c']));
+});
+
+test('weightedPick respeta los pesos e ignora los de 0', () => {
+  const r = createRng(9);
+  const counts = { a: 0, b: 0, c: 0 };
+  for (let i = 0; i < 4000; i++) counts[weightedPick(r, { a: 3, b: 1, c: 0 })]++;
+  expect(counts.c).toBe(0);
+  expect(counts.a / counts.b).toBeGreaterThan(2.5);
+  expect(counts.a / counts.b).toBeLessThan(3.5);
 });

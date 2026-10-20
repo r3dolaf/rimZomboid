@@ -67,3 +67,16 @@ test('el botón Saquear activa y desactiva la herramienta', () => {
   expect(tool.active).toBe(false);
   expect(b.classList.contains('active')).toBe(false);
 });
+
+test('muestra el narrador y la tormenta mientras dura', () => {
+  const root = document.createElement('div');
+  const hud = mountHud(root, { seed: 1, time: createTimeController(), narrator: 'chaotic' });
+  expect(root.querySelector('[data-testid="hud-narrator"]')!.textContent).toBe('Narrador: Caótico');
+  const weather = root.querySelector('[data-testid="hud-weather"]') as HTMLElement;
+  const stock = { food: 1, bandage: 0, knife: 0, bat: 0 };
+  hud.update({ day: 1, hour: 9, minute: 0 }, stock, false);
+  expect(weather.hidden).toBe(true);
+  hud.update({ day: 1, hour: 9, minute: 0 }, stock, true);
+  expect(weather.hidden).toBe(false);
+  expect(weather.textContent).toBe('🌧 Tormenta');
+});

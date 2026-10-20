@@ -5,7 +5,7 @@ import { gameTime } from '../sim/clock';
 import { ITEM_KINDS, type Inventory } from '../sim/items';
 import type { LogEntry } from '../sim/log';
 import type { MoodModifier } from '../sim/mood';
-import type { MemoryId, Survivor, World } from '../sim/types';
+import type { MemoryId, Survivor, Tone, World } from '../sim/types';
 
 export function activityText(s: Survivor, w?: World): string {
   const container = (id: number) => w?.containers.find((c) => c.id === id);
@@ -56,6 +56,7 @@ export function statusIcon(s: Survivor): { icon: string; label: string } | null 
   if (a.type === 'sleep') return es.status.sleeping;
   if (a.type === 'eat') return es.status.eating;
   if (s.needs.mood < MOOD_EDGE) return es.status.edge;
+  if (s.sick) return es.status.sick;
   return null;
 }
 
@@ -112,6 +113,11 @@ export function formatItems(inv: Inventory): string {
 /** "Día 2, 10:14 · Ana ha encontrado 4 latas en la casa 3". */
 export function formatLogEntry(e: LogEntry, w: World): string {
   const t = gameTime(e.tick);
+  return `${es.dayTime(t.day, t.hour, t.minute)} · ${logText(e, w)}`;
+}
+
+/** La frase de un suceso, sin la fecha. */
+export function logText(e: LogEntry, w: World): string {
   const name = (id: number) => w.survivors.find((s) => s.id === id)?.name ?? '?';
   const l = es.log;
   let text: string;
@@ -230,5 +236,52 @@ export function formatLogEntry(e: LogEntry, w: World): string {
       text = l.fluOver(name(e.survivorId));
       break;
   }
-  return `${es.dayTime(t.day, t.hour, t.minute)} · ${text}`;
+  return text;
+}
+
+export interface NoticeInfo {
+  tone: Tone;
+  title: string;
+  /** A quién enfoca la cámara al pulsar el aviso, si a alguien. */
+  focusId: number | null;
+}
+
+/**
+ * Si un suceso del registro merece aviso (spec H3c §5.2), su tono, título y a quién enfoca.
+ * Los que piden decisión tienen su propio aviso (ver `notices.ts`); aquí van sus desenlaces.
+ */
+export function noticeFor(e: LogEntry): NoticeInfo | null {
+  const t = es.notices;
+  switch (e.kind) {
+    case 'jealousy':
+      return { tone: 'bad', title: t.jealousy, focusId: e.survivorId };
+    case 'clash':
+      return { tone: 'bad', title: t.clash, focusId: e.survivorId };
+    case 'grief':
+      return { tone: 'bad', title: t.grief, focusId: e.survivorId };
+    case 'foodFight':
+      return { tone: 'bad', title: t.foodFight, focusId: null };
+    case 'gossip':
+      return { tone: 'bad', title: t.gossip, focusId: e.otherId };
+    case 'storyNight':
+      return e.arguedIds
+        ? { tone: 'mixed', title: t.storyNight, focusId: e.arguedIds[0] }
+        : { tone: 'good', title: t.storyNight, focusId: null };
+    case 'cache':
+      return { tone: 'good', title: t.cache, focusId: e.survivorId };
+    case 'storm':
+      return { tone: 'bad', title: t.storm, focusId: null };
+    case 'theftPunished':
+      return { tone: e.guilty ? 'mixed' : 'bad', title: t.theftPunished, focusId: e.suspectId };
+    case 'birthdayParty':
+      return { tone: 'good', title: t.birthdayParty, focusId: e.survivorId };
+    case 'birthdayRuined':
+      return { tone: 'bad', title: t.birthdayRuined, focusId: e.survivorId };
+    case 'strangerAccepted':
+      return { tone: 'good', title: t.strangerAccepted, focusId: null };
+    case 'strangerLeft':
+      return { tone: 'mixed', title: t.strangerLeft, focusId: null };
+    default:
+      return null;
+  }
 }

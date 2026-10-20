@@ -39,9 +39,15 @@
   border-color: #c9a227;
   color: #111;
 }
-.hud-seed {
+.hud-narrator {
   margin-left: auto;
   opacity: 0.7;
+}
+.hud-seed {
+  opacity: 0.7;
+}
+.hud-weather[hidden] {
+  display: none;
 }
 
 .hud-tool {

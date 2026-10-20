@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { parseSeed, randomSeed } from './seed';
+import { parseNarrator, parseSeed, randomSeed, startUrl } from './seed';
 
 const fb = () => 999;
 
@@ -24,4 +24,17 @@ test('randomSeed da un entero de 32 bits sin signo', () => {
     const s = randomSeed();
     expect(Number.isInteger(s) && s >= 0 && s <= 4294967295).toBe(true);
   }
+});
+
+test.each([
+  ['?narrador=tranquilo', 'calm'],
+  ['?seed=3&narrador=equilibrado', 'balanced'],
+  ['?narrador=caotico', 'chaotic'],
+  ['?narrador=otro', null],
+  ['', null],
+])('parseNarrator(%s) = %s', (q, esperado) => expect(parseNarrator(q)).toBe(esperado));
+
+test('startUrl conserva lo demás y pone semilla y narrador', () => {
+  expect(startUrl('?debug=1', 42, 'chaotic')).toBe('?debug=1&seed=42&narrador=caotico');
+  expect(startUrl('', 7, 'calm')).toBe('?seed=7&narrador=tranquilo');
 });

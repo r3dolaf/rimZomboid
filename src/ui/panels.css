@@ -171,39 +171,72 @@
   margin: 2px 0 4px;
 }
 
-.stranger {
+.notices {
   position: fixed;
-  top: 60px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 44px;
+  left: 12px;
   width: 300px;
-  padding: 10px 14px;
-  border: 1px solid #f2c641;
-  border-radius: 8px;
-  background: rgba(23, 25, 28, 0.97);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+}
+.notices > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.notice {
+  position: relative;
+  pointer-events: auto;
+  padding: 6px 28px 6px 10px;
+  border: 1px solid #444;
+  border-left: 4px solid #999;
+  border-radius: 6px;
+  background: rgba(23, 25, 28, 0.95);
   color: #e8e6e3;
   font:
-    13px/1.4 system-ui,
+    13px/1.35 system-ui,
     sans-serif;
 }
-.stranger[hidden] {
+.notice[hidden] {
   display: none;
 }
-.stranger h2 {
-  margin: 0 0 6px;
-  font-size: 16px;
+.notice.good {
+  border-left-color: #6fbf73;
 }
-.stranger p {
-  margin: 2px 0;
+.notice.mixed {
+  border-left-color: #e0a030;
 }
-.stranger .buttons {
+.notice.bad {
+  border-left-color: #d9534f;
+}
+.notice.focusable {
+  cursor: pointer;
+}
+.notice p {
+  margin: 2px 0 0;
+}
+.notice .close {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+.notice.decision {
+  padding-right: 10px;
+}
+.notice .buttons {
   display: flex;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 6px;
+  margin-top: 6px;
 }
-.stranger button {
+.notice .buttons button {
   flex: 1;
-  padding: 5px 0;
+  padding: 4px 0;
   border: 1px solid #555;
   border-radius: 5px;
   background: #2e3237;
@@ -211,6 +244,10 @@
   font: inherit;
   cursor: pointer;
 }
-.stranger button:hover {
+.notice .buttons button:hover:not(:disabled) {
   border-color: #f2c641;
+}
+.notice .buttons button:disabled {
+  opacity: 0.45;
+  cursor: default;
 }

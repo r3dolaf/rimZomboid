@@ -2,7 +2,7 @@
 import type { MoodModifierId } from '../sim/mood';
 import type { ItemKind } from '../sim/items';
 import type { RelationLabel } from '../sim/social';
-import type { BubbleKind, MemoryId, TraitId } from '../sim/types';
+import type { BubbleKind, Decision, MemoryId, NarratorStyle, TraitId } from '../sim/types';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 /** "Ana", "Ana y Luis" o "Ana, Luis y Sara". */
@@ -16,6 +16,63 @@ export const es = {
   food: (n: number) => `Comida: ${n}`,
   bandages: (n: number) => `Vendas: ${n}`,
   lootTool: 'Saquear',
+  storm: '🌧 Tormenta',
+  narratorLabel: (name: string) => `Narrador: ${name}`,
+  narrators: {
+    calm: {
+      name: 'Tranquilo',
+      desc: 'Pocos sucesos, casi siempre suaves. No te remata cuando vas mal.',
+    },
+    balanced: { name: 'Equilibrado', desc: 'Alterna calma y tensión según cómo vaya la colonia.' },
+    chaotic: { name: 'Caótico', desc: 'Cualquier cosa, en cualquier momento.' },
+  } satisfies Record<NarratorStyle, { name: string; desc: string }>,
+  start: {
+    subtitle: 'Sobrevivir juntos, o no',
+    choose: 'Elige narrador',
+    seed: 'Semilla',
+    reroll: 'Otra',
+    go: 'Empezar',
+  },
+  notices: {
+    jealousy: 'Celos',
+    clash: 'Choque de caracteres',
+    grief: 'Malos recuerdos',
+    foodFight: 'Disputa por el reparto',
+    gossip: 'Chisme',
+    storyNight: 'Noche de historias',
+    cache: 'Alijo descubierto',
+    storm: 'Tormenta',
+    theftPunished: 'Castigo',
+    birthdayParty: 'Cumpleaños',
+    birthdayRuined: 'Cumpleaños amargado',
+    strangerAccepted: 'Caras nuevas',
+    strangerLeft: 'Se marchan',
+  },
+  decisions: {
+    theft: {
+      title: 'Raciones robadas',
+      text: (who: string) => `Falta comida del almacén y todos miran a ${who}. ¿Qué hacéis?`,
+      options: ['Castigar', 'Dejarlo estar'],
+    },
+    birthday: {
+      title: 'Cumpleaños',
+      text: (who: string) => `Hoy es el cumpleaños de ${who}. ¿Lo celebráis?`,
+      options: ['Celebrarlo con 2 latas', 'No hay para fiestas'],
+    },
+    flu: {
+      title: 'Gripe',
+      text: (who: string) => `${who} ha cogido la gripe.`,
+      options: ['Que descanse', 'Que siga trabajando'],
+    },
+    stranger: {
+      title: 'Alguien se acerca',
+      text: (who: string) => `${who} quiere unirse al grupo.`,
+      options: ['Aceptar', 'Rechazar'],
+    },
+  } satisfies Record<
+    Decision['kind'],
+    { title: string; text: (who: string) => string; options: [string, string] }
+  >,
   lootToolHint: 'Marcar casas o contenedores para saquear (L)',
   pause: 'Pausa',
   pauseIcon: '⏸',
@@ -176,13 +233,7 @@ export const es = {
     rival: 'Rivalidad',
   } satisfies Record<RelationLabel, string>,
 
-  stranger: {
-    title: 'Alguien se acerca',
-    intro: (who: string) => `${who} quiere unirse al grupo.`,
-    carrying: (what: string) => `Lleva: ${what}`,
-    accept: 'Aceptar',
-    reject: 'Rechazar',
-  },
+  strangerCarrying: (what: string) => `Lleva: ${what}`,
 
   activities: {
     wander: 'Paseando',
@@ -223,5 +274,6 @@ export const es = {
     sleeping: { icon: '💤', label: 'Durmiendo' },
     eating: { icon: '🍽', label: 'Comiendo' },
     edge: { icon: '⚠', label: 'Al límite' },
+    sick: { icon: '🤒', label: 'Con gripe' },
   },
 };

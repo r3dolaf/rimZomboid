@@ -319,6 +319,12 @@ export class GameScene extends Phaser.Scene {
     };
   }
 
+  /** Centra la cámara en un superviviente (al pulsar un aviso). */
+  centerOnSurvivor(id: number): void {
+    const s = this.world.survivors.find((x) => x.id === id);
+    if (s) this.cameras.main.centerOn(s.pos.x * TILE_PX, s.pos.y * TILE_PX);
+  }
+
   /** Zoom mínimo para que el mapa siempre llene la pantalla. */
   private minZoom(): number {
     const cam = this.cameras.main;

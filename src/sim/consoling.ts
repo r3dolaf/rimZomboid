@@ -91,7 +91,7 @@ export function tryStartConsoling(w: World, c: Survivor, targetId: number): bool
   return true;
 }
 
-/** Termina bien: "Consolado por X" (o por su pareja), +8 de opinión los dos y al registro. */
+/** Termina bien: "Le consoló X" (o su pareja), +CONSOLE_OPINION_GAIN de opinión los dos y al registro. */
 export function finishConsoling(w: World, c: Survivor, t: Survivor): void {
   addMemory(t, c.partnerId === t.id ? 'consoledByPartner' : 'consoled', w.tick, c.id);
   changeOpinion(c, t.id, CONSOLE_OPINION_GAIN);

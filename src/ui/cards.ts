@@ -40,7 +40,7 @@ export function mountCards(
     name.textContent = s.name;
     const love = document.createElement('span');
     love.className = 'love';
-    love.textContent = '💕';
+    love.textContent = es.partnerIcon;
     love.title = es.hasPartner;
     love.hidden = true;
     const status = document.createElement('span');

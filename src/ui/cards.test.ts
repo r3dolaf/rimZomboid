@@ -101,3 +101,29 @@ test('el nombre de la tarjeta es solo el nombre (el 💕 va aparte)', () => {
   cards.update();
   expect(root.querySelector(`[data-testid="card-${a!.id}"] .name`)!.textContent).toBe(a!.name);
 });
+
+test('con el CSS real, las barras Sueño y Social cambian de color al bajar', async () => {
+  const { readFileSync } = await import('node:fs');
+  const style = document.createElement('style');
+  style.textContent = readFileSync('src/ui/panels.css', 'utf8'); // vitest corre desde la raíz
+  document.head.append(style);
+  const { root, world, cards } = setup();
+  document.body.append(root);
+  const s = world.survivors[0]!;
+  const color = (need: string) =>
+    getComputedStyle(
+      root.querySelector(`[data-testid="card-${s.id}"] [data-need="${need}"] .fill`)!,
+    ).backgroundColor;
+  const ok = { sleep: color('sleep'), social: color('social') };
+  s.needs.sleep = 30;
+  s.needs.social = 30;
+  cards.update();
+  expect(color('sleep')).not.toBe(ok.sleep);
+  expect(color('social')).not.toBe(ok.social);
+  const warn = color('social');
+  s.needs.social = 10;
+  cards.update();
+  expect(color('social')).not.toBe(warn);
+  root.remove();
+  style.remove();
+});

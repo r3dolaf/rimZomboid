@@ -161,3 +161,29 @@ test('invariante: consolar y pelear son siempre de dos en dos', () => {
   t.action = { type: 'fight', otherId: c.id, ticksLeft: 3 };
   expect(checkInvariants(w).length).toBeGreaterThan(0);
 });
+
+test('si el consolado se desploma a mitad, el que consuela queda libre y no hay consuelo', () => {
+  const { w, t, c } = scene();
+  expect(runUntil(w, () => c.action.type === 'console', TICKS_PER_HOUR)).toBe(true);
+  t.needs.sleep = 0;
+  step(w);
+  expect(t.action.type).toBe('sleep');
+  expect(c.action.type).not.toBe('console');
+  expect(consoledLog(w)).toEqual([]);
+  expect(checkInvariants(w)).toEqual([]);
+});
+
+test('si rompen mientras uno consuela al otro, el consuelo termina sin "su pareja"', () => {
+  const { w, t, c } = scene();
+  t.partnerId = c.id;
+  c.partnerId = t.id;
+  t.opinions[c.id] = 25;
+  expect(runUntil(w, () => c.action.type === 'console', TICKS_PER_HOUR)).toBe(true);
+  t.opinions[c.id] = 5; // < 20: rompen en el siguiente tick
+  expect(runUntil(w, () => consoledLog(w).length > 0, TICKS_PER_HOUR)).toBe(true);
+  expect(t.partnerId).toBeNull();
+  expect(w.log.some((e) => e.kind === 'breakup')).toBe(true);
+  expect(t.memories.map((m) => m.id)).toContain('consoled');
+  expect(t.memories.map((m) => m.id)).not.toContain('consoledByPartner');
+  expect(checkInvariants(w)).toEqual([]);
+});

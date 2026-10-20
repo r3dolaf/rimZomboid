@@ -54,6 +54,10 @@
 .bar[data-need='mood'] .fill {
   background: #c9a227;
 }
+.bar[data-need='social'] .fill {
+  background: #b07cd8;
+}
+/* Después de los colores de cada barra: con la misma especificidad, gana la última regla. */
 .bar .fill.warn {
   background: #e0a030;
 }
@@ -159,9 +163,6 @@
 }
 .sheet.house {
   top: 44px;
-}
-.bar[data-need='social'] .fill {
-  background: #b07cd8;
 }
 .card .love {
   margin-left: 4px;

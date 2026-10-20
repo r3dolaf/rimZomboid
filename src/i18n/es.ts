@@ -2,7 +2,7 @@
 import type { MoodModifierId } from '../sim/mood';
 import type { ItemKind } from '../sim/items';
 import type { RelationLabel } from '../sim/social';
-import type { MemoryId, TraitId } from '../sim/types';
+import type { BubbleKind, MemoryId, TraitId } from '../sim/types';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -122,7 +122,7 @@ export const es = {
   } satisfies Record<RelationLabel, string>,
 
   stranger: {
-    title: 'Alguien a la puerta',
+    title: 'Alguien se acerca',
     intro: (who: string) => `${who} quiere unirse al grupo.`,
     carrying: (what: string) => `Lleva: ${what}`,
     accept: 'Aceptar',
@@ -149,6 +149,17 @@ export const es = {
     consoled: (other: string) => `${other} le está consolando`,
   },
   containers: { fridge: 'una nevera', wardrobe: 'un armario', shelf: 'una estantería' },
+
+  /** Iconos sobre la cabeza en el mapa. */
+  bubbles: {
+    chat: '💬',
+    argue: '💢',
+    fight: '🥊',
+    console: '🤝',
+    share: '🍞',
+    love: '💕',
+  } satisfies Record<BubbleKind, string>,
+  partnerIcon: '💕',
 
   status: {
     crisis: { icon: '🌀', label: 'En crisis' },

@@ -61,7 +61,7 @@ Los colonos charlan, se hacen amigos o rivales, discuten, se pelean, se consuela
 ## 5. Parejas
 
 - **Formarse:** tras una charla agradable entre dos sin pareja que se tienen ≥ 60 en ambos sentidos, hay un 10 % de que se hagan pareja (`partnerId` mutuo). Queda en el registro.
-- **Durmió con su pareja:** al despertar, si su pareja está durmiendo, recibe "Durmió con su pareja" +5 (12 h).
+- **Durmió con su pareja:** al despertar, si su pareja está durmiendo, **los dos** reciben "Durmió con su pareja" +5 (12 h). (Ajustado al implementar: si solo lo recibía el que despierta, el que se levanta después nunca lo tenía.)
 - **Ruptura:** si la opinión de cualquiera de los dos sobre el otro baja de 20, rompen.
   - Los dos reciben "Ruptura con X" −15 (72 h) y pierden 20 de opinión sobre el otro.
   - Queda en el registro.

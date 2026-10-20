@@ -2,7 +2,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-19-rimzomboid-design.md`
 
-El prototipo se construye en 6 hitos. Cada hito tiene su propio plan detallado,
+El prototipo se construye en 6 hitos, más H3b (Relaciones), que se añadió entre H3 y H4. Cada hito tiene su propio plan detallado,
 que se escribe cuando el anterior está terminado, y cada uno deja el juego en un
 estado que se puede probar o jugar.
 
@@ -11,6 +11,7 @@ estado que se puede probar o jugar.
 | **H1. Cimientos**        | Proyecto, simulación por ticks con semilla, mapa generado, caminos, 3 supervivientes que pasean, dibujado con Phaser, cámara, velocidad y pausa, publicación en GitHub Pages | Un enlace con un mapa aleatorio y 3 supervivientes moviéndose; pausa y x1/x2/x3 | 3, 5.1, 5.2 (reloj), 9 (barra superior y cámara), 10 |
 | **H2. Personas**         | Hambre, sueño, ánimo con modificadores, rasgos, camas, comida del almacén, día y noche, **tarjetas y ficha** (adelantadas de H3)                                             | Los supervivientes comen, duermen y cambian de ánimo; crisis de ánimo           | 4.1, 4.2, 5.2                                        |
 | **H3. Saqueo**           | Objetos, contenedores, niebla de guerra, peso de carga, órdenes (cola), herramienta Saquear, prioridades y registro de sucesos (Transportar → H5)                            | Marcas una casa y traen comida y vendas al almacén                              | 3 (órdenes), 5.1 (niebla), 5.3, 8.2, 8.3, 9          |
+| **H3b. Relaciones**      | Opinión, charlas y necesidad social, peleas, consuelo, compartir comida, parejas y recién llegados que se aceptan o rechazan (spec `2026-10-20-h3b-relaciones-design.md`)    | Se forman amistades, rivalidades y parejas; llegan desconocidos a la puerta     | 4.1 (relaciones), nuevos supervivientes              |
 | **H4. Zombis**           | Zombis con visión y estados, ruido, puertas que se rompen, aparición por los bordes, noche más peligrosa, combate y modo combate                                             | Los zombis persiguen; los supervivientes pelean o huyen                         | 5.4, 6, 7, 8.1, 8.3                                  |
 | **H5. Heridas y muerte** | Heridas por parte del cuerpo, sangre, vendas, infección, muerte, reanimación, fin de partida                                                                                 | Un mordisco acaba en zombi; la partida termina con el resumen                   | 4.3, 4.4, 9 (fin de partida)                         |
 | **H6. Pulido**           | Modo depuración F3, partida automática de 30 días con todas las reglas, ajuste de `balance.ts`                                                                               | El prototipo cumple el criterio de éxito (spec §12)                             | 9 (F3), 10, 12                                       |
@@ -33,10 +34,11 @@ Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al p
 - La ficha de la casa cuenta solo contenedores vistos.
 - El test del navegador comprueba la ficha de la casa.
 
+**Hechos en H3b:** tarjetas que se crean y se quitan según quién está en la colonia; `goSleep` sin cama (duerme en el suelo de la base) y `bedId` nulo en las invariantes.
+
 **Para H5 (muertes):**
 
-- Las tarjetas se crean una vez al empezar; habrá que quitar las de los muertos.
-- La invariante "cada cama tiene un dueño vivo" y `goSleep`, que lanza un error si falta la cama, tendrán que contemplar las muertes.
+- La invariante "cada cama tiene un dueño vivo" tendrá que contemplar las muertes (liberar la cama o borrarla), igual que las parejas (la pareja de un muerto) y las acciones de dos (pelea, consuelo).
 - Probar el desplome en plena crisis de principio a fin.
 
 **Para H6 (pulido):**

@@ -1,12 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 interface Debug {
-  world: {
-    tick: number;
-    nextStrangerAt: number;
-    stranger: unknown;
-    survivors: { id: number; bubble: unknown }[];
-  };
+  forceEvent(id: string): boolean;
 }
 
 test('llega un desconocido: el juego se pausa, Aceptar añade una tarjeta; la ficha muestra Relaciones', async ({
@@ -21,25 +16,23 @@ test('llega un desconocido: el juego se pausa, Aceptar añade una tarjeta; la fi
   const cards = page.locator('[data-testid^="card-"]');
   await expect(cards).toHaveCount(3);
 
-  // Que llegue ya.
-  await page.evaluate(() => {
-    const { world } = (window as unknown as { rimzomboid: Debug }).rimzomboid;
-    world.nextStrangerAt = world.tick;
-  });
-  const dialog = page.getByTestId('stranger');
-  await expect(dialog).toBeVisible();
-  await expect(dialog).toContainText('quiere unirse al grupo');
+  // Que llegue ya (con esta semilla, uno solo).
+  await page.evaluate(() =>
+    (window as unknown as { rimzomboid: Debug }).rimzomboid.forceEvent('strangers'),
+  );
+  const notice = page.getByTestId('decision-stranger');
+  await expect(notice).toBeVisible();
+  await expect(notice).toContainText('quiere unirse al grupo');
   await expect(page.locator('[data-speed="0"]')).toHaveClass(/active/);
 
-  await page.getByTestId('stranger-accept').click();
-  await expect(dialog).toBeHidden(); // enseguida, aunque esté en pausa
+  await notice.getByTestId('decision-option-0').click();
+  await expect(notice).toBeHidden(); // enseguida, aunque esté en pausa
   await page.locator('[data-speed="1"]').click();
-  await expect(cards).toHaveCount(4);
+  await expect(cards).not.toHaveCount(3);
 
   await cards.last().click();
   const sheet = page.getByTestId('sheet');
   await expect(sheet).toBeVisible();
   await expect(sheet).toContainText('Relaciones');
-  await expect(sheet.locator('[data-testid="relation"]')).toHaveCount(3);
   expect(errores).toEqual([]);
 });

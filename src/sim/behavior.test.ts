@@ -183,21 +183,24 @@ test('mientras dura "Se desahogó" no entra en otra crisis', () => {
 });
 
 test('en partidas reales las crisis llegan a terminar con "Se desahogó"', () => {
-  // semilla 5: dos Pesimistas; la comida se acaba hacia el día 9
-  const w = createWorld(5);
+  // Varias semillas: desde H3b muchas crisis acaban antes porque alguien consuela.
+  // Sin saquear, la comida se acaba hacia el día 9 y llegan las crisis.
   let vented = 0;
-  const had = new Set<number>();
-  for (let i = 0; i < 20 * TICKS_PER_DAY; i++) {
-    step(w);
-    for (const s of w.survivors) {
-      const has = s.memories.some((m) => m.id === 'vented');
-      if (has && !had.has(s.id)) vented++;
-      if (has) had.add(s.id);
-      else had.delete(s.id);
+  for (const seed of [3, 6, 9]) {
+    const w = createWorld(seed);
+    const had = new Set<number>();
+    for (let i = 0; i < 20 * TICKS_PER_DAY; i++) {
+      step(w);
+      for (const s of w.survivors) {
+        const has = s.memories.some((m) => m.id === 'vented');
+        if (has && !had.has(s.id)) vented++;
+        if (has) had.add(s.id);
+        else had.delete(s.id);
+      }
     }
   }
   expect(vented).toBeGreaterThan(0);
-});
+}, 30_000);
 
 test('escenario: a las 23:00 del día 1 los tres duermen en su cama', () => {
   for (let seed = 1; seed <= 5; seed++) {

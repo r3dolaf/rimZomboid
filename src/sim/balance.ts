@@ -178,3 +178,28 @@ export const STRANGER_BANDAGE_CHANCE = 0.3;
 export const EVENTS_START = 1.5 * TICKS_PER_DAY; // el primer día y medio, sin sucesos
 export const CALM_DAYS_MIN = 2;
 export const CALM_DAYS_MAX = 3;
+export const TENSION_DAYS_MIN = 1;
+export const TENSION_DAYS_MAX = 2;
+/** Separación entre sucesos, en ticks: [mínimo, máximo]. */
+export const EVENT_GAP = {
+  balancedCalm: [1.5 * TICKS_PER_DAY, 2.5 * TICKS_PER_DAY],
+  balancedTension: [0.5 * TICKS_PER_DAY, TICKS_PER_DAY],
+  calm: [2 * TICKS_PER_DAY, 4 * TICKS_PER_DAY],
+  chaotic: [6 * TICKS_PER_HOUR, 3 * TICKS_PER_DAY],
+} as const;
+export const CHAOTIC_DOUBLE_CHANCE = 0.2; // otro suceso 1 h después
+export const EVENT_RETRY_TICKS = TICKS_PER_HOUR;
+/** Pesos de cada tono que busca cada estilo (y fase). */
+export const TONE_WEIGHTS = {
+  balancedCalm: { good: 60, mixed: 40, bad: 0 },
+  calm: { good: 35, mixed: 25, bad: 40 },
+  chaotic: { good: 1, mixed: 1, bad: 1 },
+} as const;
+export const RESPITE_BELOW = 35; // Equilibrado en calma: por debajo, solo buenos
+export const TENSION_BREAK_BELOW = 25; // Equilibrado: por debajo, la tensión acaba
+export const CALM_NO_BAD_BELOW = 40; // Tranquilo: por debajo, nunca malos
+export const HARSH_ABOVE = 60; // en tensión, por encima los duros pesan más
+export const GENTLE_BELOW = 40; // en tensión, por debajo los leves pesan más
+/** Peso de cada parte del bienestar. */
+export const WELLBEING_WEIGHTS = { mood: 0.4, opinion: 0.3, food: 0.3 } as const;
+export const WELLBEING_FOOD_DAYS = 5; // con estos días de comida o más, la comida cuenta al máximo

@@ -1,3 +1,4 @@
+import { narratorSystem } from './narrator';
 import { ordersSystem } from './orders';
 import { activitiesSystem } from './systems/activities';
 import { decisionsSystem } from './systems/decisions';
@@ -16,6 +17,7 @@ export function step(w: World): void {
   needsSystem(w);
   moodSystem(w);
   socialSystem(w);
+  narratorSystem(w);
   decisionsSystem(w);
   movementSystem(w);
   strangerSystem(w);

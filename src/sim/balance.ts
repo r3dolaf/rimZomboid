@@ -235,3 +235,12 @@ export const BIRTHDAY_RUIN_CHANCE = 0.3;
 export const BIRTHDAY_RUIN_OPINION = 15;
 export const CACHE_CANS_MIN = 3;
 export const CACHE_CANS_MAX = 6;
+// Tormenta y gripe (H3c §3.3)
+export const STORM_HOURS_MIN = 8;
+export const STORM_HOURS_MAX = 12;
+export const STORM_SLEEP_FACTOR = 0.75;
+export const FLU_DAYS = 4;
+export const FLU_REST_DAYS = 2;
+export const FLU_HUNGER_MULT = 1.3;
+export const FLU_MOOD = -10;
+export const WORKING_SICK_MOOD = -5;

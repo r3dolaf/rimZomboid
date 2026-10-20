@@ -38,7 +38,12 @@ export type LogEvent =
   | { kind: 'birthdayParty'; survivorId: number }
   | { kind: 'birthdayRuined'; survivorId: number; otherId: number }
   | { kind: 'birthdaySkipped'; survivorId: number }
-  | { kind: 'cache'; survivorId: number; houseId: number; cans: number };
+  | { kind: 'cache'; survivorId: number; houseId: number; cans: number }
+  | { kind: 'storm' }
+  | { kind: 'flu'; survivorId: number }
+  | { kind: 'fluRest'; survivorId: number }
+  | { kind: 'fluWork'; survivorId: number }
+  | { kind: 'fluOver'; survivorId: number };
 
 export type LogEntry = LogEvent & { tick: number };
 

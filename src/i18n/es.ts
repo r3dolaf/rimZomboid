@@ -89,6 +89,11 @@ export const es = {
     birthdaySkipped: (who: string) => `Nadie celebra el cumpleaños de ${who}`,
     cache: (who: string, house: number, cans: number) =>
       `${who} recuerda una despensa en la casa ${house}: ${cans} latas`,
+    storm: 'Se desata una tormenta',
+    flu: (who: string) => `${who} ha cogido la gripe`,
+    fluRest: (who: string) => `${who} guarda reposo`,
+    fluWork: (who: string) => `${who} sigue trabajando con gripe`,
+    fluOver: (who: string) => `${who} se ha recuperado de la gripe`,
   },
 
   needs: { hunger: 'Hambre', sleep: 'Sueño', mood: 'Ánimo', social: 'Social' },
@@ -114,6 +119,8 @@ export const es = {
     starving: 'Desnutrido',
     tired: 'Cansado',
     lonely: 'Soledad',
+    flu: 'Con gripe',
+    workingSick: 'Trabaja con gripe',
     optimist: 'Optimista',
     pessimist: 'Pesimista',
     scaredOutside: 'Asustado fuera',

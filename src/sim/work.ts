@@ -64,10 +64,12 @@ function goUnload(w: World): Action {
  */
 export function findWork(s: Survivor, w: World): Action | null {
   const carrying = !isEmpty(s.carrying);
-  if (carrying && !s.work.loot) return goUnload(w);
+  // Con gripe y descansando (H3c) no saquea, como si no tuviera permiso.
+  const loot = s.work.loot && s.sick?.plan !== 'rest';
+  if (carrying && !loot) return goUnload(w);
   // Si en el almacén no queda comida y él lleva, lo primero es llevarla para que coman todos.
   if (s.carrying.food > 0 && w.storage.items.food === 0) return goUnload(w);
-  if (!s.work.loot) return null;
+  if (!loot) return null;
   const c = nearestContainer(s, w);
   if (!c) return carrying ? goUnload(w) : null;
   return { type: 'moveTo', target: c.pos, then: { type: 'search', containerId: c.id } };
@@ -78,7 +80,13 @@ export function stillWorthIt(s: Survivor, w: World): boolean {
   const id = targetContainerId(s);
   if (id === null || s.action.type === 'search') return true;
   const c = w.containers.find((x) => x.id === id);
-  return c !== undefined && s.work.loot && available(c, s) && canTakeSomething(c, s);
+  return (
+    c !== undefined &&
+    s.work.loot &&
+    s.sick?.plan !== 'rest' &&
+    available(c, s) &&
+    canTakeSomething(c, s)
+  );
 }
 
 /** Libera las reservas de quien ya no va a ese contenedor. */

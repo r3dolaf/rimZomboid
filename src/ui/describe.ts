@@ -214,6 +214,21 @@ export function formatLogEntry(e: LogEntry, w: World): string {
     case 'cache':
       text = l.cache(name(e.survivorId), e.houseId, e.cans);
       break;
+    case 'storm':
+      text = l.storm;
+      break;
+    case 'flu':
+      text = l.flu(name(e.survivorId));
+      break;
+    case 'fluRest':
+      text = l.fluRest(name(e.survivorId));
+      break;
+    case 'fluWork':
+      text = l.fluWork(name(e.survivorId));
+      break;
+    case 'fluOver':
+      text = l.fluOver(name(e.survivorId));
+      break;
   }
   return `${es.dayTime(t.day, t.hour, t.minute)} · ${text}`;
 }

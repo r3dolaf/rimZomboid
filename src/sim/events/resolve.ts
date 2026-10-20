@@ -2,6 +2,7 @@
 import { logEvent } from '../log';
 import { acceptStrangers, leaveStrangers } from '../systems/strangers';
 import { resolveBirthday } from './birthday';
+import { resolveFlu } from './flu';
 import { resolveTheft } from './theft';
 import type { Decision, World } from '../types';
 
@@ -19,7 +20,7 @@ const RESOLVERS: Record<Decision['kind'], Resolver> = {
   },
   theft: (w, d, option) => resolveTheft(w, d, option),
   birthday: (w, d, option) => resolveBirthday(w, d, option),
-  flu: () => {},
+  flu: (w, d, option) => resolveFlu(w, d, option),
 };
 
 /** Quita la decisión y aplica la opción elegida. */

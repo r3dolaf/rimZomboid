@@ -35,7 +35,7 @@ test('invariantes: decisiones de colonos que no existen y gripe sin fin', () => 
   expect(checkInvariants(w).length).toBeGreaterThan(0);
   w.decisions = [{ id: 90, kind: 'birthday', survivorIds: [w.survivors[0]!.id], expiresAt: 100 }];
   expect(checkInvariants(w)).toEqual([]);
-  w.survivors[1]!.sick = { until: Number.NaN, resting: false };
+  w.survivors[1]!.sick = { until: Number.NaN, plan: 'undecided' };
   expect(checkInvariants(w).length).toBeGreaterThan(0);
 });
 

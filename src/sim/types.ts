@@ -142,8 +142,8 @@ export interface Survivor {
   /** Tick en que intentará charlar con alguien. */
   nextChatAt: number;
   bubble: { kind: BubbleKind; until: number } | null;
-  /** Con gripe hasta `until`; `resting`, sin trabajar mientras tanto. */
-  sick: { until: number; resting: boolean } | null;
+  /** Con gripe hasta `until`; `plan`, lo que decidió el jugador (descansar: sin saquear). */
+  sick: { until: number; plan: 'undecided' | 'rest' | 'work' } | null;
   /** Ya ha tenido su cumpleaños. */
   celebrated: boolean;
 }

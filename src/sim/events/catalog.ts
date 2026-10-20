@@ -1,11 +1,13 @@
 import { birthdayEvent } from './birthday';
 import { cacheEvent } from './cache';
 import { clashEvent } from './clash';
+import { fluEvent } from './flu';
 import { foodFightEvent } from './foodFight';
 import { gossipEvent } from './gossip';
 import { griefEvent } from './grief';
 import { jealousyEvent } from './jealousy';
 import { storyNightEvent } from './storyNight';
+import { stormEvent } from './storm';
 import { strangersEvent } from './strangers';
 import { theftEvent } from './theft';
 import type { GameEvent } from './types';
@@ -22,4 +24,6 @@ export const CATALOG: readonly GameEvent[] = [
   birthdayEvent,
   cacheEvent,
   strangersEvent,
+  stormEvent,
+  fluEvent,
 ];

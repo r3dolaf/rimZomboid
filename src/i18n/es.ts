@@ -65,6 +65,21 @@ export const es = {
       `No dejáis entrar a ${list(names)}, que ${names.length === 1 ? 'se marcha' : 'se marchan'}`,
     strangerLeft: (names: string[]) =>
       `${list(names)} ${names.length === 1 ? 'se cansa' : 'se cansan'} de esperar y ${names.length === 1 ? 'se marcha' : 'se marchan'}`,
+    theft: (suspect: string, cans: number) =>
+      `Faltan ${cans} ${cans === 1 ? 'lata' : 'latas'} del almacén y todos miran a ${suspect}`,
+    theftPunished: (suspect: string, guilty: boolean) =>
+      guilty
+        ? `Castigáis a ${suspect}, que confiesa el robo`
+        : `Castigáis a ${suspect}… y más tarde se sabe que era inocente`,
+    theftIgnored: (suspect: string) => `Lo dejáis estar, pero nadie se fía de ${suspect}`,
+    jealousy: (who: string, other: string, partner: string) =>
+      `${who} tiene celos de ${other} por lo bien que se lleva con ${partner}`,
+    clash: (a: string, b: string) => `${a} y ${b} no se soportan`,
+    grief: (who: string) => `${who} recuerda a los suyos y se viene abajo`,
+    foodFight: 'Discusión por el reparto de la comida',
+    gossip: (teller: string, listener: string, victim: string, found: boolean) =>
+      `${teller} le cuenta a ${listener} cosas de ${victim}` +
+      (found ? `, y ${victim} se entera` : ''),
   },
 
   needs: { hunger: 'Hambre', sleep: 'Sueño', mood: 'Ánimo', social: 'Social' },

@@ -205,3 +205,21 @@ export const GENTLE_BELOW = 40; // en tensión, por debajo los leves pesan más
 /** Peso de cada parte del bienestar. */
 export const WELLBEING_WEIGHTS = { mood: 0.4, opinion: 0.3, food: 0.3 } as const;
 export const WELLBEING_FOOD_DAYS = 5; // con estos días de comida o más, la comida cuenta al máximo
+// Sucesos sociales (H3c §3.1)
+export const THEFT_MIN_FOOD = 3;
+export const THEFT_CANS_MAX = 3;
+export const THEFT_GUILTY_CHANCE = 0.6;
+export const THEFT_SUSPICION = 10; // opinión que pierden los demás del sospechoso (y otro tanto si se deja estar)
+export const THEFT_UNFAIR_OPINION = 20; // el castigado sin culpa, de todos
+export const THEFT_HUNGRY_BELOW = 50;
+export const JEALOUSY_ADMIRER = 20; // opinión del tercero sobre la pareja
+export const JEALOUSY_OPINION = 20; // de los celos hacia el tercero
+export const JEALOUSY_COUPLE_OPINION = 10;
+export const CLASH_BELOW = 30;
+export const CLASH_ARGUE = 30;
+export const CLASH_INSULT = 10;
+export const FOOD_FIGHT_PER_COLONIST = 2; // con menos latas por colono hay disputa
+export const FOOD_FIGHT_OPINION = 5;
+export const GOSSIP_OPINION = 15;
+export const GOSSIP_FOUND_CHANCE = 0.3;
+export const GOSSIP_FOUND_OPINION = 20;

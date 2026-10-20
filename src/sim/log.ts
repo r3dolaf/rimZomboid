@@ -22,7 +22,16 @@ export type LogEvent =
   | { kind: 'strangerArrived'; names: string[] }
   | { kind: 'strangerAccepted'; names: string[] }
   | { kind: 'strangerRejected'; names: string[] }
-  | { kind: 'strangerLeft'; names: string[] };
+  | { kind: 'strangerLeft'; names: string[] }
+  // Sucesos del narrador (H3c)
+  | { kind: 'theft'; suspectId: number; cans: number }
+  | { kind: 'theftPunished'; suspectId: number; guilty: boolean }
+  | { kind: 'theftIgnored'; suspectId: number }
+  | { kind: 'jealousy'; survivorId: number; otherId: number; partnerId: number }
+  | { kind: 'clash'; survivorId: number; otherId: number }
+  | { kind: 'grief'; survivorId: number }
+  | { kind: 'foodFight' }
+  | { kind: 'gossip'; survivorId: number; listenerId: number; otherId: number; found: boolean };
 
 export type LogEntry = LogEvent & { tick: number };
 

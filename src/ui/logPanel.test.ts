@@ -57,3 +57,25 @@ test('el panel muestra los sucesos, el más reciente abajo', () => {
   expect(items).toHaveLength(2);
   expect(items[1]).toContain('Casa 2 vaciada');
 });
+
+test('textos de los sucesos sociales del narrador', () => {
+  const w = createWorld(2);
+  const [a, b, c] = w.survivors;
+  const last = () => formatLogEntry(w.log.at(-1)!, w);
+  logEvent(w, { kind: 'theft', suspectId: a!.id, cans: 2 });
+  expect(last()).toContain(`Faltan 2 latas del almacén y todos miran a ${a!.name}`);
+  logEvent(w, { kind: 'theftPunished', suspectId: a!.id, guilty: false });
+  expect(last()).toContain('era inocente');
+  logEvent(w, {
+    kind: 'gossip',
+    survivorId: a!.id,
+    listenerId: b!.id,
+    otherId: c!.id,
+    found: true,
+  });
+  expect(last()).toContain(
+    `${a!.name} le cuenta a ${b!.name} cosas de ${c!.name}, y ${c!.name} se entera`,
+  );
+  logEvent(w, { kind: 'foodFight' });
+  expect(last()).toContain('Discusión por el reparto de la comida');
+});

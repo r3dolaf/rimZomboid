@@ -27,7 +27,13 @@ import { weightOf } from '../items';
 import { logEvent } from '../log';
 import { addMemory } from '../mood';
 import { nextFloat, nextInt, weightedPick } from '../rng';
-import { changeOpinion, chatWeights, opinionOf, type ChatKind } from '../social';
+import {
+  changeOpinion,
+  chatWeights,
+  isAvailable as available,
+  opinionOf,
+  type ChatKind,
+} from '../social';
 import type { BubbleKind, Survivor, World } from '../types';
 import { computeFov } from '../vision';
 import { tileOf } from '../world';
@@ -52,14 +58,6 @@ export function socialSystem(w: World): void {
     if (p && (opinionOf(s, p.id) < BREAKUP_BELOW || opinionOf(p, s.id) < BREAKUP_BELOW))
       breakUp(w, s, p);
   }
-}
-
-/** Despierto, sin crisis (ni yendo a tenerla), sin pelear y sin consolar ni ser consolado. */
-function available(s: Survivor): boolean {
-  const a = s.action;
-  if (a.type === 'sleep' || a.type === 'crisis' || a.type === 'fight') return false;
-  if (a.type === 'console' || a.type === 'consoled') return false;
-  return !(a.type === 'moveTo' && a.then?.type === 'crisis');
 }
 
 /** El más cercano que esté disponible, a CHAT_RANGE casillas o menos y a la vista. */

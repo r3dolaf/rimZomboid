@@ -1,6 +1,7 @@
 // Qué pasa al contestar (o al caducar) cada decisión.
 import { logEvent } from '../log';
 import { acceptStrangers, leaveStrangers } from '../systems/strangers';
+import { resolveTheft } from './theft';
 import type { Decision, World } from '../types';
 
 /** Opción 0 o 1; `timedOut`, si nadie contestó y se aplica la de por defecto (la 1). */
@@ -15,7 +16,7 @@ const RESOLVERS: Record<Decision['kind'], Resolver> = {
     logEvent(w, timedOut ? { kind: 'strangerLeft', names } : { kind: 'strangerRejected', names });
     leaveStrangers(w);
   },
-  theft: () => {},
+  theft: (w, d, option) => resolveTheft(w, d, option),
   birthday: () => {},
   flu: () => {},
 };

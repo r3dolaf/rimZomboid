@@ -170,6 +170,30 @@ export function formatLogEntry(e: LogEntry, w: World): string {
     case 'strangerLeft':
       text = l.strangerLeft(e.names);
       break;
+    case 'theft':
+      text = l.theft(name(e.suspectId), e.cans);
+      break;
+    case 'theftPunished':
+      text = l.theftPunished(name(e.suspectId), e.guilty);
+      break;
+    case 'theftIgnored':
+      text = l.theftIgnored(name(e.suspectId));
+      break;
+    case 'jealousy':
+      text = l.jealousy(name(e.survivorId), name(e.otherId), name(e.partnerId));
+      break;
+    case 'clash':
+      text = l.clash(name(e.survivorId), name(e.otherId));
+      break;
+    case 'grief':
+      text = l.grief(name(e.survivorId));
+      break;
+    case 'foodFight':
+      text = l.foodFight;
+      break;
+    case 'gossip':
+      text = l.gossip(name(e.survivorId), name(e.listenerId), name(e.otherId), e.found);
+      break;
   }
   return `${es.dayTime(t.day, t.hour, t.minute)} · ${text}`;
 }

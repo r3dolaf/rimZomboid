@@ -138,6 +138,18 @@ export function formatLogEntry(e: LogEntry, w: World): string {
     case 'breakup':
       text = l.breakup(name(e.survivorId), name(e.otherId));
       break;
+    case 'strangerArrived':
+      text = l.strangerArrived(e.name);
+      break;
+    case 'strangerAccepted':
+      text = l.strangerAccepted(e.name);
+      break;
+    case 'strangerRejected':
+      text = l.strangerRejected(e.name);
+      break;
+    case 'strangerLeft':
+      text = l.strangerLeft(e.name);
+      break;
   }
   return `${es.dayTime(t.day, t.hour, t.minute)} · ${text}`;
 }

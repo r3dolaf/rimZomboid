@@ -17,7 +17,12 @@ export type LogEvent =
   | { kind: 'fight'; survivorId: number; otherId: number }
   | { kind: 'consoled'; survivorId: number; otherId: number }
   | { kind: 'couple'; survivorId: number; otherId: number }
-  | { kind: 'breakup'; survivorId: number; otherId: number };
+  | { kind: 'breakup'; survivorId: number; otherId: number }
+  // El desconocido aún no es colono: se guarda su nombre.
+  | { kind: 'strangerArrived'; name: string }
+  | { kind: 'strangerAccepted'; name: string }
+  | { kind: 'strangerRejected'; name: string }
+  | { kind: 'strangerLeft'; name: string };
 
 export type LogEntry = LogEvent & { tick: number };
 

@@ -50,6 +50,19 @@ export function checkInvariants(w: World): string[] {
     else if (!isWalkable(w.grid, t.x, t.y))
       problems.push(`${who}: en una casilla no transitable (${t.x}, ${t.y})`);
   }
+  if (w.stranger) {
+    const s = w.stranger.survivor;
+    const who = `desconocido ${s.name} (#${s.id})`;
+    if (ids.has(s.id)) problems.push(`${who}: su id ya es de un colono`);
+    for (const k of ['hunger', 'sleep', 'mood', 'social'] as const) {
+      const v = s.needs[k];
+      if (!Number.isFinite(v) || v < 0 || v > 100)
+        problems.push(`${who}: ${k} fuera de 0–100 (${v})`);
+    }
+    checkInventory(problems, `${who}: carga`, s.carrying);
+    const t = tileOf(s.pos);
+    if (!isWalkable(w.grid, t.x, t.y)) problems.push(`${who}: en una casilla no transitable`);
+  }
   checkInventory(problems, 'almacén', w.storage.items);
   for (const c of w.containers) {
     checkInventory(problems, `contenedor ${c.id}`, c.items);

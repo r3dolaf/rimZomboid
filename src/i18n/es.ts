@@ -51,6 +51,10 @@ export const es = {
     consoled: (who: string, other: string) => `${who} ha consolado a ${other}`,
     couple: (who: string, other: string) => `${who} y ${other} ahora son pareja`,
     breakup: (who: string, other: string) => `${who} y ${other} lo han dejado`,
+    strangerArrived: (who: string) => `Alguien se acerca a la base: ${who}`,
+    strangerAccepted: (who: string) => `${who} se une al grupo`,
+    strangerRejected: (who: string) => `No dejáis entrar a ${who}, que se marcha`,
+    strangerLeft: (who: string) => `${who} se cansa de esperar y se marcha`,
   },
 
   needs: { hunger: 'Hambre', sleep: 'Sueño', mood: 'Ánimo', social: 'Social' },

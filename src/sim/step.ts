@@ -5,6 +5,7 @@ import { moodSystem } from './systems/mood';
 import { movementSystem } from './systems/movement';
 import { needsSystem } from './systems/needs';
 import { socialSystem } from './systems/social';
+import { strangerSystem } from './systems/strangers';
 import type { World } from './types';
 import { visionSystem } from './vision';
 import { reservationsSystem } from './work';
@@ -17,6 +18,7 @@ export function step(w: World): void {
   socialSystem(w);
   decisionsSystem(w);
   movementSystem(w);
+  strangerSystem(w);
   activitiesSystem(w);
   reservationsSystem(w);
   visionSystem(w);

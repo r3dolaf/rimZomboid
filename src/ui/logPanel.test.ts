@@ -32,6 +32,18 @@ test('cada suceso se convierte en una frase con día y hora', () => {
   expect(formatLogEntry(w.log.at(-1)!, w)).toContain('El almacén se ha quedado sin comida');
 });
 
+test('sucesos de relaciones y de recién llegados', () => {
+  const w = createWorld(2);
+  const [a, b] = w.survivors;
+  const last = () => formatLogEntry(w.log.at(-1)!, w);
+  logEvent(w, { kind: 'couple', survivorId: a!.id, otherId: b!.id });
+  expect(last()).toContain(`${a!.name} y ${b!.name} ahora son pareja`);
+  logEvent(w, { kind: 'consoled', survivorId: a!.id, otherId: b!.id });
+  expect(last()).toContain(`${a!.name} ha consolado a ${b!.name}`);
+  logEvent(w, { kind: 'strangerArrived', name: 'Zoe' });
+  expect(last()).toContain('Alguien se acerca a la base: Zoe');
+});
+
 test('el panel muestra los sucesos, el más reciente abajo', () => {
   const root = document.createElement('div');
   const w = createWorld(2);

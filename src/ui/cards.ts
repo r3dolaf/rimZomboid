@@ -1,12 +1,19 @@
 import { es } from '../i18n/es';
-import type { Needs, World } from '../sim/types';
+import type { Needs, Survivor, World } from '../sim/types';
 import { barLevel, statusIcon } from './describe';
 import type { Selection } from './selection';
 import './panels.css';
 
-const NEEDS: readonly (keyof Needs)[] = ['hunger', 'sleep', 'mood'];
+const NEEDS: readonly (keyof Needs)[] = ['hunger', 'sleep', 'social', 'mood'];
 
-/** Barra inferior: una tarjeta por superviviente con sus necesidades. */
+interface Card {
+  card: HTMLButtonElement;
+  love: HTMLElement;
+  status: HTMLElement;
+  fills: HTMLElement[];
+}
+
+/** Barra inferior: una tarjeta por colono con sus necesidades. Siguen a quien está en la colonia. */
 export function mountCards(
   root: HTMLElement,
   opts: { world: World; selection: Selection },
@@ -15,7 +22,8 @@ export function mountCards(
   bar.className = 'cards';
   root.append(bar);
 
-  const cards = opts.world.survivors.map((s) => {
+  const cards = new Map<number, Card>();
+  const create = (s: Survivor): Card => {
     const card = document.createElement('button');
     card.type = 'button';
     card.className = 'card';
@@ -30,6 +38,12 @@ export function mountCards(
     const name = document.createElement('span');
     name.className = 'name';
     name.textContent = s.name;
+    const love = document.createElement('span');
+    love.className = 'love';
+    love.textContent = '💕';
+    love.title = es.hasPartner;
+    love.hidden = true;
+    name.append(love);
     const status = document.createElement('span');
     status.className = 'status';
     head.append(name, status);
@@ -48,20 +62,30 @@ export function mountCards(
     });
 
     bar.append(card);
-    return { id: s.id, card, status, fills };
-  });
+    return { card, love, status, fills };
+  };
 
   return {
     update() {
-      for (const c of cards) {
-        const s = opts.world.survivors.find((x) => x.id === c.id);
-        if (!s) continue;
+      const here = new Set(opts.world.survivors.map((s) => s.id));
+      for (const [id, c] of cards)
+        if (!here.has(id)) {
+          c.card.remove();
+          cards.delete(id);
+        }
+      for (const s of opts.world.survivors) {
+        let c = cards.get(s.id);
+        if (!c) {
+          c = create(s);
+          cards.set(s.id, c);
+        }
+        const card = c;
         NEEDS.forEach((k, i) => {
           const v = Math.round(s.needs[k]);
-          const fill = c.fills[i]!;
+          const fill = card.fills[i]!;
           const width = `${v}%`;
           if (fill.style.width !== width) fill.style.width = width;
-          const level = barLevel(v, k === 'mood' ? 'mood' : 'need');
+          const level = barLevel(v, k === 'mood' || k === 'social' ? k : 'need');
           fill.className = `fill ${level}`;
         });
         const icon = statusIcon(s);
@@ -70,6 +94,8 @@ export function mountCards(
           c.status.textContent = text;
           c.status.title = icon?.label ?? '';
         }
+        const coupled = s.partnerId !== null;
+        if (c.love.hidden === coupled) c.love.hidden = !coupled;
         c.card.classList.toggle('selected', opts.selection.id === s.id);
       }
     },

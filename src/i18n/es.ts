@@ -1,7 +1,8 @@
 // Textos visibles del juego en español. Todo texto de la interfaz sale de aquí.
 import type { MoodModifierId } from '../sim/mood';
 import type { ItemKind } from '../sim/items';
-import type { TraitId } from '../sim/types';
+import type { RelationLabel } from '../sim/social';
+import type { MemoryId, TraitId } from '../sim/types';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -79,7 +80,7 @@ export const es = {
     hungry: 'Hambriento',
     starving: 'Desnutrido',
     tired: 'Cansado',
-    lonely: 'Solo',
+    lonely: 'Soledad',
     optimist: 'Optimista',
     pessimist: 'Pesimista',
     scaredOutside: 'Asustado fuera',
@@ -89,14 +90,44 @@ export const es = {
     vented: 'Se desahogó',
     goodChat: 'Buena charla',
     argued: 'Discutió',
-    insulted: 'Insultado',
+    insulted: 'Le insultaron',
     fought: 'Se peleó',
-    consoled: 'Consolado',
-    consoledByPartner: 'Consolado por su pareja',
+    consoled: 'Le consolaron',
+    consoledByPartner: 'Le consoló su pareja',
     sharedFood: 'Le compartieron comida',
     breakup: 'Ruptura',
     sleptWithPartner: 'Durmió con su pareja',
   } satisfies Record<MoodModifierId, string>,
+  /** Los recuerdos con otra persona, con su nombre. */
+  modifiersWith: {
+    goodChat: (who: string) => `Buena charla con ${who}`,
+    argued: (who: string) => `Discutió con ${who}`,
+    insulted: (who: string) => `Le insultó ${who}`,
+    fought: (who: string) => `Se peleó con ${who}`,
+    consoled: (who: string) => `Le consoló ${who}`,
+    sharedFood: (who: string) => `${who} compartió su comida`,
+    breakup: (who: string) => `Ruptura con ${who}`,
+  } satisfies Partial<Record<MemoryId, (who: string) => string>> as Partial<
+    Record<MemoryId, (who: string) => string>
+  >,
+
+  relationsTitle: 'Relaciones',
+  partner: (who: string) => `Pareja: ${who}`,
+  hasPartner: 'Tiene pareja',
+  noRelations: 'Aún no conoce a nadie',
+  relationLabels: {
+    partner: 'Pareja',
+    friend: 'Amistad',
+    rival: 'Rivalidad',
+  } satisfies Record<RelationLabel, string>,
+
+  stranger: {
+    title: 'Alguien a la puerta',
+    intro: (who: string) => `${who} quiere unirse al grupo.`,
+    carrying: (what: string) => `Lleva: ${what}`,
+    accept: 'Aceptar',
+    reject: 'Rechazar',
+  },
 
   activities: {
     wander: 'Paseando',

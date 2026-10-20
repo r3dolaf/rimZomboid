@@ -3,12 +3,16 @@ import { CARRY_CAPACITY_KG } from '../sim/balance';
 import { weightOf } from '../sim/items';
 import { moodModifiers, moodTarget } from '../sim/mood';
 import { issue } from '../sim/orders';
-import type { World } from '../sim/types';
-import { activityText, formatItems, formatModifier } from './describe';
+import { opinionOf, relationLabel } from '../sim/social';
+import type { Survivor, World } from '../sim/types';
+import { activityText, formatItems, formatModifier, signed } from './describe';
 import type { Selection } from './selection';
 import './panels.css';
 
-/** Ficha del superviviente seleccionado: qué hace, rasgos, necesidades y por qué de su ánimo. */
+/**
+ * Ficha del superviviente seleccionado: qué hace, rasgos, necesidades, por qué de su ánimo y
+ * relaciones.
+ */
 export function mountSheet(
   root: HTMLElement,
   opts: { world: World; selection: Selection },
@@ -64,14 +68,15 @@ export function mountSheet(
         shown = '';
         return;
       }
+      const nameOf = (id: number) => world.survivors.find((x) => x.id === id)?.name ?? '?';
       const mods = moodModifiers(s, world.tick, world.base.rect).map((m) =>
-        formatModifier(m, world.tick),
+        formatModifier(m, world.tick, nameOf),
       );
       const view = {
         name: s.name,
         doing: activityText(s, world),
         traits: s.traits.map((t) => es.traits[t]),
-        needs: (['hunger', 'sleep'] as const).map(
+        needs: (['hunger', 'sleep', 'social'] as const).map(
           (k) => `${es.needs[k]}: ${Math.round(s.needs[k])}`,
         ),
         mood: es.moodArrow(
@@ -79,6 +84,8 @@ export function mountSheet(
           Math.round(moodTarget(s, world.tick, world.base.rect)),
         ),
         mods,
+        partner: s.partnerId === null ? null : nameOf(s.partnerId),
+        relations: relations(s, world),
       };
       // La casilla refleja el permiso real, salvo justo cuando el jugador la acaba de cambiar
       // y la orden aún no se ha aplicado.
@@ -101,6 +108,18 @@ export function mountSheet(
   };
 }
 
+/** "Bea: +45 · Amistad" por cada colono, de quien mejor le cae a quien peor. */
+function relations(s: Survivor, w: World): string[] {
+  return w.survivors
+    .filter((o) => o !== s)
+    .map((o) => ({ o, v: Math.round(opinionOf(s, o.id)) }))
+    .sort((a, b) => b.v - a.v)
+    .map(({ o, v }) => {
+      const label = relationLabel(s, o.id);
+      return `${o.name}: ${signed(v)}` + (label ? ` · ${es.relationLabels[label]}` : '');
+    });
+}
+
 /** El cuerpo de la ficha, debajo de la cabecera. */
 function render(v: {
   doing: string;
@@ -108,6 +127,8 @@ function render(v: {
   needs: string[];
   mood: string;
   mods: string[];
+  partner: string | null;
+  relations: string[];
 }): DocumentFragment {
   const f = document.createDocumentFragment();
   const el = <K extends keyof HTMLElementTagNameMap>(tag: K, text?: string, cls?: string) => {
@@ -147,5 +168,16 @@ function render(v: {
     mods.append(li);
   }
   f.append(mods);
+
+  f.append(el('h3', es.relationsTitle));
+  if (v.partner !== null) f.append(el('p', es.partner(v.partner), 'partner'));
+  const rel = el('ul', undefined, 'relations');
+  if (v.relations.length === 0) rel.append(el('li', es.noRelations, 'muted'));
+  for (const r of v.relations) {
+    const li = el('li', r);
+    li.dataset.testid = 'relation';
+    rel.append(li);
+  }
+  f.append(rel);
   return f;
 }

@@ -113,3 +113,45 @@ test('la casilla Saquear da la orden y no se reconstruye', () => {
   expect(root.querySelector('[data-testid="sheet-loot"]')).toBe(box);
   root.remove();
 });
+
+test('sección Relaciones: pareja y opiniones ordenadas con su etiqueta', () => {
+  const { root, world, selection, sheet } = setup();
+  const [a, b, c] = world.survivors;
+  a!.opinions = { [b!.id]: 45.4, [c!.id]: -60 };
+  a!.partnerId = b!.id;
+  b!.partnerId = a!.id;
+  selection.set(a!.id);
+  sheet.update();
+  const el = sheetEl(root);
+  expect(el.textContent).toContain('Relaciones');
+  expect(el.textContent).toContain(`Pareja: ${b!.name}`);
+  const items = [...el.querySelectorAll('[data-testid="relation"]')].map((li) => li.textContent);
+  expect(items).toEqual([`${b!.name}: +45 · Pareja`, `${c!.name}: −60 · Rivalidad`]);
+  a!.partnerId = null;
+  b!.partnerId = null;
+  a!.opinions[b!.id] = 41;
+  sheet.update();
+  expect(el.textContent).not.toContain('Pareja:');
+  expect(el.querySelector('[data-testid="relation"]')!.textContent).toBe(
+    `${b!.name}: +41 · Amistad`,
+  );
+  root.remove();
+});
+
+test('los motivos del ánimo con otra persona llevan su nombre', () => {
+  const { root, world, selection, sheet } = setup();
+  const [a, b] = world.survivors;
+  a!.traits = [];
+  a!.needs.hunger = 100;
+  a!.needs.sleep = 100;
+  addMemory(a!, 'goodChat', 0, b!.id);
+  addMemory(a!, 'insulted', 0, b!.id);
+  selection.set(a!.id);
+  sheet.update();
+  const items = [...sheetEl(root).querySelectorAll('[data-testid="modifier"]')].map(
+    (li) => li.textContent,
+  );
+  expect(items).toContain(`Buena charla con ${b!.name} +3 (quedan 6 h)`);
+  expect(items).toContain(`Le insultó ${b!.name} −8 (quedan 12 h)`);
+  root.remove();
+});

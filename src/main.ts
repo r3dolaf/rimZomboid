@@ -13,6 +13,7 @@ import { bindTimeKeys } from './ui/keys';
 import { mountLog } from './ui/logPanel';
 import { createSelection } from './ui/selection';
 import { mountSheet } from './ui/sheet';
+import { mountStrangerDialog } from './ui/strangerDialog';
 import { createTool } from './ui/tool';
 
 const seed = parseSeed(location.search, randomSeed);
@@ -27,6 +28,7 @@ const cards = mountCards(ui, { world, selection });
 const sheet = mountSheet(ui, { world, selection });
 const housePanel = mountHousePanel(ui, { world, selection: houseSelection });
 const log = mountLog(ui, { world });
+const stranger = mountStrangerDialog(ui, { world, time });
 
 // Solo una ficha abierta a la vez: superviviente o casa.
 selection.onChange((id) => id !== null && houseSelection.set(null));
@@ -63,6 +65,7 @@ const data: GameSceneData = {
     sheet.update();
     housePanel.update();
     log.update();
+    stranger.update();
   },
 };
 game.scene.add('game', GameScene, true, data);

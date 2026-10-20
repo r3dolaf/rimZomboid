@@ -1,11 +1,11 @@
 // Traducciones del estado de la simulación a textos e indicadores para la interfaz.
 import { es } from '../i18n/es';
-import { MOOD_CRISIS, MOOD_EDGE, TICKS_PER_HOUR } from '../sim/balance';
+import { LONELY_BELOW, MOOD_CRISIS, MOOD_EDGE, TICKS_PER_HOUR } from '../sim/balance';
 import { gameTime } from '../sim/clock';
 import { ITEM_KINDS, type Inventory } from '../sim/items';
 import type { LogEntry } from '../sim/log';
 import type { MoodModifier } from '../sim/mood';
-import type { Survivor, World } from '../sim/types';
+import type { MemoryId, Survivor, World } from '../sim/types';
 
 export function activityText(s: Survivor, w?: World): string {
   const container = (id: number) => w?.containers.find((c) => c.id === id);
@@ -61,18 +61,38 @@ export function statusIcon(s: Survivor): { icon: string; label: string } | null 
 
 export type BarLevel = 'ok' | 'warn' | 'bad';
 
+/** Por debajo de cuánto se pone amarilla y roja cada tipo de barra. */
+const BAR_LIMITS: Record<'need' | 'social' | 'mood', readonly [number, number]> = {
+  need: [35, 15],
+  social: [35, LONELY_BELOW],
+  mood: [MOOD_EDGE, MOOD_CRISIS],
+};
+
 /** Color de una barra: amarilla o roja cuando el valor es bajo. */
-export function barLevel(value: number, kind: 'need' | 'mood'): BarLevel {
-  const [warn, bad] = kind === 'mood' ? [MOOD_EDGE, MOOD_CRISIS] : [35, 15];
+export function barLevel(value: number, kind: 'need' | 'social' | 'mood'): BarLevel {
+  const [warn, bad] = BAR_LIMITS[kind];
   if (value < bad) return 'bad';
   if (value < warn) return 'warn';
   return 'ok';
 }
 
-/** "Hambriento −10" o "Comió +5 (quedan 3 h)". */
-export function formatModifier(m: MoodModifier, tick: number): string {
+/** "+45", "−60" o "0". */
+export function signed(v: number): string {
+  return v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '0';
+}
+
+/**
+ * "Hambriento −10", "Comió +5 (quedan 3 h)" o, con `nameOf`, "Buena charla con Bea +3 (quedan 6 h)".
+ */
+export function formatModifier(
+  m: MoodModifier,
+  tick: number,
+  nameOf?: (id: number) => string,
+): string {
   const sign = m.value > 0 ? '+' : '−';
-  let text = `${es.modifiers[m.id]} ${sign}${Math.abs(m.value)}`;
+  const withName = m.otherId !== undefined && nameOf ? es.modifiersWith[m.id as MemoryId] : null;
+  const label = withName ? withName(nameOf!(m.otherId!)) : es.modifiers[m.id];
+  let text = `${label} ${sign}${Math.abs(m.value)}`;
   if (m.expiresAt !== undefined)
     text += ` (${es.hoursLeft(Math.ceil((m.expiresAt - tick) / TICKS_PER_HOUR))})`;
   return text;

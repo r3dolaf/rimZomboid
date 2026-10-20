@@ -160,3 +160,56 @@
 .sheet.house {
   top: 44px;
 }
+.bar[data-need='social'] .fill {
+  background: #b07cd8;
+}
+.card .love {
+  margin-left: 4px;
+}
+.sheet .partner {
+  margin: 2px 0 4px;
+}
+
+.stranger {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  padding: 10px 14px;
+  border: 1px solid #f2c641;
+  border-radius: 8px;
+  background: rgba(23, 25, 28, 0.97);
+  color: #e8e6e3;
+  font:
+    13px/1.4 system-ui,
+    sans-serif;
+}
+.stranger[hidden] {
+  display: none;
+}
+.stranger h2 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+.stranger p {
+  margin: 2px 0;
+}
+.stranger .buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.stranger button {
+  flex: 1;
+  padding: 5px 0;
+  border: 1px solid #555;
+  border-radius: 5px;
+  background: #2e3237;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.stranger button:hover {
+  border-color: #f2c641;
+}

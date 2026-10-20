@@ -54,17 +54,19 @@ test('niebla al empezar, herramienta Saquear y marcar una casa', async ({ page }
   await page.keyboard.press('l');
   await page.mouse.click(target.x, target.y);
   await page.keyboard.press('Escape');
-  await page.locator('[data-speed="1"]').click(); // la orden se aplica en el siguiente tick
-  await expect
-    .poll(() =>
-      page.evaluate(
-        (id) =>
-          (window as unknown as { rimzomboid: Debug }).rimzomboid.world.containers.some(
-            (c) => c.houseId === id && c.designated,
-          ),
-        target.id,
-      ),
-    )
-    .toBe(true);
+
+  // Sin la herramienta, clic en la fachada (siempre conocida) abre la ficha de la casa.
+  const facade = await page.evaluate((id) => {
+    const { world, tileToScreen } = (window as unknown as { rimzomboid: Debug }).rimzomboid;
+    const h = world.houses.find((x) => x.id === id)!;
+    return tileToScreen(h.rect.x, h.rect.y + 2);
+  }, target.id);
+  await page.mouse.click(facade.x, facade.y);
+  const panel = page.getByTestId('house-panel');
+  await expect(panel).toBeVisible();
+  await expect(panel).toContainText(`Casa ${target.id}`);
+  await expect(panel).toContainText('Marcada para saquear'); // en pausa, contando la orden pendiente
+  await page.keyboard.press('Escape');
+  await expect(panel).toBeHidden();
   expect(errores).toEqual([]);
 });

@@ -61,14 +61,11 @@ test('se actualiza cuando cambian los datos', () => {
   root.remove();
 });
 
-test('la ✕ y la tecla Esc cierran la ficha', () => {
+test('la ✕ cierra la ficha (Esc: ver escape.test.ts)', () => {
   const { root, world, selection, sheet } = setup();
   selection.set(world.survivors[0]!.id);
   sheet.update();
   (root.querySelector('[data-testid="sheet-close"]') as HTMLElement).click();
-  expect(selection.id).toBeNull();
-  selection.set(world.survivors[0]!.id);
-  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
   expect(selection.id).toBeNull();
   root.remove();
 });

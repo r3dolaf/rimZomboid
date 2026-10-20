@@ -38,12 +38,18 @@ export function mountHousePanel(
         shown = '';
         return;
       }
-      const cs = opts.world.containers.filter((c) => c.houseId === house.id);
-      const lines = [
-        houseMarked(opts.world, house.id) ? es.houseMarked : es.houseUnmarked,
-        es.houseSearched(cs.filter((c) => c.searched).length, cs.length),
-        es.houseEmpty(cs.filter((c) => c.searched && isEmpty(c.items)).length),
-      ];
+      // Solo cuenta los contenedores que se han visto: el resto el jugador no los conoce.
+      const w = opts.world;
+      const cs = w.containers.filter(
+        (c) => c.houseId === house.id && w.seen[c.pos.y * w.grid.width + c.pos.x] === 1,
+      );
+      const lines = [houseMarked(w, house.id) ? es.houseMarked : es.houseUnmarked];
+      if (cs.length === 0) lines.push(es.houseUnexplored);
+      else
+        lines.push(
+          es.houseSearched(cs.filter((c) => c.searched).length, cs.length),
+          es.houseEmpty(cs.filter((c) => c.searched && isEmpty(c.items)).length),
+        );
       panel.hidden = false;
       const key = `${house.id}|${lines.join('|')}`;
       if (key === shown) return;

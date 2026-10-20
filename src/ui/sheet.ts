@@ -19,10 +19,8 @@ export function mountSheet(
   panel.hidden = true;
   root.append(panel);
 
+  // (Esc la cierra desde bindEscape, en main.ts.)
   const close = () => opts.selection.set(null);
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') close();
-  });
 
   // La cabecera (nombre y ✕) se crea una vez: si la ✕ se rehiciera mientras se pulsa,
   // el navegador no daría el clic por bueno.

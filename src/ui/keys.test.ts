@@ -44,12 +44,12 @@ test('1, 2 y 3 cambian la velocidad', () => {
   expect(time.speed).toBe(2);
 });
 
-test('L activa y desactiva la herramienta Saquear; Esc la desactiva', () => {
+test('L activa y desactiva la herramienta Saquear (Esc: ver escape.test.ts)', () => {
   const time = createTimeController();
   const tool = createTool();
   bindTimeKeys(window, time, tool);
   press(window, { code: 'KeyL', key: 'l' });
   expect(tool.active).toBe(true);
-  press(window, { code: 'Escape', key: 'Escape' });
+  press(window, { code: 'KeyL', key: 'l' });
   expect(tool.active).toBe(false);
 });

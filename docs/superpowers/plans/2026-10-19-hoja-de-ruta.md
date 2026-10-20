@@ -23,12 +23,15 @@ Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al p
 
 **Hechos en H3:** A\* con regiones conectadas y búferes reutilizados, espera de "sin camino" en todas las acciones, comida inicial a 10 latas, darse la vuelta con el almacén vacío.
 
-**Para H4 (zombis):**
+**Hechos tras la revisión de H3:**
 
-- **Visión simétrica y sin fugas por esquinas.** El shadowcasting deja ver entre dos casillas opacas que se tocan en diagonal y por esquinas junto a ventanas. Además, no es simétrico: A ve a B pero B no ve a A en ~5 % de los pares cerca de casas. Con zombis que usan la misma visión, conviene una variante simétrica o una regla que bloquee las esquinas, con tests de ventanas y huecos en diagonal.
-- **Contenedores sin registrar.** `canTakeSomething` mira lo que hay dentro aunque nadie lo haya registrado. Mejor: un contenedor sin registrar merece el viaje solo si cabe al menos el objeto más ligero.
-- **Invariante de reservas.** Ahora solo comprueba que el dueño de la reserva exista. Debería comprobar también que va hacia ese contenedor y que quien va hacia un contenedor lo tiene reservado.
-- **Botín perdido.** Si una casa no tuviera contenedores, su parte del botín se perdería sin aviso; hoy no puede pasar.
+- Visión simétrica (shadowcasting de Ford) y sin ver por huecos diagonales.
+- Contenedores sin registrar valorados por el hueco libre, no por lo que tienen dentro.
+- Invariante de reservas estricta.
+- Botín sin pérdidas si una casa no tuviera contenedores.
+- Esc por capas.
+- La ficha de la casa cuenta solo contenedores vistos.
+- El test del navegador comprueba la ficha de la casa.
 
 **Para H5 (muertes):**
 
@@ -37,10 +40,6 @@ Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al p
 - Probar el desplome en plena crisis de principio a fin.
 
 **Para H6 (pulido):**
-
-- **Esc por capas.** Ahora Esc cierra a la vez la herramienta, la ficha del superviviente y la de la casa; mejor cerrar solo la de más arriba.
-- **Contenedores en la ficha de la casa.** "Registrados: N de M" cuenta también contenedores que no se han visto.
-- **Test del navegador.** El de saqueo comprueba el mundo; mejor que compruebe la ficha de la casa.
 
 - `cards.ts` reescribe la clase de las barras en cada fotograma.
 - El color de los motivos del ánimo en la ficha se deduce del texto (`−`), en vez de usar el signo del valor.

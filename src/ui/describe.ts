@@ -9,6 +9,7 @@ import type { Survivor, World } from '../sim/types';
 
 export function activityText(s: Survivor, w?: World): string {
   const container = (id: number) => w?.containers.find((c) => c.id === id);
+  const name = (id: number) => w?.survivors.find((o) => o.id === id)?.name ?? '?';
   const a = s.action;
   const t = es.activities;
   switch (a.type) {
@@ -25,13 +26,18 @@ export function activityText(s: Survivor, w?: World): string {
     case 'unload':
       return t.unload;
     case 'fight':
-      return t.fight(w?.survivors.find((o) => o.id === a.otherId)?.name ?? '?');
+      return t.fight(name(a.otherId));
+    case 'console':
+      return t.console(name(a.otherId));
+    case 'consoled':
+      return t.consoled(name(a.otherId));
     case 'moveTo':
       if (a.then?.type === 'search') return t.goLoot(container(a.then.containerId)?.houseId ?? 0);
       if (a.then?.type === 'unload') return t.goUnload;
       if (a.then?.type === 'eat') return t.goEat;
       if (a.then?.type === 'sleep') return t.goSleep;
       if (a.then?.type === 'crisis') return t.crisis;
+      if (a.then?.type === 'console') return t.goConsole(name(a.then.otherId));
       return t.wander;
     case 'idle':
       if (a.wait === 'refused' && a.ticksLeft > 0) return t.refused;
@@ -46,6 +52,7 @@ export function statusIcon(s: Survivor): { icon: string; label: string } | null 
   if (a.type === 'crisis' || (a.type === 'moveTo' && a.then?.type === 'crisis'))
     return es.status.crisis;
   if (a.type === 'fight') return es.status.fighting;
+  if (a.type === 'console' || a.type === 'consoled') return es.status.consoling;
   if (a.type === 'sleep') return es.status.sleeping;
   if (a.type === 'eat') return es.status.eating;
   if (s.needs.mood < MOOD_EDGE) return es.status.edge;
@@ -121,6 +128,9 @@ export function formatLogEntry(e: LogEntry, w: World): string {
       break;
     case 'fight':
       text = l.fight(name(e.survivorId), name(e.otherId));
+      break;
+    case 'consoled':
+      text = l.consoled(name(e.survivorId), name(e.otherId));
       break;
   }
   return `${es.dayTime(t.day, t.hour, t.minute)} · ${text}`;

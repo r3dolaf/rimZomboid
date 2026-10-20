@@ -86,7 +86,8 @@ export type Activity =
   | { type: 'sleep' }
   | { type: 'crisis' }
   | { type: 'search'; containerId: number }
-  | { type: 'unload' };
+  | { type: 'unload' }
+  | { type: 'console'; otherId: number };
 
 export type Action =
   /** `wait`: esperando tras no encontrar camino (no se consulta al cerebro) o tras negarse a trabajar. */
@@ -98,7 +99,10 @@ export type Action =
   | { type: 'crisis'; ticksLeft: number }
   | { type: 'search'; containerId: number; ticksLeft: number }
   | { type: 'unload'; ticksLeft: number }
-  | { type: 'fight'; otherId: number; ticksLeft: number };
+  | { type: 'fight'; otherId: number; ticksLeft: number }
+  /** Consuela a `otherId`, que mientras tanto está en `consoled` (lo lleva el que consuela). */
+  | { type: 'console'; otherId: number; ticksLeft: number }
+  | { type: 'consoled'; otherId: number };
 
 export interface Survivor {
   id: number;

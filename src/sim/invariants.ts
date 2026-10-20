@@ -33,6 +33,13 @@ export function checkInvariants(w: World): string[] {
     for (const [id, v] of Object.entries(s.opinions))
       if (!Number.isFinite(v) || Math.abs(v) > OPINION_LIMIT)
         problems.push(`${who}: opinión sobre #${id} fuera de ±${OPINION_LIMIT} (${v})`);
+    const a = s.action;
+    if (a.type === 'fight' || a.type === 'console' || a.type === 'consoled') {
+      const mirror = a.type === 'fight' ? 'fight' : a.type === 'console' ? 'consoled' : 'console';
+      const o = w.survivors.find((x) => x.id === a.otherId);
+      if (!o || o.action.type !== mirror || o.action.otherId !== s.id)
+        problems.push(`${who}: ${a.type} con #${a.otherId}, que no está en ${mirror} con él`);
+    }
     if (s.partnerId !== null) {
       const p = w.survivors.find((x) => x.id === s.partnerId);
       if (!p || p === s || p.partnerId !== s.id)

@@ -44,10 +44,11 @@ export function socialSystem(w: World): void {
   }
 }
 
-/** Despierto, sin crisis (ni yendo a tenerla) y sin pelear. */
+/** Despierto, sin crisis (ni yendo a tenerla), sin pelear y sin consolar ni ser consolado. */
 function available(s: Survivor): boolean {
   const a = s.action;
   if (a.type === 'sleep' || a.type === 'crisis' || a.type === 'fight') return false;
+  if (a.type === 'console' || a.type === 'consoled') return false;
   return !(a.type === 'moveTo' && a.then?.type === 'crisis');
 }
 

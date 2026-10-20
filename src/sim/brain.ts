@@ -10,6 +10,7 @@ import {
   SLEEP_AT_NIGHT_BELOW,
 } from './balance';
 import { isNight } from './clock';
+import { findConsoleTarget, inCrisis as crisisNow, stillConsoling } from './consoling';
 import { getTile } from './map/grid';
 import { logEvent } from './log';
 import { nextFloat, pick } from './rng';
@@ -24,12 +25,12 @@ export interface Brain {
   decide(s: Survivor, w: World): Action | null;
 }
 
-/** Prioridades del spec §8.1 sin peligro (H4): comer, dormir, crisis, trabajo, pasear. */
+/** Prioridades del spec §8.1 sin peligro (H4): comer, dormir, crisis, consolar, trabajo, pasear. */
 const AiBrain: Brain = {
   decide(s, w) {
     const a = s.action;
     const goingTo = a.type === 'moveTo' ? a.then?.type : undefined;
-    const inCrisis = a.type === 'crisis' || goingTo === 'crisis';
+    const inCrisis = crisisNow(s);
 
     // Si la comida se acaba mientras va a comer o come, lo deja.
     if (((a.type === 'eat' && !a.fromPack) || goingTo === 'eat') && w.storage.items.food === 0)
@@ -37,7 +38,8 @@ const AiBrain: Brain = {
     // Comer, dormir y pelear se terminan; la crisis solo se corta por algo urgente.
     if (a.type === 'eat' || a.type === 'sleep' || goingTo === 'eat' || goingTo === 'sleep')
       return null;
-    if (a.type === 'fight') return null;
+    // Pelear y consolar son cosas de dos y duran poco: las termina activitiesSystem.
+    if (a.type === 'fight' || a.type === 'console' || a.type === 'consoled') return null;
     // (desplomarse, que también la corta, lo decide decisionsSystem)
     if (inCrisis) {
       if (s.needs.hunger < CRISIS_BREAK_HUNGER) return eatSomething(s, w);
@@ -49,10 +51,17 @@ const AiBrain: Brain = {
       if (eat) return eat;
     }
     if (wantsToSleep(s, w)) return goSleep(s, w);
-    // Tras desahogarse el ánimo tarda en subir: sin esta guarda, encadenaría otra crisis al momento.
-    const vented = s.memories.some((m) => m.id === 'vented' && m.expiresAt > w.tick);
-    if (s.needs.mood < MOOD_CRISIS && !vented)
+    // Tras desahogarse (o ser consolado) el ánimo tarda en subir: sin esta guarda, encadenaría
+    // otra crisis al momento.
+    const calmed = s.memories.some(
+      (m) =>
+        (m.id === 'vented' || m.id === 'consoled' || m.id === 'consoledByPartner') &&
+        m.expiresAt > w.tick,
+    );
+    if (s.needs.mood < MOOD_CRISIS && !calmed)
       return { type: 'moveTo', target: pick(w.rng, baseFloor(w)), then: { type: 'crisis' } };
+    if (a.type === 'moveTo' && a.then?.type === 'console')
+      return stillConsoling(s, w, a.then.otherId) ? null : { type: 'idle', ticksLeft: 0 };
 
     // Trabajo en curso: sigue salvo que haya dejado de tener sentido.
     const working =
@@ -60,6 +69,14 @@ const AiBrain: Brain = {
     if (working) return stillWorthIt(s, w) ? null : { type: 'idle', ticksLeft: 0 };
     // Tras negarse a trabajar espera; solo le sacan de ahí las urgencias (arriba).
     if (a.type === 'idle' && a.wait === 'refused' && a.ticksLeft > 0) return null;
+
+    const sad = findConsoleTarget(s, w);
+    if (sad)
+      return {
+        type: 'moveTo',
+        target: { x: Math.floor(sad.pos.x), y: Math.floor(sad.pos.y) },
+        then: { type: 'console', otherId: sad.id },
+      };
 
     const job = findWork(s, w);
     if (job) {

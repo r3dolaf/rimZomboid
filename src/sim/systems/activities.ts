@@ -1,11 +1,12 @@
 import { EAT_RESTORE } from '../balance';
 import { isNight } from '../clock';
+import { finishConsoling } from '../consoling';
 import { logEvent } from '../log';
 import { addMemory } from '../mood';
 import { addInto, isEmpty, takeUpTo } from '../items';
 import type { Survivor, World } from '../types';
 
-/** Avanzan y terminan las actividades: comer, dormir, crisis, registrar, descargar y pelear. */
+/** Avanzan y terminan las actividades: comer, dormir, crisis, registrar, descargar, pelear y consolar. */
 export function activitiesSystem(w: World): void {
   for (const s of w.survivors) {
     const a = s.action;
@@ -39,6 +40,19 @@ export function activitiesSystem(w: World): void {
       const mutual = o?.action.type === 'fight' && o.action.otherId === s.id;
       if (--a.ticksLeft > 0 && mutual) continue;
       s.action = { type: 'idle', ticksLeft: 0 };
+    } else if (a.type === 'console') {
+      // Lo lleva el que consuela; si el otro ya no está con él (se ha dormido…), lo deja.
+      const t = w.survivors.find((x) => x.id === a.otherId);
+      if (!t || t.action.type !== 'consoled' || t.action.otherId !== s.id) {
+        s.action = { type: 'idle', ticksLeft: 0 };
+        continue;
+      }
+      if (--a.ticksLeft > 0) continue;
+      finishConsoling(w, s, t);
+    } else if (a.type === 'consoled') {
+      const c = w.survivors.find((x) => x.id === a.otherId);
+      if (!c || c.action.type !== 'console' || c.action.otherId !== s.id)
+        s.action = { type: 'idle', ticksLeft: 0 };
     } else if (a.type === 'crisis') {
       if (--a.ticksLeft > 0) continue;
       addMemory(s, 'vented', w.tick);

@@ -51,7 +51,8 @@ Los colonos charlan, se hacen amigos o rivales, discuten, se pelean, se consuela
   - **Quién recibe consuelo:** un colono **en crisis**, o **al límite** (ánimo por debajo de 25), que no tenga ya un "Consolado" vigente.
   - **Quién consuela:** un colono despierto, sin crisis, con ánimo de 25 o más y una opinión del otro de +20 o más (o que sea su pareja). Va hasta él y, a 2 casillas o menos, lo consuela durante 30 ticks.
   - **Prioridad:** consolar va después de las urgencias propias y antes del trabajo. Una persona solo recibe consuelo de un colono a la vez.
-  - **Al terminar:** el consolado recibe "Consolado por X" +10 (12 h), o "Consolado por su pareja" +15. Si estaba en crisis, la crisis termina. Los dos ganan +8 de opinión. Queda en el registro.
+  - **Al terminar:** el consolado recibe "Consolado por X" +10 (12 h), o "Consolado por su pareja" +15. Si estaba en crisis, la crisis termina. Los dos ganan +3 de opinión (ajustado al implementar desde +8: sin comida hay consuelos a diario y con +8 todos acababan en 100). Queda en el registro.
+  - Tras ser consolado, como tras desahogarse, no entra en otra crisis mientras dure el recuerdo.
 - **Compartir comida:** en una charla agradable o neutra, si el otro tiene hambre por debajo de 35, quien inicia lleva comida, su opinión del otro es de 0 o más y al otro le cabe, le da 1 lata.
   - Los dos ganan +5 de opinión.
   - El que la recibe gana "X compartió su comida" +5 (12 h).

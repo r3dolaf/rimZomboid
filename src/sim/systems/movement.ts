@@ -7,6 +7,7 @@ import {
   SURVIVOR_WALK_SPEED,
   UNLOAD_TICKS,
 } from '../balance';
+import { tryStartConsoling } from '../consoling';
 import { logEvent } from '../log';
 import { nextInt } from '../rng';
 import type { Action, Activity, Survivor, World } from '../types';
@@ -52,6 +53,9 @@ function startActivity(s: Survivor, activity: Activity, w: World): Action {
       return { type: 'search', containerId: activity.containerId, ticksLeft: SEARCH_TICKS };
     case 'unload':
       return { type: 'unload', ticksLeft: UNLOAD_TICKS };
+    case 'console':
+      // Si se ha movido o está ocupado, vuelve a decidir (y a acercarse) en el siguiente tick.
+      return tryStartConsoling(w, s, activity.otherId) ? s.action : { type: 'idle', ticksLeft: 0 };
     case 'sleep': {
       const bed = w.beds.find((b) => b.id === s.bedId);
       const t = tileOf(s.pos);

@@ -132,6 +132,10 @@ export const FIGHT_OPINION = -40; // rivales: alguno tiene al otro aquí o por d
 export const FIGHT_CHANCE = 0.3;
 export const FIGHT_TICKS = 30;
 export const FIGHT_OPINION_LOSS = 15;
+export const CONSOLE_OPINION = 20; // opinión mínima para ir a consolar (salvo a la pareja)
+export const CONSOLE_RANGE = 2;
+export const CONSOLE_TICKS = 30;
+export const CONSOLE_OPINION_GAIN = 3;
 export const BUBBLE_TICKS = 30;
 /** Cama de cada colono por orden de llegada, relativa a la esquina de la base. */
 export const BED_SLOTS: readonly { dx: number; dy: number }[] = [

@@ -1,6 +1,9 @@
 import {
   BED_SLOTS,
+  CALM_DAYS_MAX,
+  CALM_DAYS_MIN,
   CHAT_EVERY_MAX,
+  EVENTS_START,
   INITIAL_REVEAL,
   NEED_START_MAX,
   NEED_START_MIN,
@@ -21,14 +24,22 @@ import { moodTarget } from './mood';
 import { NAMES } from './names';
 import { createRng, nextInt, type RngState } from './rng';
 import { rollTraits } from './traits';
-import { Tile, type Bed, type Point, type Storage, type Survivor, type World } from './types';
+import {
+  Tile,
+  type Bed,
+  type NarratorStyle,
+  type Point,
+  type Storage,
+  type Survivor,
+  type World,
+} from './types';
 
 /** Casilla en la que está una posición continua. */
 export function tileOf(p: Point): Point {
   return { x: Math.floor(p.x), y: Math.floor(p.y) };
 }
 
-export function createWorld(seed: number): World {
+export function createWorld(seed: number, style: NarratorStyle = 'balanced'): World {
   const rng = createRng(seed);
   const { grid, base, houses } = generateMap(rng);
 
@@ -61,6 +72,8 @@ export function createWorld(seed: number): World {
     partnerId: null,
     nextChatAt: 0,
     bubble: null,
+    sick: null,
+    celebrated: false,
   }));
   // El Cobarde no sale a saquear salvo que el jugador lo permita.
   for (const s of survivors) s.work.loot = !s.traits.includes('coward');
@@ -96,6 +109,8 @@ export function createWorld(seed: number): World {
     STRANGER_EVERY_DAYS_MIN * TICKS_PER_DAY,
     STRANGER_EVERY_DAYS_MAX * TICKS_PER_DAY,
   );
+  // Narrador (H3c), lo último: el estilo no cambia nada de lo anterior.
+  const calmEndsAt = nextInt(rng, CALM_DAYS_MIN * TICKS_PER_DAY, CALM_DAYS_MAX * TICKS_PER_DAY);
 
   const world: World = {
     seed,
@@ -114,6 +129,15 @@ export function createWorld(seed: number): World {
     nextId: survivors.length + 1,
     stranger: null,
     nextStrangerAt,
+    narrator: {
+      style,
+      phase: 'calm',
+      phaseEndsAt: calmEndsAt,
+      nextEventAt: EVENTS_START,
+      lastAt: {},
+    },
+    decisions: [],
+    stormUntil: 0,
   };
   // Los supervivientes conocen su base y los alrededores.
   for (let y = r.y - INITIAL_REVEAL; y < r.y + r.h + INITIAL_REVEAL; y++)

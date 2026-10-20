@@ -60,6 +60,19 @@ export const MEMORY_EFFECTS = {
   sharedFood: { value: 5, hours: 12 },
   breakup: { value: -15, hours: 72 },
   sleptWithPartner: { value: 5, hours: 12 },
+  punished: { value: -15, hours: 48 },
+  punishedUnfairly: { value: -25, hours: 72 },
+  thiefAmongUs: { value: -5, hours: 48 },
+  jealous: { value: -10, hours: 24 },
+  clash: { value: -5, hours: 72 },
+  grief: { value: -20, hours: 48 },
+  foodFight: { value: -5, hours: 24 },
+  storyNight: { value: 8, hours: 24 },
+  happyBirthday: { value: 15, hours: 24 },
+  party: { value: 5, hours: 12 },
+  ruinedBirthday: { value: -10, hours: 24 },
+  forgottenBirthday: { value: -8, hours: 48 },
+  storm: { value: -6, hours: 18 },
 } as const;
 export const EAT_BELOW = 35;
 export const EAT_RESTORE = 60;
@@ -160,3 +173,8 @@ export const STRANGER_NEED_MIN = 30; // viene de pasarlo mal
 export const STRANGER_NEED_MAX = 90;
 export const STRANGER_FOOD_MAX = 4;
 export const STRANGER_BANDAGE_CHANCE = 0.3;
+
+// Narrador (H3c)
+export const EVENTS_START = 1.5 * TICKS_PER_DAY; // el primer día y medio, sin sucesos
+export const CALM_DAYS_MIN = 2;
+export const CALM_DAYS_MAX = 3;

@@ -97,6 +97,19 @@ export const es = {
     sharedFood: 'Le compartieron comida',
     breakup: 'Ruptura',
     sleptWithPartner: 'Durmió con su pareja',
+    punished: 'Le castigaron',
+    punishedUnfairly: 'Le castigaron sin culpa',
+    thiefAmongUs: 'Alguien nos roba',
+    jealous: 'Celos',
+    clash: 'No soporta a alguien',
+    grief: 'Recuerda a los suyos',
+    foodFight: 'Discusión por la comida',
+    storyNight: 'Noche de historias',
+    happyBirthday: 'Cumpleaños feliz',
+    party: 'Fiesta',
+    ruinedBirthday: 'Le amargaron el cumpleaños',
+    forgottenBirthday: 'Nadie celebró su cumpleaños',
+    storm: 'Tormenta',
   } satisfies Record<MoodModifierId, string>,
   /** Los recuerdos con otra persona, con su nombre. */
   modifiersWith: {
@@ -107,6 +120,8 @@ export const es = {
     consoled: (who: string) => `Le consoló ${who}`,
     sharedFood: (who: string) => `${who} compartió su comida`,
     breakup: (who: string) => `Ruptura con ${who}`,
+    jealous: (who: string) => `Celos de ${who}`,
+    clash: (who: string) => `No soporta a ${who}`,
   } satisfies Partial<Record<MemoryId, (who: string) => string>> as Partial<
     Record<MemoryId, (who: string) => string>
   >,

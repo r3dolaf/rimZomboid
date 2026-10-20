@@ -33,6 +33,8 @@ export function emptyWorld(width: number, height: number): World {
         partnerId: null,
         nextChatAt: 0,
         bubble: null,
+        sick: null,
+        celebrated: false,
       },
     ],
     beds: [{ id: 1, pos: { x: width - 1, y: 0 }, ownerId: 1 }],
@@ -44,6 +46,15 @@ export function emptyWorld(width: number, height: number): World {
     nextId: 2,
     stranger: null,
     nextStrangerAt: Number.MAX_SAFE_INTEGER, // sin desconocidos salvo que el test los pida
+    narrator: {
+      style: 'balanced',
+      phase: 'calm',
+      phaseEndsAt: Number.MAX_SAFE_INTEGER,
+      nextEventAt: Number.MAX_SAFE_INTEGER, // sin sucesos salvo que el test los pida
+      lastAt: {},
+    },
+    decisions: [],
+    stormUntil: 0,
   };
 }
 
@@ -65,6 +76,8 @@ export function addSurvivor(w: World, t: Point, name = 'Bea'): Survivor {
     partnerId: null,
     nextChatAt: 0,
     bubble: null,
+    sick: null,
+    celebrated: false,
   };
   w.survivors.push(s);
   return s;

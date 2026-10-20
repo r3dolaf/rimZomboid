@@ -68,7 +68,21 @@ export type MemoryId =
   | 'consoledByPartner'
   | 'sharedFood'
   | 'breakup'
-  | 'sleptWithPartner';
+  | 'sleptWithPartner'
+  // Narrador (H3c)
+  | 'punished'
+  | 'punishedUnfairly'
+  | 'thiefAmongUs'
+  | 'jealous'
+  | 'clash'
+  | 'grief'
+  | 'foodFight'
+  | 'storyNight'
+  | 'happyBirthday'
+  | 'party'
+  | 'ruinedBirthday'
+  | 'forgottenBirthday'
+  | 'storm';
 
 /** Recuerdo con efecto en el ánimo hasta el tick `expiresAt`; `otherId`, con quién fue. */
 export interface Memory {
@@ -128,6 +142,10 @@ export interface Survivor {
   /** Tick en que intentará charlar con alguien. */
   nextChatAt: number;
   bubble: { kind: BubbleKind; until: number } | null;
+  /** Con gripe hasta `until`; `resting`, sin trabajar mientras tanto. */
+  sick: { until: number; resting: boolean } | null;
+  /** Ya ha tenido su cumpleaños. */
+  celebrated: boolean;
 }
 
 /** Superviviente que espera a la puerta a que el jugador lo acepte o lo rechace. */
@@ -168,6 +186,43 @@ export interface Container {
   reservedBy: number | null;
 }
 
+export type NarratorStyle = 'calm' | 'balanced' | 'chaotic';
+export type Tone = 'good' | 'mixed' | 'bad';
+export type EventId =
+  | 'theft'
+  | 'jealousy'
+  | 'clash'
+  | 'grief'
+  | 'foodFight'
+  | 'gossip'
+  | 'storyNight'
+  | 'birthday'
+  | 'cache'
+  | 'strangers'
+  | 'storm'
+  | 'flu';
+
+/** El narrador (spec H3c §2): cuándo y de qué tono pasan cosas. */
+export interface Narrator {
+  style: NarratorStyle;
+  /** Solo la usa el Equilibrado. */
+  phase: 'calm' | 'tension';
+  phaseEndsAt: number;
+  nextEventAt: number;
+  /** Tick en que salió cada suceso por última vez. */
+  lastAt: Partial<Record<EventId, number>>;
+}
+
+/** Algo que el jugador tiene que decidir; si no contesta antes de `expiresAt`, se aplica la opción por defecto. */
+export interface Decision {
+  id: number;
+  kind: 'theft' | 'birthday' | 'flu' | 'stranger';
+  survivorIds: number[];
+  expiresAt: number;
+  /** Robo: si el sospechoso es el culpable de verdad. */
+  guilty?: boolean;
+}
+
 export interface World {
   seed: number;
   tick: number;
@@ -189,4 +244,8 @@ export interface World {
   stranger: Stranger | null;
   /** Tick de la siguiente llegada de un desconocido. */
   nextStrangerAt: number;
+  narrator: Narrator;
+  decisions: Decision[];
+  /** Hay tormenta mientras el tick sea menor que este. */
+  stormUntil: number;
 }

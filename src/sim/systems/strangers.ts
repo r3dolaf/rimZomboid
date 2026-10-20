@@ -120,6 +120,8 @@ function arrive(w: World): void {
     partnerId: null,
     nextChatAt: 0,
     bubble: null,
+    sick: null,
+    celebrated: false,
   };
   s.needs.mood = moodTarget(s, w.tick, w.base.rect);
   w.stranger = { survivor: s, expiresAt: w.tick + STRANGER_WAIT_TICKS, leaving: false };

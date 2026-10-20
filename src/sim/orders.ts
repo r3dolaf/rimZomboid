@@ -1,5 +1,5 @@
 import { isEmpty } from './items';
-import { acceptStranger, rejectStranger } from './systems/strangers';
+import { resolveDecision } from './events/resolve';
 import type { Container, World } from './types';
 
 /** Lo que pide el jugador. La interfaz solo cambia el mundo mediante órdenes. */
@@ -7,8 +7,8 @@ export type Order =
   | { type: 'designateHouse'; houseId: number; on: boolean }
   | { type: 'designateContainer'; containerId: number; on: boolean }
   | { type: 'setWork'; survivorId: number; work: 'loot'; enabled: boolean }
-  | { type: 'acceptStranger' }
-  | { type: 'rejectStranger' };
+  /** Respuesta a una decisión (spec H3c §4): 0 es la primera opción. */
+  | { type: 'decide'; decisionId: number; option: 0 | 1 };
 
 /** Encola una orden; se aplica al principio del siguiente tick. */
 export function issue(w: World, order: Order): void {
@@ -55,18 +55,10 @@ export function ordersSystem(w: World): void {
         if (s) s.work[o.work] = o.enabled;
         break;
       }
-      case 'acceptStranger':
-        acceptStranger(w);
-        break;
-      case 'rejectStranger':
-        rejectStranger(w);
+      case 'decide':
+        resolveDecision(w, o.decisionId, o.option);
         break;
     }
   }
   w.orders = [];
-}
-
-/** ¿Hay ya una respuesta pendiente para el desconocido? (Para ocultar el aviso aunque esté en pausa.) */
-export function strangerAnswered(w: World): boolean {
-  return w.orders.some((o) => o.type === 'acceptStranger' || o.type === 'rejectStranger');
 }

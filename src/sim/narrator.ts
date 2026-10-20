@@ -21,6 +21,7 @@ import {
   WELLBEING_WEIGHTS,
 } from './balance';
 import { CATALOG } from './events/catalog';
+import { expireDecisions } from './events/resolve';
 import type { GameEvent } from './events/types';
 import { nextFloat, nextInt, weightedPick } from './rng';
 import { opinionOf } from './social';
@@ -47,8 +48,9 @@ export function wellbeing(w: World): number {
   return k.mood * mood + k.opinion * opinion + k.food * foodScore;
 }
 
-/** Fases del Equilibrado, el siguiente suceso y, si toca, el suceso. */
+/** Decisiones caducadas, fases del Equilibrado, el siguiente suceso y, si toca, el suceso. */
 export function narratorSystem(w: World, catalog: readonly GameEvent[] = CATALOG): void {
+  expireDecisions(w);
   const n = w.narrator;
   if (n.style === 'balanced') {
     const breaks =

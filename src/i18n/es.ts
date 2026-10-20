@@ -5,6 +5,9 @@ import type { RelationLabel } from '../sim/social';
 import type { BubbleKind, MemoryId, TraitId } from '../sim/types';
 
 const pad = (n: number) => String(n).padStart(2, '0');
+/** "Ana", "Ana y Luis" o "Ana, Luis y Sara". */
+const list = (names: string[]) =>
+  names.length <= 1 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} y ${names.at(-1)}`;
 
 export const es = {
   title: 'rimZomboid',
@@ -52,10 +55,16 @@ export const es = {
     consoled: (who: string, other: string) => `${who} ha consolado a ${other}`,
     couple: (who: string, other: string) => `${who} y ${other} ahora son pareja`,
     breakup: (who: string, other: string) => `${who} y ${other} lo han dejado`,
-    strangerArrived: (who: string) => `Alguien se acerca a la base: ${who}`,
-    strangerAccepted: (who: string) => `${who} se une al grupo`,
-    strangerRejected: (who: string) => `No dejáis entrar a ${who}, que se marcha`,
-    strangerLeft: (who: string) => `${who} se cansa de esperar y se marcha`,
+    strangerArrived: (names: string[]) =>
+      names.length === 1
+        ? `Alguien se acerca a la base: ${names[0]}`
+        : `Se acercan a la base ${list(names)}, que van juntos`,
+    strangerAccepted: (names: string[]) =>
+      `${list(names)} ${names.length === 1 ? 'se une' : 'se unen'} al grupo`,
+    strangerRejected: (names: string[]) =>
+      `No dejáis entrar a ${list(names)}, que ${names.length === 1 ? 'se marcha' : 'se marchan'}`,
+    strangerLeft: (names: string[]) =>
+      `${list(names)} ${names.length === 1 ? 'se cansa' : 'se cansan'} de esperar y ${names.length === 1 ? 'se marcha' : 'se marchan'}`,
   },
 
   needs: { hunger: 'Hambre', sleep: 'Sueño', mood: 'Ánimo', social: 'Social' },

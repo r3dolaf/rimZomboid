@@ -142,7 +142,7 @@ test('el desconocido: id distinto de los colonos y necesidades en rango', () => 
   const s = structuredClone(w.survivors[0]!);
   s.name = 'Zoe';
   s.bedId = null;
-  w.stranger = { survivor: s, expiresAt: 100, leaving: false };
+  w.stranger = { survivors: [s], leaving: false };
   expect(checkInvariants(w).length).toBeGreaterThan(0); // id repetido
   s.id = 99;
   expect(checkInvariants(w)).toEqual([]);

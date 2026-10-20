@@ -69,8 +69,8 @@ test.each([1, 2, 3])(
       const present = new Set(w.survivors.map((s) => s.id));
       const moved = new Set<number>();
       for (let i = 0; i < TICKS_PER_DAY; i++) {
-        if (w.stranger && !w.stranger.leaving && w.orders.length === 0)
-          issue(w, { type: 'acceptStranger' });
+        const d = w.decisions.find((x) => x.kind === 'stranger');
+        if (d && w.orders.length === 0) issue(w, { type: 'decide', decisionId: d.id, option: 0 });
         const before = new Map(w.survivors.map((s) => [s.id, { ...s.pos }]));
         step(w);
         const problems = checkInvariants(w);

@@ -166,9 +166,11 @@ export const BED_SLOTS: readonly { dx: number; dy: number }[] = [
   { dx: 9, dy: 3 },
 ];
 export const COLONY_MAX = 8;
-export const STRANGER_EVERY_DAYS_MIN = 3;
-export const STRANGER_EVERY_DAYS_MAX = 6;
-export const STRANGER_WAIT_TICKS = TICKS_PER_DAY; // sin respuesta, se marcha
+export const STRANGER_FIRST_TICK = 3 * TICKS_PER_DAY;
+export const STRANGER_PAIR_CHANCE = 0.25;
+export const STRANGER_PAIR_OPINION_MIN = 60;
+export const STRANGER_PAIR_OPINION_MAX = 80;
+export const DECISION_TICKS = TICKS_PER_DAY; // sin respuesta, se aplica la opción por defecto
 export const STRANGER_NEED_MIN = 30; // viene de pasarlo mal
 export const STRANGER_NEED_MAX = 90;
 export const STRANGER_FOOD_MAX = 4;

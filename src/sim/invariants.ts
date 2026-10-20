@@ -53,15 +53,14 @@ export function checkInvariants(w: World): string[] {
   for (const s of w.survivors)
     if (s.sick && !(Number.isFinite(s.sick.until) && s.sick.until >= 0))
       problems.push(`${s.name}: gripe con fin no válido (${s.sick.until})`);
-  const strangerIds = new Set(w.stranger ? [w.stranger.survivor.id] : []);
+  const strangerIds = new Set(w.stranger?.survivors.map((s) => s.id) ?? []);
   for (const d of w.decisions)
     for (const id of d.survivorIds)
       if (!ids.has(id) && !strangerIds.has(id))
         problems.push(`decisión ${d.id} (${d.kind}): el superviviente #${id} no existe`);
   for (const v of [w.narrator.nextEventAt, w.narrator.phaseEndsAt, w.stormUntil])
     if (!Number.isFinite(v)) problems.push(`narrador: tick no válido (${v})`);
-  if (w.stranger) {
-    const s = w.stranger.survivor;
+  for (const s of w.stranger?.survivors ?? []) {
     const who = `desconocido ${s.name} (#${s.id})`;
     if (ids.has(s.id)) problems.push(`${who}: su id ya es de un colono`);
     for (const k of ['hunger', 'sleep', 'mood', 'social'] as const) {

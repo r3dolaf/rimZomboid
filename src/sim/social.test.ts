@@ -42,7 +42,5 @@ test('al empezar: opiniones entre −10 y 20, social 60–100, sin pareja ni glo
       expect(s.bubble).toBeNull();
     }
     expect(w.stranger).toBeNull();
-    expect(w.nextStrangerAt).toBeGreaterThanOrEqual(3 * 7200);
-    expect(w.nextStrangerAt).toBeLessThanOrEqual(6 * 7200);
   }
 });

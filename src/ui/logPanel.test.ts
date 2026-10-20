@@ -40,8 +40,10 @@ test('sucesos de relaciones y de recién llegados', () => {
   expect(last()).toContain(`${a!.name} y ${b!.name} ahora son pareja`);
   logEvent(w, { kind: 'consoled', survivorId: a!.id, otherId: b!.id });
   expect(last()).toContain(`${a!.name} ha consolado a ${b!.name}`);
-  logEvent(w, { kind: 'strangerArrived', name: 'Zoe' });
+  logEvent(w, { kind: 'strangerArrived', names: ['Zoe'] });
   expect(last()).toContain('Alguien se acerca a la base: Zoe');
+  logEvent(w, { kind: 'strangerArrived', names: ['Zoe', 'Iván'] });
+  expect(last()).toContain('Se acercan a la base Zoe y Iván, que van juntos');
 });
 
 test('el panel muestra los sucesos, el más reciente abajo', () => {

@@ -168,7 +168,7 @@ export class GameScene extends Phaser.Scene {
       this.drawPerson(g, s, SURVIVOR_COLOR);
     }
     // El desconocido, en gris, hasta que lo aceptan.
-    if (this.world.stranger) this.drawPerson(g, this.world.stranger.survivor, STRANGER_COLOR);
+    for (const s of this.world.stranger?.survivors ?? []) this.drawPerson(g, s, STRANGER_COLOR);
   }
 
   private drawPerson(g: Phaser.GameObjects.Graphics, s: Survivor, color: number): void {

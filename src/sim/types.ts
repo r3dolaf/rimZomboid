@@ -148,12 +148,10 @@ export interface Survivor {
   celebrated: boolean;
 }
 
-/** Superviviente que espera a la puerta a que el jugador lo acepte o lo rechace. */
+/** Uno o dos desconocidos que esperan a la puerta a que el jugador decida (su decisión caduca). */
 export interface Stranger {
-  survivor: Survivor;
-  /** Si nadie contesta antes de este tick, se marcha. */
-  expiresAt: number;
-  /** Ya se va hacia el borde del mapa. */
+  survivors: Survivor[];
+  /** Ya se van hacia el borde del mapa. */
   leaving: boolean;
 }
 
@@ -242,8 +240,6 @@ export interface World {
   log: LogEntry[];
   nextId: number;
   stranger: Stranger | null;
-  /** Tick de la siguiente llegada de un desconocido. */
-  nextStrangerAt: number;
   narrator: Narrator;
   decisions: Decision[];
   /** Hay tormenta mientras el tick sea menor que este. */

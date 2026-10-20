@@ -19,10 +19,10 @@ export type LogEvent =
   | { kind: 'couple'; survivorId: number; otherId: number }
   | { kind: 'breakup'; survivorId: number; otherId: number }
   // El desconocido aún no es colono: se guarda su nombre.
-  | { kind: 'strangerArrived'; name: string }
-  | { kind: 'strangerAccepted'; name: string }
-  | { kind: 'strangerRejected'; name: string }
-  | { kind: 'strangerLeft'; name: string };
+  | { kind: 'strangerArrived'; names: string[] }
+  | { kind: 'strangerAccepted'; names: string[] }
+  | { kind: 'strangerRejected'; names: string[] }
+  | { kind: 'strangerLeft'; names: string[] };
 
 export type LogEntry = LogEvent & { tick: number };
 

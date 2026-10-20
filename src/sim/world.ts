@@ -10,8 +10,6 @@ import {
   START_FOOD,
   START_OPINION_MAX,
   START_OPINION_MIN,
-  STRANGER_EVERY_DAYS_MAX,
-  STRANGER_EVERY_DAYS_MIN,
   SURVIVOR_COUNT,
   TICKS_PER_DAY,
 } from './balance';
@@ -104,11 +102,6 @@ export function createWorld(seed: number, style: NarratorStyle = 'balanced'): Wo
       if (o !== s) s.opinions[o.id] = nextInt(rng, START_OPINION_MIN, START_OPINION_MAX);
   }
   for (const s of survivors) s.needs.mood = moodTarget(s, 0, base.rect);
-  const nextStrangerAt = nextInt(
-    rng,
-    STRANGER_EVERY_DAYS_MIN * TICKS_PER_DAY,
-    STRANGER_EVERY_DAYS_MAX * TICKS_PER_DAY,
-  );
   // Narrador (H3c), lo último: el estilo no cambia nada de lo anterior.
   const calmEndsAt = nextInt(rng, CALM_DAYS_MIN * TICKS_PER_DAY, CALM_DAYS_MAX * TICKS_PER_DAY);
 
@@ -128,7 +121,6 @@ export function createWorld(seed: number, style: NarratorStyle = 'balanced'): Wo
     log: [],
     nextId: survivors.length + 1,
     stranger: null,
-    nextStrangerAt,
     narrator: {
       style,
       phase: 'calm',

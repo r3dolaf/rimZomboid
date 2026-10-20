@@ -45,7 +45,6 @@ export function emptyWorld(width: number, height: number): World {
     log: [],
     nextId: 2,
     stranger: null,
-    nextStrangerAt: Number.MAX_SAFE_INTEGER, // sin desconocidos salvo que el test los pida
     narrator: {
       style: 'balanced',
       phase: 'calm',

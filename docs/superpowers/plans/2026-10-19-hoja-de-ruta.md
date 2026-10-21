@@ -48,7 +48,7 @@ Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al p
 
 **Para H6 (pulido), de H4b:**
 
-- Equilibrio de zombis: sin tapiar, en Equilibrado/normal los colonos caen unas 4 veces al día entre todos, casi siempre dentro de la base (ven por las ventanas, que solo aguantan 20); hay pocas armas en el mapa (unos 2 cuchillos, 2 bates y 1 hacha).
+- Equilibrio de zombis: ya se empieza con un cuchillo cada uno, hay unas 10 armas por mapa y las ventanas aguantan 60 (tapiadas, 180). Así, en Equilibrado/normal y sin construir nada, los colonos pasan en el suelo cerca de un 9 % del tiempo los 3 primeros días (12 semillas; antes, un 31 %). Lo que queda: en algunas semillas un grupo de unos 12 zombis entra en una base sin muros, y quien se levanta con 15 de Salud vuelve a caer en cuanto vuelven.
 - La partida larga de zombis prueba 3 combinaciones de narrador y opción, no las 9.
 
 **Para H6 (pulido):**

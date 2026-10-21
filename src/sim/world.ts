@@ -8,6 +8,7 @@ import {
   NEED_START_MAX,
   NEED_START_MIN,
   START_FOOD,
+  START_WEAPON,
   START_OPINION_MAX,
   START_OPINION_MIN,
   SURVIVOR_COUNT,
@@ -78,7 +79,7 @@ export function createWorld(
     bedId: i + 1,
     carrying: emptyInventory(),
     work: defaultWork([]), // se ajusta abajo con los rasgos
-    equipped: null,
+    equipped: START_WEAPON,
     weaponLocked: false,
     health: 100,
     stance: 'decide', // se ajusta abajo con los rasgos

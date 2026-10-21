@@ -102,8 +102,9 @@ export const LOOT_FOOD_TOTAL = 80; // + START_FOOD ≈ 25 días para 3 supervivi
 export const LOOT_BANDAGE_TOTAL = 15;
 export const CONTAINERS_MIN = 2;
 export const CONTAINERS_MAX = 5;
-export const KNIFE_CHANCE = 0.08; // × (0,5 + distancia normalizada)
-export const BAT_CHANCE = 0.06;
+export const KNIFE_CHANCE = 0.14; // × (0,5 + distancia normalizada); H4b: más armas
+export const BAT_CHANCE = 0.1;
+export const START_WEAPON = 'knife' as const; // H4b: sin arma, caían enseguida
 
 // Visión (H3)
 export const VISION_DAY = 12;
@@ -258,7 +259,7 @@ export const WORKING_SICK_MOOD = -5;
 
 // Defensa y trabajos (H4a)
 export const LOOT_WOOD_TOTAL = 40; // en armarios y estanterías
-export const AXE_CHANCE = 0.05; // × (0,5 + distancia normalizada), por mueble
+export const AXE_CHANCE = 0.08; // × (0,5 + distancia normalizada), por mueble
 export const CHOP_TICKS = TICKS_PER_HOUR;
 export const CHOP_WOOD_MIN = 4;
 export const CHOP_WOOD_MAX = 6;
@@ -294,8 +295,8 @@ export const ZOMBIE_EDGE_START_DAY = 2;
 export const ZOMBIE_HEALTH = 60;
 /** Resistencia de lo que pueden romper los zombis (spec H4b §4.1). */
 export const RESISTANCE: Partial<Record<Tile, number>> = {
-  [Tile.Window]: 20,
-  [Tile.BoardedWindow]: 120,
+  [Tile.Window]: 60,
+  [Tile.BoardedWindow]: 180,
   [Tile.Door]: 100,
   [Tile.WoodWall]: 200,
   [Tile.Wall]: 800,

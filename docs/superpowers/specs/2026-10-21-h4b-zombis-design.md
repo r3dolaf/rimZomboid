@@ -123,8 +123,8 @@ Con la opción **Zombis** en _normal_:
 
 | Casilla                   | Resistencia | Al romperse                                                             |
 | ------------------------- | ----------- | ----------------------------------------------------------------------- |
-| Ventana                   | 20          | **Ventana rota** (`BrokenWindow`): se pasa y se ve a través             |
-| Ventana tapiada           | 120         | Ventana rota                                                            |
+| Ventana                   | 60          | **Ventana rota** (`BrokenWindow`): se pasa y se ve a través             |
+| Ventana tapiada           | 180         | Ventana rota                                                            |
 | Puerta (de casa o madera) | 100         | **Puerta rota** (`BrokenDoor`): un hueco que se pasa y no tapa la vista |
 | Muro de madera            | 200         | **Escombros** (`Rubble`): se pasa por encima                            |
 | Muro de ladrillo          | 800         | Escombros                                                               |
@@ -196,6 +196,9 @@ Con la opción **Zombis** en _normal_:
 ### 6.2 Armas en la mano
 
 `Survivor.equipped`: `'axe' | 'bat' | 'knife' | null`, de mejor a peor.
+
+- **Al empezar**, cada colono lleva un cuchillo en la mano (sin arma caían enseguida).
+- **En los contenedores** hay unas 10 armas por mapa de media: cada mueble tiene un 14 % de cuchillo, un 10 % de bate y un 8 % de hacha, más en las casas lejanas.
 
 - **Coger y cambiar:**
   - quien no lleva nada, o lleva algo peor que lo mejor del almacén, va al almacén (actividad `swapWeapon`), deja lo suyo y coge lo mejor;

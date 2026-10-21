@@ -4,12 +4,10 @@ import {
   CALM_DAYS_MIN,
   CALM_NO_BAD_BELOW,
   CHAOTIC_DOUBLE_CHANCE,
-  EAT_RESTORE,
   EVENT_GAP,
   EVENT_RETRY_TICKS,
   GENTLE_BELOW,
   HARSH_ABOVE,
-  HUNGER_PER_DAY,
   RESPITE_BELOW,
   TENSION_BREAK_BELOW,
   TENSION_DAYS_MAX,
@@ -20,6 +18,7 @@ import {
   WELLBEING_FOOD_DAYS,
   WELLBEING_WEIGHTS,
 } from './balance';
+import { foodDays } from './colony';
 import { CATALOG } from './events/catalog';
 import { expireDecisions } from './events/resolve';
 import type { GameEvent } from './events/types';
@@ -41,9 +40,7 @@ export function wellbeing(w: World): number {
         pairs++;
       }
   const opinion = pairs === 0 ? 50 : (sum / pairs + 100) / 2;
-  const food = w.storage.items.food + ss.reduce((acc, s) => acc + s.carrying.food, 0);
-  const days = food / ((ss.length * HUNGER_PER_DAY) / EAT_RESTORE);
-  const foodScore = Math.min(1, days / WELLBEING_FOOD_DAYS) * 100;
+  const foodScore = Math.min(1, foodDays(w) / WELLBEING_FOOD_DAYS) * 100;
   const k = WELLBEING_WEIGHTS;
   return k.mood * mood + k.opinion * opinion + k.food * foodScore;
 }

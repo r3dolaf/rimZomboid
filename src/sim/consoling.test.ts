@@ -187,3 +187,15 @@ test('si rompen mientras uno consuela al otro, el consuelo termina sin "su parej
   expect(t.memories.map((m) => m.id)).not.toContain('consoledByPartner');
   expect(checkInvariants(w)).toEqual([]);
 });
+
+test('solo consuela quien tiene el trabajo Social; si se lo quitan mientras va, lo deja', () => {
+  const { w, c } = scene();
+  c.work.social = false;
+  const a = brains.ai.decide(c, w);
+  expect(a?.type === 'moveTo' && a.then?.type === 'console').toBe(false);
+  c.work.social = true;
+  step(w);
+  expect(c.action.type === 'moveTo' && c.action.then?.type === 'console').toBe(true);
+  c.work.social = false;
+  expect(brains.ai.decide(c, w)).toEqual({ type: 'idle', ticksLeft: 0 });
+});

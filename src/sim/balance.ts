@@ -255,6 +255,7 @@ export const WORKING_SICK_MOOD = -5;
 // Defensa y trabajos (H4a)
 export const LOOT_WOOD_TOTAL = 40; // en armarios y estanterías
 export const AXE_CHANCE = 0.05; // × (0,5 + distancia normalizada), por mueble
+export const HUNGRY_LOOT_DAYS = 2; // con menos días de comida, saquear sube a lo más urgente
 /** Madera y tiempo de cada plano (spec H4a §4.1). */
 export const BUILD = {
   bed: { wood: 6, ticks: 2 * TICKS_PER_HOUR },

@@ -1,5 +1,6 @@
 // Trabajo de saqueo: elegir contenedor, reservar, descargar en el almacén.
-import { CARRY_CAPACITY_KG, ITEM_WEIGHT_KG } from './balance';
+import { CARRY_CAPACITY_KG, HUNGRY_LOOT_DAYS, ITEM_WEIGHT_KG } from './balance';
+import { foodDays } from './colony';
 import { isEmpty, ITEM_KINDS, weightOf } from './items';
 import { regionOf } from './path/astar';
 import { pick } from './rng';
@@ -58,21 +59,47 @@ function goUnload(w: World): Action {
   return { type: 'moveTo', target: pick(w.rng, w.storage.tiles), then: { type: 'unload' } };
 }
 
+/** Con gripe y descansando (H3c) no saquea, como si no tuviera permiso. */
+function canLoot(s: Survivor): boolean {
+  return s.work.loot && s.sick?.plan !== 'rest';
+}
+
+function lootJob(s: Survivor, w: World): Action | null {
+  const c = nearestContainer(s, w);
+  return c && { type: 'moveTo', target: c.pos, then: { type: 'search', containerId: c.id } };
+}
+
 /**
- * El trabajo que toca ahora, o `null` si no hay. Si lleva algo y no queda ningún contenedor
- * del que pueda coger algo (porque no le cabe o no hay), o si ya no tiene permiso, descarga.
+ * El trabajo que toca ahora, o `null` si no hay (spec H4a §3.1), por orden de criticidad.
+ * (Consolar, el trabajo Social, lo decide antes el cerebro.)
  */
 export function findWork(s: Survivor, w: World): Action | null {
-  const carrying = !isEmpty(s.carrying);
-  // Con gripe y descansando (H3c) no saquea, como si no tuviera permiso.
-  const loot = s.work.loot && s.sick?.plan !== 'rest';
-  if (carrying && !loot) return goUnload(w);
-  // Si en el almacén no queda comida y él lleva, lo primero es llevarla para que coman todos.
-  if (s.carrying.food > 0 && w.storage.items.food === 0) return goUnload(w);
-  if (!loot) return null;
-  const c = nearestContainer(s, w);
-  if (!c) return carrying ? goUnload(w) : null;
-  return { type: 'moveTo', target: c.pos, then: { type: 'search', containerId: c.id } };
+  const loot = canLoot(s);
+  // Quien lleva cosas termina el viaje: sigue saqueando si puede o descarga.
+  if (!isEmpty(s.carrying)) {
+    // Si en el almacén no queda comida y él lleva, lo primero es llevarla para que coman todos.
+    if (s.carrying.food > 0 && w.storage.items.food === 0) return goUnload(w);
+    return (loot ? lootJob(s, w) : null) ?? goUnload(w);
+  }
+  const hungry = foodDays(w) < HUNGRY_LOOT_DAYS;
+  const order: (() => Action | null)[] = [
+    () => (hungry && loot ? lootJob(s, w) : null),
+    () => (loot ? lootJob(s, w) : null),
+  ];
+  for (const job of order) {
+    const a = job();
+    if (a) return a;
+  }
+  return null;
+}
+
+/** Acciones y actividades que son trabajo (para que el cerebro las deje seguir). */
+const WORK_ACTIONS: ReadonlySet<string> = new Set(['search', 'unload']);
+
+/** ¿Está trabajando (o yendo a trabajar)? */
+export function isWorking(s: Survivor): boolean {
+  const a = s.action;
+  return WORK_ACTIONS.has(a.type) || (a.type === 'moveTo' && WORK_ACTIONS.has(a.then?.type ?? ''));
 }
 
 /** Si el trabajo en curso ya no tiene sentido (desmarcado, sin permiso, reservado), lo deja. */

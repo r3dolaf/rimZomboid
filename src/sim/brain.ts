@@ -14,7 +14,7 @@ import { findConsoleTarget, inCrisis as crisisNow, stillConsoling } from './cons
 import { getTile } from './map/grid';
 import { logEvent } from './log';
 import { nextFloat, pick } from './rng';
-import { findWork, stillWorthIt } from './work';
+import { findWork, isWorking, stillWorthIt } from './work';
 import { Tile, type Action, type BrainId, type Point, type Survivor, type World } from './types';
 
 /**
@@ -64,9 +64,7 @@ const AiBrain: Brain = {
       return stillConsoling(s, w, a.then.otherId) ? null : { type: 'idle', ticksLeft: 0 };
 
     // Trabajo en curso: sigue salvo que haya dejado de tener sentido.
-    const working =
-      a.type === 'search' || a.type === 'unload' || goingTo === 'search' || goingTo === 'unload';
-    if (working) return stillWorthIt(s, w) ? null : { type: 'idle', ticksLeft: 0 };
+    if (isWorking(s)) return stillWorthIt(s, w) ? null : { type: 'idle', ticksLeft: 0 };
     // Tras negarse a trabajar espera; solo le sacan de ahí las urgencias (arriba).
     if (a.type === 'idle' && a.wait === 'refused' && a.ticksLeft > 0) return null;
 

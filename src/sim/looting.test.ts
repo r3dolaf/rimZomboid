@@ -2,6 +2,7 @@
 import { expect, test } from 'vitest';
 import { REFUSE_CHANCE, TICKS_PER_DAY } from './balance';
 import { brains } from './brain';
+import { foodDays } from './colony';
 import { checkInvariants } from './invariants';
 import { emptyInventory, isEmpty } from './items';
 import { moodModifiers } from './mood';
@@ -270,4 +271,13 @@ test('lleno del todo (8 kg), no va a contenedores sin registrar: descarga', () =
   s.action = { type: 'idle', ticksLeft: 0 };
   const a = brains.ai.decide(s, w);
   expect(a?.type === 'moveTo' && a.then?.type === 'unload').toBe(true);
+});
+
+test('días de comida: latas entre lo que comen todos al día', () => {
+  const w = createWorld(3);
+  for (const s of w.survivors) s.carrying.food = 0;
+  w.storage.items.food = 7;
+  expect(foodDays(w)).toBeCloseTo(7 / (3 * (70 / 60)), 9);
+  w.survivors[0]!.carrying.food = 3;
+  expect(foodDays(w)).toBeCloseTo(10 / 3.5, 9);
 });

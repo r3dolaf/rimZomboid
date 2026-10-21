@@ -37,7 +37,8 @@ export function needsConsoling(t: Survivor, w: World): boolean {
 
 /** ¿Puede `c` consolar a `t`? Bien de ánimo y con buena opinión de él (o es su pareja). */
 export function canConsole(c: Survivor, t: Survivor): boolean {
-  if (c === t || inCrisis(c) || c.needs.mood < MOOD_EDGE) return false;
+  // Consolar es el trabajo Social (H4a): sin permiso, no consuela.
+  if (!c.work.social || c === t || inCrisis(c) || c.needs.mood < MOOD_EDGE) return false;
   return c.partnerId === t.id || opinionOf(c, t.id) >= CONSOLE_OPINION;
 }
 

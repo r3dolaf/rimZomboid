@@ -28,7 +28,8 @@ export function emptyWorld(width: number, height: number): World {
         memories: [],
         bedId: 1,
         carrying: emptyInventory(),
-        work: { loot: true },
+        work: { social: true, build: true, haul: true, chop: true, loot: true },
+        equipped: null,
         opinions: {},
         partnerId: null,
         nextChatAt: 0,
@@ -54,6 +55,11 @@ export function emptyWorld(width: number, height: number): World {
     },
     decisions: [],
     stormUntil: 0,
+    piles: [],
+    blueprints: [],
+    furniture: [],
+    chopMarks: [],
+    woodLog: { start: 0, chopped: 0, recovered: 0, spent: 0 },
   };
 }
 

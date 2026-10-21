@@ -10,12 +10,12 @@ test('Esc cierra solo la capa de más arriba: herramienta, casa y superviviente'
   const house = createSelection();
   const survivor = createSelection();
   bindEscape(target, [
-    () => tool.active && (tool.set(false), true),
+    () => tool.active && (tool.set(null), true),
     () => house.id !== null && (house.set(null), true),
     () => survivor.id !== null && (survivor.set(null), true),
   ]);
   const esc = () => target.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-  tool.set(true);
+  tool.set('loot');
   house.set(4);
   survivor.set(2);
   esc();
@@ -29,8 +29,8 @@ test('Esc cierra solo la capa de más arriba: herramienta, casa y superviviente'
 test('otras teclas no hacen nada', () => {
   const target = new EventTarget();
   const tool = createTool();
-  tool.set(true);
-  bindEscape(target, [() => tool.active && (tool.set(false), true)]);
+  tool.set('loot');
+  bindEscape(target, [() => tool.active && (tool.set(null), true)]);
   target.dispatchEvent(new KeyboardEvent('keydown', { key: 'x' }));
   expect(tool.active).toBe(true);
 });

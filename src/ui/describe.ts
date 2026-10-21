@@ -10,6 +10,10 @@ import type { MemoryId, Survivor, Tone, World } from '../sim/types';
 export function activityText(s: Survivor, w?: World): string {
   const container = (id: number) => w?.containers.find((c) => c.id === id);
   const name = (id: number) => w?.survivors.find((o) => o.id === id)?.name ?? '?';
+  const buildName = (id: number) => {
+    const b = w?.blueprints.find((x) => x.id === id);
+    return b ? es.builds[b.kind] : '?';
+  };
   const a = s.action;
   const t = es.activities;
   switch (a.type) {
@@ -29,6 +33,12 @@ export function activityText(s: Survivor, w?: World): string {
       return t.fight(name(a.otherId));
     case 'console':
       return t.console(name(a.otherId));
+    case 'chop':
+      return t.chop;
+    case 'build': {
+      const b = w?.blueprints.find((x) => x.id === a.blueprintId);
+      return b ? t.build(b.kind) : t.goBuild;
+    }
     case 'consoled':
       return t.consoled(name(a.otherId));
     case 'moveTo':
@@ -38,6 +48,13 @@ export function activityText(s: Survivor, w?: World): string {
       if (a.then?.type === 'sleep') return t.goSleep;
       if (a.then?.type === 'crisis') return t.crisis;
       if (a.then?.type === 'console') return t.goConsole(name(a.then.otherId));
+      if (a.then?.type === 'chop') return t.goChop;
+      if (a.then?.type === 'takeAxe') return t.takeAxe;
+      if (a.then?.type === 'storeAxe') return t.storeAxe;
+      if (a.then?.type === 'pickUp') return t.goPickUp;
+      if (a.then?.type === 'fetchWood') return t.fetchWood(buildName(a.then.blueprintId));
+      if (a.then?.type === 'deliver') return t.deliver(buildName(a.then.blueprintId));
+      if (a.then?.type === 'build') return t.goBuild;
       return t.wander;
     case 'idle':
       if (a.wait === 'refused' && a.ticksLeft > 0) return t.refused;
@@ -234,6 +251,9 @@ export function logText(e: LogEntry, w: World): string {
       break;
     case 'fluOver':
       text = l.fluOver(name(e.survivorId));
+      break;
+    case 'built':
+      text = l.built(e.what);
       break;
   }
   return text;

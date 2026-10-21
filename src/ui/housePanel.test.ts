@@ -16,7 +16,7 @@ test('muestra la casa seleccionada con sus contenedores y se cierra con la ✕',
   const cs = w.containers.filter((c) => c.houseId === h.id);
   for (const c of cs) w.seen[c.pos.y * w.grid.width + c.pos.x] = 1;
   cs[0]!.searched = true;
-  cs[0]!.items = { food: 0, bandage: 0, knife: 0, bat: 0 };
+  cs[0]!.items = { food: 0, bandage: 0, knife: 0, bat: 0, axe: 0, wood: 0 };
   cs[1]!.designated = true;
   sel.set(h.id);
   panel.update();

@@ -1,7 +1,14 @@
 import { expect, test } from 'vitest';
 import { addInto, emptyInventory, isEmpty, takeUpTo, weightOf } from './items';
 
-const inv = (food = 0, bandage = 0, knife = 0, bat = 0) => ({ food, bandage, knife, bat });
+const inv = (food = 0, bandage = 0, knife = 0, bat = 0) => ({
+  food,
+  bandage,
+  knife,
+  bat,
+  axe: 0,
+  wood: 0,
+});
 
 test('pesos: lata 0,5; venda 0,1; cuchillo 0,5; bate 1,5', () => {
   expect(weightOf(inv(2, 1, 1, 1))).toBeCloseTo(1 + 0.1 + 0.5 + 1.5, 9);

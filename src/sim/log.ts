@@ -1,6 +1,6 @@
 import { LOG_MAX } from './balance';
 import type { Inventory } from './items';
-import type { World } from './types';
+import type { BuildKind, World } from './types';
 
 /** Suceso del registro: solo datos; la interfaz los convierte en texto. */
 export type LogEvent =
@@ -43,7 +43,8 @@ export type LogEvent =
   | { kind: 'flu'; survivorId: number }
   | { kind: 'fluRest'; survivorId: number }
   | { kind: 'fluWork'; survivorId: number }
-  | { kind: 'fluOver'; survivorId: number };
+  | { kind: 'fluOver'; survivorId: number }
+  | { kind: 'built'; what: BuildKind };
 
 export type LogEntry = LogEvent & { tick: number };
 

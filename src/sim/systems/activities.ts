@@ -1,6 +1,9 @@
 import { EAT_RESTORE } from '../balance';
 import { isNight } from '../clock';
 import { finishConsoling } from '../consoling';
+import { nearTable } from '../furniture';
+import { workOnBlueprint } from '../jobs/build';
+import { finishChop } from '../jobs/chop';
 import { logEvent } from '../log';
 import { addMemory } from '../mood';
 import { addInto, isEmpty, takeUpTo } from '../items';
@@ -19,6 +22,7 @@ export function activitiesSystem(w: World): void {
         if (!a.fromPack && source.food === 0) logEvent(w, { kind: 'outOfFood' });
         s.needs.hunger = Math.min(100, s.needs.hunger + EAT_RESTORE);
         addMemory(s, 'ate', w.tick);
+        if (nearTable(w, s)) addMemory(s, 'ateAtTable', w.tick);
       }
       s.action = { type: 'idle', ticksLeft: 0 };
     } else if (a.type === 'sleep') {
@@ -59,6 +63,12 @@ export function activitiesSystem(w: World): void {
       const c = w.survivors.find((x) => x.id === a.otherId);
       if (!c || c.action.type !== 'console' || c.action.otherId !== s.id)
         s.action = { type: 'idle', ticksLeft: 0 };
+    } else if (a.type === 'build') {
+      if (workOnBlueprint(w, s, a.blueprintId)) s.action = { type: 'idle', ticksLeft: 0 };
+    } else if (a.type === 'chop') {
+      if (--a.ticksLeft > 0) continue;
+      finishChop(w, a.tree);
+      s.action = { type: 'idle', ticksLeft: 0 };
     } else if (a.type === 'crisis') {
       if (--a.ticksLeft > 0) continue;
       addMemory(s, 'vented', w.tick);

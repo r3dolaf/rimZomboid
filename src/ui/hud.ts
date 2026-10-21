@@ -13,12 +13,18 @@ export function formatDayTime(t: GameTime): string {
 const SPEEDS: readonly Speed[] = [0, 1, 2, 3];
 
 /**
- * Barra superior: hora, velocidad, comida y vendas del almacén, herramienta Saquear, tormenta,
- * narrador y semilla.
+ * Barra superior: hora, velocidad, comida, vendas y madera del almacén, herramientas (Saquear,
+ * Talar, Construir), panel de Trabajos, tormenta, narrador y semilla.
  */
 export function mountHud(
   root: HTMLElement,
-  opts: { seed: number; time: TimeController; tool?: Tool; narrator?: NarratorStyle },
+  opts: {
+    seed: number;
+    time: TimeController;
+    tool?: Tool;
+    narrator?: NarratorStyle;
+    toggleWork?: () => void;
+  },
 ): { update(t: GameTime, stock: Inventory, storm?: boolean): void } {
   const bar = document.createElement('div');
   bar.className = 'hud-bar';
@@ -52,19 +58,40 @@ export function mountHud(
   bandages.className = 'hud-bandages';
   bandages.dataset.testid = 'hud-bandages';
 
-  const loot = document.createElement('button');
-  loot.type = 'button';
-  loot.className = 'hud-tool';
-  loot.dataset.testid = 'hud-loot-tool';
-  loot.textContent = es.lootTool;
-  loot.title = es.lootToolHint;
-  loot.addEventListener('click', () => {
-    opts.tool?.toggle();
-    loot.blur();
+  const wood = document.createElement('span');
+  wood.className = 'hud-wood';
+  wood.dataset.testid = 'hud-wood';
+
+  const button = (testid: string, text: string, hint: string, onClick: () => void) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'hud-tool';
+    b.dataset.testid = testid;
+    b.textContent = text;
+    b.title = hint;
+    b.addEventListener('click', () => {
+      onClick();
+      b.blur();
+    });
+    return b;
+  };
+  const tools = (
+    [
+      ['loot', 'hud-loot-tool', es.lootTool, es.lootToolHint],
+      ['chop', 'hud-chop-tool', es.chopTool, es.chopToolHint],
+      ['build', 'hud-build-tool', es.buildTool, es.buildToolHint],
+    ] as const
+  ).map(([mode, testid, text, hint]) => {
+    const b = button(testid, text, hint, () => opts.tool?.toggle(mode));
+    b.hidden = !opts.tool;
+    return { mode, b };
   });
-  const refreshTool = () => loot.classList.toggle('active', opts.tool?.active ?? false);
+  const refreshTool = () => {
+    for (const t of tools) t.b.classList.toggle('active', opts.tool?.mode === t.mode);
+  };
   opts.tool?.onChange(refreshTool);
-  if (!opts.tool) loot.hidden = true;
+  const work = button('hud-work', es.workPanel, es.workPanelHint, () => opts.toggleWork?.());
+  work.hidden = !opts.toggleWork;
 
   const seed = document.createElement('span');
   seed.className = 'hud-seed';
@@ -82,7 +109,18 @@ export function mountHud(
   narrator.dataset.testid = 'hud-narrator';
   narrator.textContent = es.narratorLabel(es.narrators[opts.narrator ?? 'balanced'].name);
 
-  bar.append(time, speeds, food, bandages, loot, weather, narrator, seed);
+  bar.append(
+    time,
+    speeds,
+    food,
+    bandages,
+    wood,
+    ...tools.map((t) => t.b),
+    work,
+    weather,
+    narrator,
+    seed,
+  );
   root.append(bar);
 
   let shownSpeed: Speed | null = null;
@@ -102,6 +140,8 @@ export function mountHud(
       if (food.textContent !== foodText) food.textContent = foodText;
       const bandagesText = es.bandages(stock.bandage);
       if (bandages.textContent !== bandagesText) bandages.textContent = bandagesText;
+      const woodText = es.wood(stock.wood);
+      if (wood.textContent !== woodText) wood.textContent = woodText;
       refreshSpeed(); // la velocidad también puede cambiar con el teclado
     },
   };

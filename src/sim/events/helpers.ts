@@ -1,10 +1,7 @@
 // Ayudas comunes a los sucesos.
 import type { Survivor, World } from '../types';
 
-/** Latas que hay en total: almacén y lo que llevan encima. */
-export function totalFood(w: World): number {
-  return w.storage.items.food + w.survivors.reduce((acc, s) => acc + s.carrying.food, 0);
-}
+export { totalFood } from '../colony';
 
 /** Todas las parejas ordenadas (a, b) con a ≠ b. */
 export function orderedPairs(w: World): [Survivor, Survivor][] {

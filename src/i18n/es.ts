@@ -3,7 +3,15 @@ import { BIRTHDAY_CANS } from '../sim/balance';
 import type { MoodModifierId } from '../sim/mood';
 import type { ItemKind } from '../sim/items';
 import type { RelationLabel } from '../sim/social';
-import type { BubbleKind, Decision, MemoryId, NarratorStyle, TraitId } from '../sim/types';
+import type {
+  BubbleKind,
+  BuildKind,
+  Decision,
+  MemoryId,
+  NarratorStyle,
+  TraitId,
+  WorkType,
+} from '../sim/types';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 /** "Ana", "Ana y Luis" o "Ana, Luis y Sara". */
@@ -17,6 +25,35 @@ export const es = {
   food: (n: number) => `Comida: ${n}`,
   bandages: (n: number) => `Vendas: ${n}`,
   lootTool: 'Saquear',
+  chopTool: 'Talar',
+  chopToolHint: 'Marcar árboles para talar: clic o arrastrar (T)',
+  buildTool: 'Construir',
+  buildToolHint: 'Construir con madera (B)',
+  workPanel: 'Trabajos',
+  workPanelHint: 'Quién hace qué (J)',
+  wood: (n: number) => `Madera: ${n}`,
+  inHand: (what: string) => `En la mano: ${what}`,
+  /** Trabajos, en el orden del panel. */
+  works: {
+    social: 'Social',
+    build: 'Construir',
+    haul: 'Transportar',
+    chop: 'Talar',
+    loot: 'Saquear',
+  } satisfies Record<WorkType, string>,
+  /** Lo que se puede construir, para el menú. */
+  buildMenu: {
+    bed: 'Cama',
+    table: 'Mesa',
+    campfire: 'Hoguera',
+    woodWall: 'Muro',
+    woodDoor: 'Puerta',
+    board: 'Tapiar',
+    unboard: 'Quitar tablas',
+  } satisfies Record<BuildKind, string>,
+  buildOption: (name: string, wood: number) => `${name} · ${wood}`,
+  buildMenuHint:
+    'Clic en el mapa para colocar; arrastrar para una fila de muros; clic en un plano para cancelarlo',
   storm: '🌧 Tormenta',
   narratorLabel: (name: string) => `Narrador: ${name}`,
   narrators: {
@@ -84,7 +121,6 @@ export const es = {
   close: 'Cerrar',
   logTitle: 'Sucesos',
   carrying: (what: string, kg: string, max: number) => `Lleva: ${what} (${kg} / ${max} kg)`,
-  workLoot: 'Saquear',
   house: (id: number) => `Casa ${id}`,
   houseMarked: 'Marcada para saquear',
   houseUnmarked: 'Sin marcar',
@@ -98,6 +134,8 @@ export const es = {
     bandage: ['venda', 'vendas'],
     knife: ['cuchillo', 'cuchillos'],
     bat: ['bate', 'bates'],
+    axe: ['hacha', 'hachas'],
+    wood: ['tabla', 'tablas'],
   } satisfies Record<ItemKind, [string, string]>,
   log: {
     found: (who: string, what: string, house: number) =>
@@ -149,6 +187,7 @@ export const es = {
     birthdaySkipped: (who: string) => `Nadie celebra el cumpleaños de ${who}`,
     cache: (who: string, house: number, cans: number) =>
       `${who} recuerda una despensa en la casa ${house}: ${cans} latas`,
+    built: (what: BuildKind) => es.built[what],
     storm: 'Se desata una tormenta',
     flu: (who: string) => `${who} ha cogido la gripe`,
     fluRest: (who: string) => `${who} guarda reposo`,
@@ -210,6 +249,8 @@ export const es = {
     ruinedBirthday: 'Le amargaron el cumpleaños',
     forgottenBirthday: 'Nadie celebró su cumpleaños',
     storm: 'Tormenta',
+    ateAtTable: 'Comió en la mesa',
+    byTheFire: 'Junto al fuego',
   } satisfies Record<MoodModifierId, string>,
   /** Los recuerdos con otra persona, con su nombre. */
   modifiersWith: {
@@ -254,10 +295,48 @@ export const es = {
     noPath: 'No puede llegar',
     fight: (other: string) => `Peleándose con ${other}`,
     goConsole: (other: string) => `Va a consolar a ${other}`,
+    goChop: 'Va a talar',
+    chop: 'Talando',
+    takeAxe: 'Va a por el hacha',
+    storeAxe: 'Devuelve el hacha',
+    goPickUp: 'Va a recoger un montón',
+    fetchWood: (what: string) => `Va a por madera para ${what}`,
+    deliver: (what: string) => `Llevando madera a ${what}`,
+    goBuild: 'Va a construir',
+    build: (kind: BuildKind) => es.building[kind],
     console: (other: string) => `Consolando a ${other}`,
     consoled: (other: string) => `${other} le está consolando`,
   },
   containers: { fridge: 'una nevera', wardrobe: 'un armario', shelf: 'una estantería' },
+  built: {
+    bed: 'Se ha construido una cama',
+    table: 'Se ha construido una mesa',
+    campfire: 'Se ha encendido una hoguera',
+    woodWall: 'Se ha levantado un muro de madera',
+    woodDoor: 'Se ha puesto una puerta de madera',
+    board: 'Se ha tapiado una ventana',
+    unboard: 'Se han quitado las tablas de una ventana',
+  } satisfies Record<BuildKind, string>,
+  /** Lo que hace quien trabaja en cada plano. */
+  building: {
+    bed: 'Construyendo una cama',
+    table: 'Construyendo una mesa',
+    campfire: 'Encendiendo una hoguera',
+    woodWall: 'Levantando un muro',
+    woodDoor: 'Poniendo una puerta',
+    board: 'Tapiando una ventana',
+    unboard: 'Quitando las tablas de una ventana',
+  } satisfies Record<BuildKind, string>,
+  /** Cada plano, para las frases ("Llevando madera a una cama"). */
+  builds: {
+    bed: 'una cama',
+    table: 'una mesa',
+    campfire: 'una hoguera',
+    woodWall: 'un muro',
+    woodDoor: 'una puerta',
+    board: 'una ventana',
+    unboard: 'una ventana',
+  } satisfies Record<BuildKind, string>,
 
   /** Iconos sobre la cabeza en el mapa. */
   bubbles: {

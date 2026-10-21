@@ -2,12 +2,19 @@
 import { VISION_DAY, VISION_EVERY_TICKS, VISION_NIGHT } from './balance';
 import { darkness } from './clock';
 import { getTile, inBounds } from './map/grid';
+import { visionFor } from './furniture';
 import { Tile, type Grid, type World } from './types';
 
-/** Muros, árboles y puertas tapan la vista; las ventanas no. Fuera del mapa, opaco. */
+/** Muros, árboles, puertas y ventanas tapiadas tapan la vista; las ventanas no. Fuera del mapa, opaco. */
 export function isOpaque(g: Grid, x: number, y: number): boolean {
   const t = getTile(g, x, y);
-  return t === Tile.Wall || t === Tile.Tree || t === Tile.Door;
+  return (
+    t === Tile.Wall ||
+    t === Tile.Tree ||
+    t === Tile.Door ||
+    t === Tile.WoodWall ||
+    t === Tile.BoardedWindow
+  );
 }
 
 export function visionRadius(tick: number): number {
@@ -78,9 +85,8 @@ export function computeFov(
 /** Casillas que ven ahora los supervivientes (1 = visible), por índice y·ancho + x. */
 export function visibleTiles(w: World): Uint8Array {
   const out = new Uint8Array(w.grid.width * w.grid.height);
-  const r = visionRadius(w.tick);
   for (const s of w.survivors)
-    computeFov(w.grid, Math.floor(s.pos.x), Math.floor(s.pos.y), r, (x, y) => {
+    computeFov(w.grid, Math.floor(s.pos.x), Math.floor(s.pos.y), visionFor(w, s), (x, y) => {
       out[y * w.grid.width + x] = 1;
     });
   return out;
@@ -93,9 +99,8 @@ export function visionSystem(w: World): void {
 }
 
 export function revealFromSurvivors(w: World): void {
-  const r = visionRadius(w.tick);
   for (const s of w.survivors)
-    computeFov(w.grid, Math.floor(s.pos.x), Math.floor(s.pos.y), r, (x, y) => {
+    computeFov(w.grid, Math.floor(s.pos.x), Math.floor(s.pos.y), visionFor(w, s), (x, y) => {
       w.seen[y * w.grid.width + x] = 1;
     });
 }

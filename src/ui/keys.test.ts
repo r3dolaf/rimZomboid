@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 import { createTimeController } from '../game/timeController';
 import { bindTimeKeys } from './keys';
 import { createTool } from './tool';
@@ -44,12 +44,24 @@ test('1, 2 y 3 cambian la velocidad', () => {
   expect(time.speed).toBe(2);
 });
 
-test('L activa y desactiva la herramienta Saquear (Esc: ver escape.test.ts)', () => {
+test('L, T y B activan y desactivan Saquear, Talar y Construir (Esc: ver escape.test.ts)', () => {
   const time = createTimeController();
   const tool = createTool();
   bindTimeKeys(window, time, tool);
   press(window, { code: 'KeyL', key: 'l' });
-  expect(tool.active).toBe(true);
-  press(window, { code: 'KeyL', key: 'l' });
-  expect(tool.active).toBe(false);
+  expect(tool.mode).toBe('loot');
+  press(window, { code: 'KeyT', key: 't' });
+  expect(tool.mode).toBe('chop');
+  press(window, { code: 'KeyB', key: 'b' });
+  expect(tool.mode).toBe('build');
+  press(window, { code: 'KeyB', key: 'b' });
+  expect(tool.mode).toBeNull();
+});
+
+test('J abre y cierra el panel de Trabajos', () => {
+  const time = createTimeController();
+  const toggleWork = vi.fn();
+  bindTimeKeys(window, time, undefined, { toggleWork });
+  press(window, { code: 'KeyJ', key: 'j' });
+  expect(toggleWork).toHaveBeenCalledTimes(1);
 });

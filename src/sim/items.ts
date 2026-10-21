@@ -1,15 +1,15 @@
 import { CARRY_CAPACITY_KG, ITEM_WEIGHT_KG } from './balance';
 
-export type ItemKind = 'food' | 'bandage' | 'knife' | 'bat';
+export type ItemKind = 'food' | 'bandage' | 'knife' | 'bat' | 'axe' | 'wood';
 
 /** Orden en el que se cogen las cosas al registrar un contenedor. */
-export const ITEM_KINDS: readonly ItemKind[] = ['food', 'bandage', 'knife', 'bat'];
+export const ITEM_KINDS: readonly ItemKind[] = ['food', 'bandage', 'knife', 'bat', 'axe', 'wood'];
 
 /** Recuento de objetos por tipo. Lo usan el almacén, los contenedores y la carga. */
 export type Inventory = Record<ItemKind, number>;
 
 export function emptyInventory(): Inventory {
-  return { food: 0, bandage: 0, knife: 0, bat: 0 };
+  return { food: 0, bandage: 0, knife: 0, bat: 0, axe: 0, wood: 0 };
 }
 
 export function weightOf(inv: Inventory): number {

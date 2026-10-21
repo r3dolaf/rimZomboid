@@ -9,6 +9,7 @@ import {
   STRANGER_NEED_MAX,
   STRANGER_NEED_MIN,
 } from '../balance';
+import { freeFloor } from '../build';
 import { contains } from '../geom';
 import { emptyInventory } from '../items';
 import { logEvent } from '../log';
@@ -19,7 +20,7 @@ import { findPath, regionOf } from '../path/astar';
 import { nextFloat, nextInt, pick } from '../rng';
 import { rollTraits } from '../traits';
 import { Tile, type Point, type Survivor, type World } from '../types';
-import { tileOf } from '../world';
+import { defaultWork, tileOf } from '../world';
 import { walkStep } from './movement';
 
 /** La caminata hasta la puerta, la espera y la marcha. */
@@ -29,9 +30,9 @@ export function strangerSystem(w: World): void {
   let arrived = true;
   for (const s of st.survivors) {
     if (s.action.type !== 'moveTo') continue;
-    if (walkStep(s))
-      s.action = { type: 'idle', ticksLeft: 0 }; // espera (o ya se ha ido)
-    else arrived = false;
+    // Al llegar (o si un muro le corta el paso), espera ahí (o ya se ha ido).
+    if (walkStep(s, w.grid) === 'walking') arrived = false;
+    else s.action = { type: 'idle', ticksLeft: 0 };
   }
   if (st.leaving && arrived) w.stranger = null;
 }
@@ -102,7 +103,8 @@ export function newStranger(w: World, start: Point): Survivor {
       food: nextInt(w.rng, 0, STRANGER_FOOD_MAX),
       bandage: nextFloat(w.rng) < STRANGER_BANDAGE_CHANCE ? 1 : 0,
     },
-    work: { loot: false },
+    work: { social: true, build: true, haul: true, chop: false, loot: false },
+    equipped: null,
     opinions: {},
     partnerId: null,
     nextChatAt: 0,
@@ -149,12 +151,17 @@ export function acceptStrangers(w: World): void {
   for (const s of st.survivors) {
     s.action = { type: 'idle', ticksLeft: 0 };
     s.path = [];
-    s.work.loot = !s.traits.includes('coward');
+    s.work = defaultWork(s.traits);
     s.nextChatAt = w.tick + nextInt(w.rng, 0, CHAT_EVERY_MAX);
-    const free = BED_SLOTS.map((b) => ({ x: r.x + b.dx, y: r.y + b.dy })).find(
-      (p) => !w.beds.some((b) => b.pos.x === p.x && b.pos.y === p.y),
+    // Primero una cama construida que esté libre (H4a); si no, uno de los sitios de serie.
+    const spare = w.beds.find((b) => b.ownerId === null);
+    const free = BED_SLOTS.map((b) => ({ x: r.x + b.dx, y: r.y + b.dy })).find((p) =>
+      freeFloor(w, p),
     );
-    if (free) {
+    if (spare) {
+      spare.ownerId = s.id;
+      s.bedId = spare.id;
+    } else if (free) {
       const id = Math.max(0, ...w.beds.map((b) => b.id)) + 1;
       w.beds.push({ id, pos: free, ownerId: s.id });
       s.bedId = id;

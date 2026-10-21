@@ -3,28 +3,54 @@ import { toggleContainer, toggleHouse } from '../game/designate';
 import { containerAt, houseAt, survivorAt } from '../game/pick';
 import { runTicks } from '../game/runTicks';
 import type { TimeController } from '../game/timeController';
+import {
+  buildAt,
+  buildLine,
+  liveBlueprints,
+  markTreesIn,
+  pendingPlacements,
+  toggleTree,
+  wallLine,
+} from '../game/tools';
+import { BUILD, CAMPFIRE_RANGE } from '../sim/balance';
+import { canPlace, markedTrees } from '../sim/build';
+import { darkness } from '../sim/clock';
 import { CATALOG } from '../sim/events/catalog';
-import { getTile } from '../sim/map/grid';
 import { isEmpty } from '../sim/items';
 import { effectiveDesignated, houseMarked } from '../sim/orders';
-import type { Survivor, World } from '../sim/types';
+import { Tile, type BuildKind, type Point, type Survivor, type World } from '../sim/types';
 import { visibleTiles } from '../sim/vision';
 import type { Selection } from '../ui/selection';
-import type { Tool } from '../ui/tool';
+import type { Tool, ToolMode } from '../ui/tool';
 import {
+  BAR_BACK,
+  BAR_PROGRESS,
+  BAR_WOOD,
   BED_COLOR,
+  BLUEPRINT,
+  BLUEPRINT_BAD,
+  CAMPFIRE_CORE,
+  CAMPFIRE_FLAME,
+  CAMPFIRE_STONE,
   CONTAINER_COLORS,
   CONTAINER_EDGE,
+  css,
   DESIGNATION,
+  FIRE_GLOW,
   HOUSE_SELECTED,
   NIGHT_COLOR,
+  PILE_OTHER,
   PILLOW_COLOR,
+  PLANK_COLOR,
+  PLANK_SEAM,
   SELECTION_RING,
   STORAGE_COLOR,
   STORAGE_EDGE,
   STRANGER_COLOR,
   SURVIVOR_COLOR,
   SURVIVOR_OUTLINE,
+  TABLE_COLOR,
+  TABLE_EDGE,
   TILE_COLORS,
 } from './colors';
 import { bubbleIcon } from './bubbles';
@@ -41,6 +67,10 @@ const SLEEPING_ALPHA = 0.45;
 const FOG_SEEN_ALPHA = 140; // 0–255: penumbra de lo visto pero no visible ahora
 const FOG_EVERY_FRAMES = 4;
 const BUBBLE_PX = 10;
+const BLUEPRINT_ALPHA = 0.45;
+const PENDING_ALPHA = 0.3; // planos pedidos en pausa, aún sin poner
+const GLOW_RINGS = [1, 0.85, 0.7, 0.55, 0.4, 0.25]; // resplandor de la hoguera, de fuera adentro
+const GLOW_ALPHA = 0.045; // por cada círculo: se suman hacia el centro
 
 export interface GameSceneData {
   world: World;
@@ -67,6 +97,16 @@ export class GameScene extends Phaser.Scene {
   private bubbles = new Map<number, Phaser.GameObjects.Text>();
   private furniture!: Phaser.GameObjects.Graphics;
   private marks!: Phaser.GameObjects.Graphics;
+  /** Resplandor de las hogueras, encima de la capa de noche. */
+  private glow!: Phaser.GameObjects.Graphics;
+  /** El mapa, pintado en un lienzo; se repinta lo que cambia (`Grid.version`). */
+  private map!: Phaser.Textures.CanvasTexture;
+  private mapTiles: number[] = [];
+  private mapVersion = -1;
+  private storageTiles = new Set<number>();
+  /** Arrastre con Talar o Construir, de casilla a casilla. */
+  private drag: { mode: ToolMode; from: Point; to: Point } | null = null;
+  private hover: Point | null = null;
   private fog!: Phaser.Textures.CanvasTexture;
   private fogPixels!: ImageData;
   private frame = 0;
@@ -116,6 +156,7 @@ export class GameScene extends Phaser.Scene {
       .rectangle(0, 0, width * TILE_PX, height * TILE_PX, NIGHT_COLOR, 1)
       .setOrigin(0, 0)
       .setAlpha(0);
+    this.glow = this.add.graphics().setBlendMode(Phaser.BlendModes.ADD);
     this.setupCamera();
     this.setupSelection();
     this.keys = this.input.keyboard!.addKeys(
@@ -127,34 +168,47 @@ export class GameScene extends Phaser.Scene {
   update(_now: number, dtMs: number): void {
     runTicks(this.world, this.clock.advance(dtMs), this.onProblems);
     this.panWithKeys(dtMs);
+    this.refreshMap();
     this.drawFurniture();
+    this.drawBuilding();
     this.drawActors();
     this.drawBubbles();
     if (++this.frame % FOG_EVERY_FRAMES === 0) this.drawFog();
     this.night.setAlpha(skyAlpha(this.world.tick, this.world.tick < this.world.stormUntil));
+    this.drawGlow();
     this.onFrame?.();
   }
 
-  /** El mapa y el almacén no cambian: se dibujan una vez en una textura. (Las camas, no: llegan
-   * colonos nuevos.) */
+  /** El mapa se pinta en un lienzo, con el almacén encima. */
   private drawMap(): void {
     const { grid, storage } = this.world;
-    const g = this.make.graphics({}, false);
-    for (let y = 0; y < grid.height; y++)
-      for (let x = 0; x < grid.width; x++) {
-        g.fillStyle(TILE_COLORS[getTile(grid, x, y)]);
-        g.fillRect(x * TILE_PX, y * TILE_PX, TILE_PX, TILE_PX);
-      }
-    for (const t of storage.tiles) {
-      const [x, y] = [t.x * TILE_PX, t.y * TILE_PX];
-      g.fillStyle(STORAGE_EDGE);
-      g.fillRect(x + 1, y + 1, TILE_PX - 2, TILE_PX - 2);
-      g.fillStyle(STORAGE_COLOR);
-      g.fillRect(x + 2, y + 2, TILE_PX - 4, TILE_PX - 4);
-    }
-    g.generateTexture('map', grid.width * TILE_PX, grid.height * TILE_PX);
-    g.destroy();
+    this.map = this.textures.createCanvas('map', grid.width * TILE_PX, grid.height * TILE_PX)!;
     this.add.image(0, 0, 'map').setOrigin(0, 0);
+    this.storageTiles = new Set(storage.tiles.map((t) => t.y * grid.width + t.x));
+    this.mapTiles = new Array<number>(grid.tiles.length).fill(-1);
+    this.refreshMap();
+  }
+
+  /** Repinta solo las casillas que han cambiado desde la última vez (talar, muros, tablas…). */
+  private refreshMap(): void {
+    const { grid } = this.world;
+    if (grid.version === this.mapVersion) return;
+    this.mapVersion = grid.version;
+    const ctx = this.map.context;
+    for (let i = 0; i < grid.tiles.length; i++) {
+      const t = grid.tiles[i]!;
+      if (this.mapTiles[i] === t) continue;
+      this.mapTiles[i] = t;
+      const [x, y] = [(i % grid.width) * TILE_PX, Math.floor(i / grid.width) * TILE_PX];
+      paintTile(ctx, x, y, t);
+      if (this.storageTiles.has(i)) {
+        ctx.fillStyle = css(STORAGE_EDGE);
+        ctx.fillRect(x + 1, y + 1, TILE_PX - 2, TILE_PX - 2);
+        ctx.fillStyle = css(STORAGE_COLOR);
+        ctx.fillRect(x + 2, y + 2, TILE_PX - 4, TILE_PX - 4);
+      }
+    }
+    this.map.refresh();
   }
 
   private drawActors(): void {
@@ -226,18 +280,40 @@ export class GameScene extends Phaser.Scene {
     this.scale.on('resize', () => cam.setZoom(Math.max(cam.zoom, this.minZoom())));
   }
 
+  /** Casilla bajo el puntero (dentro del mapa). */
+  private tileAt(p: Phaser.Input.Pointer): Point {
+    const { width, height } = this.world.grid;
+    return {
+      x: Phaser.Math.Clamp(Math.floor(p.worldX / TILE_PX), 0, width - 1),
+      y: Phaser.Math.Clamp(Math.floor(p.worldY / TILE_PX), 0, height - 1),
+    };
+  }
+
   /**
    * Clic izquierdo. Con la herramienta Saquear: marca o desmarca el contenedor (si se ha visto)
-   * o la casa. Sin ella: selecciona superviviente o casa vista, o deselecciona.
+   * o la casa. Con Talar o Construir: un clic o un arrastre (ver `finishDrag`). Sin herramienta:
+   * selecciona superviviente o casa vista, o deselecciona.
    */
   private setupSelection(): void {
+    this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
+      this.hover = this.tileAt(p);
+      if (this.drag) this.drag.to = this.hover;
+    });
+    this.input.on('pointerup', () => this.finishDrag());
+    this.input.on('pointerupoutside', () => (this.drag = null));
+    this.input.on('gameout', () => (this.hover = null));
+    this.tool.onChange(() => (this.drag = null));
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
       if (!p.leftButtonDown()) return;
       const w = this.world;
-      const tx = Math.floor(p.worldX / TILE_PX);
-      const ty = Math.floor(p.worldY / TILE_PX);
+      const { x: tx, y: ty } = this.tileAt(p);
       const seen = w.seen[ty * w.grid.width + tx] === 1;
-      if (this.tool.active) {
+      const mode = this.tool.mode;
+      if (mode === 'chop' || mode === 'build') {
+        this.drag = { mode, from: { x: tx, y: ty }, to: { x: tx, y: ty } };
+        return;
+      }
+      if (mode === 'loot') {
         const c = seen ? containerAt(w, tx, ty) : null;
         if (c) {
           toggleContainer(w, c.id);
@@ -256,6 +332,26 @@ export class GameScene extends Phaser.Scene {
       this.selection.set(null);
       this.houseSelection.set(h?.id ?? null);
     });
+  }
+
+  /**
+   * Al soltar. Talar: un clic marca o desmarca el árbol; arrastrar marca los del rectángulo.
+   * Construir: un clic pone el plano elegido (o cancela el que hay); arrastrar muros, una línea.
+   */
+  private finishDrag(): void {
+    const d = this.drag;
+    this.drag = null;
+    if (!d || this.tool.mode !== d.mode) return;
+    const w = this.world;
+    const click = d.from.x === d.to.x && d.from.y === d.to.y;
+    if (d.mode === 'chop') {
+      if (click) toggleTree(w, d.from.x, d.from.y);
+      else markTreesIn(w, d.from, d.to);
+      return;
+    }
+    const kind = this.tool.buildKind;
+    if (click || kind !== 'woodWall') buildAt(w, kind, d.from.x, d.from.y);
+    else buildLine(w, kind, d.from, d.to);
   }
 
   /** Camas, contenedores vistos (bajo la niebla) y, encima de ella, marcas y casa seleccionada. */
@@ -284,12 +380,150 @@ export class GameScene extends Phaser.Scene {
         m.strokeRect(x + 1, y + 1, TILE_PX - 2, TILE_PX - 2);
       }
     }
+    const seen = (p: Point) => w.seen[p.y * w.grid.width + p.x] === 1;
+    for (const f of w.furniture) {
+      if (!seen(f.pos)) continue;
+      const [x, y] = [f.pos.x * TILE_PX, f.pos.y * TILE_PX];
+      if (f.kind === 'table') {
+        g.fillStyle(TABLE_EDGE);
+        g.fillRect(x + 1, y + 3, TILE_PX - 2, TILE_PX - 6);
+        g.fillStyle(TABLE_COLOR);
+        g.fillRect(x + 2, y + 4, TILE_PX - 4, TILE_PX - 8);
+      } else {
+        const [cx, cy] = [x + TILE_PX / 2, y + TILE_PX / 2];
+        g.fillStyle(CAMPFIRE_STONE);
+        g.fillCircle(cx, cy, 6);
+        g.fillStyle(CAMPFIRE_FLAME);
+        g.fillCircle(cx, cy, 4 + 0.5 * Math.sin(this.frame / 6)); // la llama tiembla
+        g.fillStyle(CAMPFIRE_CORE);
+        g.fillCircle(cx, cy + 1, 2);
+      }
+    }
+    for (const p of w.piles) {
+      if (!seen(p.pos)) continue;
+      const [x, y] = [p.pos.x * TILE_PX, p.pos.y * TILE_PX];
+      for (let k = 0; k < Math.min(3, p.items.wood); k++) {
+        // Hasta 3 tablas apiladas.
+        g.fillStyle(PLANK_SEAM);
+        g.fillRect(x + 2, y + 10 - k * 3, TILE_PX - 4, 3);
+        g.fillStyle(PLANK_COLOR);
+        g.fillRect(x + 3, y + 10 - k * 3, TILE_PX - 6, 2);
+      }
+      if (!isEmpty({ ...p.items, wood: 0 })) {
+        g.fillStyle(CONTAINER_EDGE);
+        g.fillRect(x + 9, y + 2, 6, 6);
+        g.fillStyle(PILE_OTHER);
+        g.fillRect(x + 10, y + 3, 4, 4);
+      }
+    }
     for (const h of w.houses) {
       const marked = houseMarked(w, h.id);
       const selected = this.houseSelection.id === h.id;
       if (!marked && !selected) continue;
       m.lineStyle(selected ? 2 : 3, selected ? HOUSE_SELECTED : DESIGNATION, 0.9);
       m.strokeRect(h.rect.x * TILE_PX, h.rect.y * TILE_PX, h.rect.w * TILE_PX, h.rect.h * TILE_PX);
+    }
+  }
+
+  /** Encima de la niebla: marcas de talar, planos (también los pendientes) y lo que se va a hacer
+   * al soltar o al hacer clic. */
+  private drawBuilding(): void {
+    const m = this.marks;
+    const w = this.world;
+    m.lineStyle(2, DESIGNATION, 1);
+    for (const i of markedTrees(w)) {
+      const [x, y] = [(i % w.grid.width) * TILE_PX, Math.floor(i / w.grid.width) * TILE_PX];
+      m.lineBetween(x + 4, y + 4, x + TILE_PX - 4, y + TILE_PX - 4);
+      m.lineBetween(x + TILE_PX - 4, y + 4, x + 4, y + TILE_PX - 4);
+    }
+    for (const b of liveBlueprints(w)) {
+      this.drawBlueprint(b.kind, b.pos, BLUEPRINT, BLUEPRINT_ALPHA);
+      const [x, y] = [b.pos.x * TILE_PX, b.pos.y * TILE_PX];
+      const cost = BUILD[b.kind];
+      if (cost.wood > 0) this.drawBar(x, y + TILE_PX - 5, b.wood / cost.wood, BAR_WOOD);
+      if (b.progress > 0) this.drawBar(x, y + TILE_PX - 3, b.progress / cost.ticks, BAR_PROGRESS);
+    }
+    for (const p of pendingPlacements(w))
+      this.drawBlueprint(p.kind, p.pos, BLUEPRINT, PENDING_ALPHA);
+
+    const d = this.drag;
+    if (d?.mode === 'chop' && (d.from.x !== d.to.x || d.from.y !== d.to.y)) {
+      const [x, y] = [Math.min(d.from.x, d.to.x) * TILE_PX, Math.min(d.from.y, d.to.y) * TILE_PX];
+      const rw = (Math.abs(d.from.x - d.to.x) + 1) * TILE_PX;
+      const rh = (Math.abs(d.from.y - d.to.y) + 1) * TILE_PX;
+      m.fillStyle(DESIGNATION, 0.12);
+      m.fillRect(x, y, rw, rh);
+      m.lineStyle(1, DESIGNATION, 0.9);
+      m.strokeRect(x, y, rw, rh);
+    }
+    if (this.tool.mode !== 'build') return;
+    // Construir: la silueta de lo elegido donde iría (en rojo si no se puede poner ahí).
+    const kind = this.tool.buildKind;
+    const at = d?.mode === 'build' ? (kind === 'woodWall' ? wallLine(d.from, d.to) : [d.from]) : [];
+    if (!d && this.hover) at.push(this.hover);
+    for (const p of at) {
+      if (w.blueprints.some((b) => b.pos.x === p.x && b.pos.y === p.y)) continue; // el clic lo cancela
+      const ok = canPlace(w, kind, p);
+      this.drawBlueprint(kind, p, ok ? BLUEPRINT : BLUEPRINT_BAD, PENDING_ALPHA);
+    }
+  }
+
+  /** Silueta de lo que se va a construir. */
+  private drawBlueprint(kind: BuildKind, pos: Point, color: number, alpha: number): void {
+    const m = this.marks;
+    const [x, y] = [pos.x * TILE_PX, pos.y * TILE_PX];
+    m.fillStyle(color, alpha);
+    m.lineStyle(1, color, Math.min(1, alpha * 2));
+    switch (kind) {
+      case 'bed':
+        m.fillRect(x + 2, y + 1, TILE_PX - 4, TILE_PX - 2);
+        break;
+      case 'table':
+        m.fillRect(x + 1, y + 3, TILE_PX - 2, TILE_PX - 6);
+        break;
+      case 'campfire':
+        m.fillCircle(x + TILE_PX / 2, y + TILE_PX / 2, 6);
+        break;
+      case 'woodWall':
+        m.fillRect(x, y, TILE_PX, TILE_PX);
+        break;
+      case 'woodDoor':
+        m.fillRect(x, y, TILE_PX, TILE_PX);
+        m.strokeRect(x + 4.5, y + 3.5, TILE_PX - 9, TILE_PX - 4);
+        break;
+      case 'board':
+        m.fillRect(x, y + 3, TILE_PX, 4);
+        m.fillRect(x, y + 9, TILE_PX, 4);
+        break;
+      case 'unboard': // tablas que se quitan: solo el contorno
+        m.strokeRect(x + 0.5, y + 3.5, TILE_PX - 1, 3);
+        m.strokeRect(x + 0.5, y + 9.5, TILE_PX - 1, 3);
+        break;
+    }
+    m.strokeRect(x + 0.5, y + 0.5, TILE_PX - 1, TILE_PX - 1);
+  }
+
+  /** Barra fina de 0 a 1 (madera entregada o avance de la obra). */
+  private drawBar(x: number, y: number, frac: number, color: number): void {
+    const m = this.marks;
+    m.fillStyle(BAR_BACK, 0.8);
+    m.fillRect(x + 1, y, TILE_PX - 2, 2);
+    m.fillStyle(color, 1);
+    m.fillRect(x + 1, y, (TILE_PX - 2) * Math.min(1, frac), 2);
+  }
+
+  /** De noche, cada hoguera vista alumbra un círculo del tamaño de su alcance. */
+  private drawGlow(): void {
+    const g = this.glow;
+    const w = this.world;
+    g.clear();
+    const dark = darkness(w.tick);
+    if (dark <= 0) return;
+    for (const f of w.furniture) {
+      if (f.kind !== 'campfire' || w.seen[f.pos.y * w.grid.width + f.pos.x] !== 1) continue;
+      const [cx, cy] = [(f.pos.x + 0.5) * TILE_PX, (f.pos.y + 0.5) * TILE_PX];
+      g.fillStyle(FIRE_GLOW, GLOW_ALPHA * dark);
+      for (const k of GLOW_RINGS) g.fillCircle(cx, cy, (CAMPFIRE_RANGE + 0.5) * TILE_PX * k);
     }
   }
 
@@ -326,6 +560,7 @@ export class GameScene extends Phaser.Scene {
       world: this.world,
       tileToScreen,
       forceEvent,
+      canPlace: (kind: BuildKind, x: number, y: number) => canPlace(this.world, kind, { x, y }),
     };
   }
 
@@ -350,5 +585,23 @@ export class GameScene extends Phaser.Scene {
     if (k.D.isDown || k.RIGHT.isDown) cam.scrollX += d;
     if (k.W.isDown || k.UP.isDown) cam.scrollY -= d;
     if (k.S.isDown || k.DOWN.isDown) cam.scrollY += d;
+  }
+}
+
+/** Pinta una casilla del mapa en el lienzo (con juntas en los muros de madera y tablas en las
+ * ventanas tapiadas). */
+function paintTile(ctx: CanvasRenderingContext2D, x: number, y: number, t: Tile): void {
+  ctx.fillStyle = css(TILE_COLORS[t === Tile.BoardedWindow ? Tile.Window : t]);
+  ctx.fillRect(x, y, TILE_PX, TILE_PX);
+  if (t === Tile.WoodWall) {
+    ctx.fillStyle = css(PLANK_SEAM);
+    for (const dy of [5, 10]) ctx.fillRect(x, y + dy, TILE_PX, 1);
+  } else if (t === Tile.BoardedWindow) {
+    for (const dy of [3, 9]) {
+      ctx.fillStyle = css(PLANK_SEAM);
+      ctx.fillRect(x, y + dy, TILE_PX, 4);
+      ctx.fillStyle = css(TILE_COLORS[Tile.BoardedWindow]);
+      ctx.fillRect(x, y + dy + 1, TILE_PX, 2);
+    }
   }
 }

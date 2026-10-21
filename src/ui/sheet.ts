@@ -7,6 +7,7 @@ import { opinionOf, relationLabel } from '../sim/social';
 import type { Survivor, World } from '../sim/types';
 import { activityText, formatItems, formatModifier, signed } from './describe';
 import type { Selection } from './selection';
+import { effectiveWork, WORKS } from './workPanel';
 import './panels.css';
 
 /**
@@ -39,18 +40,23 @@ export function mountSheet(
   x.addEventListener('click', close);
   head.append(title, x);
 
-  // La casilla de trabajo también es fija, por lo mismo que la ✕.
-  const work = document.createElement('label');
+  // Las casillas de trabajo también son fijas, por lo mismo que la ✕.
+  const work = document.createElement('div');
   work.className = 'work';
-  const loot = document.createElement('input');
-  loot.type = 'checkbox';
-  loot.dataset.testid = 'sheet-loot';
-  loot.addEventListener('change', () => {
-    const id = opts.selection.id;
-    if (id !== null)
-      issue(opts.world, { type: 'setWork', survivorId: id, work: 'loot', enabled: loot.checked });
+  const boxes = WORKS.map((k) => {
+    const label = document.createElement('label');
+    const box = document.createElement('input');
+    box.type = 'checkbox';
+    box.dataset.testid = `sheet-work-${k}`;
+    box.addEventListener('change', () => {
+      const id = opts.selection.id;
+      if (id !== null)
+        issue(opts.world, { type: 'setWork', survivorId: id, work: k, enabled: box.checked });
+    });
+    label.append(box, document.createTextNode(es.works[k]));
+    work.append(label);
+    return box;
   });
-  work.append(loot, document.createTextNode(es.workLoot));
   const carrying = document.createElement('p');
   carrying.className = 'carrying';
 
@@ -87,15 +93,14 @@ export function mountSheet(
         partner: s.partnerId === null ? null : nameOf(s.partnerId),
         relations: relations(s, world),
       };
-      // La casilla refleja el permiso real, salvo justo cuando el jugador la acaba de cambiar
-      // y la orden aún no se ha aplicado.
-      const pending = world.orders.some((o) => o.type === 'setWork' && o.survivorId === s.id);
-      if (!pending) loot.checked = s.work.loot;
-      const carryText = es.carrying(
-        formatItems(s.carrying),
-        weightOf(s.carrying).toFixed(1).replace('.', ','),
-        CARRY_CAPACITY_KG,
-      );
+      // Las casillas reflejan los permisos con las órdenes pendientes ya aplicadas.
+      boxes.forEach((box, i) => (box.checked = effectiveWork(world, s, WORKS[i]!)));
+      const carryText =
+        es.carrying(
+          formatItems(s.carrying),
+          weightOf(s.carrying).toFixed(1).replace('.', ','),
+          CARRY_CAPACITY_KG,
+        ) + (s.equipped ? ` · ${es.inHand(es.items[s.equipped][0])}` : '');
       if (carrying.textContent !== carryText) carrying.textContent = carryText;
 
       const key = JSON.stringify(view);

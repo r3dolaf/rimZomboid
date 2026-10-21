@@ -65,6 +65,8 @@
   color: #111;
 }
 
-body.tool-loot canvas {
+body.tool-loot canvas,
+body.tool-chop canvas,
+body.tool-build canvas {
   cursor: crosshair;
 }

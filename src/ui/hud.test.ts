@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 import { createTimeController } from '../game/timeController';
 import { formatDayTime, mountHud } from './hud';
 import { createTool } from './tool';
@@ -25,7 +25,10 @@ test('update cambia la hora y refleja cambios de velocidad hechos con el teclado
   const time = createTimeController();
   const hud = mountHud(root, { seed: 1, time });
   time.togglePause();
-  hud.update({ day: 2, hour: 13, minute: 30 }, { food: 35, bandage: 0, knife: 0, bat: 0 });
+  hud.update(
+    { day: 2, hour: 13, minute: 30 },
+    { food: 35, bandage: 0, knife: 0, bat: 0, axe: 0, wood: 0 },
+  );
   expect(root.querySelector('[data-testid="hud-time"]')!.textContent).toBe('Día 2, 13:30');
   expect(root.querySelector('[data-speed="0"]')!.classList.contains('active')).toBe(true);
 });
@@ -50,22 +53,43 @@ test('al pulsar un botón de velocidad, este pierde el foco (Espacio no lo vuelv
 test('muestra la comida del almacén', () => {
   const root = document.createElement('div');
   const hud = mountHud(root, { seed: 1, time: createTimeController() });
-  hud.update({ day: 1, hour: 8, minute: 0 }, { food: 12, bandage: 3, knife: 0, bat: 0 });
+  hud.update(
+    { day: 1, hour: 8, minute: 0 },
+    { food: 12, bandage: 3, knife: 0, bat: 0, axe: 0, wood: 0 },
+  );
   expect(root.querySelector('[data-testid="hud-food"]')!.textContent).toBe('Comida: 12');
   expect(root.querySelector('[data-testid="hud-bandages"]')!.textContent).toBe('Vendas: 3');
 });
 
-test('el botón Saquear activa y desactiva la herramienta', () => {
+test('los botones Saquear, Talar y Construir activan su herramienta (solo una a la vez)', () => {
   const root = document.createElement('div');
   const tool = createTool();
   mountHud(root, { seed: 1, time: createTimeController(), tool });
-  const b = root.querySelector('[data-testid="hud-loot-tool"]') as HTMLButtonElement;
-  b.click();
-  expect(tool.active).toBe(true);
-  expect(b.classList.contains('active')).toBe(true);
-  b.click();
-  expect(tool.active).toBe(false);
-  expect(b.classList.contains('active')).toBe(false);
+  const b = (id: string) => root.querySelector(`[data-testid="${id}"]`) as HTMLButtonElement;
+  b('hud-loot-tool').click();
+  expect(tool.mode).toBe('loot');
+  expect(b('hud-loot-tool').classList.contains('active')).toBe(true);
+  b('hud-chop-tool').click();
+  expect(tool.mode).toBe('chop');
+  expect(b('hud-loot-tool').classList.contains('active')).toBe(false);
+  expect(b('hud-chop-tool').classList.contains('active')).toBe(true);
+  b('hud-build-tool').click();
+  expect(tool.mode).toBe('build');
+  b('hud-build-tool').click();
+  expect(tool.mode).toBeNull();
+});
+
+test('muestra la madera del almacén y el botón Trabajos abre el panel', () => {
+  const root = document.createElement('div');
+  const toggleWork = vi.fn();
+  const hud = mountHud(root, { seed: 1, time: createTimeController(), toggleWork });
+  hud.update(
+    { day: 1, hour: 9, minute: 0 },
+    { food: 1, bandage: 0, knife: 0, bat: 0, axe: 0, wood: 7 },
+  );
+  expect(root.querySelector('[data-testid="hud-wood"]')!.textContent).toBe('Madera: 7');
+  (root.querySelector('[data-testid="hud-work"]') as HTMLButtonElement).click();
+  expect(toggleWork).toHaveBeenCalledTimes(1);
 });
 
 test('muestra el narrador y la tormenta mientras dura', () => {
@@ -73,7 +97,7 @@ test('muestra el narrador y la tormenta mientras dura', () => {
   const hud = mountHud(root, { seed: 1, time: createTimeController(), narrator: 'chaotic' });
   expect(root.querySelector('[data-testid="hud-narrator"]')!.textContent).toBe('Narrador: Caótico');
   const weather = root.querySelector('[data-testid="hud-weather"]') as HTMLElement;
-  const stock = { food: 1, bandage: 0, knife: 0, bat: 0 };
+  const stock = { food: 1, bandage: 0, knife: 0, bat: 0, axe: 0, wood: 0 };
   hud.update({ day: 1, hour: 9, minute: 0 }, stock, false);
   expect(weather.hidden).toBe(true);
   hud.update({ day: 1, hour: 9, minute: 0 }, stock, true);

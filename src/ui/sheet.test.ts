@@ -86,10 +86,37 @@ test('la ✕ no se reconstruye al cambiar los datos (si no, un clic puede perder
 test('muestra lo que lleva encima y su peso', () => {
   const { root, world, selection, sheet } = setup();
   const s = world.survivors[0]!;
-  s.carrying = { food: 6, bandage: 1, knife: 0, bat: 0 };
+  s.carrying = { food: 6, bandage: 1, knife: 0, bat: 0, axe: 0, wood: 0 };
   selection.set(s.id);
   sheet.update();
   expect(sheetEl(root).textContent).toContain('Lleva: 6 latas y 1 venda (3,1 / 8 kg)');
+  root.remove();
+});
+
+test('una casilla por trabajo y "En la mano: hacha"', () => {
+  const { root, world, selection, sheet } = setup();
+  const s = world.survivors[0]!;
+  s.work = { social: true, build: false, haul: true, chop: false, loot: true };
+  s.equipped = 'axe';
+  selection.set(s.id);
+  sheet.update();
+  const box = (k: string) =>
+    root.querySelector(`[data-testid="sheet-work-${k}"]`) as HTMLInputElement;
+  expect(['social', 'build', 'haul', 'chop', 'loot'].map((k) => box(k).checked)).toEqual([
+    true,
+    false,
+    true,
+    false,
+    true,
+  ]);
+  box('build').click();
+  expect(world.orders).toContainEqual({
+    type: 'setWork',
+    survivorId: s.id,
+    work: 'build',
+    enabled: true,
+  });
+  expect(sheetEl(root).textContent).toContain('En la mano: hacha');
   root.remove();
 });
 
@@ -99,7 +126,7 @@ test('la casilla Saquear da la orden y no se reconstruye', () => {
   s.work.loot = true;
   selection.set(s.id);
   sheet.update();
-  const box = root.querySelector('[data-testid="sheet-loot"]') as HTMLInputElement;
+  const box = root.querySelector('[data-testid="sheet-work-loot"]') as HTMLInputElement;
   expect(box.checked).toBe(true);
   box.click();
   expect(world.orders).toContainEqual({
@@ -110,7 +137,7 @@ test('la casilla Saquear da la orden y no se reconstruye', () => {
   });
   s.needs.hunger = 2;
   sheet.update();
-  expect(root.querySelector('[data-testid="sheet-loot"]')).toBe(box);
+  expect(root.querySelector('[data-testid="sheet-work-loot"]')).toBe(box);
   root.remove();
 });
 

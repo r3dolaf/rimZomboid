@@ -109,7 +109,11 @@ export type Activity =
   // Talar (H4a): coger o devolver el hacha en el almacén y talar el árbol de la casilla `tree`.
   | { type: 'takeAxe' }
   | { type: 'storeAxe' }
-  | { type: 'chop'; tree: number };
+  | { type: 'chop'; tree: number }
+  // Transportar (H4a): recoger un montón, coger madera para un plano y entregarla.
+  | { type: 'pickUp'; pileId: number }
+  | { type: 'fetchWood'; blueprintId: number }
+  | { type: 'deliver'; blueprintId: number };
 
 export type Action =
   /** `wait`: esperando tras no encontrar camino (no se consulta al cerebro) o tras negarse a trabajar. */
@@ -289,4 +293,6 @@ export interface World {
   furniture: Furniture[];
   /** Árboles marcados para talar, por índice y·ancho + x. */
   chopMarks: number[];
+  /** Cuentas de la madera, para comprobar que nunca aparece ni desaparece. */
+  woodLog: { start: number; chopped: number; recovered: number; spent: number };
 }

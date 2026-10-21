@@ -98,6 +98,7 @@ test('colocar un plano y cancelarlo (la madera entregada queda en un montón)', 
   ordersSystem(w);
   expect(w.blueprints).toHaveLength(1);
   b.wood = 2;
+  w.woodLog.chopped += 2; // como si se hubiera talado y traído
   issue(w, { type: 'cancelBlueprint', id: b.id });
   ordersSystem(w);
   expect(w.blueprints).toEqual([]);
@@ -113,6 +114,7 @@ test('cancelar un plano de tapiar deja la madera en una casilla transitable de a
   issue(w, { type: 'placeBlueprint', kind: 'board', x: win.x, y: win.y });
   ordersSystem(w);
   w.blueprints[0]!.wood = 3;
+  w.woodLog.chopped += 3;
   issue(w, { type: 'cancelBlueprint', id: w.blueprints[0]!.id });
   ordersSystem(w);
   const p = w.piles[0]!;

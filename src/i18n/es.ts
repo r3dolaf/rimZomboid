@@ -3,7 +3,14 @@ import { BIRTHDAY_CANS } from '../sim/balance';
 import type { MoodModifierId } from '../sim/mood';
 import type { ItemKind } from '../sim/items';
 import type { RelationLabel } from '../sim/social';
-import type { BubbleKind, Decision, MemoryId, NarratorStyle, TraitId } from '../sim/types';
+import type {
+  BubbleKind,
+  BuildKind,
+  Decision,
+  MemoryId,
+  NarratorStyle,
+  TraitId,
+} from '../sim/types';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 /** "Ana", "Ana y Luis" o "Ana, Luis y Sara". */
@@ -260,10 +267,23 @@ export const es = {
     chop: 'Talando',
     takeAxe: 'Va a por el hacha',
     storeAxe: 'Devuelve el hacha',
+    goPickUp: 'Va a recoger un montón',
+    fetchWood: (what: string) => `Va a por madera para ${what}`,
+    deliver: (what: string) => `Llevando madera a ${what}`,
     console: (other: string) => `Consolando a ${other}`,
     consoled: (other: string) => `${other} le está consolando`,
   },
   containers: { fridge: 'una nevera', wardrobe: 'un armario', shelf: 'una estantería' },
+  /** Cada plano, para las frases ("Llevando madera a una cama"). */
+  builds: {
+    bed: 'una cama',
+    table: 'una mesa',
+    campfire: 'una hoguera',
+    woodWall: 'un muro',
+    woodDoor: 'una puerta',
+    board: 'una ventana',
+    unboard: 'una ventana',
+  } satisfies Record<BuildKind, string>,
 
   /** Iconos sobre la cabeza en el mapa. */
   bubbles: {

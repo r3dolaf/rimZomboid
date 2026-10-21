@@ -1,12 +1,12 @@
 // Talar (spec H4a §3.2): coger el hacha, ir al árbol marcado más cercano y talarlo.
 import { CHOP_TICKS, CHOP_WOOD_MAX, CHOP_WOOD_MIN } from '../balance';
 import { emptyInventory } from '../items';
-import { getTile, inBounds, isWalkable, setTile } from '../map/grid';
-import { regionOf } from '../path/astar';
+import { getTile, setTile } from '../map/grid';
 import { dropPile } from '../piles';
 import { nextInt, pick } from '../rng';
 import { Tile, type Action, type Point, type Survivor, type World } from '../types';
 import { tileOf } from '../world';
+import { standBeside } from './stand';
 
 /** Árbol (índice de casilla) al que va o que está talando, o `null`. */
 export function chopTarget(s: Survivor): number | null {
@@ -22,29 +22,6 @@ const goingFor = (s: Survivor, kind: 'takeAxe' | 'storeAxe') =>
 /** ¿Sigue marcado y siendo un árbol? */
 function marked(w: World, tree: number): boolean {
   return w.chopMarks.includes(tree) && w.grid.tiles[tree] === Tile.Tree;
-}
-
-/** La casilla transitable junto al árbol, alcanzable por `s`, más cercana a él. */
-function standNear(w: World, s: Survivor, tree: number): Point | null {
-  const tx = tree % w.grid.width;
-  const ty = Math.floor(tree / w.grid.width);
-  const at = tileOf(s.pos);
-  const region = regionOf(w.grid, at.x, at.y);
-  let best: Point | null = null;
-  let bestD = Infinity;
-  for (let dy = -1; dy <= 1; dy++)
-    for (let dx = -1; dx <= 1; dx++) {
-      const x = tx + dx;
-      const y = ty + dy;
-      if ((dx === 0 && dy === 0) || !inBounds(w.grid, x, y) || !isWalkable(w.grid, x, y)) continue;
-      if (regionOf(w.grid, x, y) !== region) continue;
-      const d = (x - at.x) ** 2 + (y - at.y) ** 2;
-      if (d < bestD) {
-        best = { x, y };
-        bestD = d;
-      }
-    }
-  return best;
 }
 
 function toStorage(w: World, then: { type: 'takeAxe' } | { type: 'storeAxe' }): Action {
@@ -71,7 +48,10 @@ export function chopJob(s: Survivor, w: World): Action | null {
     if (claimed.has(tree) || !marked(w, tree)) continue;
     const d = ((tree % w.grid.width) - at.x) ** 2 + (Math.floor(tree / w.grid.width) - at.y) ** 2;
     if (d >= bestD) continue;
-    const stand = standNear(w, s, tree);
+    const stand = standBeside(w, s, {
+      x: tree % w.grid.width,
+      y: Math.floor(tree / w.grid.width),
+    });
     if (!stand) continue;
     best = { tree, stand };
     bestD = d;
@@ -124,9 +104,7 @@ export function finishChop(w: World, tree: number): void {
   w.chopMarks = w.chopMarks.filter((k) => k !== tree);
   if (getTile(w.grid, x, y) !== Tile.Tree) return;
   setTile(w.grid, x, y, Tile.Grass);
-  dropPile(
-    w,
-    { x, y },
-    { ...emptyInventory(), wood: nextInt(w.rng, CHOP_WOOD_MIN, CHOP_WOOD_MAX) },
-  );
+  const wood = nextInt(w.rng, CHOP_WOOD_MIN, CHOP_WOOD_MAX);
+  w.woodLog.chopped += wood;
+  dropPile(w, { x, y }, { ...emptyInventory(), wood });
 }

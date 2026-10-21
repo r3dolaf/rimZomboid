@@ -138,6 +138,12 @@ export function createWorld(seed: number, style: NarratorStyle = 'balanced'): Wo
     blueprints: [],
     furniture: [],
     chopMarks: [],
+    woodLog: {
+      start: containers.reduce((acc, c) => acc + c.items.wood, 0),
+      chopped: 0,
+      recovered: 0,
+      spent: 0,
+    },
   };
   // Los supervivientes conocen su base y los alrededores.
   for (let y = r.y - INITIAL_REVEAL; y < r.y + r.h + INITIAL_REVEAL; y++)

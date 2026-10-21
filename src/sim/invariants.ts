@@ -107,6 +107,19 @@ export function checkInvariants(w: World): string[] {
   }
   for (const i of w.chopMarks)
     if (w.grid.tiles[i] !== Tile.Tree) problems.push(`marca de talar en ${i}: no es un árbol`);
+  // La madera nunca aparece ni desaparece: lo que hay más lo gastado es lo repartido, talado y recuperado.
+  const wood =
+    w.storage.items.wood +
+    w.containers.reduce((acc, c) => acc + c.items.wood, 0) +
+    w.piles.reduce((acc, p) => acc + p.items.wood, 0) +
+    w.survivors.reduce((acc, s) => acc + s.carrying.wood, 0) +
+    (w.stranger?.survivors.reduce((acc, s) => acc + s.carrying.wood, 0) ?? 0) +
+    w.blueprints.reduce((acc, b) => acc + b.wood, 0);
+  const log = w.woodLog;
+  if (wood + log.spent !== log.start + log.chopped + log.recovered)
+    problems.push(
+      `la madera no cuadra: hay ${wood}, gastada ${log.spent}; repartida ${log.start}, talada ${log.chopped}, recuperada ${log.recovered}`,
+    );
   return problems;
 }
 

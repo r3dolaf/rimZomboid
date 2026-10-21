@@ -2,6 +2,7 @@
 import { CARRY_CAPACITY_KG, HUNGRY_LOOT_DAYS, ITEM_WEIGHT_KG } from './balance';
 import { foodDays } from './colony';
 import { chopJob, chopStillWorth, returnAxeJob } from './jobs/chop';
+import { deliverJob, haulJob, haulStillWorth } from './jobs/haul';
 import { isEmpty, ITEM_KINDS, weightOf } from './items';
 import { regionOf } from './path/astar';
 import { pick } from './rng';
@@ -80,6 +81,9 @@ export function findWork(s: Survivor, w: World): Action | null {
   if (!isEmpty(s.carrying)) {
     // Si en el almacén no queda comida y él lleva, lo primero es llevarla para que coman todos.
     if (s.carrying.food > 0 && w.storage.items.food === 0) return goUnload(w);
+    // La madera que lleva, a un plano que la necesite.
+    const deliver = s.work.haul ? deliverJob(s, w) : null;
+    if (deliver) return deliver;
     return (loot ? lootJob(s, w) : null) ?? goUnload(w);
   }
   const back = returnAxeJob(s, w);
@@ -87,6 +91,7 @@ export function findWork(s: Survivor, w: World): Action | null {
   const hungry = foodDays(w) < HUNGRY_LOOT_DAYS;
   const order: (() => Action | null)[] = [
     () => (hungry && loot ? lootJob(s, w) : null),
+    () => (s.work.haul ? haulJob(s, w) : null),
     () => (s.work.chop ? chopJob(s, w) : null),
     () => (loot ? lootJob(s, w) : null),
   ];
@@ -104,6 +109,9 @@ const WORK_ACTIONS: ReadonlySet<string> = new Set([
   'chop',
   'takeAxe',
   'storeAxe',
+  'pickUp',
+  'fetchWood',
+  'deliver',
 ]);
 
 /** ¿Está trabajando (o yendo a trabajar)? */
@@ -117,6 +125,7 @@ export function stillWorthIt(s: Survivor, w: World): boolean {
   const a = s.action;
   const what = a.type === 'moveTo' ? a.then?.type : a.type;
   if (what === 'chop' || what === 'takeAxe' || what === 'storeAxe') return chopStillWorth(s, w);
+  if (what === 'pickUp' || what === 'fetchWood' || what === 'deliver') return haulStillWorth(s, w);
   const id = targetContainerId(s);
   if (id === null || s.action.type === 'search') return true;
   const c = w.containers.find((x) => x.id === id);

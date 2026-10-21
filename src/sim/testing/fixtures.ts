@@ -59,6 +59,7 @@ export function emptyWorld(width: number, height: number): World {
     blueprints: [],
     furniture: [],
     chopMarks: [],
+    woodLog: { start: 0, chopped: 0, recovered: 0, spent: 0 },
   };
 }
 

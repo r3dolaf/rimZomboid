@@ -8,6 +8,7 @@ import {
   UNLOAD_TICKS,
 } from '../balance';
 import { tryStartConsoling } from '../consoling';
+import { startChopActivity } from '../jobs/chop';
 import { logEvent } from '../log';
 import { nextInt } from '../rng';
 import type { Action, Activity, Survivor, World } from '../types';
@@ -57,6 +58,10 @@ function startActivity(s: Survivor, activity: Activity, w: World): Action {
       return { type: 'search', containerId: activity.containerId, ticksLeft: SEARCH_TICKS };
     case 'unload':
       return { type: 'unload', ticksLeft: UNLOAD_TICKS };
+    case 'takeAxe':
+    case 'storeAxe':
+    case 'chop':
+      return startChopActivity(s, w, activity);
     case 'console':
       // Si se ha movido o está ocupado, vuelve a decidir (y a acercarse) en el siguiente tick.
       return tryStartConsoling(w, s, activity.otherId) ? s.action : { type: 'idle', ticksLeft: 0 };

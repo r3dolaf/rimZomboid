@@ -105,7 +105,11 @@ export type Activity =
   | { type: 'crisis' }
   | { type: 'search'; containerId: number }
   | { type: 'unload' }
-  | { type: 'console'; otherId: number };
+  | { type: 'console'; otherId: number }
+  // Talar (H4a): coger o devolver el hacha en el almacén y talar el árbol de la casilla `tree`.
+  | { type: 'takeAxe' }
+  | { type: 'storeAxe' }
+  | { type: 'chop'; tree: number };
 
 export type Action =
   /** `wait`: esperando tras no encontrar camino (no se consulta al cerebro) o tras negarse a trabajar. */
@@ -120,7 +124,8 @@ export type Action =
   | { type: 'fight'; otherId: number; ticksLeft: number }
   /** Consuela a `otherId`, que mientras tanto está en `consoled` (lo lleva el que consuela). */
   | { type: 'console'; otherId: number; ticksLeft: number }
-  | { type: 'consoled'; otherId: number };
+  | { type: 'consoled'; otherId: number }
+  | { type: 'chop'; tree: number; ticksLeft: number };
 
 export interface Survivor {
   id: number;

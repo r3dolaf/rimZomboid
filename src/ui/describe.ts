@@ -29,6 +29,8 @@ export function activityText(s: Survivor, w?: World): string {
       return t.fight(name(a.otherId));
     case 'console':
       return t.console(name(a.otherId));
+    case 'chop':
+      return t.chop;
     case 'consoled':
       return t.consoled(name(a.otherId));
     case 'moveTo':
@@ -38,6 +40,9 @@ export function activityText(s: Survivor, w?: World): string {
       if (a.then?.type === 'sleep') return t.goSleep;
       if (a.then?.type === 'crisis') return t.crisis;
       if (a.then?.type === 'console') return t.goConsole(name(a.then.otherId));
+      if (a.then?.type === 'chop') return t.goChop;
+      if (a.then?.type === 'takeAxe') return t.takeAxe;
+      if (a.then?.type === 'storeAxe') return t.storeAxe;
       return t.wander;
     case 'idle':
       if (a.wait === 'refused' && a.ticksLeft > 0) return t.refused;

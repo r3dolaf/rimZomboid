@@ -237,7 +237,7 @@ export class GameScene extends Phaser.Scene {
       const tx = Math.floor(p.worldX / TILE_PX);
       const ty = Math.floor(p.worldY / TILE_PX);
       const seen = w.seen[ty * w.grid.width + tx] === 1;
-      if (this.tool.active) {
+      if (this.tool.mode === 'loot') {
         const c = seen ? containerAt(w, tx, ty) : null;
         if (c) {
           toggleContainer(w, c.id);

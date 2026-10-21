@@ -6,6 +6,7 @@ import { GameScene, type GameSceneData } from './render/GameScene';
 import { gameTime } from './sim/clock';
 import type { NarratorStyle } from './sim/types';
 import { createWorld } from './sim/world';
+import { mountBuildMenu } from './ui/buildMenu';
 import { mountCards } from './ui/cards';
 import { bindEscape } from './ui/escape';
 import { mountHousePanel } from './ui/housePanel';
@@ -13,10 +14,12 @@ import { mountHud } from './ui/hud';
 import { bindTimeKeys } from './ui/keys';
 import { mountLog } from './ui/logPanel';
 import { mountNotices } from './ui/notices';
+import { createFlag } from './ui/flag';
 import { createSelection } from './ui/selection';
 import { mountSheet } from './ui/sheet';
 import { mountStartScreen } from './ui/startScreen';
 import { createTool } from './ui/tool';
+import { mountWorkPanel } from './ui/workPanel';
 
 const ui = document.getElementById('hud')!;
 
@@ -42,11 +45,14 @@ function start(seed: number, style: NarratorStyle): void {
   const selection = createSelection();
   const houseSelection = createSelection();
   const tool = createTool();
-  const hud = mountHud(ui, { seed, time, tool, narrator: style });
+  const workOpen = createFlag();
+  const hud = mountHud(ui, { seed, time, tool, narrator: style, toggleWork: workOpen.toggle });
   const cards = mountCards(ui, { world, selection });
   const sheet = mountSheet(ui, { world, selection });
   const housePanel = mountHousePanel(ui, { world, selection: houseSelection });
   const log = mountLog(ui, { world });
+  const workPanel = mountWorkPanel(ui, { world, open: workOpen });
+  const buildMenu = mountBuildMenu(ui, { tool });
   const notices = mountNotices(ui, {
     world,
     time,
@@ -60,16 +66,21 @@ function start(seed: number, style: NarratorStyle): void {
   // Solo una ficha abierta a la vez: superviviente o casa.
   selection.onChange((id) => id !== null && houseSelection.set(null));
   houseSelection.onChange((id) => id !== null && selection.set(null));
-  // Esc cierra por capas: primero la herramienta, luego la ficha de la casa y luego la del superviviente.
+  // Esc cierra por capas: primero la herramienta, luego el panel de Trabajos, la ficha de la casa
+  // y la del superviviente.
   bindEscape(window, [
-    () => tool.active && (tool.set(false), true),
+    () => tool.active && (tool.set(null), true),
+    () => workOpen.value && (workOpen.set(false), true),
     () => houseSelection.id !== null && (houseSelection.set(null), true),
     () => selection.id !== null && (selection.set(null), true),
   ]);
-  // El cursor indica que la herramienta Saquear está activa.
-  tool.onChange((on) => document.body.classList.toggle('tool-loot', on));
+  // El cursor indica qué herramienta está activa.
+  tool.onChange((mode) => {
+    for (const m of ['loot', 'chop', 'build'] as const)
+      document.body.classList.toggle(`tool-${m}`, mode === m);
+  });
 
-  bindTimeKeys(window, time, tool);
+  bindTimeKeys(window, time, tool, { toggleWork: workOpen.toggle });
 
   const game = new Phaser.Game({
     type: Phaser.AUTO,
@@ -93,6 +104,8 @@ function start(seed: number, style: NarratorStyle): void {
       housePanel.update();
       log.update();
       notices.update();
+      workPanel.update();
+      buildMenu.update();
     },
   };
   game.scene.add('game', GameScene, true, data);

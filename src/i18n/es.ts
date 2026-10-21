@@ -10,6 +10,7 @@ import type {
   MemoryId,
   NarratorStyle,
   TraitId,
+  WorkType,
 } from '../sim/types';
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -24,6 +25,35 @@ export const es = {
   food: (n: number) => `Comida: ${n}`,
   bandages: (n: number) => `Vendas: ${n}`,
   lootTool: 'Saquear',
+  chopTool: 'Talar',
+  chopToolHint: 'Marcar árboles para talar: clic o arrastrar (T)',
+  buildTool: 'Construir',
+  buildToolHint: 'Construir con madera (B)',
+  workPanel: 'Trabajos',
+  workPanelHint: 'Quién hace qué (J)',
+  wood: (n: number) => `Madera: ${n}`,
+  inHand: (what: string) => `En la mano: ${what}`,
+  /** Trabajos, en el orden del panel. */
+  works: {
+    social: 'Social',
+    build: 'Construir',
+    haul: 'Transportar',
+    chop: 'Talar',
+    loot: 'Saquear',
+  } satisfies Record<WorkType, string>,
+  /** Lo que se puede construir, para el menú. */
+  buildMenu: {
+    bed: 'Cama',
+    table: 'Mesa',
+    campfire: 'Hoguera',
+    woodWall: 'Muro',
+    woodDoor: 'Puerta',
+    board: 'Tapiar',
+    unboard: 'Quitar tablas',
+  } satisfies Record<BuildKind, string>,
+  buildOption: (name: string, wood: number) => `${name} · ${wood}`,
+  buildMenuHint:
+    'Clic en el mapa para colocar; arrastrar para una fila de muros; clic en un plano para cancelarlo',
   storm: '🌧 Tormenta',
   narratorLabel: (name: string) => `Narrador: ${name}`,
   narrators: {
@@ -91,7 +121,6 @@ export const es = {
   close: 'Cerrar',
   logTitle: 'Sucesos',
   carrying: (what: string, kg: string, max: number) => `Lleva: ${what} (${kg} / ${max} kg)`,
-  workLoot: 'Saquear',
   house: (id: number) => `Casa ${id}`,
   houseMarked: 'Marcada para saquear',
   houseUnmarked: 'Sin marcar',

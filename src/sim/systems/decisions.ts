@@ -10,6 +10,7 @@ import { tileOf } from '../world';
 /** Cada superviviente consulta a su cerebro; quien se cae de sueño se desploma donde esté. */
 export function decisionsSystem(w: World): void {
   for (const s of w.survivors) {
+    if (s.action.type === 'downed') continue; // en el suelo no decide nada
     if (s.needs.sleep <= 0 && s.action.type !== 'sleep') {
       s.action = { type: 'sleep', inBed: false };
       s.path = [];

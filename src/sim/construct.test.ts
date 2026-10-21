@@ -1,5 +1,6 @@
 // H4a §4: construir cada cosa, el orden de los trabajos y el escenario completo.
 import { expect, test } from 'vitest';
+import { withoutZombies } from './testing/fixtures';
 import { BUILD, TICKS_PER_DAY, TICKS_PER_HOUR } from './balance';
 import { brains } from './brain';
 import { strangersEvent } from './events/strangers';
@@ -11,7 +12,7 @@ import { step } from './step';
 import { Tile, type BuildKind, type Point, type Survivor, type World } from './types';
 import { createWorld, tileOf } from './world';
 
-const BASE = createWorld(3);
+const BASE = withoutZombies(createWorld(3));
 
 /** Ana sola construyendo, todo visto, sin narrador. */
 function scene(): { w: World; a: Survivor } {

@@ -103,3 +103,10 @@ export function encloseTile(w: World, t: Point): void {
     for (let dx = -1; dx <= 1; dx++)
       if (dx !== 0 || dy !== 0) setTile(w.grid, t.x + dx, t.y + dy, Tile.Wall);
 }
+
+/** Sin zombis ni llegadas: para los tests de lo que no tiene que ver con ellos (antes de H4b). */
+export function withoutZombies(w: World): World {
+  w.zombies = [];
+  w.nextZombieAt = Number.MAX_SAFE_INTEGER;
+  return w;
+}

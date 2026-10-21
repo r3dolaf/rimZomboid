@@ -10,6 +10,7 @@ import { socialSystem } from './systems/social';
 import { strangerSystem } from './systems/strangers';
 import type { World } from './types';
 import { visionSystem } from './vision';
+import { zombieSystem } from './zombies/system';
 import { reservationsSystem } from './work';
 
 /** Avanza la simulación un tick. Orden del spec §3, limitado a los sistemas que ya existen. */
@@ -22,6 +23,7 @@ export function step(w: World): void {
   narratorSystem(w);
   decisionsSystem(w);
   movementSystem(w);
+  zombieSystem(w);
   strangerSystem(w);
   activitiesSystem(w);
   reservationsSystem(w);

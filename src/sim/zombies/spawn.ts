@@ -1,9 +1,11 @@
 // Cuántos zombis hay y dónde aparecen (spec H4b §2.3).
 import {
+  ARRIVAL_GOAL_RADIUS,
   START_HOUR,
   TICKS_PER_DAY,
   TICKS_PER_HOUR,
   ZOMBIE_EDGE_START_DAY,
+  ZOMBIE_EVERY_HOURS,
   ZOMBIE_HEALTH,
   ZOMBIE_HOUSE_RADIUS,
   ZOMBIE_LEVEL_MULT,
@@ -11,6 +13,7 @@ import {
   ZOMBIE_SAFE_RADIUS,
   ZOMBIE_START,
 } from '../balance';
+import { isNight } from '../clock';
 import { isZombieWalkable } from '../map/grid';
 import { nextFloat, nextInt } from '../rng';
 import type { NarratorStyle, Point, World, Zombie, ZombieLevel } from '../types';
@@ -88,5 +91,42 @@ export function placeStartZombies(w: World): void {
       if (spawnable(w, x, y)) spot = { x, y };
     }
     if (spot) w.zombies.push(newZombie(w, spot));
+  }
+}
+
+/** Ticks hasta la siguiente llegada por los bordes: según narrador y opción, la mitad de noche. */
+export function arrivalInterval(w: World): number {
+  const every =
+    (ZOMBIE_EVERY_HOURS[w.narrator.style] * TICKS_PER_HOUR) / ZOMBIE_LEVEL_MULT[w.zombieLevel];
+  return isNight(w.tick) ? every / 2 : every;
+}
+
+/**
+ * Llega un zombi por un borde cuando toca (sin pasar del máximo) y va hacia el centro del mapa,
+ * más o menos, para meterse en el pueblo.
+ */
+export function arrivalsSystem(w: World): void {
+  if (w.tick < w.nextZombieAt) return;
+  w.nextZombieAt = w.tick + arrivalInterval(w);
+  if (w.zombies.length >= zombieMax(w.narrator.style, w.zombieLevel)) return;
+  const rng = w.zombieRng;
+  const { width, height } = w.grid;
+  for (let tries = 0; tries < 50; tries++) {
+    const side = nextInt(rng, 0, 3);
+    const along = nextInt(rng, 0, (side < 2 ? width : height) - 1);
+    const x = side === 0 ? along : side === 1 ? along : side === 2 ? 0 : width - 1;
+    const y = side === 0 ? 0 : side === 1 ? height - 1 : along;
+    if (!isZombieWalkable(w.grid, x, y)) continue;
+    const z = newZombie(w, { x, y });
+    for (let k = 0; k < 20; k++) {
+      const gx = Math.floor(width / 2) + nextInt(rng, -ARRIVAL_GOAL_RADIUS, ARRIVAL_GOAL_RADIUS);
+      const gy = Math.floor(height / 2) + nextInt(rng, -ARRIVAL_GOAL_RADIUS, ARRIVAL_GOAL_RADIUS);
+      if (!isZombieWalkable(w.grid, gx, gy)) continue;
+      z.state = 'alert';
+      z.goal = { x: gx, y: gy };
+      break;
+    }
+    w.zombies.push(z);
+    return;
   }
 }

@@ -46,7 +46,7 @@ Usan su propio generador de azar, `World.zombieRng`, para que añadir zombis no 
 El cerebro de cada zombi decide cada `ZOMBIE_THINK_TICKS`, con los zombis repartidos por id.
 
 - **Vagar:** paseos cortos al azar (3–8 casillas), con pausas.
-  - **Agruparse:** si tiene otros zombis a 8 casillas o menos, la mitad de las veces el paseo va hacia el centro de ese grupo.
+  - **Agruparse:** si tiene otros zombis a 10 casillas o menos, 3 de cada 4 paseos van hacia el centro de ese grupo (con 8 casillas y la mitad de las veces, los grupos se dispersaban).
 - **Alertado:** va hacia `goal`, el punto de un ruido, una hoguera o adonde va otro zombi que persigue. Al llegar, vuelve a vagar.
   - **Contagio:** un zombi que vaga o está alertado y ve a otro que persigue queda alertado hacia el punto donde ese otro vio a su presa por última vez.
 - **Perseguir:** ve a un colono (no derribado) y va a por el más cercano.

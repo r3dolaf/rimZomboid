@@ -1,5 +1,6 @@
 // Comportamiento de los supervivientes (H2): comer, dormir, crisis.
 import { expect, test } from 'vitest';
+import { withoutZombies } from './testing/fixtures';
 import {
   CRISIS_TICKS,
   EAT_TICKS,
@@ -187,7 +188,7 @@ test('en partidas reales las crisis llegan a terminar con "Se desahogó"', () =>
   // Sin saquear, la comida se acaba hacia el día 9 y llegan las crisis.
   let vented = 0;
   for (const seed of [3, 6, 9]) {
-    const w = createWorld(seed);
+    const w = withoutZombies(createWorld(seed));
     const had = new Set<number>();
     for (let i = 0; i < 20 * TICKS_PER_DAY; i++) {
       step(w);
@@ -204,7 +205,7 @@ test('en partidas reales las crisis llegan a terminar con "Se desahogó"', () =>
 
 test('escenario: a las 23:00 del día 1 los tres duermen en su cama', () => {
   for (let seed = 1; seed <= 5; seed++) {
-    const w = createWorld(seed);
+    const w = withoutZombies(createWorld(seed));
     runUntil(w, () => false, at(23));
     for (const s of w.survivors)
       expect(s.action, `semilla ${seed}: ${s.name}`).toEqual({ type: 'sleep', inBed: true });

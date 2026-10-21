@@ -25,10 +25,11 @@ export function consolingTargetId(s: Survivor): number | null {
   return null;
 }
 
-/** En crisis o al límite, despierto, sin pelear y sin un "Consolado" vigente. */
+/** En crisis o al límite, despierto, sin pelear, no en el suelo y sin un "Consolado" vigente. */
 export function needsConsoling(t: Survivor, w: World): boolean {
   const a = t.action.type;
   if (a === 'sleep' || a === 'fight' || a === 'console') return false;
+  if (a === 'downed' || a === 'melee') return false;
   if (!inCrisis(t) && t.needs.mood >= MOOD_EDGE) return false;
   return !t.memories.some(
     (m) => (m.id === 'consoled' || m.id === 'consoledByPartner') && m.expiresAt > w.tick,

@@ -70,10 +70,12 @@ function stepToward(w: World, z: Zombie, goal: Point): Point[] {
   for (let dy = -1; dy <= 1; dy++)
     for (let dx = -1; dx <= 1; dx++) {
       const p = { x: at.x + dx, y: at.y + dy };
-      // Sin diagonales por lo que hay que romper (como en los caminos).
+      // En diagonal, solo por lo libre y sin cortar esquinas (como en los caminos).
       const cost = zombieStepCost(w, p.x, p.y);
-      if ((dx || dy) && cost < Infinity && (cost === 1 || dx === 0 || dy === 0))
-        if (d(p) < d(best ?? at)) best = p;
+      const diagonal = dx !== 0 && dy !== 0;
+      const free = (x: number, y: number) => zombieStepCost(w, x, y) === 1;
+      if (diagonal && !(cost === 1 && free(at.x + dx, at.y) && free(at.x, at.y + dy))) continue;
+      if ((dx || dy) && cost < Infinity && d(p) < d(best ?? at)) best = p;
     }
   return best ? [best] : [];
 }

@@ -1,6 +1,6 @@
 // H4b §7: posturas (Pelear, Huir, Decidir) y la capa de Peligro del cerebro.
 import { expect, test } from 'vitest';
-import { START_HOUR, TICKS_PER_HOUR } from '../balance';
+import { FLED_LOG_TICKS, START_HOUR, TICKS_PER_HOUR } from '../balance';
 import { brains } from '../brain';
 import { checkInvariants } from '../invariants';
 import { setTile } from '../map/grid';
@@ -167,7 +167,7 @@ test('sin zombis a la vista deja de pelear', () => {
   expect(decide(s, w)).toEqual({ type: 'idle', ticksLeft: 0 });
 });
 
-test('durmiendo: se despierta con un zombi a 4 casillas o si le golpean; y no vuelve a dormirse con él cerca', () => {
+test('durmiendo: se despierta si ve un zombi a 4 casillas o si le golpean; y no vuelve a dormirse con él cerca', () => {
   const w = world();
   const s = w.survivors[0]!;
   s.pos = { x: 1.5, y: 1.5 };
@@ -175,10 +175,11 @@ test('durmiendo: se despierta con un zombi a 4 casillas o si le golpean; y no vu
   s.action = { type: 'sleep', inBed: true };
   const z = zombieAt(w, 9, 1);
   expect(decide(s, w)).toBeNull(); // lejos: sigue durmiendo
-  // Detrás de un muro, a 3 casillas: lo oye y se despierta, pero no lo ve.
-  for (let y = 0; y < 6; y++) setTile(w.grid, 3, y, Tile.Wall);
+  // A 3 casillas, y lo ve: se despierta.
   z.pos = { x: 4.5, y: 1.5 };
-  expect(decide(s, w)).toEqual({ type: 'idle', ticksLeft: 0 });
+  const woke = decide(s, w);
+  expect(woke).not.toBeNull();
+  expect(woke?.type).not.toBe('sleep');
   s.action = { type: 'idle', ticksLeft: 0 };
   const next = decide(s, w);
   expect(next?.type === 'moveTo' && next.then?.type === 'sleep').toBe(false);
@@ -201,4 +202,88 @@ test('el peligro corta un consuelo sin dejar a nadie colgado', () => {
   expect(s.action.type).toBe('melee');
   expect(b.action.type).not.toBe('consoled');
   expect(checkInvariants(w)).toEqual([]);
+});
+
+test('Huir: sigue corriendo a la base aunque deje de verlo un momento (y queda en el registro una vez)', () => {
+  const w = world();
+  const s = w.survivors[0]!;
+  s.stance = 'flee';
+  w.piles.push({ id: 9, pos: { x: 20, y: 20 }, items: { ...s.carrying, wood: 2 } });
+  w.woodLog.start = 2;
+  const z = zombieAt(w, 16, 12);
+  s.action = decide(s, w)!;
+  expect(flees(s.action, w)).toBe(true);
+  z.pos = { x: 28.5, y: 28.5 }; // ya no lo ve: no vuelve al trabajo a medio camino
+  expect(decide(s, w)).toBeNull();
+  z.pos = { x: 16.5, y: 12.5 }; // lo vuelve a ver: sigue con la misma huida
+  expect(decide(s, w)).toBeNull();
+  expect(w.log.filter((e) => e.kind === 'fled')).toHaveLength(1);
+});
+
+test('dormir: un zombi detrás de un muro no le despierta ni le impide acostarse; uno que ve, sí', () => {
+  const w = world();
+  w.tick = 14 * TICKS_PER_HOUR; // 22:00
+  const s = w.survivors[0]!;
+  s.pos = { x: 1.5, y: 1.5 };
+  s.needs.sleep = 30;
+  for (let y = 0; y < 6; y++) setTile(w.grid, 3, y, Tile.Wall);
+  const z = zombieAt(w, 4, 1); // a 3 casillas, al otro lado del muro
+  s.action = { type: 'sleep', inBed: true };
+  expect(decide(s, w)).toBeNull();
+  s.action = { type: 'idle', ticksLeft: 0 };
+  const next = decide(s, w);
+  expect(next?.type === 'moveTo' && next.then?.type === 'sleep').toBe(true);
+  setTile(w.grid, 3, 1, Tile.Floor); // ahora lo ve
+  z.pos = { x: 4.5, y: 1.5 };
+  s.action = { type: 'sleep', inBed: true };
+  expect(decide(s, w)?.type).not.toBe('sleep');
+  expect(decide(s, w)).not.toBeNull();
+});
+
+test('rendido de sueño (desplomado), ver un zombi no le despierta; un golpe, sí', () => {
+  const w = world();
+  const s = w.survivors[0]!;
+  s.needs.sleep = 1;
+  s.action = { type: 'sleep', inBed: false };
+  const z = zombieAt(w, 14, 12);
+  expect(decide(s, w)).toBeNull();
+  for (let i = 0; i < 20 && s.action.type === 'sleep'; i++) zombieAttack(w, z, s);
+  expect(s.action.type).not.toBe('sleep');
+});
+
+test('en la base, viendo un zombi por la ventana (sin tenerlo al lado), come y duerme', () => {
+  const w = world();
+  const s = w.survivors[0]!;
+  s.stance = 'flee';
+  s.pos = { x: 3.5, y: 3.5 };
+  w.storage.items.food = 3;
+  zombieAt(w, 9, 3);
+  s.needs.hunger = 10;
+  const eat = decide(s, w);
+  expect(eat?.type === 'moveTo' && eat.then?.type === 'eat').toBe(true);
+  s.action = { type: 'eat', ticksLeft: 5 };
+  expect(decide(s, w)).toBeNull(); // y no se lo corta
+  s.needs.hunger = 100;
+  s.needs.sleep = 5;
+  s.action = { type: 'idle', ticksLeft: 0 };
+  const sleep = decide(s, w);
+  expect(sleep?.type === 'moveTo' && sleep.then?.type === 'sleep').toBe(true);
+});
+
+test('"huye a la base" va al registro como mucho una vez por hora y colono (aunque vaya y vuelva)', () => {
+  const w = world();
+  const s = w.survivors[0]!;
+  s.stance = 'flee';
+  zombieAt(w, 16, 12);
+  const fled = () => w.log.filter((e) => e.kind === 'fled').length;
+  expect(flees(decide(s, w), w)).toBe(true);
+  s.action = { type: 'idle', ticksLeft: 0 }; // volvió a salir de la base
+  w.tick += TICKS_PER_HOUR - 1;
+  expect(flees(decide(s, w), w)).toBe(true);
+  expect(fled()).toBe(1);
+  s.action = { type: 'idle', ticksLeft: 0 };
+  w.tick += 1;
+  expect(flees(decide(s, w), w)).toBe(true);
+  expect(fled()).toBe(2);
+  expect(FLED_LOG_TICKS).toBe(TICKS_PER_HOUR);
 });

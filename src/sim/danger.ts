@@ -4,11 +4,13 @@ import {
   DANGER_RANGE,
   DECIDE_MAX_THREATS,
   DECIDE_MIN_HEALTH,
+  FLED_LOG_TICKS,
   FLEE_HEALTH,
   SHELTER_WAIT_TICKS,
   SURVIVOR_REACH,
   UNARMED_MAX_THREATS,
   UNARMED_MIN_HEALTH,
+  WAKE_MIN_SLEEP,
   WAKE_RANGE,
 } from './balance';
 import { baseFloor } from './base';
@@ -41,9 +43,12 @@ export function zombiesInSight(w: World): Zombie[] {
   );
 }
 
-/** ¿Hay un zombi a `range` casillas o menos (lo oiga o no lo vea)? */
-export function zombieNear(w: World, s: Survivor, range: number): boolean {
-  return w.zombies.some((z) => d2(z.pos, s.pos) <= range * range);
+/** ¿Ve un zombi a `range` casillas o menos? (Uno detrás de un muro no cuenta.) */
+export function zombieInSight(w: World, s: Survivor, range: number): boolean {
+  const at = tileOf(s.pos);
+  return w.zombies.some(
+    (z) => d2(z.pos, s.pos) <= range * range && lineOfSight(w.grid, at, tileOf(z.pos)),
+  );
 }
 
 /** ¿Pelea o huye? (spec H4b §7) */
@@ -81,17 +86,29 @@ function shelter(w: World, threats: Zombie[]): Point | null {
   return best;
 }
 
+/** ¿Va corriendo a la base? */
+const fleeing = (w: World, a: Action) =>
+  a.type === 'moveTo' && a.run === true && !a.then && contains(w.base.rect, a.target);
+
 /**
  * La capa de Peligro: `undefined` si no hay peligro (decide el resto del cerebro); si no, lo que
  * hace (o `null` para seguir con lo que hacía).
  */
-export function dangerDecision(s: Survivor, w: World): Action | null | undefined {
+export function dangerDecision(
+  s: Survivor,
+  w: World,
+  rest: () => Action | null = () => null,
+): Action | null | undefined {
   const a = s.action;
   if (a.type === 'downed') return undefined;
-  if (a.type === 'sleep' && !zombieNear(w, s, WAKE_RANGE)) return undefined;
+  // Durmiendo, solo le despierta un zombi que ve muy cerca (y rendido de sueño, ni eso).
+  if (a.type === 'sleep' && (s.needs.sleep < WAKE_MIN_SLEEP || !zombieInSight(w, s, WAKE_RANGE)))
+    return undefined;
   const threats = threatsOf(w, s);
   if (threats.length === 0) {
-    // Se despierta (lo ha oído) o deja de pelear cuando no ve a ninguno.
+    // Huyendo, sigue hasta la base aunque deje de verlo un momento (si no, iba y volvía).
+    if (fleeing(w, a)) return null;
+    // Deja de pelear (o de dormir) cuando no ve a ninguno.
     if (a.type === 'sleep' || a.type === 'melee') return { type: 'idle', ticksLeft: 0 };
     return undefined;
   }
@@ -106,13 +123,24 @@ export function dangerDecision(s: Survivor, w: World): Action | null | undefined
     target && regionOf(w.grid, here.x, here.y) === regionOf(w.grid, target.x, target.y);
   if (inBase || !reachable) {
     if (near) return melee(s, near);
+    // En la base, sin ninguno al lado, come y duerme (si no, caían rendidos).
+    if (inBase) {
+      const goingTo = a.type === 'moveTo' ? a.then?.type : undefined;
+      if (a.type === 'eat' || goingTo === 'eat' || goingTo === 'sleep') return null;
+      const r = rest();
+      if (r) return r;
+    }
     // En la base: se queda dentro, lejos de la ventana, sin trabajar.
     if (a.type === 'moveTo' && !a.then && contains(w.base.rect, a.target)) return null;
     if (a.type === 'idle' && a.ticksLeft > 0) return null;
     if (inBase && target) return { type: 'moveTo', target };
     return { type: 'idle', ticksLeft: SHELTER_WAIT_TICKS };
   }
-  if (a.type === 'moveTo' && a.run && !a.then && contains(w.base.rect, a.target)) return null;
-  logEvent(w, { kind: 'fled', survivorId: s.id });
+  if (fleeing(w, a)) return null;
+  // Si va y vuelve (un zombi rondando la base), no llena el registro ni los avisos.
+  const lately = w.log.some(
+    (e) => e.kind === 'fled' && e.survivorId === s.id && w.tick - e.tick < FLED_LOG_TICKS,
+  );
+  if (!lately) logEvent(w, { kind: 'fled', survivorId: s.id });
   return { type: 'moveTo', target: target!, run: true };
 }

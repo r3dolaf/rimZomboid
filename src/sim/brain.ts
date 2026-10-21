@@ -13,7 +13,7 @@ import {
 import { baseFloor } from './base';
 import { isNight } from './clock';
 import { findConsoleTarget, inCrisis as crisisNow, stillConsoling } from './consoling';
-import { dangerDecision, zombieNear } from './danger';
+import { dangerDecision, zombieInSight } from './danger';
 import { logEvent } from './log';
 import { nextFloat, pick } from './rng';
 import { equipFromPack } from './jobs/weapons';
@@ -33,7 +33,7 @@ const AiBrain: Brain = {
   decide(s, w) {
     equipFromPack(s, w.chopMarks.length > 0);
     // Peligro (spec H4b §7): lo primero de todo.
-    const danger = dangerDecision(s, w);
+    const danger = dangerDecision(s, w, () => rest(s, w));
     if (danger !== undefined) return danger;
     const a = s.action;
     const goingTo = a.type === 'moveTo' ? a.then?.type : undefined;
@@ -53,11 +53,8 @@ const AiBrain: Brain = {
       return null;
     }
 
-    if (s.needs.hunger < EAT_BELOW) {
-      const eat = eatSomething(s, w);
-      if (eat) return eat;
-    }
-    if (wantsToSleep(s, w)) return goSleep(s, w);
+    const r = rest(s, w);
+    if (r) return r;
     // Tras desahogarse (o ser consolado) el ánimo tarda en subir: sin esta guarda, encadenaría
     // otra crisis al momento.
     const calmed = s.memories.some(
@@ -97,10 +94,19 @@ const AiBrain: Brain = {
   },
 };
 
+/** Comer si tiene hambre (y hay qué) o, si no, dormir si tiene sueño. */
+function rest(s: Survivor, w: World): Action | null {
+  if (s.needs.hunger < EAT_BELOW) {
+    const eat = eatSomething(s, w);
+    if (eat) return eat;
+  }
+  return wantsToSleep(s, w) ? goSleep(s, w) : null;
+}
+
 function wantsToSleep(s: Survivor, w: World): boolean {
   const limit = isNight(w.tick) ? SLEEP_AT_NIGHT_BELOW : SLEEP_ANYTIME_BELOW;
-  // Con un zombi tan cerca que le despertaría, no se acuesta.
-  return s.needs.sleep < limit && !zombieNear(w, s, WAKE_RANGE);
+  // Viendo un zombi tan cerca que le despertaría, no se acuesta.
+  return s.needs.sleep < limit && !zombieInSight(w, s, WAKE_RANGE);
 }
 
 /** Come de lo que lleva encima si puede; si no, va al almacén si queda comida. */

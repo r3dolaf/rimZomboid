@@ -289,3 +289,22 @@ test('los que llegan por un borde van hacia una casa (no hacia la base, que est�
     expect(dist(z.goal!, { x: 6, y: 9 })).toBeLessThanOrEqual(ARRIVAL_GOAL_RADIUS * Math.SQRT2);
   }
 });
+
+test('sin camino, el paso en línea recta no corta esquinas: no se mete en un muro', () => {
+  const w = world(14, 14);
+  setTile(w.grid, 6, 5, Tile.Wall);
+  setTile(w.grid, 5, 4, Tile.Wall);
+  // La meta, rodeada de árboles: no hay camino y da un paso hacia ella (en diagonal, no).
+  for (let y = 0; y <= 3; y++) for (let x = 8; x <= 12; x++) setTile(w.grid, x, y, Tile.Tree);
+  setTile(w.grid, 10, 1, Tile.Grass);
+  const z = zombieAt(w, 5, 5);
+  z.pos = { x: 5.9, y: 5.4 };
+  z.state = 'alert';
+  z.goal = { x: 10, y: 1 };
+  z.lastSeenAt = w.tick;
+  for (let i = 0; i < 60; i++) {
+    run(w, 1);
+    const t = tileOf(z.pos);
+    expect(isZombieWalkable(w.grid, t.x, t.y)).toBe(true);
+  }
+});

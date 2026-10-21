@@ -210,3 +210,25 @@ test('orden de poner un plano de reparar', () => {
   ordersSystem(w);
   expect(w.blueprints).toMatchObject([{ kind: 'fixDoor', pos: { x: 3, y: 3 } }]);
 });
+
+test('tapiar una ventana dañada, o destapiarla, la deja entera (no arrastra el daño)', () => {
+  const w = world();
+  const s = w.survivors[0]!;
+  setTile(w.grid, 3, 3, Tile.Window);
+  damageTile(w, 3, 3, RESISTANCE[Tile.Window]! - 5);
+  setTile(w.grid, 5, 3, Tile.BoardedWindow);
+  damageTile(w, 5, 3, 60);
+  for (const [kind, x] of [
+    ['board', 3],
+    ['unboard', 5],
+  ] as const) {
+    const b = readyPlan(w, kind, { x, y: 3 });
+    s.pos = { x: x + 0.5, y: 4.5 };
+    expect(workOnBlueprint(w, s, b.id)).toBe(true);
+  }
+  expect(getTile(w.grid, 3, 3)).toBe(Tile.BoardedWindow);
+  expect(resistanceOf(w, 3, 3)).toBe(RESISTANCE[Tile.BoardedWindow]);
+  expect(getTile(w.grid, 5, 3)).toBe(Tile.Window);
+  expect(resistanceOf(w, 5, 3)).toBe(RESISTANCE[Tile.Window]);
+  expect(checkInvariants(w)).toEqual([]);
+});

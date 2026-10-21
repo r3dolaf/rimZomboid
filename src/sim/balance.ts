@@ -332,6 +332,7 @@ export const WANDER_PAUSE_MAX = 80;
 export const WANDER_PATH_BUDGET = 1500;
 export const ARRIVAL_GOAL_RADIUS = 6; // los que llegan van hacia una casa al azar, a esta distancia o menos
 export const DOWNED_TICKS = 4 * TICKS_PER_HOUR;
+export const DOWNED_MAX_TICKS = 8 * TICKS_PER_HOUR; // con zombis a la vista espera, pero no más de esto
 /** Salud que se recupera por hora (spec H4b §5). */
 export const HEALTH_PER_HOUR = { awake: 1, floor: 4, bed: 6 } as const;
 export const GET_UP_HEALTH = 15; // al levantarse tras un derribo
@@ -355,6 +356,8 @@ export const DECIDE_MAX_THREATS = 2;
 export const UNARMED_MIN_HEALTH = 70;
 export const UNARMED_MAX_THREATS = 1;
 export const ALLY_RANGE = 5; // compañeros peleando a esta distancia o menos
-export const WAKE_RANGE = 4; // un zombi tan cerca despierta a quien duerme
+export const WAKE_RANGE = 4; // un zombi que ve tan cerca despierta a quien duerme
+export const WAKE_MIN_SLEEP = 5; // rendido de sueño (desplomado), solo le despierta un golpe
+export const FLED_LOG_TICKS = TICKS_PER_HOUR; // "huye a la base", como mucho una vez por hora y colono
 export const SHELTER_WAIT_TICKS = 10; // en la base, sin sitio adonde ir, espera esto y vuelve a mirar
 export const SIGHTED_NEAR_BASE = 15; // aviso del primer zombi visto a esta distancia de la base

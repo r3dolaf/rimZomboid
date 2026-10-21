@@ -116,9 +116,11 @@ export function finishBuild(w: World, b: Blueprint, builder: Survivor): void {
       break;
     case 'board':
       setTile(w.grid, x, y, Tile.BoardedWindow);
+      repairTile(w, x, y); // tablas nuevas: no arrastran el daño de la ventana
       break;
     case 'unboard':
       setTile(w.grid, x, y, Tile.Window);
+      repairTile(w, x, y);
       w.woodLog.recovered += UNBOARD_WOOD;
       dropPile(w, tileOf(builder.pos), { ...emptyInventory(), wood: UNBOARD_WOOD });
       break;

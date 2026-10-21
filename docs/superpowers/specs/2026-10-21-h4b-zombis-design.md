@@ -73,7 +73,7 @@ El cerebro de cada zombi decide cada `ZOMBIE_THINK_TICKS`, con los zombis repart
 
 - Usan el mismo A\*, pero lo rompible cuenta como "se pasa, con un coste" según su resistencia: los ticks que tardaría un zombi en romperlo, pasados a casillas de andar.
 - Así solo rompe una puerta si es el camino más corto, y un muro de ladrillo casi nunca.
-- La búsqueda tiene un límite de casillas exploradas (`ZOMBIE_PATH_BUDGET`). Si se pasa, da un paso en línea recta hacia el destino.
+- La búsqueda tiene un límite de casillas exploradas (`ZOMBIE_PATH_BUDGET`). Si se pasa, da un paso en línea recta hacia el destino (en diagonal, solo por lo libre y sin cortar esquinas, como los caminos).
 
 **Romper:** si la siguiente casilla del camino es rompible, se queda al lado golpeándola, un golpe cada `ZOMBIE_HIT_TICKS` que quita `ZOMBIE_BREAK_DAMAGE`, hasta romperla (§4).
 
@@ -148,6 +148,7 @@ Con la opción **Zombis** en _normal_:
 - Son planos normales: Transportar lleva la madera y Construir trabaja desde una casilla de al lado.
 - **Los planos de reparar** (`repair`, `fixDoor`, y `board` y `woodWall` puestos sobre algo roto) **van antes** que los demás, al acarrear y al construir.
 - Si mientras tanto lo dañado se rompe, el plano `repair` se cancela y la madera queda en un montón.
+- Tapiar o destapiar deja la casilla entera: las tablas nuevas no arrastran el daño de la ventana.
 - **Esperar a que no haya nadie encima** vale ahora también para los zombis, y para todo plano que deja la casilla sin poder pisarse: muro, puerta (los zombis no pueden estar en una puerta), `fixDoor` y `board` sobre una ventana rota.
 
 ## 5. Salud y derribos
@@ -163,7 +164,8 @@ Con la opción **Zombis** en _normal_:
   - acción `{ type: 'downed', until }` durante 4 h, sin hacer nada y sin recuperarse;
   - el hambre y el sueño siguen bajando;
   - los zombis no lo ven, así que dejan de perseguirlo;
-  - a las 4 h se levanta, pero solo si no hay zombis a 8 casillas o menos: si los hay, sigue en el suelo hasta que se vayan (si no, caía una y otra vez entre ellos);
+  - a las 4 h se levanta, pero solo si no ve zombis a 8 casillas o menos (los de detrás de un muro no cuentan): si los ve, sigue en el suelo hasta que se vayan (si no, caía una y otra vez entre ellos), pero nunca más de 8 h en total (un zombi encerrado con él no le dejaba levantarse nunca);
+  - en el suelo nadie le consuela ni le habla, y tampoco a quien pelea con un zombi;
   - al levantarse tiene 15 de Salud y el recuerdo "Le derribaron" (−15, 24 h);
   - se registra al caer, con un aviso rojo que pausa.
 - **Lo que interrumpe** (como el peligro, §7): cualquier acción, incluidas peleas y consuelos. El otro queda libre, igual que ahora cuando alguien se desploma.
@@ -224,8 +226,9 @@ Con la opción **Zombis** en _normal_:
 
 - **Pelear:** si ya pelea con un zombi que sigue existiendo, sigue. Si no, va a por la amenaza más cercana.
 - **Huir:**
-  - fuera de la base, corre a la casilla de suelo de la base más lejana de las amenazas;
-  - dentro de la base, se queda y pasea dentro, sin trabajar;
+  - fuera de la base, corre a la casilla de suelo de la base más lejana de las amenazas, y sigue hasta llegar aunque deje de verlas un momento (si no, iba y volvía en el límite de la vista);
+  - "X huye a la base" va al registro y a los avisos como mucho una vez por hora y colono;
+  - dentro de la base, se queda y pasea dentro, sin trabajar; pero si no tiene un zombi al lado, come y duerme cuando lo necesita (si no, caían rendidos);
   - si no hay camino a la base, se comporta como acorralado.
 - **Decidir:** pelea si tiene Salud de 50 o más, lleva arma y las amenazas son como mucho 2. Si no, huye.
   - Cada compañero a 5 casillas o menos que esté peleando cuenta como una amenaza menos.
@@ -235,7 +238,8 @@ Con la opción **Zombis** en _normal_:
   - con Salud por debajo de 20 huye siempre, aunque esté en Pelear;
   - **acorralado:** si un zombi está a 1,5 casillas o menos y no puede huir (ya está en la base o no hay camino), pelea con él.
 - **Durmiendo:**
-  - se despierta si le golpean, o si hay un zombi a 4 casillas o menos (lo oye, aunque no lo vea);
+  - se despierta si le golpean, o si ve un zombi a 4 casillas o menos; y con uno así no se acuesta (los de detrás de un muro no cuentan: le despertaban una y otra vez y caía rendido);
+  - rendido de sueño (sueño por debajo de 5, como al desplomarse), solo le despierta un golpe;
   - mientras duerme no ve.
 - **Derribado:** no decide nada.
 - **Correr:**

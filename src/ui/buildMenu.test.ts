@@ -22,6 +22,7 @@ test('el menú Construir solo se ve con la herramienta y elige qué construir', 
     'Puerta · 4',
     'Tapiar · 3',
     'Quitar tablas · 0',
+    'Reparar · 1–3',
   ]);
   (root.querySelector('[data-testid="build-bed"]') as HTMLButtonElement).click();
   expect(tool.buildKind).toBe('bed');

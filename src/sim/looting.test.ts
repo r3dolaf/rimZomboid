@@ -1,5 +1,6 @@
 // Saqueo (H3): buscar contenedores, registrarlos, cargar y descargar en el almacén.
 import { expect, test } from 'vitest';
+import { withoutZombies } from './testing/fixtures';
 import { REFUSE_CHANCE, TICKS_PER_DAY } from './balance';
 import { brains } from './brain';
 import { foodDays } from './colony';
@@ -42,7 +43,10 @@ test('marcar la casa más cercana: la vacían y sus objetos acaban en el almacé
   expect(w.log.some((e) => e.kind === 'found')).toBe(true);
   for (const s of w.survivors) expect(isEmpty(s.carrying)).toBe(true);
   expect(w.storage.items.bandage).toBe(bandages);
-  expect(w.storage.items.knife + w.storage.items.bat).toBe(weapons);
+  // Las armas, en el almacén o ya en la mano de alguien (spec H4b §6.2), más el cuchillo con que
+  // empieza cada uno.
+  const inHand = w.survivors.filter((s) => s.equipped === 'knife' || s.equipped === 'bat').length;
+  expect(w.storage.items.knife + w.storage.items.bat + inHand).toBe(weapons + w.survivors.length);
   expect(checkInvariants(w)).toEqual([]);
 });
 
@@ -59,7 +63,7 @@ test('con dos casas marcadas nunca van dos al mismo contenedor', () => {
 });
 
 test('una casa marcada sin ver se descubre al llegar', () => {
-  const w = createWorld(4);
+  const w = withoutZombies(createWorld(4)); // la casa más lejana es la de más zombis
   w.survivors.forEach(happy);
   const far = byDistance(w).at(-1)!;
   const c = w.containers.find((x) => x.houseId === far.id)!;

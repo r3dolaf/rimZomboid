@@ -26,6 +26,10 @@ export const Tile = {
   Tree: 6,
   WoodWall: 7,
   BoardedWindow: 8,
+  // Lo que dejan los zombis al romper (H4b): se pisa y no tapa la vista.
+  BrokenWindow: 9,
+  BrokenDoor: 10,
+  Rubble: 11,
 } as const;
 export type Tile = (typeof Tile)[keyof typeof Tile];
 
@@ -89,7 +93,9 @@ export type MemoryId =
   | 'storm'
   // Muebles (H4a)
   | 'ateAtTable'
-  | 'byTheFire';
+  | 'byTheFire'
+  // Zombis (H4b)
+  | 'downed';
 
 /** Recuerdo con efecto en el ánimo hasta el tick `expiresAt`; `otherId`, con quién fue. */
 export interface Memory {
@@ -118,12 +124,15 @@ export type Activity =
   | { type: 'fetchWood'; blueprintId: number }
   | { type: 'deliver'; blueprintId: number }
   // Construir (H4a): trabajar en un plano con toda su madera.
-  | { type: 'build'; blueprintId: number };
+  | { type: 'build'; blueprintId: number }
+  // Armas (H4b): en el almacén, cambiar lo que lleva en la mano por lo mejor que haya.
+  | { type: 'swapWeapon' };
 
 export type Action =
   /** `wait`: esperando tras no encontrar camino (no se consulta al cerebro) o tras negarse a trabajar. */
   | { type: 'idle'; ticksLeft: number; wait?: 'noPath' | 'refused' }
-  | { type: 'moveTo'; target: Point; then?: Activity }
+  /** `run`: va corriendo (huye o va a por un zombi): más rápido, pero hace ruido. */
+  | { type: 'moveTo'; target: Point; then?: Activity; run?: boolean }
   /** `fromPack`: se come una lata de las que lleva encima, sin ir al almacén. */
   | { type: 'eat'; ticksLeft: number; fromPack?: boolean }
   | { type: 'sleep'; inBed: boolean }
@@ -136,7 +145,10 @@ export type Action =
   | { type: 'consoled'; otherId: number }
   | { type: 'chop'; tree: number; ticksLeft: number }
   /** El avance se guarda en el plano (si se deja a medias, no se pierde). */
-  | { type: 'build'; blueprintId: number };
+  | { type: 'build'; blueprintId: number }
+  // Zombis (H4b): en el suelo hasta `until`; peleando con un zombi.
+  | { type: 'downed'; until: number }
+  | { type: 'melee'; zombieId: number; cooldown: number };
 
 export interface Survivor {
   id: number;
@@ -156,8 +168,14 @@ export interface Survivor {
   carrying: Inventory;
   /** Trabajos permitidos (casillas del panel de Trabajos). */
   work: Record<WorkType, boolean>;
-  /** Lo que lleva en la mano (no cuenta como carga). */
-  equipped: 'axe' | null;
+  /** Lo que lleva en la mano (no cuenta como carga): herramienta y arma. */
+  equipped: Weapon | null;
+  /** No cambia ni devuelve lo que lleva en la mano. */
+  weaponLocked: boolean;
+  /** Salud de 0 (derribado) a 100. */
+  health: number;
+  /** Qué hace cuando ve zombis. */
+  stance: Stance;
   /** Opinión sobre cada uno de los demás, por id, de −100 a 100 (sin entrada, 0). */
   opinions: Record<string, number>;
   partnerId: number | null;
@@ -175,6 +193,34 @@ export interface Stranger {
   survivors: Survivor[];
   /** Ya se van hacia el borde del mapa. */
   leaving: boolean;
+}
+
+/** Armas que se llevan en la mano, de mejor a peor (spec H4b §6.2). */
+export type Weapon = 'axe' | 'bat' | 'knife';
+
+/** Pelear, Huir o Decidir (spec H4b §7). */
+export type Stance = 'fight' | 'flee' | 'decide';
+
+/** Opción Zombis de la portada. */
+export type ZombieLevel = 'few' | 'normal' | 'many';
+
+/** Un zombi (spec H4b §2.1). */
+export interface Zombie {
+  id: number;
+  pos: Point;
+  path: Point[];
+  health: number;
+  state: 'wander' | 'alert' | 'chase';
+  /** El colono que persigue. */
+  targetId: number | null;
+  /** Adonde va (un ruido, una hoguera, donde vio a alguien, un paseo). */
+  goal: Point | null;
+  /** Último tick en que algo le llamó la atención (vio a quien persigue, oyó un ruido…). */
+  lastSeenAt: number;
+  /** Ticks hasta su próximo golpe. */
+  cooldown: number;
+  /** Al vagar, espera hasta este tick antes del siguiente paseo. */
+  waitUntil: number;
 }
 
 /** Trabajos, en orden de criticidad (spec H4a §3.1). */
@@ -195,7 +241,16 @@ export interface Pile {
 }
 
 export type BuildKind =
-  'bed' | 'table' | 'campfire' | 'woodWall' | 'woodDoor' | 'board' | 'unboard';
+  | 'bed'
+  | 'table'
+  | 'campfire'
+  | 'woodWall'
+  | 'woodDoor'
+  | 'board'
+  | 'unboard'
+  // Reparar (H4b): devolver la resistencia a lo dañado y rehacer una puerta rota.
+  | 'repair'
+  | 'fixDoor';
 
 /** Algo por construir: madera entregada y ticks trabajados. */
 export interface Blueprint {
@@ -302,4 +357,16 @@ export interface World {
   chopMarks: number[];
   /** Cuentas de la madera, para comprobar que nunca aparece ni desaparece. */
   woodLog: { start: number; chopped: number; recovered: number; spent: number };
+  // Zombis (H4b)
+  zombies: Zombie[];
+  /** Su propio azar: añadir zombis no cambia lo que hacen los colonos con la misma semilla. */
+  zombieRng: RngState;
+  zombieLevel: ZombieLevel;
+  nextZombieId: number;
+  /** Tick de la siguiente llegada por los bordes. */
+  nextZombieAt: number;
+  /** Resistencia que le queda a cada casilla dañada, por índice y·ancho + x (lo intacto no está). */
+  damage: Record<string, number>;
+  /** Día en que se avisó del primer zombi visto cerca de la base (uno al día). */
+  zombieSightedDay: number;
 }

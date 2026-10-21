@@ -41,6 +41,10 @@ export function activityText(s: Survivor, w?: World): string {
     }
     case 'consoled':
       return t.consoled(name(a.otherId));
+    case 'downed':
+      return t.downed;
+    case 'melee':
+      return t.melee;
     case 'moveTo':
       if (a.then?.type === 'search') return t.goLoot(container(a.then.containerId)?.houseId ?? 0);
       if (a.then?.type === 'unload') return t.goUnload;
@@ -55,6 +59,8 @@ export function activityText(s: Survivor, w?: World): string {
       if (a.then?.type === 'fetchWood') return t.fetchWood(buildName(a.then.blueprintId));
       if (a.then?.type === 'deliver') return t.deliver(buildName(a.then.blueprintId));
       if (a.then?.type === 'build') return t.goBuild;
+      if (a.then?.type === 'swapWeapon') return t.swapWeapon;
+      if (a.run) return t.flee;
       return t.wander;
     case 'idle':
       if (a.wait === 'refused' && a.ticksLeft > 0) return t.refused;
@@ -66,6 +72,9 @@ export function activityText(s: Survivor, w?: World): string {
 /** El icono más importante para la tarjeta, o `null` si no hay nada que destacar. */
 export function statusIcon(s: Survivor): { icon: string; label: string } | null {
   const a = s.action;
+  if (a.type === 'downed') return es.status.downed;
+  if (a.type === 'melee') return es.status.meleeZombie;
+  if (a.type === 'moveTo' && a.run && !a.then) return es.status.fleeing;
   if (a.type === 'crisis' || (a.type === 'moveTo' && a.then?.type === 'crisis'))
     return es.status.crisis;
   if (a.type === 'fight') return es.status.fighting;
@@ -255,6 +264,27 @@ export function logText(e: LogEntry, w: World): string {
     case 'built':
       text = l.built(e.what);
       break;
+    case 'broken':
+      text = l.broken(e.what, e.inBase);
+      break;
+    case 'downed':
+      text = l.downed(name(e.survivorId));
+      break;
+    case 'gotUp':
+      text = l.gotUp(name(e.survivorId));
+      break;
+    case 'zombieKilled':
+      text = l.zombieKilled(name(e.survivorId));
+      break;
+    case 'fled':
+      text = l.fled(name(e.survivorId));
+      break;
+    case 'zombiesInBase':
+      text = l.zombiesInBase;
+      break;
+    case 'zombieSighted':
+      text = l.zombieSighted;
+      break;
   }
   return text;
 }
@@ -264,6 +294,8 @@ export interface NoticeInfo {
   title: string;
   /** A quién enfoca la cámara al pulsar el aviso, si a alguien. */
   focusId: number | null;
+  /** O qué casilla (zombis, destrozos). */
+  focusAt?: { x: number; y: number };
 }
 
 /**
@@ -306,6 +338,20 @@ export function noticeFor(e: LogEntry): NoticeInfo | null {
       return { tone: 'good', title: t.strangerAccepted, focusId: null };
     case 'strangerLeft':
       return { tone: 'mixed', title: t.strangerLeft, focusId: null };
+    // Zombis (H4b §8)
+    case 'downed':
+      return { tone: 'bad', title: t.downed, focusId: e.survivorId };
+    case 'zombiesInBase':
+      return { tone: 'bad', title: t.zombiesInBase, focusId: null, focusAt: { x: e.x, y: e.y } };
+    case 'zombieSighted':
+      return { tone: 'mixed', title: t.zombieSighted, focusId: null, focusAt: { x: e.x, y: e.y } };
+    case 'broken':
+      // Solo lo de la base: lo de las casas sería ruido.
+      return e.inBase
+        ? { tone: 'mixed', title: t.broken, focusId: null, focusAt: { x: e.x, y: e.y } }
+        : null;
+    case 'fled':
+      return { tone: 'mixed', title: t.fled, focusId: e.survivorId };
     default:
       return null;
   }

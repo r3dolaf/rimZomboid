@@ -1,4 +1,5 @@
 // Todas las cifras ajustables del juego. Se retocan jugando.
+import { Tile } from './types';
 
 // Tiempo
 export const TICKS_PER_SECOND = 10;
@@ -75,6 +76,7 @@ export const MEMORY_EFFECTS = {
   storm: { value: -6, hours: 18 },
   ateAtTable: { value: 3, hours: 6 },
   byTheFire: { value: 4, hours: 1 },
+  downed: { value: -15, hours: 24 },
 } as const;
 export const EAT_BELOW = 35;
 export const EAT_RESTORE = 60;
@@ -100,8 +102,9 @@ export const LOOT_FOOD_TOTAL = 80; // + START_FOOD ≈ 25 días para 3 supervivi
 export const LOOT_BANDAGE_TOTAL = 15;
 export const CONTAINERS_MIN = 2;
 export const CONTAINERS_MAX = 5;
-export const KNIFE_CHANCE = 0.08; // × (0,5 + distancia normalizada)
-export const BAT_CHANCE = 0.06;
+export const KNIFE_CHANCE = 0.14; // × (0,5 + distancia normalizada); H4b: más armas
+export const BAT_CHANCE = 0.1;
+export const START_WEAPON = 'knife' as const; // H4b: sin arma, caían enseguida
 
 // Visión (H3)
 export const VISION_DAY = 12;
@@ -256,7 +259,7 @@ export const WORKING_SICK_MOOD = -5;
 
 // Defensa y trabajos (H4a)
 export const LOOT_WOOD_TOTAL = 40; // en armarios y estanterías
-export const AXE_CHANCE = 0.05; // × (0,5 + distancia normalizada), por mueble
+export const AXE_CHANCE = 0.08; // × (0,5 + distancia normalizada), por mueble
 export const CHOP_TICKS = TICKS_PER_HOUR;
 export const CHOP_WOOD_MIN = 4;
 export const CHOP_WOOD_MAX = 6;
@@ -274,4 +277,88 @@ export const BUILD = {
   woodDoor: { wood: 4, ticks: 1.5 * TICKS_PER_HOUR },
   board: { wood: 3, ticks: 0.5 * TICKS_PER_HOUR },
   unboard: { wood: 0, ticks: 0.25 * TICKS_PER_HOUR },
+  // Reparar (H4b): lo dañado sin romper, y una puerta rota.
+  repair: { wood: 1, ticks: 0.25 * TICKS_PER_HOUR },
+  fixDoor: { wood: 2, ticks: TICKS_PER_HOUR },
 } as const;
+
+// Zombis (H4b)
+/** Zombis al empezar, máximo y cada cuántas horas llega uno por los bordes, según el narrador. */
+// Caótico era 35/70/1 h y Muchos ×1,5: sin defensas, en Caótico/muchos caían el 80 % del tiempo.
+export const ZOMBIE_START = { calm: 15, balanced: 25, chaotic: 30 } as const;
+export const ZOMBIE_MAX = { calm: 30, balanced: 50, chaotic: 60 } as const;
+export const ZOMBIE_EVERY_HOURS = { calm: 4, balanced: 2, chaotic: 1.5 } as const;
+/** Opción Zombis de la portada: multiplica lo anterior (y el ritmo de llegada). */
+export const ZOMBIE_LEVEL_MULT = { few: 0.5, normal: 1, many: 1.25 } as const;
+export const ZOMBIE_SAFE_RADIUS = 20; // al empezar, ninguno más cerca de la base
+export const ZOMBIE_HOUSE_RADIUS = 6; // al empezar, junto a una casa
+export const ZOMBIE_EDGE_START_DAY = 2;
+export const ZOMBIE_HEALTH = 60;
+/** Resistencia de lo que pueden romper los zombis (spec H4b §4.1). */
+export const RESISTANCE: Partial<Record<Tile, number>> = {
+  [Tile.Window]: 60,
+  [Tile.BoardedWindow]: 180,
+  [Tile.Door]: 100,
+  [Tile.WoodWall]: 200,
+  [Tile.Wall]: 800,
+};
+export const ZOMBIE_SPEED = 0.1; // casillas por tick (un colono andando, 0,15)
+export const ZOMBIE_HIT_TICKS = 15; // entre golpes, a un colono o a lo que rompe
+export const ZOMBIE_BREAK_DAMAGE = 5; // por golpe a una puerta, ventana o muro
+export const ZOMBIE_PATH_BUDGET = 4000; // casillas que puede explorar una búsqueda de camino
+export const ZOMBIE_VISION = 8; // casillas, de día y de noche
+export const CAMPFIRE_SIGHT = 15; // de noche, un zombi ve una hoguera hasta esta distancia
+export const SURVIVOR_RUN_SPEED = 0.25; // casillas por tick, al huir o ir a por un zombi
+/** Radio de cada ruido, en casillas (spec H4b §3). */
+export const NOISE = { fightHit: 10, broken: 12, zombieHit: 8, chop: 8, build: 6, run: 5 } as const;
+export const CHOP_NOISE_TICKS = 30; // cada cuánto suena un hachazo
+export const BUILD_NOISE_TICKS = 30; // cada cuánto suena un martillazo
+export const RUN_NOISE_TICKS = 10; // cada cuánto se oyen los pasos de quien corre
+export const ZOMBIE_THINK_TICKS = 5; // cada cuánto decide cada zombi (repartidos por id)
+export const ZOMBIE_REPATH_TICKS = 20; // al perseguir, cada cuánto rehace el camino
+export const LOSE_TRACK_TICKS = 50; // sin ver a su presa este tiempo, pierde el rastro
+export const ZOMBIE_REACH = 1.5; // casillas de centro a centro para golpear
+export const ZOMBIE_HIT_CHANCE = 0.4;
+export const ZOMBIE_DAMAGE_MIN = 8;
+export const ZOMBIE_DAMAGE_MAX = 12;
+export const HERD_RANGE = 10; // al vagar, se fija en los zombis a esta distancia
+export const HERD_CHANCE = 0.75; // de los paseos, cuántos van hacia el grupo
+export const WANDER_MIN = 3;
+export const WANDER_MAX = 8;
+export const BORED_TICKS = 3 * TICKS_PER_HOUR; // sin nada que le llame la atención, se va lejos
+export const WANDER_FAR_MIN = 12;
+export const WANDER_FAR_MAX = 25;
+export const WANDER_PAUSE_MIN = 20;
+export const WANDER_PAUSE_MAX = 80;
+export const WANDER_PATH_BUDGET = 1500;
+export const ARRIVAL_GOAL_RADIUS = 6; // los que llegan van hacia una casa al azar, a esta distancia o menos
+export const DOWNED_TICKS = 4 * TICKS_PER_HOUR;
+export const DOWNED_MAX_TICKS = 8 * TICKS_PER_HOUR; // con zombis a la vista espera, pero no más de esto
+/** Salud que se recupera por hora (spec H4b §5). */
+export const HEALTH_PER_HOUR = { awake: 1, floor: 4, bed: 6 } as const;
+export const GET_UP_HEALTH = 15; // al levantarse tras un derribo
+export const HURT_BELOW = 50; // "Herido" por debajo de esto
+export const HURT_MOOD = -10;
+/** Golpes de los colonos según lo que llevan en la mano (spec H4b §6.1). */
+export const WEAPON_STATS = {
+  none: { damage: 5, ticks: 10 },
+  knife: { damage: 15, ticks: 10 },
+  bat: { damage: 25, ticks: 15 },
+  axe: { damage: 40, ticks: 20 },
+} as const;
+export const SURVIVOR_HIT_CHANCE = 0.7;
+export const HEAD_HIT_CHANCE = 1 / 6; // de los golpes que aciertan; hacen el doble
+export const SURVIVOR_REACH = 1.5; // casillas de centro a centro para golpear
+// Posturas y peligro (spec H4b §7)
+export const DANGER_RANGE = 8; // como mucho, aunque de día vean más lejos
+export const FLEE_HEALTH = 20; // por debajo, huye siempre
+export const DECIDE_MIN_HEALTH = 50;
+export const DECIDE_MAX_THREATS = 2;
+export const UNARMED_MIN_HEALTH = 70;
+export const UNARMED_MAX_THREATS = 1;
+export const ALLY_RANGE = 5; // compañeros peleando a esta distancia o menos
+export const WAKE_RANGE = 4; // un zombi que ve tan cerca despierta a quien duerme
+export const WAKE_MIN_SLEEP = 5; // rendido de sueño (desplomado), solo le despierta un golpe
+export const FLED_LOG_TICKS = TICKS_PER_HOUR; // "huye a la base", como mucho una vez por hora y colono
+export const SHELTER_WAIT_TICKS = 10; // en la base, sin sitio adonde ir, espera esto y vuelve a mirar
+export const SIGHTED_NEAR_BASE = 15; // aviso del primer zombi visto a esta distancia de la base

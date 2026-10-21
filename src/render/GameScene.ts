@@ -12,8 +12,8 @@ import {
   toggleTree,
   wallLine,
 } from '../game/tools';
-import { BUILD, CAMPFIRE_RANGE } from '../sim/balance';
-import { canPlace, markedTrees } from '../sim/build';
+import { BUILD, CAMPFIRE_RANGE, RESISTANCE, ZOMBIE_HEALTH } from '../sim/balance';
+import { canPlace, markedTrees, repairKindAt } from '../sim/build';
 import { darkness } from '../sim/clock';
 import { CATALOG } from '../sim/events/catalog';
 import { isEmpty } from '../sim/items';
@@ -29,13 +29,16 @@ import {
   BED_COLOR,
   BLUEPRINT,
   BLUEPRINT_BAD,
+  BROKEN_GLASS,
   CAMPFIRE_CORE,
   CAMPFIRE_FLAME,
   CAMPFIRE_STONE,
   CONTAINER_COLORS,
   CONTAINER_EDGE,
   css,
+  DAMAGE_BAR,
   DESIGNATION,
+  DOWNED_RING,
   FIRE_GLOW,
   HOUSE_SELECTED,
   NIGHT_COLOR,
@@ -43,6 +46,7 @@ import {
   PILLOW_COLOR,
   PLANK_COLOR,
   PLANK_SEAM,
+  RUBBLE_BITS,
   SELECTION_RING,
   STORAGE_COLOR,
   STORAGE_EDGE,
@@ -52,6 +56,9 @@ import {
   TABLE_COLOR,
   TABLE_EDGE,
   TILE_COLORS,
+  ZOMBIE_COLOR,
+  ZOMBIE_HURT,
+  ZOMBIE_OUTLINE,
 } from './colors';
 import { bubbleIcon } from './bubbles';
 import { skyAlpha } from './daylight';
@@ -108,6 +115,8 @@ export class GameScene extends Phaser.Scene {
   private drag: { mode: ToolMode; from: Point; to: Point } | null = null;
   private hover: Point | null = null;
   private fog!: Phaser.Textures.CanvasTexture;
+  /** Lo que ven ahora los colonos (se rehace con la niebla): solo ahí se dibujan los zombis. */
+  private visible: Uint8Array = new Uint8Array(0);
   private fogPixels!: ImageData;
   private frame = 0;
   private night!: Phaser.GameObjects.Rectangle;
@@ -224,10 +233,35 @@ export class GameScene extends Phaser.Scene {
     }
     // El desconocido, en gris, hasta que lo aceptan.
     for (const s of this.world.stranger?.survivors ?? []) this.drawPerson(g, s, STRANGER_COLOR);
+    // Zombis (H4b): solo los que ven ahora los colonos, con una barrita si están heridos.
+    const width = this.world.grid.width;
+    for (const z of this.world.zombies) {
+      if (this.visible[Math.floor(z.pos.y) * width + Math.floor(z.pos.x)] !== 1) continue;
+      const [x, y] = [z.pos.x * TILE_PX, z.pos.y * TILE_PX];
+      g.fillStyle(ZOMBIE_OUTLINE, 1);
+      g.fillCircle(x, y, SURVIVOR_RADIUS + 1);
+      g.fillStyle(ZOMBIE_COLOR, 1);
+      g.fillCircle(x, y, SURVIVOR_RADIUS);
+      if (z.health < ZOMBIE_HEALTH) {
+        const w = 2 * SURVIVOR_RADIUS + 2;
+        g.fillStyle(SURVIVOR_OUTLINE, 0.8);
+        g.fillRect(x - w / 2, y - SURVIVOR_RADIUS - 4, w, 2);
+        g.fillStyle(ZOMBIE_HURT, 1);
+        g.fillRect(x - w / 2, y - SURVIVOR_RADIUS - 4, (w * z.health) / ZOMBIE_HEALTH, 2);
+      }
+    }
   }
 
   private drawPerson(g: Phaser.GameObjects.Graphics, s: Survivor, color: number): void {
     const [x, y] = [s.pos.x * TILE_PX, s.pos.y * TILE_PX];
+    if (s.action.type === 'downed') {
+      // Derribado: tumbado, con un borde rojo.
+      g.fillStyle(DOWNED_RING, 1);
+      g.fillEllipse(x, y, 2 * SURVIVOR_RADIUS + 6, SURVIVOR_RADIUS + 4);
+      g.fillStyle(color, 1);
+      g.fillEllipse(x, y, 2 * SURVIVOR_RADIUS + 2, SURVIVOR_RADIUS);
+      return;
+    }
     const alpha = s.action.type === 'sleep' ? SLEEPING_ALPHA : 1;
     g.fillStyle(SURVIVOR_OUTLINE, alpha);
     g.fillCircle(x, y, SURVIVOR_RADIUS + 1);
@@ -445,6 +479,15 @@ export class GameScene extends Phaser.Scene {
     }
     for (const p of pendingPlacements(w))
       this.drawBlueprint(p.kind, p.pos, BLUEPRINT, PENDING_ALPHA);
+    // Lo dañado (H4b): una barrita con la resistencia que le queda.
+    for (const [key, left] of Object.entries(w.damage)) {
+      const i = Number(key);
+      if (w.seen[i] !== 1) continue;
+      const full = RESISTANCE[w.grid.tiles[i]!];
+      if (!full) continue;
+      const [x, y] = [(i % w.grid.width) * TILE_PX, Math.floor(i / w.grid.width) * TILE_PX];
+      this.drawBar(x, y + 1, left / full, DAMAGE_BAR);
+    }
 
     const d = this.drag;
     if (d?.mode === 'chop' && (d.from.x !== d.to.x || d.from.y !== d.to.y)) {
@@ -458,11 +501,14 @@ export class GameScene extends Phaser.Scene {
     }
     if (this.tool.mode !== 'build') return;
     // Construir: la silueta de lo elegido donde iría (en rojo si no se puede poner ahí).
-    const kind = this.tool.buildKind;
-    const at = d?.mode === 'build' ? (kind === 'woodWall' ? wallLine(d.from, d.to) : [d.from]) : [];
+    const chosen = this.tool.buildKind;
+    const at =
+      d?.mode === 'build' ? (chosen === 'woodWall' ? wallLine(d.from, d.to) : [d.from]) : [];
     if (!d && this.hover) at.push(this.hover);
     for (const p of at) {
       if (w.blueprints.some((b) => b.pos.x === p.x && b.pos.y === p.y)) continue; // el clic lo cancela
+      // Reparar: el plano lo decide la casilla (spec H4b §4.2).
+      const kind = chosen === 'repair' ? (repairKindAt(w, p) ?? 'repair') : chosen;
       const ok = canPlace(w, kind, p);
       this.drawBlueprint(kind, p, ok ? BLUEPRINT : BLUEPRINT_BAD, PENDING_ALPHA);
     }
@@ -494,6 +540,14 @@ export class GameScene extends Phaser.Scene {
       case 'board':
         m.fillRect(x, y + 3, TILE_PX, 4);
         m.fillRect(x, y + 9, TILE_PX, 4);
+        break;
+      case 'fixDoor':
+        m.fillRect(x, y, TILE_PX, TILE_PX);
+        m.strokeRect(x + 4.5, y + 3.5, TILE_PX - 9, TILE_PX - 4);
+        break;
+      case 'repair': // una cruz: arreglar lo dañado
+        m.fillRect(x + TILE_PX / 2 - 1.5, y + 3, 3, TILE_PX - 6);
+        m.fillRect(x + 3, y + TILE_PX / 2 - 1.5, TILE_PX - 6, 3);
         break;
       case 'unboard': // tablas que se quitan: solo el contorno
         m.strokeRect(x + 0.5, y + 3.5, TILE_PX - 1, 3);
@@ -531,6 +585,7 @@ export class GameScene extends Phaser.Scene {
   private drawFog(): void {
     const w = this.world;
     const visible = visibleTiles(w);
+    this.visible = visible;
     const data = this.fogPixels.data;
     for (let i = 0; i < w.seen.length; i++) {
       data[i * 4 + 3] = visible[i] ? 0 : w.seen[i] ? FOG_SEEN_ALPHA : 255;
@@ -570,6 +625,11 @@ export class GameScene extends Phaser.Scene {
     if (s) this.cameras.main.centerOn(s.pos.x * TILE_PX, s.pos.y * TILE_PX);
   }
 
+  /** Centra la cámara en una casilla (al pulsar un aviso de zombis o destrozos). */
+  centerOnTile(p: { x: number; y: number }): void {
+    this.cameras.main.centerOn((p.x + 0.5) * TILE_PX, (p.y + 0.5) * TILE_PX);
+  }
+
   /** Zoom mínimo para que el mapa siempre llene la pantalla. */
   private minZoom(): number {
     const cam = this.cameras.main;
@@ -596,6 +656,27 @@ function paintTile(ctx: CanvasRenderingContext2D, x: number, y: number, t: Tile)
   if (t === Tile.WoodWall) {
     ctx.fillStyle = css(PLANK_SEAM);
     for (const dy of [5, 10]) ctx.fillRect(x, y + dy, TILE_PX, 1);
+  } else if (t === Tile.BrokenWindow) {
+    // Marco con el cristal roto: oscuro, con el borde de la ventana.
+    ctx.fillStyle = css(TILE_COLORS[Tile.Window]);
+    ctx.fillRect(x, y, TILE_PX, TILE_PX);
+    ctx.fillStyle = css(BROKEN_GLASS);
+    ctx.fillRect(x + 2, y + 2, TILE_PX - 4, TILE_PX - 4);
+  } else if (t === Tile.BrokenDoor) {
+    // Hueco en el marco: el marco de la puerta y suelo en medio.
+    ctx.fillStyle = css(TILE_COLORS[Tile.Floor]);
+    ctx.fillRect(x + 3, y, TILE_PX - 6, TILE_PX);
+  } else if (t === Tile.Rubble) {
+    // Cascotes.
+    ctx.fillStyle = css(RUBBLE_BITS);
+    for (const [dx, dy] of [
+      [2, 3],
+      [8, 2],
+      [11, 9],
+      [4, 10],
+      [9, 13],
+    ])
+      ctx.fillRect(x + dx!, y + dy!, 3, 2);
   } else if (t === Tile.BoardedWindow) {
     for (const dy of [3, 9]) {
       ctx.fillStyle = css(PLANK_SEAM);

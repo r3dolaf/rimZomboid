@@ -1,6 +1,6 @@
 // Herramientas Talar y Construir: qué órdenes da cada clic o arrastre, teniendo en cuenta las aún
 // pendientes (con el juego en pausa, la orden no se aplica hasta el siguiente tick).
-import { canPlace, markedTrees, treeMarked } from '../sim/build';
+import { canPlace, markedTrees, repairKindAt, treeMarked } from '../sim/build';
 import { getTile } from '../sim/map/grid';
 import { issue } from '../sim/orders';
 import { Tile, type Blueprint, type BuildKind, type Point, type World } from '../sim/types';
@@ -46,15 +46,19 @@ export function pendingPlacements(w: World): { kind: BuildKind; pos: Point }[] {
 const pendingAt = (w: World, x: number, y: number) =>
   pendingPlacements(w).some((p) => p.pos.x === x && p.pos.y === y);
 
-/** Clic con Construir: en un plano, lo cancela; si no, pone ahí el plano elegido (si se puede). */
+/**
+ * Clic con Construir: en un plano, lo cancela; si no, pone ahí el plano elegido (si se puede).
+ * Con Reparar, el plano lo elige la casilla (spec H4b §4.2).
+ */
 export function buildAt(w: World, kind: BuildKind, x: number, y: number): void {
   const b = w.blueprints.find((p) => p.pos.x === x && p.pos.y === y);
   if (b) {
     if (!cancelling(w).has(b.id)) issue(w, { type: 'cancelBlueprint', id: b.id });
     return;
   }
-  if (!pendingAt(w, x, y) && canPlace(w, kind, { x, y }))
-    issue(w, { type: 'placeBlueprint', kind, x, y });
+  const actual = kind === 'repair' ? repairKindAt(w, { x, y }) : kind;
+  if (actual && !pendingAt(w, x, y) && canPlace(w, actual, { x, y }))
+    issue(w, { type: 'placeBlueprint', kind: actual, x, y });
 }
 
 /** Casillas en línea recta desde `a`, por el eje en que más se ha arrastrado, hasta `b`. */

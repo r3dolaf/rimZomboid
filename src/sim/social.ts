@@ -20,10 +20,14 @@ import type { Survivor } from './types';
 
 export type RelationLabel = 'partner' | 'friend' | 'rival';
 
-/** Despierto, sin crisis (ni yendo a tenerla), sin pelear y sin consolar ni ser consolado. */
+/**
+ * Despierto, sin crisis (ni yendo a tenerla), sin pelear (tampoco con zombis), sin consolar ni ser
+ * consolado y no en el suelo.
+ */
 export function isAvailable(s: Survivor): boolean {
   const a = s.action;
   if (a.type === 'sleep' || a.type === 'crisis' || a.type === 'fight') return false;
+  if (a.type === 'downed' || a.type === 'melee') return false;
   if (a.type === 'console' || a.type === 'consoled') return false;
   return !(a.type === 'moveTo' && a.then?.type === 'crisis');
 }

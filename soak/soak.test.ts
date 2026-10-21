@@ -1,4 +1,5 @@
 // Partida larga sin pantalla: solo IA, a toda velocidad. Comprueba que nada se rompe.
+// Las de antes de H4b, sin zombis (prueban lo suyo); las de H4b, al final, con zombis.
 import { describe, expect, test } from 'vitest';
 import { TICKS_PER_DAY } from '../src/sim/balance';
 import { checkInvariants } from '../src/sim/invariants';
@@ -14,8 +15,10 @@ import {
   type NarratorStyle,
   type Survivor,
   type World,
+  type ZombieLevel,
 } from '../src/sim/types';
 import { regionOf } from '../src/sim/path/astar';
+import { withoutZombies } from '../src/sim/testing/fixtures';
 import { createWorld, tileOf } from '../src/sim/world';
 import { targetContainerId } from '../src/sim/work';
 
@@ -28,7 +31,7 @@ test('SOAK_DAYS es un número de días válido', () => {
 test.each([1, 2, 3])(
   `semilla %i: ${DAYS} días sin romper invariantes ni bloquearse`,
   (seed) => {
-    const w = createWorld(seed);
+    const w = withoutZombies(createWorld(seed));
     for (let day = 1; day <= DAYS; day++) {
       const moved = w.survivors.map(() => false);
       for (let i = 0; i < TICKS_PER_DAY; i++) {
@@ -55,7 +58,7 @@ test.each([1, 2, 3])(
 test.each([1, 2, 3])(
   `semilla %i: ${DAYS} días con todas las casas marcadas — el mapa se vacía sin romper nada`,
   (seed) => {
-    const w = createWorld(seed);
+    const w = withoutZombies(createWorld(seed));
     // Sin narrador: un alijo de última hora dejaría comida en un mueble sin marcar.
     w.narrator.nextEventAt = Number.MAX_SAFE_INTEGER;
     w.narrator.phaseEndsAt = Number.MAX_SAFE_INTEGER; // si no, el cambio de fase lo adelanta
@@ -77,7 +80,7 @@ test.each([1, 2, 3])(
 test.each([1, 2, 3])(
   `semilla %i: ${DAYS} días aceptando a todos los desconocidos — relaciones sanas y sin bloqueos`,
   (seed) => {
-    const w = createWorld(seed);
+    const w = withoutZombies(createWorld(seed));
     for (const h of w.houses) issue(w, { type: 'designateHouse', houseId: h.id, on: true });
     for (let day = 1; day <= DAYS; day++) {
       const present = new Set(w.survivors.map((s) => s.id));
@@ -110,7 +113,7 @@ describe.each(STYLES)('narrador %s', (style) => {
   test.each([1, 2, 3])(
     `semilla %i: ${DAYS} días saqueando y contestando al azar — sin romper nada ni bloquearse`,
     (seed) => {
-      const w = createWorld(seed, style);
+      const w = withoutZombies(createWorld(seed, style));
       for (const h of w.houses) issue(w, { type: 'designateHouse', houseId: h.id, on: true });
       const answers = createRng(seed * 77);
       let events = 0;
@@ -213,7 +216,7 @@ function playDay(
 test.each([1, 2, 3])(
   `semilla %i: ${DAYS} días talando y construyendo al azar — la madera cuadra y nadie se bloquea`,
   (seed) => {
-    const w = createWorld(seed);
+    const w = withoutZombies(createWorld(seed));
     for (const h of w.houses) issue(w, { type: 'designateHouse', houseId: h.id, on: true });
     const r = createRng(seed * 131);
     const cx = w.base.rect.x + Math.floor(w.base.rect.w / 2);
@@ -265,7 +268,7 @@ const WALL_DAYS = Math.min(DAYS, 10);
 test.each([1, 2, 3])(
   `semilla %i: ${WALL_DAYS} días levantando muros en línea por la base y alrededor — nadie los atraviesa ni se queda dentro`,
   (seed) => {
-    const w = createWorld(seed);
+    const w = withoutZombies(createWorld(seed));
     w.seen.fill(1);
     w.storage.items.wood += 300; // madera de sobra: que se construya deprisa
     w.woodLog.start += 300;
@@ -298,3 +301,85 @@ test.each([1, 2, 3])(
   },
   240_000,
 );
+
+/** Armas en todo el mundo (cuchillos, bates y hachas): nunca aparecen ni desaparecen. */
+function allWeapons(w: World): number {
+  const kinds = ['knife', 'bat', 'axe'] as const;
+  const people = [...w.survivors, ...(w.stranger?.survivors ?? [])];
+  let n = 0;
+  for (const k of kinds) {
+    n += w.storage.items[k];
+    n += w.containers.reduce((a, c) => a + c.items[k], 0);
+    n += w.piles.reduce((a, p) => a + p.items[k], 0);
+    n += people.reduce((a, s) => a + s.carrying[k] + (s.equipped === k ? 1 : 0), 0);
+  }
+  return n;
+}
+
+// H4b: un juego por narrador, cada uno con una opción de Zombis (los 3 narradores y las 3 opciones).
+const ZOMBIE_GAMES: [NarratorStyle, ZombieLevel][] = [
+  ['calm', 'few'],
+  ['balanced', 'normal'],
+  ['chaotic', 'many'],
+];
+const zombieTotals = { kills: 0, downs: 0, broken: 0 };
+
+describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
+  test(`${DAYS} días saqueando con zombis — sin romper nada, sin bloqueos, las armas cuadran y cada tick va rápido`, () => {
+    const w = createWorld(1, style, level);
+    for (const h of w.houses) issue(w, { type: 'designateHouse', houseId: h.id, on: true });
+    const r = createRng(17);
+    const weapons = allWeapons(w);
+    let ms = 0;
+    for (let day = 1; day <= DAYS; day++) {
+      const present = new Set(w.survivors.map((s) => s.id));
+      const moved = new Set<number>();
+      const down = new Map<number, number>();
+      for (let i = 0; i < TICKS_PER_DAY; i++) {
+        const d = w.decisions[0];
+        if (d && !w.orders.some((o) => o.type === 'decide'))
+          issue(w, { type: 'decide', decisionId: d.id, option: nextInt(r, 0, 1) as 0 | 1 });
+        const before = new Map(w.survivors.map((s) => [s.id, { ...s.pos }]));
+        const last = w.log.at(-1);
+        const t0 = performance.now();
+        step(w);
+        ms += performance.now() - t0;
+        const problems = checkInvariants(w);
+        if (problems.length > 0) expect(problems, `tick ${w.tick}`).toEqual([]);
+        for (const e of w.log.slice(last ? w.log.lastIndexOf(last) + 1 : 0)) {
+          if (e.kind === 'zombieKilled') zombieTotals.kills++;
+          if (e.kind === 'downed') zombieTotals.downs++;
+          if (e.kind === 'broken') zombieTotals.broken++;
+        }
+        for (const s of w.survivors) {
+          const b = before.get(s.id);
+          if (b && (b.x !== s.pos.x || b.y !== s.pos.y)) moved.add(s.id);
+          if (s.action.type === 'downed') down.set(s.id, (down.get(s.id) ?? 0) + 1);
+        }
+      }
+      const store = w.storage.tiles[0]!;
+      for (const s of w.survivors) {
+        if (!present.has(s.id)) continue;
+        // Nadie se pasa el día entero en el suelo (cayendo una y otra vez entre zombis).
+        expect(down.get(s.id) ?? 0, `día ${day}: ${s.name}, todo el día en el suelo`).toBeLessThan(
+          TICKS_PER_DAY,
+        );
+        // Nadie se queda quieto un día entero, salvo derribados o encerrados (spec H4b §10).
+        const t = tileOf(s.pos);
+        const cut = regionOf(w.grid, t.x, t.y) !== regionOf(w.grid, store.x, store.y);
+        if (!down.has(s.id) && !cut)
+          expect(moved.has(s.id), `día ${day}: ${s.name} no se ha movido`).toBe(true);
+      }
+      expect(allWeapons(w), `día ${day}: armas`).toBe(weapons);
+    }
+    // Límite generoso (en local va por 0,1–0,2 ms por tick).
+    expect(ms / (DAYS * TICKS_PER_DAY), 'ms por tick').toBeLessThan(1);
+  }, 600_000);
+});
+
+test('con zombis se pelea, alguien cae y algo se rompe', () => {
+  if (DAYS < 10) return;
+  expect(zombieTotals.kills).toBeGreaterThan(0);
+  expect(zombieTotals.downs).toBeGreaterThan(0);
+  expect(zombieTotals.broken).toBeGreaterThan(0);
+});

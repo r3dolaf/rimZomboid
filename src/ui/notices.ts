@@ -22,7 +22,13 @@ const DECISION_TONE: Record<Decision['kind'], Tone> = {
  */
 export function mountNotices(
   root: HTMLElement,
-  opts: { world: World; time: TimeController; onFocus?: (survivorId: number) => void },
+  opts: {
+    world: World;
+    time: TimeController;
+    onFocus?: (survivorId: number) => void;
+    /** Centrar la cámara en una casilla (zombis, destrozos). */
+    onFocusAt?: (p: { x: number; y: number }) => void;
+  },
 ): { update(): void } {
   const box = document.createElement('div');
   box.className = 'notices';
@@ -37,7 +43,13 @@ export function mountNotices(
   const decisions = new Map<number, { el: HTMLElement; buttons: HTMLButtonElement[] }>();
   const name = (id: number) => opts.world.survivors.find((s) => s.id === id)?.name ?? '?';
 
-  function card(tone: Tone, title: string, lines: string[], focusId: number | null): HTMLElement {
+  function card(
+    tone: Tone,
+    title: string,
+    lines: string[],
+    focusId: number | null,
+    focusAt?: { x: number; y: number },
+  ): HTMLElement {
     const el = document.createElement('div');
     el.className = `notice ${tone}`;
     const head = document.createElement('strong');
@@ -51,6 +63,9 @@ export function mountNotices(
     if (focusId !== null && opts.onFocus) {
       el.classList.add('focusable');
       el.addEventListener('click', () => opts.onFocus?.(focusId));
+    } else if (focusAt && opts.onFocusAt) {
+      el.classList.add('focusable');
+      el.addEventListener('click', () => opts.onFocusAt?.(focusAt));
     }
     return el;
   }
@@ -58,7 +73,13 @@ export function mountNotices(
   function addPlain(entry: LogEntry): void {
     const info = noticeFor(entry);
     if (!info) return;
-    const el = card(info.tone, info.title, [logText(entry, opts.world)], info.focusId);
+    const el = card(
+      info.tone,
+      info.title,
+      [logText(entry, opts.world)],
+      info.focusId,
+      info.focusAt,
+    );
     el.dataset.testid = 'notice';
     const x = document.createElement('button');
     x.type = 'button';

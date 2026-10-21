@@ -1,6 +1,8 @@
 import {
   HUNGRY_BELOW,
   HUNGRY_MOOD,
+  HURT_BELOW,
+  HURT_MOOD,
   FLU_MOOD,
   LONELY_BELOW,
   LONELY_MOOD,
@@ -28,6 +30,7 @@ export type MoodModifierId =
   | 'optimist'
   | 'pessimist'
   | 'scaredOutside'
+  | 'hurt'
   | MemoryId;
 
 /** Un motivo del ánimo. Los recuerdos llevan su tick de caducidad y con quién fueron. */
@@ -48,6 +51,7 @@ export function moodModifiers(s: Survivor, tick: number, base?: Rect): MoodModif
   else if (s.needs.hunger < HUNGRY_BELOW) mods.push({ id: 'hungry', value: HUNGRY_MOOD });
   if (s.needs.sleep < TIRED_BELOW) mods.push({ id: 'tired', value: TIRED_MOOD });
   if (s.needs.social < LONELY_BELOW) mods.push({ id: 'lonely', value: LONELY_MOOD });
+  if (s.health < HURT_BELOW) mods.push({ id: 'hurt', value: HURT_MOOD });
   if (s.sick) {
     mods.push({ id: 'flu', value: FLU_MOOD });
     if (s.sick.plan === 'work') mods.push({ id: 'workingSick', value: WORKING_SICK_MOOD });

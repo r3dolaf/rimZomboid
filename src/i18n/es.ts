@@ -9,8 +9,10 @@ import type {
   Decision,
   MemoryId,
   NarratorStyle,
+  Stance,
   TraitId,
   WorkType,
+  ZombieLevel,
 } from '../sim/types';
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -50,8 +52,11 @@ export const es = {
     woodDoor: 'Puerta',
     board: 'Tapiar',
     unboard: 'Quitar tablas',
+    repair: 'Reparar',
+    fixDoor: 'Arreglar puerta',
   } satisfies Record<BuildKind, string>,
-  buildOption: (name: string, wood: number) => `${name} · ${wood}`,
+  buildOption: (name: string, wood: number | string) => `${name} · ${wood}`,
+  repairWood: '1–3',
   buildMenuHint:
     'Clic en el mapa para colocar; arrastrar para una fila de muros; clic en un plano para cancelarlo',
   storm: '🌧 Tormenta',
@@ -67,10 +72,28 @@ export const es = {
   start: {
     subtitle: 'Sobrevivir juntos, o no',
     choose: 'Elige narrador',
+    zombies: 'Zombis',
     seed: 'Semilla',
     reroll: 'Otra',
     go: 'Empezar',
   },
+  zombieLevels: { few: 'Pocos', normal: 'Normal', many: 'Muchos' } satisfies Record<
+    ZombieLevel,
+    string
+  >,
+  zombiesInSight: (n: number) => `Zombis a la vista: ${n}`,
+  health: 'Salud',
+  stanceTitle: 'Postura',
+  stances: { fight: 'Pelear', flee: 'Huir', decide: 'Decidir' } satisfies Record<Stance, string>,
+  stanceHints: {
+    fight: 'Va a por los zombis que ve',
+    flee: 'Corre a la base y se queda dentro',
+    decide: 'Pelea o huye según su Salud, su arma y cuántos zombis hay',
+  } satisfies Record<Stance, string>,
+  noWeapon: 'Sin arma',
+  lockWeapon: 'Fijar',
+  lockWeaponHint: 'No cambia ni devuelve lo que lleva en la mano',
+  logToggle: { hide: 'Minimizar el registro', show: 'Abrir el registro' },
   notices: {
     jealousy: 'Celos',
     clash: 'Choque de caracteres',
@@ -87,6 +110,11 @@ export const es = {
     theftIgnored: 'Desconfianza',
     strangerAccepted: 'Caras nuevas',
     strangerLeft: 'Se marchan',
+    downed: 'Derribo',
+    zombiesInBase: '¡Zombis en la base!',
+    zombieSighted: 'Zombis cerca',
+    broken: 'Destrozos',
+    fled: 'Huida',
   },
   decisions: {
     theft: {
@@ -188,6 +216,20 @@ export const es = {
     cache: (who: string, house: number, cans: number) =>
       `${who} recuerda una despensa en la casa ${house}: ${cans} latas`,
     built: (what: BuildKind) => es.built[what],
+    downed: (who: string) => `${who} ha caído`,
+    gotUp: (who: string) => `${who} se ha levantado`,
+    zombieKilled: (who: string) => `${who} ha matado un zombi`,
+    fled: (who: string) => `${who} huye a la base`,
+    zombiesInBase: 'Hay zombis dentro de la base',
+    zombieSighted: 'Se ven zombis cerca de la base',
+    broken: (what: 'door' | 'window' | 'wall', inBase: boolean) =>
+      `Los zombis han ${
+        what === 'door'
+          ? 'roto una puerta'
+          : what === 'window'
+            ? 'roto una ventana'
+            : 'echado abajo un muro'
+      }${inBase ? ' de la base' : ''}`,
     storm: 'Se desata una tormenta',
     flu: (who: string) => `${who} ha cogido la gripe`,
     fluRest: (who: string) => `${who} guarda reposo`,
@@ -251,6 +293,8 @@ export const es = {
     storm: 'Tormenta',
     ateAtTable: 'Comió en la mesa',
     byTheFire: 'Junto al fuego',
+    hurt: 'Con heridas',
+    downed: 'Le derribaron',
   } satisfies Record<MoodModifierId, string>,
   /** Los recuerdos con otra persona, con su nombre. */
   modifiersWith: {
@@ -306,6 +350,10 @@ export const es = {
     build: (kind: BuildKind) => es.building[kind],
     console: (other: string) => `Consolando a ${other}`,
     consoled: (other: string) => `${other} le está consolando`,
+    downed: 'En el suelo, sin fuerzas',
+    melee: 'Peleando con un zombi',
+    flee: 'Huyendo a la base',
+    swapWeapon: 'Va a por un arma',
   },
   containers: { fridge: 'una nevera', wardrobe: 'un armario', shelf: 'una estantería' },
   built: {
@@ -316,6 +364,8 @@ export const es = {
     woodDoor: 'Se ha puesto una puerta de madera',
     board: 'Se ha tapiado una ventana',
     unboard: 'Se han quitado las tablas de una ventana',
+    repair: 'Se ha hecho una reparación',
+    fixDoor: 'Se ha arreglado una puerta',
   } satisfies Record<BuildKind, string>,
   /** Lo que hace quien trabaja en cada plano. */
   building: {
@@ -326,6 +376,8 @@ export const es = {
     woodDoor: 'Poniendo una puerta',
     board: 'Tapiando una ventana',
     unboard: 'Quitando las tablas de una ventana',
+    repair: 'Reparando',
+    fixDoor: 'Arreglando una puerta',
   } satisfies Record<BuildKind, string>,
   /** Cada plano, para las frases ("Llevando madera a una cama"). */
   builds: {
@@ -336,6 +388,8 @@ export const es = {
     woodDoor: 'una puerta',
     board: 'una ventana',
     unboard: 'una ventana',
+    repair: 'una reparación',
+    fixDoor: 'una puerta rota',
   } satisfies Record<BuildKind, string>,
 
   /** Iconos sobre la cabeza en el mapa. */
@@ -357,5 +411,8 @@ export const es = {
     eating: { icon: '🍽', label: 'Comiendo' },
     edge: { icon: '⚠', label: 'Al límite' },
     sick: { icon: '🤒', label: 'Con gripe' },
+    downed: { icon: '🤕', label: 'En el suelo' },
+    meleeZombie: { icon: '⚔️', label: 'Peleando con zombis' },
+    fleeing: { icon: '🏃', label: 'Huyendo' },
   },
 };

@@ -40,14 +40,14 @@ test('40 maderas, solo en armarios y estanterías, y siempre al menos un hacha',
   }
 });
 
-test('al empezar: sin montones, planos, muebles ni marcas; nadie lleva nada en la mano', () => {
+test('al empezar: sin montones, planos, muebles ni marcas; cada uno con su cuchillo', () => {
   const w = createWorld(5);
   expect(w.piles).toEqual([]);
   expect(w.blueprints).toEqual([]);
   expect(w.furniture).toEqual([]);
   expect(w.chopMarks).toEqual([]);
   for (const s of w.survivors) {
-    expect(s.equipped).toBeNull();
+    expect(s.equipped).toBe('knife'); // H4b: sin arma caían enseguida
     const coward = s.traits.includes('coward');
     expect(s.work).toEqual({ social: true, build: true, haul: true, chop: !coward, loot: !coward });
   }

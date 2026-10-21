@@ -44,7 +44,17 @@ export type LogEvent =
   | { kind: 'fluRest'; survivorId: number }
   | { kind: 'fluWork'; survivorId: number }
   | { kind: 'fluOver'; survivorId: number }
-  | { kind: 'built'; what: BuildKind };
+  | { kind: 'built'; what: BuildKind }
+  // Zombis (H4b)
+  | { kind: 'broken'; what: 'door' | 'window' | 'wall'; x: number; y: number; inBase: boolean }
+  | { kind: 'downed'; survivorId: number }
+  | { kind: 'gotUp'; survivorId: number }
+  | { kind: 'zombieKilled'; survivorId: number }
+  | { kind: 'fled'; survivorId: number }
+  /** El primer zombi que entra en la base (x, y: por dónde). */
+  | { kind: 'zombiesInBase'; x: number; y: number }
+  /** El primer zombi que se ve cerca de la base ese día. */
+  | { kind: 'zombieSighted'; x: number; y: number };
 
 export type LogEntry = LogEvent & { tick: number };
 

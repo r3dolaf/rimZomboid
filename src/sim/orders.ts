@@ -1,7 +1,7 @@
 import { isEmpty } from './items';
 import { resolveDecision } from './events/resolve';
 import { cancelBlueprint, markTree, placeBlueprint } from './build';
-import type { BuildKind, Container, WorkType, World } from './types';
+import type { BuildKind, Container, Stance, WorkType, World } from './types';
 
 /** Lo que pide el jugador. La interfaz solo cambia el mundo mediante órdenes. */
 export type Order =
@@ -13,7 +13,10 @@ export type Order =
   // Talar y construir (H4a)
   | { type: 'markTree'; x: number; y: number; on: boolean }
   | { type: 'placeBlueprint'; kind: BuildKind; x: number; y: number }
-  | { type: 'cancelBlueprint'; id: number };
+  | { type: 'cancelBlueprint'; id: number }
+  // Zombis (H4b)
+  | { type: 'lockWeapon'; survivorId: number; locked: boolean }
+  | { type: 'setStance'; survivorId: number; stance: Stance };
 
 /** Encola una orden; se aplica al principio del siguiente tick. */
 export function issue(w: World, order: Order): void {
@@ -72,6 +75,16 @@ export function ordersSystem(w: World): void {
       case 'cancelBlueprint':
         cancelBlueprint(w, o.id);
         break;
+      case 'setStance': {
+        const s = w.survivors.find((x) => x.id === o.survivorId);
+        if (s) s.stance = o.stance;
+        break;
+      }
+      case 'lockWeapon': {
+        const s = w.survivors.find((x) => x.id === o.survivorId);
+        if (s) s.weaponLocked = o.locked;
+        break;
+      }
     }
   }
   w.orders = [];

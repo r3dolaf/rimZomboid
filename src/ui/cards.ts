@@ -11,9 +11,13 @@ interface Card {
   love: HTMLElement;
   status: HTMLElement;
   fills: HTMLElement[];
+  health: HTMLElement;
 }
 
-/** Barra inferior: una tarjeta por colono con sus necesidades. Siguen a quien está en la colonia. */
+/**
+ * Barra inferior: una tarjeta por colono con su Salud y sus necesidades. Siguen a quien está en
+ * la colonia.
+ */
 export function mountCards(
   root: HTMLElement,
   opts: { world: World; selection: Selection },
@@ -50,20 +54,22 @@ export function mountCards(
     head.append(who, status);
     card.append(head);
 
-    const fills = NEEDS.map((k) => {
+    const barRow = (key: string, title: string) => {
       const row = document.createElement('div');
       row.className = 'bar';
-      row.dataset.need = k;
-      row.title = es.needs[k];
+      row.dataset.need = key;
+      row.title = title;
       const fill = document.createElement('div');
       fill.className = 'fill';
       row.append(fill);
       card.append(row);
       return fill;
-    });
+    };
+    const health = barRow('health', es.health); // Salud (H4b), la primera
+    const fills = NEEDS.map((k) => barRow(k, es.needs[k]));
 
     bar.append(card);
-    return { card, love, status, fills };
+    return { card, love, status, fills, health };
   };
 
   return {
@@ -89,6 +95,10 @@ export function mountCards(
           const level = barLevel(v, k === 'mood' || k === 'social' ? k : 'need');
           fill.className = `fill ${level}`;
         });
+        const hp = Math.round(s.health);
+        const hpWidth = `${hp}%`;
+        if (card.health.style.width !== hpWidth) card.health.style.width = hpWidth;
+        card.health.className = `fill ${barLevel(hp, 'need')}`;
         const icon = statusIcon(s);
         const text = icon?.icon ?? '';
         if (c.status.textContent !== text) {

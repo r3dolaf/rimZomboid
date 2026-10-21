@@ -14,7 +14,7 @@ const SPEEDS: readonly Speed[] = [0, 1, 2, 3];
 
 /**
  * Barra superior: hora, velocidad, comida, vendas y madera del almacén, herramientas (Saquear,
- * Talar, Construir), panel de Trabajos, tormenta, narrador y semilla.
+ * Talar, Construir), panel de Trabajos, zombis a la vista, tormenta, narrador y semilla.
  */
 export function mountHud(
   root: HTMLElement,
@@ -25,7 +25,7 @@ export function mountHud(
     narrator?: NarratorStyle;
     toggleWork?: () => void;
   },
-): { update(t: GameTime, stock: Inventory, storm?: boolean): void } {
+): { update(t: GameTime, stock: Inventory, storm?: boolean, zombies?: number): void } {
   const bar = document.createElement('div');
   bar.className = 'hud-bar';
 
@@ -104,6 +104,10 @@ export function mountHud(
   weather.textContent = es.storm;
   weather.hidden = true;
 
+  const zombies = document.createElement('span');
+  zombies.className = 'hud-zombies';
+  zombies.dataset.testid = 'hud-zombies';
+
   const narrator = document.createElement('span');
   narrator.className = 'hud-narrator';
   narrator.dataset.testid = 'hud-narrator';
@@ -117,6 +121,7 @@ export function mountHud(
     wood,
     ...tools.map((t) => t.b),
     work,
+    zombies,
     weather,
     narrator,
     seed,
@@ -132,7 +137,10 @@ export function mountHud(
   refreshSpeed();
 
   return {
-    update(t, stock, storm = false) {
+    update(t, stock, storm = false, inSight = 0) {
+      const zombiesText = es.zombiesInSight(inSight);
+      if (zombies.textContent !== zombiesText) zombies.textContent = zombiesText;
+      zombies.classList.toggle('alert', inSight > 0);
       if (weather.hidden === storm) weather.hidden = !storm;
       const text = formatDayTime(t);
       if (time.textContent !== text) time.textContent = text;

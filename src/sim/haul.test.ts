@@ -1,5 +1,6 @@
 // H4a §3.3: transportar montones al almacén y madera a los planos.
 import { expect, test } from 'vitest';
+import { withoutZombies } from './testing/fixtures';
 import { TICKS_PER_HOUR } from './balance';
 import { checkInvariants } from './invariants';
 import { emptyInventory } from './items';
@@ -9,7 +10,7 @@ import { step } from './step';
 import { Tile, type Point, type Survivor, type World } from './types';
 import { createWorld, tileOf } from './world';
 
-const BASE = createWorld(3);
+const BASE = withoutZombies(createWorld(3)); // H4a: talar y acarrear, sin zombis
 
 /** Ana sola transportando, todo visto, sin narrador. */
 function scene(): { w: World; a: Survivor } {

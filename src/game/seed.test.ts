@@ -35,6 +35,8 @@ test.each([
 ])('parseNarrator(%s) = %s', (q, esperado) => expect(parseNarrator(q)).toBe(esperado));
 
 test('startUrl conserva lo demás y pone semilla y narrador', () => {
-  expect(startUrl('?debug=1', 42, 'chaotic')).toBe('?debug=1&seed=42&narrador=caotico');
-  expect(startUrl('', 7, 'calm')).toBe('?seed=7&narrador=tranquilo');
+  expect(startUrl('?debug=1', 42, 'chaotic')).toBe(
+    '?debug=1&seed=42&narrador=caotico&zombis=normal',
+  );
+  expect(startUrl('', 7, 'calm')).toBe('?seed=7&narrador=tranquilo&zombis=normal');
 });

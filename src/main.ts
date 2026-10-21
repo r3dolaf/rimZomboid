@@ -1,10 +1,11 @@
 import Phaser from 'phaser';
-import { parseNarrator, parseSeed, randomSeed, startUrl } from './game/seed';
+import { parseNarrator, parseSeed, parseZombies, randomSeed, startUrl } from './game/seed';
 import { createTimeController } from './game/timeController';
 import { BACKGROUND } from './render/colors';
 import { GameScene, type GameSceneData } from './render/GameScene';
 import { gameTime } from './sim/clock';
-import type { NarratorStyle } from './sim/types';
+import { zombiesInSight } from './sim/danger';
+import type { NarratorStyle, ZombieLevel } from './sim/types';
 import { createWorld } from './sim/world';
 import { mountBuildMenu } from './ui/buildMenu';
 import { mountCards } from './ui/cards';
@@ -26,21 +27,25 @@ const ui = document.getElementById('hud')!;
 // Con semilla en la dirección se entra directo (al recargar o con un enlace compartido);
 // sin ella, la portada para elegir narrador y semilla.
 if (new URLSearchParams(location.search).has('seed')) {
-  start(parseSeed(location.search, randomSeed), parseNarrator(location.search) ?? 'balanced');
+  start(
+    parseSeed(location.search, randomSeed),
+    parseNarrator(location.search) ?? 'balanced',
+    parseZombies(location.search) ?? 'normal',
+  );
 } else {
   const screen = mountStartScreen(ui, {
     seed: randomSeed(),
     randomSeed,
-    onStart(seed, style) {
-      history.replaceState(null, '', startUrl(location.search, seed, style));
+    onStart(seed, style, zombies) {
+      history.replaceState(null, '', startUrl(location.search, seed, style, zombies));
       screen.remove();
-      start(seed, style);
+      start(seed, style, zombies);
     },
   });
 }
 
-function start(seed: number, style: NarratorStyle): void {
-  const world = createWorld(seed, style);
+function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
+  const world = createWorld(seed, style, zombies);
   const time = createTimeController();
   const selection = createSelection();
   const houseSelection = createSelection();
@@ -60,6 +65,10 @@ function start(seed: number, style: NarratorStyle): void {
     onFocus(id) {
       selection.set(id);
       (game.scene.getScene('game') as GameScene | null)?.centerOnSurvivor(id);
+    },
+    // Zombis y destrozos: la cámara va a la casilla.
+    onFocusAt(p) {
+      (game.scene.getScene('game') as GameScene | null)?.centerOnTile(p);
     },
   });
 
@@ -98,7 +107,12 @@ function start(seed: number, style: NarratorStyle): void {
     tool,
     debug: new URLSearchParams(location.search).get('debug') === '1',
     onFrame: () => {
-      hud.update(gameTime(world.tick), world.storage.items, world.tick < world.stormUntil);
+      hud.update(
+        gameTime(world.tick),
+        world.storage.items,
+        world.tick < world.stormUntil,
+        zombiesInSight(world).length,
+      );
       cards.update();
       sheet.update();
       housePanel.update();

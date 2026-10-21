@@ -143,3 +143,34 @@ test('lo que se aplica al dejar pasar una decisión también se avisa, en amaril
   for (const n of all()) expect(n.classList.contains('mixed')).toBe(true);
   expect(time.speed).toBe(1);
 });
+
+test('zombis (H4b): derribado y zombis en la base, avisos rojos que pausan; lo demás, sin pausar', () => {
+  const { world, time, notices, all, onFocus } = setup();
+  const onFocusAt = vi.fn();
+  const root2 = document.createElement('div');
+  const n2 = mountNotices(root2, { world, time, onFocus, onFocusAt });
+  n2.update();
+  const s = world.survivors[0]!;
+  time.setSpeed(1);
+  logEvent(world, { kind: 'zombieSighted', x: 3, y: 4 });
+  logEvent(world, { kind: 'broken', what: 'door', x: 1, y: 2, inBase: true });
+  logEvent(world, { kind: 'broken', what: 'window', x: 9, y: 9, inBase: false }); // fuera: sin aviso
+  logEvent(world, { kind: 'fled', survivorId: s.id });
+  notices.update();
+  expect(all()).toHaveLength(3);
+  expect(all().every((n) => n.classList.contains('mixed'))).toBe(true);
+  expect(time.speed).toBe(1);
+  logEvent(world, { kind: 'downed', survivorId: s.id });
+  notices.update();
+  expect(all()[0]!.classList.contains('bad')).toBe(true);
+  expect(time.speed).toBe(0);
+  time.setSpeed(1);
+  logEvent(world, { kind: 'zombiesInBase', x: 5, y: 6 });
+  n2.update();
+  const box = [...root2.querySelectorAll('[data-testid="notice"]')] as HTMLElement[];
+  const inBase = box.find((n) => n.textContent?.includes('dentro de la base'))!;
+  expect(inBase.classList.contains('bad')).toBe(true);
+  expect(time.speed).toBe(0);
+  inBase.click();
+  expect(onFocusAt).toHaveBeenCalledWith({ x: 5, y: 6 });
+});

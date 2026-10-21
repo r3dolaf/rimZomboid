@@ -3,7 +3,10 @@ import {
   EAT_TICKS,
   IDLE_TICKS_MAX,
   IDLE_TICKS_MIN,
+  NOISE,
+  RUN_NOISE_TICKS,
   SEARCH_TICKS,
+  SURVIVOR_RUN_SPEED,
   SURVIVOR_WALK_SPEED,
   UNLOAD_TICKS,
 } from '../balance';
@@ -11,7 +14,9 @@ import { tryStartConsoling } from '../consoling';
 import { startBuildActivity } from '../jobs/build';
 import { startChopActivity } from '../jobs/chop';
 import { startHaulActivity } from '../jobs/haul';
+import { startSwapWeapon } from '../jobs/weapons';
 import { logEvent } from '../log';
+import { makeNoise } from '../noise';
 import { isWalkable } from '../map/grid';
 import { findPath } from '../path/astar';
 import { nextInt } from '../rng';
@@ -22,7 +27,10 @@ import { tileOf } from '../world';
 export function movementSystem(w: World): void {
   for (const s of w.survivors) {
     if (s.action.type !== 'moveTo') continue;
-    const step = walkStep(s, w.grid);
+    const run = s.action.run === true;
+    const step = walkStep(s, w.grid, run ? SURVIVOR_RUN_SPEED : SURVIVOR_WALK_SPEED);
+    // Quien corre hace ruido (spec H4b §3).
+    if (run && step === 'walking' && w.tick % RUN_NOISE_TICKS === 0) makeNoise(w, s.pos, NOISE.run);
     if (step === 'walking') continue;
     // Sin camino (un muro recién hecho en su destino): vuelve a decidir.
     if (step === 'blocked') {
@@ -40,7 +48,11 @@ export function movementSystem(w: World): void {
  * quedado sin camino. Si la siguiente casilla ha dejado de pisarse (un muro recién hecho), busca
  * otro camino al mismo sitio, empezando por volver al centro de la casilla en la que está.
  */
-export function walkStep(s: Survivor, g: Grid): 'walking' | 'arrived' | 'blocked' {
+export function walkStep(
+  s: Survivor,
+  g: Grid,
+  speed = SURVIVOR_WALK_SPEED,
+): 'walking' | 'arrived' | 'blocked' {
   let next = s.path[0];
   if (next === undefined) return 'arrived';
   if (!isWalkable(g, next.x, next.y)) {
@@ -58,13 +70,13 @@ export function walkStep(s: Survivor, g: Grid): 'walking' | 'arrived' | 'blocked
   const dx = tx - s.pos.x;
   const dy = ty - s.pos.y;
   const dist = Math.sqrt(dx * dx + dy * dy); // sqrt es exacto en todos los navegadores; hypot no
-  if (dist <= SURVIVOR_WALK_SPEED) {
+  if (dist <= speed) {
     s.pos = { x: tx, y: ty };
     s.path.shift();
   } else {
     s.pos = {
-      x: s.pos.x + (dx / dist) * SURVIVOR_WALK_SPEED,
-      y: s.pos.y + (dy / dist) * SURVIVOR_WALK_SPEED,
+      x: s.pos.x + (dx / dist) * speed,
+      y: s.pos.y + (dy / dist) * speed,
     };
   }
   return 'walking';
@@ -92,6 +104,8 @@ function startActivity(s: Survivor, activity: Activity, w: World): Action {
       return startHaulActivity(s, w, activity);
     case 'build':
       return startBuildActivity(s, w, activity.blueprintId);
+    case 'swapWeapon':
+      return startSwapWeapon(s, w);
     case 'console':
       // Si se ha movido o está ocupado, vuelve a decidir (y a acercarse) en el siguiente tick.
       return tryStartConsoling(w, s, activity.otherId) ? s.action : { type: 'idle', ticksLeft: 0 };

@@ -11,6 +11,9 @@ export const TILE_COLORS: Record<Tile, number> = {
   [Tile.Tree]: 0x23361f,
   [Tile.WoodWall]: 0x6b4a2a,
   [Tile.BoardedWindow]: 0x7a5a36,
+  [Tile.BrokenWindow]: 0x3c5560,
+  [Tile.BrokenDoor]: 0x4a3420,
+  [Tile.Rubble]: 0x6e6a64,
 };
 
 export const SURVIVOR_COLOR = 0xf2c641;
@@ -46,3 +49,12 @@ export const BAR_PROGRESS = 0x8fd694;
 
 /** Color de Phaser (0xRRGGBB) en CSS, para pintar en un lienzo. */
 export const css = (c: number) => `#${c.toString(16).padStart(6, '0')}`;
+
+// H4b: zombis, derribados, lo roto y lo dañado.
+export const ZOMBIE_COLOR = 0x86a072;
+export const ZOMBIE_OUTLINE = 0x1d2a18;
+export const ZOMBIE_HURT = 0xd9534f;
+export const DOWNED_RING = 0xd9534f;
+export const DAMAGE_BAR = 0xe0a030;
+export const RUBBLE_BITS = 0x8f8a82;
+export const BROKEN_GLASS = 0x1c2a30;

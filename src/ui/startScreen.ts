@@ -1,17 +1,18 @@
 import { seedFromText } from '../game/seed';
 import { es } from '../i18n/es';
-import type { NarratorStyle } from '../sim/types';
+import type { NarratorStyle, ZombieLevel } from '../sim/types';
 import './start.css';
 
 const STYLES: readonly NarratorStyle[] = ['calm', 'balanced', 'chaotic'];
+const LEVELS: readonly ZombieLevel[] = ['few', 'normal', 'many'];
 
-/** Portada (spec H3c §5.1): elegir narrador y semilla, y Empezar. */
+/** Portada (spec H3c §5.1 y H4b §8): elegir narrador, zombis y semilla, y Empezar. */
 export function mountStartScreen(
   root: HTMLElement,
   opts: {
     seed: number;
     randomSeed: () => number;
-    onStart(seed: number, style: NarratorStyle): void;
+    onStart(seed: number, style: NarratorStyle, zombies: ZombieLevel): void;
   },
 ): { remove(): void } {
   const screen = document.createElement('div');
@@ -52,6 +53,29 @@ export function mountStartScreen(
     buttons.forEach((b, i) => b.classList.toggle('selected', STYLES[i] === style));
   refresh();
 
+  // Zombis (H4b): pocos, normal o muchos.
+  let zombies: ZombieLevel = 'normal';
+  const zombiesRow = document.createElement('div');
+  zombiesRow.className = 'start-zombies';
+  const zombiesTitle = document.createElement('span');
+  zombiesTitle.textContent = es.start.zombies;
+  zombiesRow.append(zombiesTitle);
+  const levelButtons = LEVELS.map((level) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.testid = `zombies-${level}`;
+    b.textContent = es.zombieLevels[level];
+    b.addEventListener('click', () => {
+      zombies = level;
+      refreshLevels();
+    });
+    zombiesRow.append(b);
+    return b;
+  });
+  const refreshLevels = () =>
+    levelButtons.forEach((b, i) => b.classList.toggle('selected', LEVELS[i] === zombies));
+  refreshLevels();
+
   const seedRow = document.createElement('label');
   seedRow.className = 'start-seed';
   seedRow.append(document.createTextNode(es.start.seed));
@@ -81,10 +105,10 @@ export function mountStartScreen(
       input.classList.add('invalid');
       return;
     }
-    opts.onStart(n, style);
+    opts.onStart(n, style, zombies);
   });
 
-  panel.append(title, subtitle, choose, cards, seedRow, go);
+  panel.append(title, subtitle, choose, cards, zombiesRow, seedRow, go);
   screen.append(panel);
   root.append(screen);
   return { remove: () => screen.remove() };

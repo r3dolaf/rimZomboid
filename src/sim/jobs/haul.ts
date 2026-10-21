@@ -1,11 +1,13 @@
 // Transportar (spec H4a §3.3): madera a los planos y montones al almacén.
 import { BUILD } from '../balance';
+import { isRepairPlan } from '../build';
 import { emptyInventory, isEmpty, takeUpTo } from '../items';
 import { findPath, regionOf } from '../path/astar';
 import { prunePiles } from '../piles';
 import { pick } from '../rng';
 import type { Action, Activity, Blueprint, Survivor, World } from '../types';
 import { tileOf } from '../world';
+import { FAR } from './build';
 import { atOrBeside, standOnOrBeside } from './stand';
 
 /** Madera que le falta al plano. */
@@ -32,15 +34,19 @@ const dist2 = (s: Survivor, p: { x: number; y: number }) => {
   return (p.x - t.x) ** 2 + (p.y - t.y) ** 2;
 };
 
-/** El plano sin abastecer que necesita madera más cercano, con dónde ponerse para entregarla. */
+/**
+ * El plano sin abastecer que necesita madera más cercano, con dónde ponerse para entregarla. Los
+ * de reparar van antes (spec H4b §4.2).
+ */
 function blueprintToSupply(s: Survivor, w: World) {
   const claimed = new Set(w.survivors.filter((o) => o !== s).map(supplyTarget));
-  let best: { b: Blueprint; stand: { x: number; y: number } } | null = null;
+  let best: { b: Blueprint; stand: { x: number; y: number }; d: number } | null = null;
   for (const b of w.blueprints) {
     if (woodNeeded(b) <= 0 || claimed.has(b.id)) continue;
-    if (best && dist2(s, b.pos) >= dist2(s, best.b.pos)) continue;
+    const d = (isRepairPlan(w, b) ? 0 : FAR) + dist2(s, b.pos);
+    if (best && d >= best.d) continue;
     const stand = standOnOrBeside(w, s, b.pos);
-    if (stand) best = { b, stand };
+    if (stand) best = { b, stand, d };
   }
   return best;
 }

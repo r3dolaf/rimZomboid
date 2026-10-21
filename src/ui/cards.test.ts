@@ -13,12 +13,12 @@ function setup() {
   return { root, world, selection, cards };
 }
 
-test('una tarjeta por superviviente con su nombre y cuatro barras (también Social)', () => {
+test('una tarjeta por superviviente con su nombre y cinco barras (también Social y Salud)', () => {
   const { root, world } = setup();
   for (const s of world.survivors) {
     const card = root.querySelector(`[data-testid="card-${s.id}"]`)!;
     expect(card.textContent).toContain(s.name);
-    expect(card.querySelectorAll('.bar')).toHaveLength(4);
+    expect(card.querySelectorAll('.bar')).toHaveLength(5);
     expect(card.querySelector('[data-need="social"]')).not.toBeNull();
   }
 });

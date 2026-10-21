@@ -1,10 +1,11 @@
-import { EAT_RESTORE } from '../balance';
+import { CHOP_NOISE_TICKS, EAT_RESTORE, NOISE } from '../balance';
 import { isNight } from '../clock';
 import { finishConsoling } from '../consoling';
 import { nearTable } from '../furniture';
 import { workOnBlueprint } from '../jobs/build';
 import { finishChop } from '../jobs/chop';
 import { logEvent } from '../log';
+import { makeNoise } from '../noise';
 import { addMemory } from '../mood';
 import { addInto, isEmpty, takeUpTo } from '../items';
 import type { Survivor, World } from '../types';
@@ -66,7 +67,9 @@ export function activitiesSystem(w: World): void {
     } else if (a.type === 'build') {
       if (workOnBlueprint(w, s, a.blueprintId)) s.action = { type: 'idle', ticksLeft: 0 };
     } else if (a.type === 'chop') {
-      if (--a.ticksLeft > 0) continue;
+      // Cada hachazo se oye (spec H4b §3).
+      if (--a.ticksLeft % CHOP_NOISE_TICKS === 0) makeNoise(w, s.pos, NOISE.chop);
+      if (a.ticksLeft > 0) continue;
       finishChop(w, a.tree);
       s.action = { type: 'idle', ticksLeft: 0 };
     } else if (a.type === 'crisis') {

@@ -1,5 +1,6 @@
-// Semilla y narrador de la partida: de la URL (?seed=123&narrador=caotico) o al azar.
-import type { NarratorStyle } from '../sim/types';
+// Semilla, narrador y zombis de la partida: de la URL (?seed=123&narrador=caotico&zombis=muchos)
+// o al azar.
+import type { NarratorStyle, ZombieLevel } from '../sim/types';
 
 const MAX_SEED = 4294967295;
 
@@ -34,10 +35,32 @@ export function parseNarrator(search: string): NarratorStyle | null {
   return found ?? null;
 }
 
-/** La dirección de una partida: conserva lo que hubiera (p. ej. `debug`) y pone semilla y narrador. */
-export function startUrl(search: string, seed: number, style: NarratorStyle): string {
+/** La opción Zombis en la dirección (en español). */
+const ZOMBIES_PARAM: Record<ZombieLevel, string> = {
+  few: 'pocos',
+  normal: 'normal',
+  many: 'muchos',
+};
+
+export function parseZombies(search: string): ZombieLevel | null {
+  const raw = new URLSearchParams(search).get('zombis');
+  const found = (Object.keys(ZOMBIES_PARAM) as ZombieLevel[]).find((k) => ZOMBIES_PARAM[k] === raw);
+  return found ?? null;
+}
+
+/**
+ * La dirección de una partida: conserva lo que hubiera (p. ej. `debug`) y pone semilla, narrador
+ * y zombis.
+ */
+export function startUrl(
+  search: string,
+  seed: number,
+  style: NarratorStyle,
+  zombies: ZombieLevel = 'normal',
+): string {
   const p = new URLSearchParams(search);
   p.set('seed', String(seed));
   p.set('narrador', NARRATOR_PARAM[style]);
+  p.set('zombis', ZOMBIES_PARAM[zombies]);
   return `?${p.toString()}`;
 }

@@ -48,6 +48,9 @@
   height: 100%;
   background: #6fbf73;
 }
+.bar[data-need='health'] .fill {
+  background: #e06666;
+}
 .bar[data-need='sleep'] .fill {
   background: #6f9fd8;
 }
@@ -147,6 +150,31 @@
 .log[hidden] {
   display: none;
 }
+.log header {
+  position: sticky;
+  top: -6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: -6px -10px 4px;
+  padding: 3px 10px;
+  background: rgba(15, 17, 20, 0.95);
+  font-size: 11px;
+  opacity: 0.85;
+}
+.log.collapsed header {
+  margin-bottom: -6px;
+}
+.log header button {
+  border: none;
+  background: none;
+  color: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.log.collapsed {
+  overflow: hidden;
+}
 .log ol {
   margin: 0;
   padding: 0;
@@ -158,6 +186,28 @@
   align-items: center;
   gap: 4px 10px;
   margin: 6px 0 0;
+}
+.sheet .stance,
+.sheet .weapon {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 6px 0 0;
+}
+.sheet .stance button {
+  padding: 2px 8px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #2a2d31;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.sheet .stance button.selected {
+  background: #e08a2c;
+  border-color: #e08a2c;
+  color: #111;
 }
 .sheet .carrying {
   margin: 4px 0 0;

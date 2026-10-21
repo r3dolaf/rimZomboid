@@ -158,6 +158,7 @@ export const es = {
     birthdaySkipped: (who: string) => `Nadie celebra el cumpleaños de ${who}`,
     cache: (who: string, house: number, cans: number) =>
       `${who} recuerda una despensa en la casa ${house}: ${cans} latas`,
+    built: (what: BuildKind) => es.built[what],
     storm: 'Se desata una tormenta',
     flu: (who: string) => `${who} ha cogido la gripe`,
     fluRest: (who: string) => `${who} guarda reposo`,
@@ -270,10 +271,31 @@ export const es = {
     goPickUp: 'Va a recoger un montón',
     fetchWood: (what: string) => `Va a por madera para ${what}`,
     deliver: (what: string) => `Llevando madera a ${what}`,
+    goBuild: 'Va a construir',
+    build: (kind: BuildKind) => es.building[kind],
     console: (other: string) => `Consolando a ${other}`,
     consoled: (other: string) => `${other} le está consolando`,
   },
   containers: { fridge: 'una nevera', wardrobe: 'un armario', shelf: 'una estantería' },
+  built: {
+    bed: 'Se ha construido una cama',
+    table: 'Se ha construido una mesa',
+    campfire: 'Se ha encendido una hoguera',
+    woodWall: 'Se ha levantado un muro de madera',
+    woodDoor: 'Se ha puesto una puerta de madera',
+    board: 'Se ha tapiado una ventana',
+    unboard: 'Se han quitado las tablas de una ventana',
+  } satisfies Record<BuildKind, string>,
+  /** Lo que hace quien trabaja en cada plano. */
+  building: {
+    bed: 'Construyendo una cama',
+    table: 'Construyendo una mesa',
+    campfire: 'Encendiendo una hoguera',
+    woodWall: 'Levantando un muro',
+    woodDoor: 'Poniendo una puerta',
+    board: 'Tapiando una ventana',
+    unboard: 'Quitando las tablas de una ventana',
+  } satisfies Record<BuildKind, string>,
   /** Cada plano, para las frases ("Llevando madera a una cama"). */
   builds: {
     bed: 'una cama',

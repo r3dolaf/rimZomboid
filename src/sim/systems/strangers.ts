@@ -152,10 +152,15 @@ export function acceptStrangers(w: World): void {
     s.path = [];
     s.work = defaultWork(s.traits);
     s.nextChatAt = w.tick + nextInt(w.rng, 0, CHAT_EVERY_MAX);
+    // Primero una cama construida que esté libre (H4a); si no, uno de los sitios de serie.
+    const spare = w.beds.find((b) => b.ownerId === null);
     const free = BED_SLOTS.map((b) => ({ x: r.x + b.dx, y: r.y + b.dy })).find(
       (p) => !w.beds.some((b) => b.pos.x === p.x && b.pos.y === p.y),
     );
-    if (free) {
+    if (spare) {
+      spare.ownerId = s.id;
+      s.bedId = spare.id;
+    } else if (free) {
       const id = Math.max(0, ...w.beds.map((b) => b.id)) + 1;
       w.beds.push({ id, pos: free, ownerId: s.id });
       s.bedId = id;

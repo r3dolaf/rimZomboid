@@ -113,7 +113,9 @@ export type Activity =
   // Transportar (H4a): recoger un montón, coger madera para un plano y entregarla.
   | { type: 'pickUp'; pileId: number }
   | { type: 'fetchWood'; blueprintId: number }
-  | { type: 'deliver'; blueprintId: number };
+  | { type: 'deliver'; blueprintId: number }
+  // Construir (H4a): trabajar en un plano con toda su madera.
+  | { type: 'build'; blueprintId: number };
 
 export type Action =
   /** `wait`: esperando tras no encontrar camino (no se consulta al cerebro) o tras negarse a trabajar. */
@@ -129,7 +131,9 @@ export type Action =
   /** Consuela a `otherId`, que mientras tanto está en `consoled` (lo lleva el que consuela). */
   | { type: 'console'; otherId: number; ticksLeft: number }
   | { type: 'consoled'; otherId: number }
-  | { type: 'chop'; tree: number; ticksLeft: number };
+  | { type: 'chop'; tree: number; ticksLeft: number }
+  /** El avance se guarda en el plano (si se deja a medias, no se pierde). */
+  | { type: 'build'; blueprintId: number };
 
 export interface Survivor {
   id: number;

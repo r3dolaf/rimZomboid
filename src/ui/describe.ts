@@ -35,6 +35,10 @@ export function activityText(s: Survivor, w?: World): string {
       return t.console(name(a.otherId));
     case 'chop':
       return t.chop;
+    case 'build': {
+      const b = w?.blueprints.find((x) => x.id === a.blueprintId);
+      return b ? t.build(b.kind) : t.goBuild;
+    }
     case 'consoled':
       return t.consoled(name(a.otherId));
     case 'moveTo':
@@ -50,6 +54,7 @@ export function activityText(s: Survivor, w?: World): string {
       if (a.then?.type === 'pickUp') return t.goPickUp;
       if (a.then?.type === 'fetchWood') return t.fetchWood(buildName(a.then.blueprintId));
       if (a.then?.type === 'deliver') return t.deliver(buildName(a.then.blueprintId));
+      if (a.then?.type === 'build') return t.goBuild;
       return t.wander;
     case 'idle':
       if (a.wait === 'refused' && a.ticksLeft > 0) return t.refused;
@@ -246,6 +251,9 @@ export function logText(e: LogEntry, w: World): string {
       break;
     case 'fluOver':
       text = l.fluOver(name(e.survivorId));
+      break;
+    case 'built':
+      text = l.built(e.what);
       break;
   }
   return text;

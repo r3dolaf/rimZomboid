@@ -1,6 +1,7 @@
 import { EAT_RESTORE } from '../balance';
 import { isNight } from '../clock';
 import { finishConsoling } from '../consoling';
+import { workOnBlueprint } from '../jobs/build';
 import { finishChop } from '../jobs/chop';
 import { logEvent } from '../log';
 import { addMemory } from '../mood';
@@ -60,6 +61,8 @@ export function activitiesSystem(w: World): void {
       const c = w.survivors.find((x) => x.id === a.otherId);
       if (!c || c.action.type !== 'console' || c.action.otherId !== s.id)
         s.action = { type: 'idle', ticksLeft: 0 };
+    } else if (a.type === 'build') {
+      if (workOnBlueprint(w, s, a.blueprintId)) s.action = { type: 'idle', ticksLeft: 0 };
     } else if (a.type === 'chop') {
       if (--a.ticksLeft > 0) continue;
       finishChop(w, a.tree);

@@ -28,9 +28,11 @@ function toStorage(w: World, then: { type: 'takeAxe' } | { type: 'storeAxe' }): 
   return { type: 'moveTo', target: pick(w.rng, w.storage.tiles), then };
 }
 
-/** Quien tiene el hacha y no puede talar la devuelve, para que otro la use. */
+/** Quien tiene el hacha y no puede talar (sin permiso, o con gripe y descansando) la devuelve,
+ * para que otro la use. */
 export function returnAxeJob(s: Survivor, w: World): Action | null {
-  return s.equipped === 'axe' && !s.work.chop ? toStorage(w, { type: 'storeAxe' }) : null;
+  const canChop = s.work.chop && s.sick?.plan !== 'rest';
+  return s.equipped === 'axe' && !canChop ? toStorage(w, { type: 'storeAxe' }) : null;
 }
 
 /** El árbol marcado más cercano que nadie más va a talar y al que puede llegar, o `null`. */

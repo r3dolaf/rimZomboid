@@ -146,6 +146,9 @@ test('con gripe y "Que descanse" no hace ningún trabajo (salvo terminar de desc
   w.piles.push({ id: 71, pos: { x: 5, y: 5 }, items: { ...emptyInventory(), wood: 2 } });
   w.woodLog.start += 2;
   expect(findWork(s, w)).toBeNull();
+  s.equipped = 'axe'; // el hacha la devuelve, para que otro pueda talar
+  expect(findWork(s, w)).toMatchObject({ type: 'moveTo', then: { type: 'storeAxe' } });
+  s.equipped = null;
   s.sick.plan = 'work';
   expect(findWork(s, w)).not.toBeNull();
 });

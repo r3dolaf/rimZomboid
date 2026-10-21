@@ -124,7 +124,9 @@ export type Activity =
   | { type: 'fetchWood'; blueprintId: number }
   | { type: 'deliver'; blueprintId: number }
   // Construir (H4a): trabajar en un plano con toda su madera.
-  | { type: 'build'; blueprintId: number };
+  | { type: 'build'; blueprintId: number }
+  // Armas (H4b): en el almacén, cambiar lo que lleva en la mano por lo mejor que haya.
+  | { type: 'swapWeapon' };
 
 export type Action =
   /** `wait`: esperando tras no encontrar camino (no se consulta al cerebro) o tras negarse a trabajar. */

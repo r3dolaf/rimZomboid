@@ -59,6 +59,7 @@ export function activityText(s: Survivor, w?: World): string {
       if (a.then?.type === 'fetchWood') return t.fetchWood(buildName(a.then.blueprintId));
       if (a.then?.type === 'deliver') return t.deliver(buildName(a.then.blueprintId));
       if (a.then?.type === 'build') return t.goBuild;
+      if (a.then?.type === 'swapWeapon') return t.swapWeapon;
       return t.wander;
     case 'idle':
       if (a.wait === 'refused' && a.ticksLeft > 0) return t.refused;
@@ -267,6 +268,9 @@ export function logText(e: LogEntry, w: World): string {
       break;
     case 'gotUp':
       text = l.gotUp(name(e.survivorId));
+      break;
+    case 'zombieKilled':
+      text = l.zombieKilled(name(e.survivorId));
       break;
   }
   return text;

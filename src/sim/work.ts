@@ -5,6 +5,7 @@ import { foodDays } from './colony';
 import { buildJob, buildStillWorth } from './jobs/build';
 import { chopJob, chopStillWorth, returnAxeJob } from './jobs/chop';
 import { deliverJob, haulJob, haulStillWorth } from './jobs/haul';
+import { swapWeaponStillWorth, weaponJob } from './jobs/weapons';
 import { isEmpty, ITEM_KINDS, weightOf } from './items';
 import { regionOf } from './path/astar';
 import { pick } from './rng';
@@ -91,6 +92,8 @@ export function findWork(s: Survivor, w: World): Action | null {
   }
   const back = returnAxeJob(s, w);
   if (back) return back;
+  const arm = weaponJob(s, w);
+  if (arm) return arm;
   const hungry = foodDays(w) < HUNGRY_LOOT_DAYS;
   const order: (() => Action | null)[] = [
     () => (hungry && loot ? lootJob(s, w) : null),
@@ -117,6 +120,7 @@ const WORK_ACTIONS: ReadonlySet<string> = new Set([
   'fetchWood',
   'deliver',
   'build',
+  'swapWeapon',
 ]);
 
 /** ¿Está trabajando (o yendo a trabajar)? */
@@ -129,11 +133,13 @@ export function isWorking(s: Survivor): boolean {
 export function stillWorthIt(s: Survivor, w: World): boolean {
   const a = s.action;
   const what = a.type === 'moveTo' ? a.then?.type : a.type;
-  // Si le mandan descansar, deja lo que esté haciendo (descargar o guardar el hacha, no).
-  if (s.sick?.plan === 'rest' && what !== 'unload' && what !== 'storeAxe') return false;
+  // Si le mandan descansar, deja lo que esté haciendo (descargar o cambiar de arma, no).
+  if (s.sick?.plan === 'rest' && what !== 'unload' && what !== 'storeAxe' && what !== 'swapWeapon')
+    return false;
   if (what === 'chop' || what === 'takeAxe' || what === 'storeAxe') return chopStillWorth(s, w);
   if (what === 'pickUp' || what === 'fetchWood' || what === 'deliver') return haulStillWorth(s, w);
   if (what === 'build') return buildStillWorth(s, w);
+  if (what === 'swapWeapon') return swapWeaponStillWorth(s, w);
   const id = targetContainerId(s);
   if (id === null || s.action.type === 'search') return true;
   const c = w.containers.find((x) => x.id === id);

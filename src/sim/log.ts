@@ -48,7 +48,8 @@ export type LogEvent =
   // Zombis (H4b)
   | { kind: 'broken'; what: 'door' | 'window' | 'wall'; x: number; y: number; inBase: boolean }
   | { kind: 'downed'; survivorId: number }
-  | { kind: 'gotUp'; survivorId: number };
+  | { kind: 'gotUp'; survivorId: number }
+  | { kind: 'zombieKilled'; survivorId: number };
 
 export type LogEntry = LogEvent & { tick: number };
 

@@ -1,3 +1,4 @@
+import { combatSystem } from './combat';
 import { furnitureSystem } from './furniture';
 import { healthSystem } from './health';
 import { narratorSystem } from './narrator';
@@ -26,6 +27,7 @@ export function step(w: World): void {
   decisionsSystem(w);
   movementSystem(w);
   zombieSystem(w);
+  combatSystem(w);
   strangerSystem(w);
   activitiesSystem(w);
   reservationsSystem(w);

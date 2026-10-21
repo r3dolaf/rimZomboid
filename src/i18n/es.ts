@@ -192,6 +192,7 @@ export const es = {
     built: (what: BuildKind) => es.built[what],
     downed: (who: string) => `${who} ha caído`,
     gotUp: (who: string) => `${who} se ha levantado`,
+    zombieKilled: (who: string) => `${who} ha matado un zombi`,
     broken: (what: 'door' | 'window' | 'wall', inBase: boolean) =>
       `Los zombis han ${
         what === 'door'
@@ -322,6 +323,7 @@ export const es = {
     consoled: (other: string) => `${other} le está consolando`,
     downed: 'En el suelo, sin fuerzas',
     melee: 'Peleando con un zombi',
+    swapWeapon: 'Va a por un arma',
   },
   containers: { fridge: 'una nevera', wardrobe: 'un armario', shelf: 'una estantería' },
   built: {

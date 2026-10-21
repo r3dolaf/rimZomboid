@@ -42,7 +42,9 @@ test('marcar la casa más cercana: la vacían y sus objetos acaban en el almacé
   expect(w.log.some((e) => e.kind === 'found')).toBe(true);
   for (const s of w.survivors) expect(isEmpty(s.carrying)).toBe(true);
   expect(w.storage.items.bandage).toBe(bandages);
-  expect(w.storage.items.knife + w.storage.items.bat).toBe(weapons);
+  // Las armas, en el almacén o ya en la mano de alguien (spec H4b §6.2).
+  const inHand = w.survivors.filter((s) => s.equipped === 'knife' || s.equipped === 'bat').length;
+  expect(w.storage.items.knife + w.storage.items.bat + inHand).toBe(weapons);
   expect(checkInvariants(w)).toEqual([]);
 });
 

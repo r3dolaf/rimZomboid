@@ -84,21 +84,23 @@ test('con hacha, tala el árbol marcado en 1 h: hierba, sin marca y un montón d
   expect(checkInvariants(w)).toEqual([]);
 });
 
-test('sin marcas no tala ni va a por el hacha; sin permiso tampoco', () => {
+test('sin marcas no va a talar (el hacha la coge como arma); sin permiso, ni a por el hacha', () => {
   const { w, a, tree } = scene();
   w.storage.items.axe = 1;
   const first = brains.ai.decide(a, w);
-  expect(first?.type === 'moveTo' && first.then !== undefined).toBe(false); // solo pasea
+  const then = first?.type === 'moveTo' ? first.then?.type : undefined;
+  expect(then === 'takeAxe' || then === 'chop').toBe(false);
   w.chopMarks.push(idx(w, tree));
   a.work.chop = false;
   const d = brains.ai.decide(a, w);
   expect(d?.type === 'moveTo' && d.then?.type === 'takeAxe').toBe(false);
 });
 
-test('quien tiene el hacha sin permiso de talar la devuelve al almacén', () => {
-  const { w, a } = scene();
+test('quien tiene el hacha sin permiso de talar la devuelve al almacén si hay árboles marcados', () => {
+  const { w, a, tree } = scene();
   a.equipped = 'axe';
   a.work.chop = false;
+  w.chopMarks.push(idx(w, tree));
   expect(runUntil(w, () => a.equipped === null, 2 * TICKS_PER_HOUR)).toBe(true);
   expect(w.storage.items.axe).toBe(1);
 });

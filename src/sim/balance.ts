@@ -333,3 +333,13 @@ export const HEALTH_PER_HOUR = { awake: 1, floor: 4, bed: 6 } as const;
 export const GET_UP_HEALTH = 15; // al levantarse tras un derribo
 export const HURT_BELOW = 50; // "Herido" por debajo de esto
 export const HURT_MOOD = -10;
+/** Golpes de los colonos según lo que llevan en la mano (spec H4b §6.1). */
+export const WEAPON_STATS = {
+  none: { damage: 5, ticks: 10 },
+  knife: { damage: 15, ticks: 10 },
+  bat: { damage: 25, ticks: 15 },
+  axe: { damage: 40, ticks: 20 },
+} as const;
+export const SURVIVOR_HIT_CHANCE = 0.7;
+export const HEAD_HIT_CHANCE = 1 / 6; // de los golpes que aciertan; hacen el doble
+export const SURVIVOR_REACH = 1.5; // casillas de centro a centro para golpear

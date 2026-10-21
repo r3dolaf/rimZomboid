@@ -7,6 +7,7 @@ import { nextInt, pick } from '../rng';
 import { Tile, type Action, type Point, type Survivor, type World } from '../types';
 import { tileOf } from '../world';
 import { standBeside } from './stand';
+import { canChop, takeBest } from './weapons';
 
 /** Árbol (índice de casilla) al que va o que está talando, o `null`. */
 export function chopTarget(s: Survivor): number | null {
@@ -28,11 +29,13 @@ function toStorage(w: World, then: { type: 'takeAxe' } | { type: 'storeAxe' }): 
   return { type: 'moveTo', target: pick(w.rng, w.storage.tiles), then };
 }
 
-/** Quien tiene el hacha y no puede talar (sin permiso, o con gripe y descansando) la devuelve,
- * para que otro la use. */
+/**
+ * Quien lleva el hacha y no puede talar (sin permiso, con gripe y descansando…) la devuelve si hay
+ * árboles marcados, para que otro la use; salvo que la tenga fijada (spec H4b §6.2).
+ */
 export function returnAxeJob(s: Survivor, w: World): Action | null {
-  const canChop = s.work.chop && s.sick?.plan !== 'rest';
-  return s.equipped === 'axe' && !canChop ? toStorage(w, { type: 'storeAxe' }) : null;
+  if (s.equipped !== 'axe' || s.weaponLocked || w.chopMarks.length === 0 || canChop(s)) return null;
+  return toStorage(w, { type: 'storeAxe' });
 }
 
 /** El árbol marcado más cercano que nadie más va a talar y al que puede llegar, o `null`. */
@@ -59,6 +62,7 @@ export function chopJob(s: Survivor, w: World): Action | null {
   const best = treeToChop(s, w);
   if (!best) return null;
   if (s.equipped !== 'axe') {
+    if (s.weaponLocked) return null; // con otra arma fijada no tala
     // Hachas libres en el almacén: las que no va a coger ya otro.
     const others = w.survivors.filter((o) => o !== s && goingFor(o, 'takeAxe')).length;
     return w.storage.items.axe > others ? toStorage(w, { type: 'takeAxe' }) : null;
@@ -69,7 +73,7 @@ export function chopJob(s: Survivor, w: World): Action | null {
 /** ¿Sigue teniendo sentido lo que hace? */
 export function chopStillWorth(s: Survivor, w: World): boolean {
   if (goingFor(s, 'takeAxe'))
-    return s.work.chop && s.equipped === null && w.storage.items.axe > 0 && w.chopMarks.length > 0;
+    return canChop(s) && s.equipped !== 'axe' && w.storage.items.axe > 0 && w.chopMarks.length > 0;
   if (goingFor(s, 'storeAxe')) return s.equipped === 'axe';
   const tree = chopTarget(s);
   return tree !== null && s.work.chop && s.equipped === 'axe' && marked(w, tree);
@@ -83,17 +87,17 @@ export function startChopActivity(
 ): Action {
   const idle: Action = { type: 'idle', ticksLeft: 0 };
   if (activity.type === 'takeAxe') {
-    if (s.equipped === null && w.storage.items.axe > 0) {
+    // Deja en el almacén lo que llevara y coge el hacha.
+    if (s.equipped !== 'axe' && !s.weaponLocked && w.storage.items.axe > 0) {
+      if (s.equipped) w.storage.items[s.equipped]++;
       w.storage.items.axe--;
       s.equipped = 'axe';
     }
     return idle;
   }
   if (activity.type === 'storeAxe') {
-    if (s.equipped === 'axe') {
-      w.storage.items.axe++;
-      s.equipped = null;
-    }
+    // Deja el hacha y coge lo mejor que quede (spec H4b §6.2).
+    if (s.equipped === 'axe') takeBest(s, w);
     return idle;
   }
   const t = tileOf(s.pos);

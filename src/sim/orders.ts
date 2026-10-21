@@ -13,7 +13,9 @@ export type Order =
   // Talar y construir (H4a)
   | { type: 'markTree'; x: number; y: number; on: boolean }
   | { type: 'placeBlueprint'; kind: BuildKind; x: number; y: number }
-  | { type: 'cancelBlueprint'; id: number };
+  | { type: 'cancelBlueprint'; id: number }
+  // Zombis (H4b)
+  | { type: 'lockWeapon'; survivorId: number; locked: boolean };
 
 /** Encola una orden; se aplica al principio del siguiente tick. */
 export function issue(w: World, order: Order): void {
@@ -72,6 +74,11 @@ export function ordersSystem(w: World): void {
       case 'cancelBlueprint':
         cancelBlueprint(w, o.id);
         break;
+      case 'lockWeapon': {
+        const s = w.survivors.find((x) => x.id === o.survivorId);
+        if (s) s.weaponLocked = o.locked;
+        break;
+      }
     }
   }
   w.orders = [];

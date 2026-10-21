@@ -21,17 +21,20 @@ import { getTile } from './map/grid';
 import { moodTarget } from './mood';
 import { NAMES } from './names';
 import { createRng, nextInt, type RngState } from './rng';
+import { firstEdgeArrival, placeStartZombies } from './zombies/spawn';
 import { rollTraits } from './traits';
 import {
   Tile,
   type Bed,
   type NarratorStyle,
   type Point,
+  type Stance,
   type Storage,
   type Survivor,
   type TraitId,
   type WorkType,
   type World,
+  type ZombieLevel,
 } from './types';
 
 /** Casilla en la que está una posición continua. */
@@ -39,7 +42,14 @@ export function tileOf(p: Point): Point {
   return { x: Math.floor(p.x), y: Math.floor(p.y) };
 }
 
-export function createWorld(seed: number, style: NarratorStyle = 'balanced'): World {
+/** Salt del azar de los zombis: se deriva de la semilla, pero va aparte. */
+const ZOMBIE_RNG_SALT = 0x2f6b9d1;
+
+export function createWorld(
+  seed: number,
+  style: NarratorStyle = 'balanced',
+  zombieLevel: ZombieLevel = 'normal',
+): World {
   const rng = createRng(seed);
   const { grid, base, houses } = generateMap(rng);
 
@@ -69,6 +79,9 @@ export function createWorld(seed: number, style: NarratorStyle = 'balanced'): Wo
     carrying: emptyInventory(),
     work: defaultWork([]), // se ajusta abajo con los rasgos
     equipped: null,
+    weaponLocked: false,
+    health: 100,
+    stance: 'decide', // se ajusta abajo con los rasgos
     opinions: {},
     partnerId: null,
     nextChatAt: 0,
@@ -76,7 +89,10 @@ export function createWorld(seed: number, style: NarratorStyle = 'balanced'): Wo
     sick: null,
     celebrated: false,
   }));
-  for (const s of survivors) s.work = defaultWork(s.traits);
+  for (const s of survivors) {
+    s.work = defaultWork(s.traits);
+    s.stance = defaultStance(s.traits);
+  }
 
   // Muebles de la base (spec H2 §7): camas arriba, almacén abajo junto a la puerta.
   const r = base.rect;
@@ -144,7 +160,15 @@ export function createWorld(seed: number, style: NarratorStyle = 'balanced'): Wo
       recovered: 0,
       spent: 0,
     },
+    zombies: [],
+    zombieRng: createRng((seed ^ ZOMBIE_RNG_SALT) >>> 0),
+    zombieLevel,
+    nextZombieId: 1,
+    nextZombieAt: firstEdgeArrival(),
+    damage: {},
   };
+  // Zombis (H4b), con su propio azar: no cambian nada de lo anterior.
+  placeStartZombies(world);
   // Los supervivientes conocen su base y los alrededores.
   for (let y = r.y - INITIAL_REVEAL; y < r.y + r.h + INITIAL_REVEAL; y++)
     for (let x = r.x - INITIAL_REVEAL; x < r.x + r.w + INITIAL_REVEAL; x++)
@@ -181,4 +205,11 @@ function takeDistinct<T>(rng: RngState, items: readonly T[], n: number): T[] {
 export function defaultWork(traits: readonly TraitId[]): Record<WorkType, boolean> {
   const out = !traits.includes('coward');
   return { social: true, build: true, haul: true, chop: out, loot: out };
+}
+
+/** Postura por defecto (spec H4b §7): el Cobarde huye, el Valiente pelea y el resto decide. */
+export function defaultStance(traits: readonly TraitId[]): Stance {
+  if (traits.includes('coward')) return 'flee';
+  if (traits.includes('brave')) return 'fight';
+  return 'decide';
 }

@@ -22,8 +22,30 @@ export function setTile(g: Grid, x: number, y: number, t: Tile): void {
   regionCache.delete(g);
 }
 
-const WALKABLE: ReadonlySet<Tile> = new Set([Tile.Grass, Tile.Floor, Tile.Road, Tile.Door]);
+const WALKABLE: ReadonlySet<Tile> = new Set([
+  Tile.Grass,
+  Tile.Floor,
+  Tile.Road,
+  Tile.Door,
+  Tile.BrokenWindow,
+  Tile.BrokenDoor,
+  Tile.Rubble,
+]);
 
 export function isWalkable(g: Grid, x: number, y: number): boolean {
   return WALKABLE.has(getTile(g, x, y));
+}
+
+/** Lo que pisa un zombi: como los colonos, pero una puerta (cerrada) es un obstáculo. */
+const ZOMBIE_WALKABLE: ReadonlySet<Tile> = new Set([
+  Tile.Grass,
+  Tile.Floor,
+  Tile.Road,
+  Tile.BrokenWindow,
+  Tile.BrokenDoor,
+  Tile.Rubble,
+]);
+
+export function isZombieWalkable(g: Grid, x: number, y: number): boolean {
+  return ZOMBIE_WALKABLE.has(getTile(g, x, y));
 }

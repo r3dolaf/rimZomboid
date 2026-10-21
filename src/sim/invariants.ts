@@ -1,9 +1,10 @@
-import { BUILD, CARRY_CAPACITY_KG, OPINION_LIMIT } from './balance';
+import { BUILD, CARRY_CAPACITY_KG, OPINION_LIMIT, RESISTANCE, ZOMBIE_HEALTH } from './balance';
 import { ITEM_KINDS, weightOf, type Inventory } from './items';
-import { inBounds, isWalkable } from './map/grid';
+import { inBounds, isWalkable, isZombieWalkable } from './map/grid';
 import { targetContainerId } from './work';
 import { Tile, type World } from './types';
 import { tileOf } from './world';
+import { zombieMax } from './zombies/spawn';
 
 /** Reglas que nunca deben romperse. Devuelve los problemas encontrados (vacío si todo va bien). */
 export function checkInvariants(w: World): string[] {
@@ -25,6 +26,10 @@ export function checkInvariants(w: World): string[] {
       if (!Number.isFinite(v) || v < 0 || v > 100)
         problems.push(`${who}: ${k} fuera de 0–100 (${v})`);
     }
+    if (!Number.isFinite(s.health) || s.health < 0 || s.health > 100)
+      problems.push(`${who}: Salud fuera de 0–100 (${s.health})`);
+    if (s.action.type === 'downed' && s.health !== 0)
+      problems.push(`${who}: derribado con Salud ${s.health}`);
     checkInventory(problems, `${who}: carga`, s.carrying);
     if (weightOf(s.carrying) > CARRY_CAPACITY_KG + 1e-9)
       problems.push(`${who}: carga ${weightOf(s.carrying)} kg > ${CARRY_CAPACITY_KG}`);
@@ -107,6 +112,28 @@ export function checkInvariants(w: World): string[] {
   }
   for (const i of w.chopMarks)
     if (w.grid.tiles[i] !== Tile.Tree) problems.push(`marca de talar en ${i}: no es un árbol`);
+  // H4b: zombis y daños.
+  const max = zombieMax(w.narrator.style, w.zombieLevel);
+  if (w.zombies.length > max) problems.push(`demasiados zombis: ${w.zombies.length} > ${max}`);
+  for (const z of w.zombies) {
+    const who = `zombi #${z.id}`;
+    if (!Number.isFinite(z.pos.x) || !Number.isFinite(z.pos.y)) {
+      problems.push(`${who}: posición no válida (${z.pos.x}, ${z.pos.y})`);
+      continue;
+    }
+    const t = tileOf(z.pos);
+    if (!isZombieWalkable(w.grid, t.x, t.y))
+      problems.push(`${who}: en una casilla que no puede pisar (${t.x}, ${t.y})`);
+    if (!Number.isFinite(z.health) || z.health < 1 || z.health > ZOMBIE_HEALTH)
+      problems.push(`${who}: salud fuera de 1–${ZOMBIE_HEALTH} (${z.health})`);
+  }
+  for (const [key, hp] of Object.entries(w.damage)) {
+    const tile = w.grid.tiles[Number(key)];
+    const full = tile === undefined ? undefined : RESISTANCE[tile];
+    if (full === undefined) problems.push(`daño en ${key}: no se puede romper (casilla ${tile})`);
+    else if (!Number.isInteger(hp) || hp < 1 || hp > full - 1)
+      problems.push(`daño en ${key}: resistencia ${hp} fuera de 1–${full - 1}`);
+  }
   // La madera nunca aparece ni desaparece: lo que hay más lo gastado es lo repartido, talado y recuperado.
   const wood =
     w.storage.items.wood +

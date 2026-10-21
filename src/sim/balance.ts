@@ -1,4 +1,5 @@
 // Todas las cifras ajustables del juego. Se retocan jugando.
+import { Tile } from './types';
 
 // Tiempo
 export const TICKS_PER_SECOND = 10;
@@ -275,3 +276,23 @@ export const BUILD = {
   board: { wood: 3, ticks: 0.5 * TICKS_PER_HOUR },
   unboard: { wood: 0, ticks: 0.25 * TICKS_PER_HOUR },
 } as const;
+
+// Zombis (H4b)
+/** Zombis al empezar, máximo y cada cuántas horas llega uno por los bordes, según el narrador. */
+export const ZOMBIE_START = { calm: 15, balanced: 25, chaotic: 35 } as const;
+export const ZOMBIE_MAX = { calm: 30, balanced: 50, chaotic: 70 } as const;
+export const ZOMBIE_EVERY_HOURS = { calm: 4, balanced: 2, chaotic: 1 } as const;
+/** Opción Zombis de la portada: multiplica lo anterior (y el ritmo de llegada). */
+export const ZOMBIE_LEVEL_MULT = { few: 0.5, normal: 1, many: 1.5 } as const;
+export const ZOMBIE_SAFE_RADIUS = 20; // al empezar, ninguno más cerca de la base
+export const ZOMBIE_HOUSE_RADIUS = 6; // al empezar, junto a una casa
+export const ZOMBIE_EDGE_START_DAY = 2;
+export const ZOMBIE_HEALTH = 60;
+/** Resistencia de lo que pueden romper los zombis (spec H4b §4.1). */
+export const RESISTANCE: Partial<Record<Tile, number>> = {
+  [Tile.Window]: 20,
+  [Tile.BoardedWindow]: 120,
+  [Tile.Door]: 100,
+  [Tile.WoodWall]: 200,
+  [Tile.Wall]: 800,
+};

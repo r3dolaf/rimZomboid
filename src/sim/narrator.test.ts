@@ -22,11 +22,13 @@ test('por defecto, narrador Equilibrado en calma; el primer suceso, al día y me
   }
 });
 
-test('el estilo no cambia el resto del mundo (se sortea después de todo)', () => {
+test('el estilo no cambia el resto del mundo (se sortea después de todo), salvo los zombis', () => {
   const a = createWorld(7);
   const b = createWorld(7, 'chaotic');
   expect(b.narrator.style).toBe('chaotic');
-  expect({ ...b, narrator: a.narrator }).toEqual(a);
+  // Los zombis sí dependen del estilo (spec H4b §2.3), con su propio azar.
+  const { zombies, zombieRng, nextZombieId } = a;
+  expect({ ...b, narrator: a.narrator, zombies, zombieRng, nextZombieId }).toEqual(a);
 });
 
 test('invariantes: decisiones de colonos que no existen y gripe sin fin', () => {

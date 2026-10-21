@@ -306,6 +306,8 @@ export const es = {
     build: (kind: BuildKind) => es.building[kind],
     console: (other: string) => `Consolando a ${other}`,
     consoled: (other: string) => `${other} le está consolando`,
+    downed: 'En el suelo, sin fuerzas',
+    melee: 'Peleando con un zombi',
   },
   containers: { fridge: 'una nevera', wardrobe: 'un armario', shelf: 'una estantería' },
   built: {

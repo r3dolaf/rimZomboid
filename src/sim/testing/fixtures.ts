@@ -30,6 +30,9 @@ export function emptyWorld(width: number, height: number): World {
         carrying: emptyInventory(),
         work: { social: true, build: true, haul: true, chop: true, loot: true },
         equipped: null,
+        weaponLocked: false,
+        health: 100,
+        stance: 'decide',
         opinions: {},
         partnerId: null,
         nextChatAt: 0,
@@ -60,6 +63,12 @@ export function emptyWorld(width: number, height: number): World {
     furniture: [],
     chopMarks: [],
     woodLog: { start: 0, chopped: 0, recovered: 0, spent: 0 },
+    zombies: [],
+    zombieRng: createRng(2),
+    zombieLevel: 'normal',
+    nextZombieId: 1,
+    nextZombieAt: Number.MAX_SAFE_INTEGER, // sin llegadas salvo que el test las pida
+    damage: {},
   };
 }
 

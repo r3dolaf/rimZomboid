@@ -41,6 +41,10 @@ export function activityText(s: Survivor, w?: World): string {
     }
     case 'consoled':
       return t.consoled(name(a.otherId));
+    case 'downed':
+      return t.downed;
+    case 'melee':
+      return t.melee;
     case 'moveTo':
       if (a.then?.type === 'search') return t.goLoot(container(a.then.containerId)?.houseId ?? 0);
       if (a.then?.type === 'unload') return t.goUnload;

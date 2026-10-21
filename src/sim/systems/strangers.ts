@@ -20,7 +20,7 @@ import { findPath, regionOf } from '../path/astar';
 import { nextFloat, nextInt, pick } from '../rng';
 import { rollTraits } from '../traits';
 import { Tile, type Point, type Survivor, type World } from '../types';
-import { defaultWork, tileOf } from '../world';
+import { defaultStance, defaultWork, tileOf } from '../world';
 import { walkStep } from './movement';
 
 /** La caminata hasta la puerta, la espera y la marcha. */
@@ -105,6 +105,9 @@ export function newStranger(w: World, start: Point): Survivor {
     },
     work: { social: true, build: true, haul: true, chop: false, loot: false },
     equipped: null,
+    weaponLocked: false,
+    health: 100,
+    stance: 'decide', // se ajusta abajo con los rasgos
     opinions: {},
     partnerId: null,
     nextChatAt: 0,
@@ -113,6 +116,7 @@ export function newStranger(w: World, start: Point): Survivor {
     celebrated: false,
   };
   s.needs.mood = moodTarget(s, w.tick, w.base.rect);
+  s.stance = defaultStance(s.traits);
   return s;
 }
 

@@ -11,6 +11,9 @@ export const TILE_COLORS: Record<Tile, number> = {
   [Tile.Tree]: 0x23361f,
   [Tile.WoodWall]: 0x6b4a2a,
   [Tile.BoardedWindow]: 0x7a5a36,
+  [Tile.BrokenWindow]: 0x3c5560,
+  [Tile.BrokenDoor]: 0x4a3420,
+  [Tile.Rubble]: 0x6e6a64,
 };
 
 export const SURVIVOR_COLOR = 0xf2c641;

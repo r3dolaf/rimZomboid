@@ -1,20 +1,25 @@
 // Construir (spec H4a §4): trabajar en un plano con toda su madera y lo que sale al terminar.
 import { BUILD, UNBOARD_WOOD } from '../balance';
-import { WALL_KINDS } from '../build';
+import { isRepairPlan, WALL_KINDS } from '../build';
 import { emptyInventory } from '../items';
 import { logEvent } from '../log';
-import { setTile } from '../map/grid';
+import { isWalkable, setTile } from '../map/grid';
 import { dropPile, pileAt } from '../piles';
+import { repairTile } from '../structures';
 import {
   Tile,
   type Action,
   type Blueprint,
   type BuildKind,
+  type Point,
   type Survivor,
   type World,
 } from '../types';
 import { tileOf } from '../world';
 import { atOrBeside, standBeside, standOnOrBeside } from './stand';
+
+/** Más que cualquier distancia al cuadrado en el mapa: deja los planos de reparar delante. */
+export const FAR = 1e9;
 
 /** Muebles: se construyen de pie encima del plano. El resto, desde al lado. */
 const ON_TILE: ReadonlySet<BuildKind> = new Set(['bed', 'table', 'campfire']);
@@ -35,7 +40,8 @@ export function buildJob(s: Survivor, w: World): Action | null {
   let best: { b: Blueprint; stand: { x: number; y: number }; d: number } | null = null;
   for (const b of w.blueprints) {
     if (!ready(b) || claimed.has(b.id)) continue;
-    const d = (b.pos.x - t.x) ** 2 + (b.pos.y - t.y) ** 2;
+    // Reparar va antes (spec H4b §4.2): a igualdad de tipo, el más cercano.
+    const d = (isRepairPlan(w, b) ? 0 : FAR) + (b.pos.x - t.x) ** 2 + (b.pos.y - t.y) ** 2;
     if (best && d >= best.d) continue;
     const stand = ON_TILE.has(b.kind) ? standOnOrBeside(w, s, b.pos) : standBeside(w, s, b.pos);
     if (stand) best = { b, stand, d };
@@ -64,20 +70,20 @@ export function workOnBlueprint(w: World, s: Survivor, blueprintId: number): boo
   const ticks = BUILD[b.kind].ticks;
   if (b.progress < ticks) b.progress++;
   if (b.progress < ticks) return false;
-  // Un muro o una puerta no se terminan con alguien encima: espera.
+  // Un muro, una puerta o unas tablas no se terminan con alguien (o un zombi) encima: espera.
   if (WALL_KINDS.has(b.kind) && someoneOn(w, b.pos)) return false;
   finishBuild(w, b, s);
   return true;
 }
 
-/** ¿Hay alguien en esa casilla o a punto de pisarla (es la siguiente de su camino)? */
+/** ¿Hay alguien (colono, desconocido o zombi) en esa casilla o a punto de pisarla? */
 function someoneOn(w: World, p: { x: number; y: number }): boolean {
-  const on = (x: Survivor) => {
+  const on = (x: { pos: Point; path: Point[] }) => {
     const t = tileOf(x.pos);
     const next = x.path[0];
     return (t.x === p.x && t.y === p.y) || (next?.x === p.x && next.y === p.y);
   };
-  return w.survivors.some(on) || (w.stranger?.survivors.some(on) ?? false);
+  return w.survivors.some(on) || (w.stranger?.survivors.some(on) ?? false) || w.zombies.some(on);
 }
 
 /** El plano se convierte en lo que es (spec H4a §4.1). */
@@ -111,10 +117,16 @@ export function finishBuild(w: World, b: Blueprint, builder: Survivor): void {
       w.woodLog.recovered += UNBOARD_WOOD;
       dropPile(w, tileOf(builder.pos), { ...emptyInventory(), wood: UNBOARD_WOOD });
       break;
+    case 'repair':
+      repairTile(w, x, y);
+      break;
+    case 'fixDoor':
+      setTile(w.grid, x, y, Tile.Door);
+      break;
   }
-  // Si quedó un montón donde ahora hay un muro, se aparta a una casilla de al lado.
+  // Si quedó un montón donde ya no se puede pisar (un muro, unas tablas), se aparta al lado.
   const pile = pileAt(w, x, y);
-  if (pile && b.kind === 'woodWall') {
+  if (pile && !isWalkable(w.grid, x, y)) {
     w.piles = w.piles.filter((p) => p !== pile);
     dropPile(w, { x, y }, pile.items);
   }

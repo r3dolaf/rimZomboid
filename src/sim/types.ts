@@ -237,7 +237,16 @@ export interface Pile {
 }
 
 export type BuildKind =
-  'bed' | 'table' | 'campfire' | 'woodWall' | 'woodDoor' | 'board' | 'unboard';
+  | 'bed'
+  | 'table'
+  | 'campfire'
+  | 'woodWall'
+  | 'woodDoor'
+  | 'board'
+  | 'unboard'
+  // Reparar (H4b): devolver la resistencia a lo dañado y rehacer una puerta rota.
+  | 'repair'
+  | 'fixDoor';
 
 /** Algo por construir: madera entregada y ticks trabajados. */
 export interface Blueprint {

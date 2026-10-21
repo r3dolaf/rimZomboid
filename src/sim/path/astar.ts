@@ -201,3 +201,60 @@ function rebuild(came: Int32Array, goal: number, start: number, w: number): Poin
   for (let i = goal; i !== start; i = came[i]!) path.push({ x: i % w, y: Math.floor(i / w) });
   return path.reverse();
 }
+
+/**
+ * Camino con coste por casilla (los zombis: lo rompible se cruza, pero cuesta). `cost` devuelve
+ * 1 en lo que se pisa, más en lo que hay que romper e `Infinity` en lo que no se cruza. En
+ * diagonal solo se va por casillas libres (coste 1), sin cortar esquinas. Si explora más de
+ * `budget` casillas, se rinde (`null`).
+ */
+export function findCostPath(
+  g: Grid,
+  from: Point,
+  to: Point,
+  cost: (x: number, y: number) => number,
+  budget: number,
+): Point[] | null {
+  if (!Number.isFinite(cost(to.x, to.y))) return null;
+  if (from.x === to.x && from.y === to.y) return [];
+  const w = g.width;
+  const start = from.y * w + from.x;
+  const goal = to.y * w + to.x;
+  const { stamp, cost: acc, came, closed } = buffers(w * g.height);
+  const id = search;
+  const accOf = (i: number) => (stamp[i] === id ? acc[i]! : Infinity);
+  const open = new Heap();
+  let seq = 0;
+  let expanded = 0;
+  stamp[start] = id;
+  acc[start] = 0;
+  open.push({ idx: start, f: octile(from.x, from.y, to.x, to.y), seq: seq++ });
+  while (open.size > 0) {
+    const { idx } = open.pop();
+    if (closed[idx] === id) continue;
+    if (idx === goal) return rebuild(came, goal, start, w);
+    if (++expanded > budget) return null;
+    closed[idx] = id;
+    const x = idx % w;
+    const y = (idx - x) / w;
+    for (const [dx, dy] of DIRS) {
+      const nx = x + dx;
+      const ny = y + dy;
+      if (nx < 0 || ny < 0 || nx >= w || ny >= g.height) continue;
+      const c = cost(nx, ny);
+      if (!Number.isFinite(c)) continue;
+      const diagonal = dx !== 0 && dy !== 0;
+      if (diagonal && (c !== 1 || cost(x + dx, y) !== 1 || cost(x, y + dy) !== 1)) continue;
+      const n = ny * w + nx;
+      if (closed[n] === id) continue;
+      const total = acc[idx]! + (diagonal ? SQRT2 : c);
+      if (total < accOf(n)) {
+        stamp[n] = id;
+        acc[n] = total;
+        came[n] = idx;
+        open.push({ idx: n, f: total + octile(nx, ny, to.x, to.y), seq: seq++ });
+      }
+    }
+  }
+  return null;
+}

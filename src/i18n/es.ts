@@ -50,6 +50,8 @@ export const es = {
     woodDoor: 'Puerta',
     board: 'Tapiar',
     unboard: 'Quitar tablas',
+    repair: 'Reparar',
+    fixDoor: 'Arreglar puerta',
   } satisfies Record<BuildKind, string>,
   buildOption: (name: string, wood: number) => `${name} · ${wood}`,
   buildMenuHint:
@@ -188,6 +190,14 @@ export const es = {
     cache: (who: string, house: number, cans: number) =>
       `${who} recuerda una despensa en la casa ${house}: ${cans} latas`,
     built: (what: BuildKind) => es.built[what],
+    broken: (what: 'door' | 'window' | 'wall', inBase: boolean) =>
+      `Los zombis han ${
+        what === 'door'
+          ? 'roto una puerta'
+          : what === 'window'
+            ? 'roto una ventana'
+            : 'echado abajo un muro'
+      }${inBase ? ' de la base' : ''}`,
     storm: 'Se desata una tormenta',
     flu: (who: string) => `${who} ha cogido la gripe`,
     fluRest: (who: string) => `${who} guarda reposo`,
@@ -318,6 +328,8 @@ export const es = {
     woodDoor: 'Se ha puesto una puerta de madera',
     board: 'Se ha tapiado una ventana',
     unboard: 'Se han quitado las tablas de una ventana',
+    repair: 'Se ha hecho una reparación',
+    fixDoor: 'Se ha arreglado una puerta',
   } satisfies Record<BuildKind, string>,
   /** Lo que hace quien trabaja en cada plano. */
   building: {
@@ -328,6 +340,8 @@ export const es = {
     woodDoor: 'Poniendo una puerta',
     board: 'Tapiando una ventana',
     unboard: 'Quitando las tablas de una ventana',
+    repair: 'Reparando',
+    fixDoor: 'Arreglando una puerta',
   } satisfies Record<BuildKind, string>,
   /** Cada plano, para las frases ("Llevando madera a una cama"). */
   builds: {
@@ -338,6 +352,8 @@ export const es = {
     woodDoor: 'una puerta',
     board: 'una ventana',
     unboard: 'una ventana',
+    repair: 'una reparación',
+    fixDoor: 'una puerta rota',
   } satisfies Record<BuildKind, string>,
 
   /** Iconos sobre la cabeza en el mapa. */

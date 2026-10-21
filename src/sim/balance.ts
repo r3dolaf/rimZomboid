@@ -275,6 +275,9 @@ export const BUILD = {
   woodDoor: { wood: 4, ticks: 1.5 * TICKS_PER_HOUR },
   board: { wood: 3, ticks: 0.5 * TICKS_PER_HOUR },
   unboard: { wood: 0, ticks: 0.25 * TICKS_PER_HOUR },
+  // Reparar (H4b): lo dañado sin romper, y una puerta rota.
+  repair: { wood: 1, ticks: 0.25 * TICKS_PER_HOUR },
+  fixDoor: { wood: 2, ticks: TICKS_PER_HOUR },
 } as const;
 
 // Zombis (H4b)
@@ -296,3 +299,7 @@ export const RESISTANCE: Partial<Record<Tile, number>> = {
   [Tile.WoodWall]: 200,
   [Tile.Wall]: 800,
 };
+export const ZOMBIE_SPEED = 0.1; // casillas por tick (un colono andando, 0,15)
+export const ZOMBIE_HIT_TICKS = 15; // entre golpes, a un colono o a lo que rompe
+export const ZOMBIE_BREAK_DAMAGE = 5; // por golpe a una puerta, ventana o muro
+export const ZOMBIE_PATH_BUDGET = 4000; // casillas que puede explorar una búsqueda de camino

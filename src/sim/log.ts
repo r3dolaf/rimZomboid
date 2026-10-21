@@ -44,7 +44,9 @@ export type LogEvent =
   | { kind: 'fluRest'; survivorId: number }
   | { kind: 'fluWork'; survivorId: number }
   | { kind: 'fluOver'; survivorId: number }
-  | { kind: 'built'; what: BuildKind };
+  | { kind: 'built'; what: BuildKind }
+  // Zombis (H4b)
+  | { kind: 'broken'; what: 'door' | 'window' | 'wall'; x: number; y: number; inBase: boolean };
 
 export type LogEntry = LogEvent & { tick: number };
 

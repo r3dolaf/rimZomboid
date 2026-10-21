@@ -259,6 +259,9 @@ export function logText(e: LogEntry, w: World): string {
     case 'built':
       text = l.built(e.what);
       break;
+    case 'broken':
+      text = l.broken(e.what, e.inBase);
+      break;
   }
   return text;
 }

@@ -108,7 +108,7 @@ test('desconocidos: nombres, rasgos y lo que llevan; Aceptar da la orden', () =>
   strangersEvent.happen(world);
   const s = world.stranger!.survivors[0]!;
   s.traits = ['glutton'];
-  s.carrying = { food: 2, bandage: 1, knife: 0, bat: 0 };
+  s.carrying = { food: 2, bandage: 1, knife: 0, bat: 0, axe: 0, wood: 0 };
   notices.update();
   const el = root.querySelector('[data-testid="decision-stranger"]') as HTMLElement;
   expect(el.textContent).toContain(s.name);

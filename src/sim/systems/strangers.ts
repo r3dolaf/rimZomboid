@@ -19,7 +19,7 @@ import { findPath, regionOf } from '../path/astar';
 import { nextFloat, nextInt, pick } from '../rng';
 import { rollTraits } from '../traits';
 import { Tile, type Point, type Survivor, type World } from '../types';
-import { tileOf } from '../world';
+import { defaultWork, tileOf } from '../world';
 import { walkStep } from './movement';
 
 /** La caminata hasta la puerta, la espera y la marcha. */
@@ -102,7 +102,8 @@ export function newStranger(w: World, start: Point): Survivor {
       food: nextInt(w.rng, 0, STRANGER_FOOD_MAX),
       bandage: nextFloat(w.rng) < STRANGER_BANDAGE_CHANCE ? 1 : 0,
     },
-    work: { loot: false },
+    work: { social: true, build: true, haul: true, chop: false, loot: false },
+    equipped: null,
     opinions: {},
     partnerId: null,
     nextChatAt: 0,
@@ -149,7 +150,7 @@ export function acceptStrangers(w: World): void {
   for (const s of st.survivors) {
     s.action = { type: 'idle', ticksLeft: 0 };
     s.path = [];
-    s.work.loot = !s.traits.includes('coward');
+    s.work = defaultWork(s.traits);
     s.nextChatAt = w.tick + nextInt(w.rng, 0, CHAT_EVERY_MAX);
     const free = BED_SLOTS.map((b) => ({ x: r.x + b.dx, y: r.y + b.dy })).find(
       (p) => !w.beds.some((b) => b.pos.x === p.x && b.pos.y === p.y),

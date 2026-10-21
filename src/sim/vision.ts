@@ -4,10 +4,16 @@ import { darkness } from './clock';
 import { getTile, inBounds } from './map/grid';
 import { Tile, type Grid, type World } from './types';
 
-/** Muros, árboles y puertas tapan la vista; las ventanas no. Fuera del mapa, opaco. */
+/** Muros, árboles, puertas y ventanas tapiadas tapan la vista; las ventanas no. Fuera del mapa, opaco. */
 export function isOpaque(g: Grid, x: number, y: number): boolean {
   const t = getTile(g, x, y);
-  return t === Tile.Wall || t === Tile.Tree || t === Tile.Door;
+  return (
+    t === Tile.Wall ||
+    t === Tile.Tree ||
+    t === Tile.Door ||
+    t === Tile.WoodWall ||
+    t === Tile.BoardedWindow
+  );
 }
 
 export function visionRadius(tick: number): number {

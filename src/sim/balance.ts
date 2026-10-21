@@ -85,7 +85,14 @@ export const CRISIS_TICKS = 2 * TICKS_PER_HOUR;
 export const CRISIS_BREAK_HUNGER = 10;
 
 // Objetos y saqueo (H3)
-export const ITEM_WEIGHT_KG = { food: 0.5, bandage: 0.1, knife: 0.5, bat: 1.5 } as const;
+export const ITEM_WEIGHT_KG = {
+  food: 0.5,
+  bandage: 0.1,
+  knife: 0.5,
+  bat: 1.5,
+  axe: 2,
+  wood: 1,
+} as const;
 export const CARRY_CAPACITY_KG = 8;
 export const LOOT_FOOD_TOTAL = 80; // + START_FOOD ≈ 25 días para 3 supervivientes
 export const LOOT_BANDAGE_TOTAL = 15;
@@ -244,3 +251,17 @@ export const FLU_REST_DAYS = 2;
 export const FLU_HUNGER_MULT = 1.3;
 export const FLU_MOOD = -10;
 export const WORKING_SICK_MOOD = -5;
+
+// Defensa y trabajos (H4a)
+export const LOOT_WOOD_TOTAL = 40; // en armarios y estanterías
+export const AXE_CHANCE = 0.05; // × (0,5 + distancia normalizada), por mueble
+/** Madera y tiempo de cada plano (spec H4a §4.1). */
+export const BUILD = {
+  bed: { wood: 6, ticks: 2 * TICKS_PER_HOUR },
+  table: { wood: 4, ticks: 1.5 * TICKS_PER_HOUR },
+  campfire: { wood: 3, ticks: 0.5 * TICKS_PER_HOUR },
+  woodWall: { wood: 2, ticks: TICKS_PER_HOUR },
+  woodDoor: { wood: 4, ticks: 1.5 * TICKS_PER_HOUR },
+  board: { wood: 3, ticks: 0.5 * TICKS_PER_HOUR },
+  unboard: { wood: 0, ticks: 0.25 * TICKS_PER_HOUR },
+} as const;

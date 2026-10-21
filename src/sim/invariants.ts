@@ -1,8 +1,8 @@
-import { CARRY_CAPACITY_KG, OPINION_LIMIT } from './balance';
+import { BUILD, CARRY_CAPACITY_KG, OPINION_LIMIT } from './balance';
 import { ITEM_KINDS, weightOf, type Inventory } from './items';
 import { inBounds, isWalkable } from './map/grid';
 import { targetContainerId } from './work';
-import type { World } from './types';
+import { Tile, type World } from './types';
 import { tileOf } from './world';
 
 /** Reglas que nunca deben romperse. Devuelve los problemas encontrados (vacío si todo va bien). */
@@ -90,7 +90,23 @@ export function checkInvariants(w: World): string[] {
       problems.push(`${s.name}: va al contenedor ${id} sin tenerlo reservado`);
   }
   for (const b of w.beds)
-    if (!ids.has(b.ownerId)) problems.push(`cama ${b.id}: su dueño ${b.ownerId} no existe`);
+    if (b.ownerId !== null && !ids.has(b.ownerId))
+      problems.push(`cama ${b.id}: su dueño ${b.ownerId} no existe`);
+  // H4a: montones, planos y marcas de talar.
+  for (const p of w.piles) {
+    checkInventory(problems, `montón ${p.id}`, p.items);
+    if (!isWalkable(w.grid, p.pos.x, p.pos.y))
+      problems.push(`montón ${p.id}: en una casilla no transitable (${p.pos.x}, ${p.pos.y})`);
+  }
+  for (const b of w.blueprints) {
+    const cost = BUILD[b.kind].wood;
+    if (!Number.isInteger(b.wood) || b.wood < 0 || b.wood > cost)
+      problems.push(`plano ${b.id} (${b.kind}): madera ${b.wood} fuera de 0–${cost}`);
+    if (!Number.isFinite(b.progress) || b.progress < 0)
+      problems.push(`plano ${b.id}: avance no válido (${b.progress})`);
+  }
+  for (const i of w.chopMarks)
+    if (w.grid.tiles[i] !== Tile.Tree) problems.push(`marca de talar en ${i}: no es un árbol`);
   return problems;
 }
 

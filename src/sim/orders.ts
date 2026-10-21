@@ -1,12 +1,12 @@
 import { isEmpty } from './items';
 import { resolveDecision } from './events/resolve';
-import type { Container, World } from './types';
+import type { Container, WorkType, World } from './types';
 
 /** Lo que pide el jugador. La interfaz solo cambia el mundo mediante órdenes. */
 export type Order =
   | { type: 'designateHouse'; houseId: number; on: boolean }
   | { type: 'designateContainer'; containerId: number; on: boolean }
-  | { type: 'setWork'; survivorId: number; work: 'loot'; enabled: boolean }
+  | { type: 'setWork'; survivorId: number; work: WorkType; enabled: boolean }
   /** Respuesta a una decisión (spec H3c §4): 0 es la primera opción. */
   | { type: 'decide'; decisionId: number; option: 0 | 1 };
 

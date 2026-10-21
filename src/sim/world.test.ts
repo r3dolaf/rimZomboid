@@ -72,12 +72,12 @@ test('almacén de 2 casillas junto a la puerta, con 10 latas', () => {
     { x: r.x + 8, y: r.y + r.h - 2 },
   ]);
   for (const t of w.storage.tiles) expect(getTile(w.grid, t.x, t.y)).toBe(Tile.Floor);
-  expect(w.storage.items).toEqual({ food: 10, bandage: 0, knife: 0, bat: 0 });
+  expect(w.storage.items).toEqual({ food: 10, bandage: 0, knife: 0, bat: 0, axe: 0, wood: 0 });
 });
 
 test('los supervivientes empiezan sin cargar nada', () => {
   for (const s of createWorld(10).survivors)
-    expect(s.carrying).toEqual({ food: 0, bandage: 0, knife: 0, bat: 0 });
+    expect(s.carrying).toEqual({ food: 0, bandage: 0, knife: 0, bat: 0, axe: 0, wood: 0 });
 });
 
 test('necesidades iniciales entre 60 y 100, sin recuerdos y con 1–2 rasgos', () => {

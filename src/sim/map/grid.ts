@@ -2,7 +2,7 @@ import { Tile, type Grid } from '../types';
 import { regionCache } from './regionCache';
 
 export function createGrid(width: number, height: number, fill: Tile): Grid {
-  return { width, height, tiles: new Array<Tile>(width * height).fill(fill) };
+  return { width, height, tiles: new Array<Tile>(width * height).fill(fill), version: 0 };
 }
 
 export function inBounds(g: Grid, x: number, y: number): boolean {
@@ -18,6 +18,7 @@ export function getTile(g: Grid, x: number, y: number): Tile {
 export function setTile(g: Grid, x: number, y: number, t: Tile): void {
   if (!inBounds(g, x, y)) throw new Error(`setTile fuera del mapa: (${x}, ${y})`);
   g.tiles[y * g.width + x] = t;
+  g.version++;
   regionCache.delete(g);
 }
 

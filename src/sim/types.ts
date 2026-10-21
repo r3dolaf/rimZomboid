@@ -24,6 +24,8 @@ export const Tile = {
   Door: 4,
   Window: 5,
   Tree: 6,
+  WoodWall: 7,
+  BoardedWindow: 8,
 } as const;
 export type Tile = (typeof Tile)[keyof typeof Tile];
 
@@ -32,6 +34,8 @@ export interface Grid {
   width: number;
   height: number;
   tiles: Tile[];
+  /** Sube con cada cambio de casilla: la interfaz redibuja el mapa cuando cambia. */
+  version: number;
 }
 
 /** Un edificio: `rect` incluye los muros; `door` es la casilla de la puerta, en el muro. */
@@ -134,8 +138,10 @@ export interface Survivor {
   bedId: number | null;
   /** Lo que lleva encima (como máximo CARRY_CAPACITY_KG). */
   carrying: Inventory;
-  /** Trabajos permitidos (prioridades del jugador). */
-  work: { loot: boolean };
+  /** Trabajos permitidos (casillas del panel de Trabajos). */
+  work: Record<WorkType, boolean>;
+  /** Lo que lleva en la mano (no cuenta como carga). */
+  equipped: 'axe' | null;
   /** Opinión sobre cada uno de los demás, por id, de −100 a 100 (sin entrada, 0). */
   opinions: Record<string, number>;
   partnerId: number | null;
@@ -155,10 +161,39 @@ export interface Stranger {
   leaving: boolean;
 }
 
+/** Trabajos, en orden de criticidad (spec H4a §3.1). */
+export type WorkType = 'social' | 'build' | 'haul' | 'chop' | 'loot';
+
 export interface Bed {
   id: number;
   pos: Point;
-  ownerId: number;
+  /** `null`: cama construida que aún no es de nadie. */
+  ownerId: number | null;
+}
+
+/** Objetos tirados en una casilla transitable. */
+export interface Pile {
+  id: number;
+  pos: Point;
+  items: Inventory;
+}
+
+export type BuildKind =
+  'bed' | 'table' | 'campfire' | 'woodWall' | 'woodDoor' | 'board' | 'unboard';
+
+/** Algo por construir: madera entregada y ticks trabajados. */
+export interface Blueprint {
+  id: number;
+  kind: BuildKind;
+  pos: Point;
+  wood: number;
+  progress: number;
+}
+
+export interface Furniture {
+  id: number;
+  kind: 'table' | 'campfire';
+  pos: Point;
 }
 
 /** Almacén de la base. */
@@ -244,4 +279,9 @@ export interface World {
   decisions: Decision[];
   /** Hay tormenta mientras el tick sea menor que este. */
   stormUntil: number;
+  piles: Pile[];
+  blueprints: Blueprint[];
+  furniture: Furniture[];
+  /** Árboles marcados para talar, por índice y·ancho + x. */
+  chopMarks: number[];
 }

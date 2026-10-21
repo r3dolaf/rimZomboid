@@ -98,6 +98,8 @@ export const es = {
     bandage: ['venda', 'vendas'],
     knife: ['cuchillo', 'cuchillos'],
     bat: ['bate', 'bates'],
+    axe: ['hacha', 'hachas'],
+    wood: ['tabla', 'tablas'],
   } satisfies Record<ItemKind, [string, string]>,
   log: {
     found: (who: string, what: string, house: number) =>

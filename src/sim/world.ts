@@ -14,7 +14,7 @@ import {
   TICKS_PER_DAY,
 } from './balance';
 import { emptyInventory } from './items';
-import { placeContainers } from './loot';
+import { distributeWoodAndAxes, placeContainers } from './loot';
 import { revealFromSurvivors } from './vision';
 import { generateMap } from './map/generate';
 import { getTile } from './map/grid';
@@ -29,6 +29,8 @@ import {
   type Point,
   type Storage,
   type Survivor,
+  type TraitId,
+  type WorkType,
   type World,
 } from './types';
 
@@ -65,7 +67,8 @@ export function createWorld(seed: number, style: NarratorStyle = 'balanced'): Wo
     memories: [],
     bedId: i + 1,
     carrying: emptyInventory(),
-    work: { loot: true },
+    work: defaultWork([]), // se ajusta abajo con los rasgos
+    equipped: null,
     opinions: {},
     partnerId: null,
     nextChatAt: 0,
@@ -73,8 +76,7 @@ export function createWorld(seed: number, style: NarratorStyle = 'balanced'): Wo
     sick: null,
     celebrated: false,
   }));
-  // El Cobarde no sale a saquear salvo que el jugador lo permita.
-  for (const s of survivors) s.work.loot = !s.traits.includes('coward');
+  for (const s of survivors) s.work = defaultWork(s.traits);
 
   // Muebles de la base (spec H2 §7): camas arriba, almacén abajo junto a la puerta.
   const r = base.rect;
@@ -104,6 +106,8 @@ export function createWorld(seed: number, style: NarratorStyle = 'balanced'): Wo
   for (const s of survivors) s.needs.mood = moodTarget(s, 0, base.rect);
   // Narrador (H3c), lo último: el estilo no cambia nada de lo anterior.
   const calmEndsAt = nextInt(rng, CALM_DAYS_MIN * TICKS_PER_DAY, CALM_DAYS_MAX * TICKS_PER_DAY);
+  // Madera y hachas (H4a), lo último de todo.
+  distributeWoodAndAxes(base, houses, containers, rng);
 
   const world: World = {
     seed,
@@ -130,6 +134,10 @@ export function createWorld(seed: number, style: NarratorStyle = 'balanced'): Wo
     },
     decisions: [],
     stormUntil: 0,
+    piles: [],
+    blueprints: [],
+    furniture: [],
+    chopMarks: [],
   };
   // Los supervivientes conocen su base y los alrededores.
   for (let y = r.y - INITIAL_REVEAL; y < r.y + r.h + INITIAL_REVEAL; y++)
@@ -161,4 +169,10 @@ function takeDistinct<T>(rng: RngState, items: readonly T[], n: number): T[] {
   const out: T[] = [];
   for (let i = 0; i < n; i++) out.push(pool.splice(nextInt(rng, 0, pool.length - 1), 1)[0]!);
   return out;
+}
+
+/** Trabajos por defecto: todos, salvo que el Cobarde no sale de la base (ni saquea ni tala). */
+export function defaultWork(traits: readonly TraitId[]): Record<WorkType, boolean> {
+  const out = !traits.includes('coward');
+  return { social: true, build: true, haul: true, chop: out, loot: out };
 }

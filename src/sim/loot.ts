@@ -1,10 +1,12 @@
 import {
+  AXE_CHANCE,
   BAT_CHANCE,
   CONTAINERS_MAX,
   CONTAINERS_MIN,
   KNIFE_CHANCE,
   LOOT_BANDAGE_TOTAL,
   LOOT_FOOD_TOTAL,
+  LOOT_WOOD_TOTAL,
 } from './balance';
 import { emptyInventory } from './items';
 import { getTile } from './map/grid';
@@ -115,4 +117,49 @@ function largestRemainder(total: number, weights: number[]): number[] {
     out[i]!++;
   }
   return out;
+}
+
+/**
+ * Madera y hachas (H4a). Se reparte aparte y al final de createWorld para no cambiar partidas
+ * anteriores con la misma semilla. La madera, en armarios y estanterías (más lejos, más); el
+ * hacha, como el bate, y si no sale ninguna, una en la casa más lejana.
+ */
+export function distributeWoodAndAxes(
+  base: Building,
+  houses: Building[],
+  containers: Container[],
+  rng: RngState,
+): void {
+  const dist = houses.map((h) =>
+    Math.sqrt((h.door.x - base.door.x) ** 2 + (h.door.y - base.door.y) ** 2),
+  );
+  const maxDist = Math.max(...dist, 1);
+  const d = dist.map((x) => x / maxDist);
+  const shelves = houses.map((h) =>
+    containers.filter((c) => c.houseId === h.id && c.kind !== 'fridge'),
+  );
+  const weights = d.map((x, i) => (shelves[i]!.length > 0 ? 1 + 2 * x : 0));
+  if (weights.some((x) => x > 0)) {
+    const shares = largestRemainder(LOOT_WOOD_TOTAL, weights);
+    shelves.forEach((cs, i) => {
+      for (let k = 0; k < shares[i]!; k++) cs[nextInt(rng, 0, cs.length - 1)]!.items.wood++;
+    });
+  }
+  let axes = 0;
+  houses.forEach((h, i) => {
+    for (const c of containers)
+      if (c.houseId === h.id && nextFloat(rng) < AXE_CHANCE * (0.5 + d[i]!)) {
+        c.items.axe++;
+        axes++;
+      }
+  });
+  if (axes > 0) return;
+  // Siempre al menos una, en la casa más lejana que tenga muebles.
+  const order = houses.map((_, i) => i).sort((a, b) => d[b]! - d[a]!);
+  for (const i of order) {
+    const cs = containers.filter((c) => c.houseId === houses[i]!.id);
+    if (cs.length === 0) continue;
+    cs[nextInt(rng, 0, cs.length - 1)]!.items.axe++;
+    return;
+  }
 }

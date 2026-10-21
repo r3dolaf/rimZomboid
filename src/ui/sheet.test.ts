@@ -86,7 +86,7 @@ test('la ✕ no se reconstruye al cambiar los datos (si no, un clic puede perder
 test('muestra lo que lleva encima y su peso', () => {
   const { root, world, selection, sheet } = setup();
   const s = world.survivors[0]!;
-  s.carrying = { food: 6, bandage: 1, knife: 0, bat: 0 };
+  s.carrying = { food: 6, bandage: 1, knife: 0, bat: 0, axe: 0, wood: 0 };
   selection.set(s.id);
   sheet.update();
   expect(sheetEl(root).textContent).toContain('Lleva: 6 latas y 1 venda (3,1 / 8 kg)');

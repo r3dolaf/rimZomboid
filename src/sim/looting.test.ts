@@ -212,7 +212,7 @@ test('un bate que no cabe no le hace volver al mismo contenedor una y otra vez',
   issue(w, { type: 'designateHouse', houseId: w.houses[0]!.id, on: true });
   step(w);
   for (const c of w.containers) {
-    c.items = { ...emptyInventory(), bat: 1 };
+    c.items = { ...emptyInventory(), bat: 1, axe: 0, wood: 0 };
     c.searched = true;
   }
   s.carrying = { ...emptyInventory(), food: 14 }; // 7 kg: el bate (1,5) no cabe

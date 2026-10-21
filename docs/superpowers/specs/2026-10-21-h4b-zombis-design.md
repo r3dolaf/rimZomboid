@@ -87,9 +87,10 @@ Con la opción **Zombis** en _normal_:
 | ----------- | ---------- | --------------------- | ------ |
 | Tranquilo   | 15         | 1 cada 4 h            | 30     |
 | Equilibrado | 25         | 1 cada 2 h            | 50     |
-| Caótico     | 35         | 1 cada hora           | 70     |
+| Caótico     | 30         | 1 cada hora y media   | 60     |
 
-- **Opción Zombis** en la portada: con **pocos** las tres cifras se multiplican por 0,5; con **normal**, por 1; con **muchos**, por 1,5. Las cifras se redondean, y el ritmo de llegada se escala igual (con muchos, más a menudo). Se guarda en `World.zombieLevel`.
+- **Opción Zombis** en la portada: con **pocos** las tres cifras se multiplican por 0,5; con **normal**, por 1; con **muchos**, por 1,25. Las cifras se redondean, y el ritmo de llegada se escala igual (con muchos, más a menudo). Se guarda en `World.zombieLevel`.
+- Al principio Caótico era 35, 1 cada hora y 70, y muchos ×1,5: sin construir defensas, en Caótico/muchos los colonos pasaban en el suelo el 80 % del tiempo. Con estas cifras, un 44 % (Caótico/normal, 28 %; Equilibrado/muchos, 18 %; Equilibrado/normal no cambia).
 - **Al empezar:**
   - cada zombi va junto a una casa, a 6 casillas o menos de ella, y las casas lejanas tienen más probabilidad (peso `0,5 + d`, con `d` de 0 a 1 según la distancia a la base);
   - si no hay sitio, va a cualquier casilla exterior;

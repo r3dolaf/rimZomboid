@@ -260,7 +260,10 @@ test('llegadas por los bordes: desde el día 2, al doble de ritmo de noche y sin
   w.tick = night;
   expect(arrivalInterval(w)).toBe((ZOMBIE_EVERY_HOURS.balanced * TICKS_PER_HOUR) / 2);
   w.zombieLevel = 'many';
-  expect(arrivalInterval(w)).toBe((ZOMBIE_EVERY_HOURS.balanced * TICKS_PER_HOUR) / 2 / 1.5);
+  expect(arrivalInterval(w)).toBe((ZOMBIE_EVERY_HOURS.balanced * TICKS_PER_HOUR) / 2 / 1.25);
+  w.narrator.style = 'chaotic';
+  expect(ZOMBIE_EVERY_HOURS.chaotic).toBe(1.5);
+  w.narrator.style = 'balanced';
   w.zombieLevel = 'normal';
   w.nextZombieAt = w.tick;
   run(w, 1);

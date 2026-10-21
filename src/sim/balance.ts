@@ -284,11 +284,12 @@ export const BUILD = {
 
 // Zombis (H4b)
 /** Zombis al empezar, máximo y cada cuántas horas llega uno por los bordes, según el narrador. */
-export const ZOMBIE_START = { calm: 15, balanced: 25, chaotic: 35 } as const;
-export const ZOMBIE_MAX = { calm: 30, balanced: 50, chaotic: 70 } as const;
-export const ZOMBIE_EVERY_HOURS = { calm: 4, balanced: 2, chaotic: 1 } as const;
+// Caótico era 35/70/1 h y Muchos ×1,5: sin defensas, en Caótico/muchos caían el 80 % del tiempo.
+export const ZOMBIE_START = { calm: 15, balanced: 25, chaotic: 30 } as const;
+export const ZOMBIE_MAX = { calm: 30, balanced: 50, chaotic: 60 } as const;
+export const ZOMBIE_EVERY_HOURS = { calm: 4, balanced: 2, chaotic: 1.5 } as const;
 /** Opción Zombis de la portada: multiplica lo anterior (y el ritmo de llegada). */
-export const ZOMBIE_LEVEL_MULT = { few: 0.5, normal: 1, many: 1.5 } as const;
+export const ZOMBIE_LEVEL_MULT = { few: 0.5, normal: 1, many: 1.25 } as const;
 export const ZOMBIE_SAFE_RADIUS = 20; // al empezar, ninguno más cerca de la base
 export const ZOMBIE_HOUSE_RADIUS = 6; // al empezar, junto a una casa
 export const ZOMBIE_EDGE_START_DAY = 2;

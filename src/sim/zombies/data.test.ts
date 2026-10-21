@@ -50,9 +50,10 @@ test('al empezar: Salud 100, postura según los rasgos y sin arma fijada', () =>
 });
 
 test('cuántos zombis hay al empezar y cuántos como mucho, según el narrador y la opción', () => {
-  const start = { calm: 15, balanced: 25, chaotic: 35 };
-  const max = { calm: 30, balanced: 50, chaotic: 70 };
-  const mult = { few: 0.5, normal: 1, many: 1.5 };
+  // Caótico y Muchos, más suaves que al principio: con 35/70 y ×1,5 caían el 80 % del tiempo.
+  const start = { calm: 15, balanced: 25, chaotic: 30 };
+  const max = { calm: 30, balanced: 50, chaotic: 60 };
+  const mult = { few: 0.5, normal: 1, many: 1.25 };
   for (const style of ['calm', 'balanced', 'chaotic'] as NarratorStyle[])
     for (const level of ['few', 'normal', 'many'] as ZombieLevel[]) {
       expect(zombieStartCount(style, level)).toBe(Math.round(start[style] * mult[level]));

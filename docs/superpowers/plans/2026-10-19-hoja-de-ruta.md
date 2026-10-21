@@ -48,7 +48,7 @@ Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al p
 
 **Para H6 (pulido), de H4b:**
 
-- Equilibrio de zombis: ya se empieza con un cuchillo cada uno, hay unas 10 armas por mapa y las ventanas aguantan 60 (tapiadas, 180). Así, en Equilibrado/normal y sin construir nada, los colonos pasan en el suelo cerca de un 9 % del tiempo los 3 primeros días (12 semillas; antes, un 31 %). Lo que queda: en algunas semillas un grupo de unos 12 zombis entra en una base sin muros, y quien se levanta con 15 de Salud vuelve a caer en cuanto vuelven.
+- Equilibrio de zombis: ya se empieza con un cuchillo cada uno, hay unas 10 armas por mapa y las ventanas aguantan 60 (tapiadas, 180). Así, en Equilibrado/normal y sin construir nada, los colonos pasan en el suelo cerca de un 9 % del tiempo los 3 primeros días (12 semillas; antes, un 31 %). Lo que queda: en algunas semillas un grupo de unos 12 zombis entra en una base sin muros, y quien se levanta con 15 de Salud vuelve a caer en cuanto vuelven. Caótico y Muchos se suavizaron (Caótico 30/60/1 cada 1,5 h; Muchos ×1,25): sin defensas, el tiempo en el suelo es un 44 % en Caótico/muchos (antes 81 %), 28 % en Caótico/normal y 18 % en Equilibrado/muchos.
 - La partida larga de zombis prueba 3 combinaciones de narrador y opción, no las 9.
 
 **Para H6 (pulido):**

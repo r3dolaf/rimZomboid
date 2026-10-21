@@ -3,7 +3,7 @@ import { VISION_DAY, VISION_EVERY_TICKS, VISION_NIGHT } from './balance';
 import { darkness } from './clock';
 import { getTile, inBounds } from './map/grid';
 import { visionFor } from './furniture';
-import { Tile, type Grid, type World } from './types';
+import { Tile, type Grid, type Point, type World } from './types';
 
 /** Muros, árboles, puertas y ventanas tapiadas tapan la vista; las ventanas no. Fuera del mapa, opaco. */
 export function isOpaque(g: Grid, x: number, y: number): boolean {
@@ -103,4 +103,37 @@ export function revealFromSurvivors(w: World): void {
     computeFov(w.grid, Math.floor(s.pos.x), Math.floor(s.pos.y), visionFor(w, s), (x, y) => {
       w.seen[y * w.grid.width + x] = 1;
     });
+}
+
+/**
+ * ¿Se ve la casilla `b` desde la `a`? Línea recta entre sus centros (Bresenham): la tapan las
+ * casillas opacas de en medio y los huecos en diagonal entre dos opacas. Para los zombis y para
+ * saber qué zombis ve un colono.
+ */
+export function lineOfSight(g: Grid, a: Point, b: Point): boolean {
+  let x = a.x;
+  let y = a.y;
+  const dx = Math.abs(b.x - a.x);
+  const dy = -Math.abs(b.y - a.y);
+  const sx = Math.sign(b.x - a.x);
+  const sy = Math.sign(b.y - a.y);
+  let err = dx + dy;
+  while (x !== b.x || y !== b.y) {
+    const e2 = 2 * err;
+    let nx = x;
+    let ny = y;
+    if (e2 >= dy) {
+      err += dy;
+      nx += sx;
+    }
+    if (e2 <= dx) {
+      err += dx;
+      ny += sy;
+    }
+    if (nx !== x && ny !== y && isOpaque(g, nx, y) && isOpaque(g, x, ny)) return false;
+    x = nx;
+    y = ny;
+    if ((x !== b.x || y !== b.y) && isOpaque(g, x, y)) return false;
+  }
+  return true;
 }

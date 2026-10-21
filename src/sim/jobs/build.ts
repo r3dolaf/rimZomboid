@@ -1,8 +1,9 @@
 // Construir (spec H4a §4): trabajar en un plano con toda su madera y lo que sale al terminar.
-import { BUILD, UNBOARD_WOOD } from '../balance';
+import { BUILD, BUILD_NOISE_TICKS, NOISE, UNBOARD_WOOD } from '../balance';
 import { isRepairPlan, WALL_KINDS } from '../build';
 import { emptyInventory } from '../items';
 import { logEvent } from '../log';
+import { makeNoise } from '../noise';
 import { isWalkable, setTile } from '../map/grid';
 import { dropPile, pileAt } from '../piles';
 import { repairTile } from '../structures';
@@ -68,7 +69,11 @@ export function workOnBlueprint(w: World, s: Survivor, blueprintId: number): boo
   const b = w.blueprints.find((x) => x.id === blueprintId);
   if (!b || !ready(b) || !s.work.build) return true;
   const ticks = BUILD[b.kind].ticks;
-  if (b.progress < ticks) b.progress++;
+  if (b.progress < ticks) {
+    b.progress++;
+    // Cada martillazo se oye (spec H4b §3).
+    if (b.progress % BUILD_NOISE_TICKS === 0) makeNoise(w, s.pos, NOISE.build);
+  }
   if (b.progress < ticks) return false;
   // Un muro, una puerta o unas tablas no se terminan con alguien (o un zombi) encima: espera.
   if (WALL_KINDS.has(b.kind) && someoneOn(w, b.pos)) return false;

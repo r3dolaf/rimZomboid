@@ -1,9 +1,10 @@
 // Lo que pueden romper los zombis (spec H4b §4.1): resistencia, romper y reparar.
-import { RESISTANCE } from './balance';
+import { NOISE, RESISTANCE } from './balance';
 import { cancelBlueprint, tileFits } from './build';
 import { contains } from './geom';
 import { logEvent } from './log';
 import { getTile, inBounds, setTile } from './map/grid';
+import { makeNoise } from './noise';
 import { Tile, type World } from './types';
 
 /** En qué se convierte cada cosa al romperse. */
@@ -56,6 +57,7 @@ export function damageTile(w: World, x: number, y: number, amount: number): bool
   for (const b of w.blueprints.filter((p) => p.pos.x === x && p.pos.y === y))
     if (!tileFits(w, b.kind, { x, y })) cancelBlueprint(w, b.id);
   logEvent(w, { kind: 'broken', what: WHAT[tile]!, x, y, inBase: contains(w.base.rect, { x, y }) });
+  makeNoise(w, { x: x + 0.5, y: y + 0.5 }, NOISE.broken);
   return true;
 }
 

@@ -303,3 +303,11 @@ export const ZOMBIE_SPEED = 0.1; // casillas por tick (un colono andando, 0,15)
 export const ZOMBIE_HIT_TICKS = 15; // entre golpes, a un colono o a lo que rompe
 export const ZOMBIE_BREAK_DAMAGE = 5; // por golpe a una puerta, ventana o muro
 export const ZOMBIE_PATH_BUDGET = 4000; // casillas que puede explorar una búsqueda de camino
+export const ZOMBIE_VISION = 8; // casillas, de día y de noche
+export const CAMPFIRE_SIGHT = 15; // de noche, un zombi ve una hoguera hasta esta distancia
+export const SURVIVOR_RUN_SPEED = 0.25; // casillas por tick, al huir o ir a por un zombi
+/** Radio de cada ruido, en casillas (spec H4b §3). */
+export const NOISE = { fightHit: 10, broken: 12, zombieHit: 8, chop: 8, build: 6, run: 5 } as const;
+export const CHOP_NOISE_TICKS = 30; // cada cuánto suena un hachazo
+export const BUILD_NOISE_TICKS = 30; // cada cuánto suena un martillazo
+export const RUN_NOISE_TICKS = 10; // cada cuánto se oyen los pasos de quien corre

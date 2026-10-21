@@ -9,6 +9,7 @@ import {
   STRANGER_NEED_MAX,
   STRANGER_NEED_MIN,
 } from '../balance';
+import { freeFloor } from '../build';
 import { contains } from '../geom';
 import { emptyInventory } from '../items';
 import { logEvent } from '../log';
@@ -29,9 +30,9 @@ export function strangerSystem(w: World): void {
   let arrived = true;
   for (const s of st.survivors) {
     if (s.action.type !== 'moveTo') continue;
-    if (walkStep(s))
-      s.action = { type: 'idle', ticksLeft: 0 }; // espera (o ya se ha ido)
-    else arrived = false;
+    // Al llegar (o si un muro le corta el paso), espera ahí (o ya se ha ido).
+    if (walkStep(s, w.grid) === 'walking') arrived = false;
+    else s.action = { type: 'idle', ticksLeft: 0 };
   }
   if (st.leaving && arrived) w.stranger = null;
 }
@@ -154,8 +155,8 @@ export function acceptStrangers(w: World): void {
     s.nextChatAt = w.tick + nextInt(w.rng, 0, CHAT_EVERY_MAX);
     // Primero una cama construida que esté libre (H4a); si no, uno de los sitios de serie.
     const spare = w.beds.find((b) => b.ownerId === null);
-    const free = BED_SLOTS.map((b) => ({ x: r.x + b.dx, y: r.y + b.dy })).find(
-      (p) => !w.beds.some((b) => b.pos.x === p.x && b.pos.y === p.y),
+    const free = BED_SLOTS.map((b) => ({ x: r.x + b.dx, y: r.y + b.dy })).find((p) =>
+      freeFloor(w, p),
     );
     if (spare) {
       spare.ownerId = s.id;

@@ -1,7 +1,9 @@
 import { NO_PATH_RETRY_TICKS } from '../balance';
 import { brains } from '../brain';
 import { logEvent } from '../log';
+import { isWalkable } from '../map/grid';
 import { findPath } from '../path/astar';
+import { walkableNear } from '../piles';
 import type { World } from '../types';
 import { tileOf } from '../world';
 
@@ -23,7 +25,11 @@ export function decisionsSystem(w: World): void {
     const action = brains[s.brain].decide(s, w);
     if (action === null) continue;
     if (action.type === 'moveTo') {
-      const path = findPath(w.grid, tileOf(s.pos), action.target);
+      // Si está en una casilla que ya no se pisa, sale por la transitable más cercana.
+      const here = tileOf(s.pos);
+      const from = isWalkable(w.grid, here.x, here.y) ? here : (walkableNear(w, here) ?? here);
+      const rest = findPath(w.grid, from, action.target);
+      const path = rest && from !== here ? [from, ...rest] : rest;
       if (path === null) {
         s.action = { type: 'idle', ticksLeft: NO_PATH_RETRY_TICKS, wait: 'noPath' };
         s.path = [];

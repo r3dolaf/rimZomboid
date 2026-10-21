@@ -12,25 +12,47 @@ import { startBuildActivity } from '../jobs/build';
 import { startChopActivity } from '../jobs/chop';
 import { startHaulActivity } from '../jobs/haul';
 import { logEvent } from '../log';
+import { isWalkable } from '../map/grid';
+import { findPath } from '../path/astar';
 import { nextInt } from '../rng';
-import type { Action, Activity, Survivor, World } from '../types';
+import type { Action, Activity, Grid, Survivor, World } from '../types';
 import { tileOf } from '../world';
 
 /** Mueve a cada superviviente hacia el centro de la siguiente casilla de su camino. */
 export function movementSystem(w: World): void {
   for (const s of w.survivors) {
     if (s.action.type !== 'moveTo') continue;
-    if (!walkStep(s)) continue;
+    const step = walkStep(s, w.grid);
+    if (step === 'walking') continue;
+    // Sin camino (un muro recién hecho en su destino): vuelve a decidir.
+    if (step === 'blocked') {
+      s.action = { type: 'idle', ticksLeft: 0 };
+      continue;
+    }
     s.action = s.action.then
       ? startActivity(s, s.action.then, w)
       : { type: 'idle', ticksLeft: nextInt(w.rng, IDLE_TICKS_MIN, IDLE_TICKS_MAX) };
   }
 }
 
-/** Avanza un tick por su camino. Devuelve `true` si ya no le quedaban casillas (ha llegado). */
-export function walkStep(s: Survivor): boolean {
-  const next = s.path[0];
-  if (next === undefined) return true;
+/**
+ * Avanza un tick por su camino: `arrived` si ya no le quedaban casillas, `blocked` si se ha
+ * quedado sin camino. Si la siguiente casilla ha dejado de pisarse (un muro recién hecho), busca
+ * otro camino al mismo sitio, empezando por volver al centro de la casilla en la que está.
+ */
+export function walkStep(s: Survivor, g: Grid): 'walking' | 'arrived' | 'blocked' {
+  let next = s.path[0];
+  if (next === undefined) return 'arrived';
+  if (!isWalkable(g, next.x, next.y)) {
+    const here = tileOf(s.pos);
+    const rest = findPath(g, here, s.path[s.path.length - 1]!);
+    if (rest === null) {
+      s.path = [];
+      return 'blocked';
+    }
+    s.path = [here, ...rest];
+    next = here;
+  }
   const tx = next.x + 0.5;
   const ty = next.y + 0.5;
   const dx = tx - s.pos.x;
@@ -45,7 +67,7 @@ export function walkStep(s: Survivor): boolean {
       y: s.pos.y + (dy / dist) * SURVIVOR_WALK_SPEED,
     };
   }
-  return false;
+  return 'walking';
 }
 
 /** Lo que empieza a hacer al llegar a su destino. */

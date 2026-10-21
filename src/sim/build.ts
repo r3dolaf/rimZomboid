@@ -6,6 +6,15 @@ import { Tile, type BuildKind, type Point, type World } from './types';
 
 const BUILDABLE_GROUND: ReadonlySet<Tile> = new Set([Tile.Grass, Tile.Floor, Tile.Road]);
 
+/** Lo que al terminarse ocupa la casilla: no se termina con alguien encima, y para construir otra
+ * cosa es mejor no ponerse encima de su plano. */
+export const WALL_KINDS: ReadonlySet<BuildKind> = new Set(['woodWall', 'woodDoor']);
+
+/** ¿Hay un plano de muro o puerta en esa casilla? */
+export function wallPlanAt(w: World, x: number, y: number): boolean {
+  return w.blueprints.some((b) => b.pos.x === x && b.pos.y === y && WALL_KINDS.has(b.kind));
+}
+
 /** ¿Hay algo en esa casilla que impida construir? (mueble, cama, contenedor, almacén, montón, plano) */
 function occupied(w: World, x: number, y: number): boolean {
   const at = (p: Point) => p.x === x && p.y === y;
@@ -17,6 +26,11 @@ function occupied(w: World, x: number, y: number): boolean {
     pileAt(w, x, y) !== undefined ||
     w.blueprints.some((b) => at(b.pos))
   );
+}
+
+/** ¿Es suelo de la casa sin nada encima? (Para las camas de serie de los recién llegados.) */
+export function freeFloor(w: World, p: Point): boolean {
+  return getTile(w.grid, p.x, p.y) === Tile.Floor && !occupied(w, p.x, p.y);
 }
 
 /** ¿Se puede poner un plano de `kind` en `p`? (spec H4a §4.1) */

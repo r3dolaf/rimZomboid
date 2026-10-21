@@ -1,7 +1,7 @@
 // Transportar (spec H4a §3.3): madera a los planos y montones al almacén.
 import { BUILD } from '../balance';
 import { emptyInventory, isEmpty, takeUpTo } from '../items';
-import { findPath } from '../path/astar';
+import { findPath, regionOf } from '../path/astar';
 import { prunePiles } from '../piles';
 import { pick } from '../rng';
 import type { Action, Activity, Blueprint, Survivor, World } from '../types';
@@ -64,11 +64,12 @@ export function haulJob(s: Survivor, w: World): Action | null {
   }
   const claimed = new Set(w.survivors.filter((o) => o !== s).map(pileTarget));
   const at = tileOf(s.pos);
+  const region = regionOf(w.grid, at.x, at.y);
   let best: { id: number; pos: { x: number; y: number } } | null = null;
   for (const p of w.piles) {
     if (claimed.has(p.id) || isEmpty(p.items)) continue;
     if (best && dist2(s, p.pos) >= dist2(s, best.pos)) continue;
-    if (!findPath(w.grid, at, p.pos)) continue;
+    if (regionOf(w.grid, p.pos.x, p.pos.y) !== region) continue;
     best = { id: p.id, pos: p.pos };
   }
   return (

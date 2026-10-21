@@ -1,4 +1,5 @@
-// Trabajo de saqueo: elegir contenedor, reservar, descargar en el almacén.
+// Trabajos (spec H4a §3): cuál toca por orden de criticidad, si sigue teniendo sentido, y el
+// saqueo (elegir contenedor, reservar, descargar en el almacén).
 import { CARRY_CAPACITY_KG, HUNGRY_LOOT_DAYS, ITEM_WEIGHT_KG } from './balance';
 import { foodDays } from './colony';
 import { buildJob, buildStillWorth } from './jobs/build';
@@ -7,7 +8,7 @@ import { deliverJob, haulJob, haulStillWorth } from './jobs/haul';
 import { isEmpty, ITEM_KINDS, weightOf } from './items';
 import { regionOf } from './path/astar';
 import { pick } from './rng';
-import type { Action, Container, Survivor, World } from './types';
+import type { Action, Container, Survivor, WorkType, World } from './types';
 
 /** Contenedor al que va o que está registrando, o `null`. */
 export function targetContainerId(s: Survivor): number | null {
@@ -62,9 +63,10 @@ function goUnload(w: World): Action {
   return { type: 'moveTo', target: pick(w.rng, w.storage.tiles), then: { type: 'unload' } };
 }
 
-/** Con gripe y descansando (H3c) no saquea, como si no tuviera permiso. */
-function canLoot(s: Survivor): boolean {
-  return s.work.loot && s.sick?.plan !== 'rest';
+/** ¿Puede hacer ese trabajo? Con gripe y descansando (H3c), ninguno (salvo Social), como si no
+ * tuviera permiso. */
+function may(s: Survivor, work: WorkType): boolean {
+  return s.work[work] && s.sick?.plan !== 'rest';
 }
 
 function lootJob(s: Survivor, w: World): Action | null {
@@ -77,13 +79,13 @@ function lootJob(s: Survivor, w: World): Action | null {
  * (Consolar, el trabajo Social, lo decide antes el cerebro.)
  */
 export function findWork(s: Survivor, w: World): Action | null {
-  const loot = canLoot(s);
+  const loot = may(s, 'loot');
   // Quien lleva cosas termina el viaje: sigue saqueando si puede o descarga.
   if (!isEmpty(s.carrying)) {
     // Si en el almacén no queda comida y él lleva, lo primero es llevarla para que coman todos.
     if (s.carrying.food > 0 && w.storage.items.food === 0) return goUnload(w);
     // La madera que lleva, a un plano que la necesite.
-    const deliver = s.work.haul ? deliverJob(s, w) : null;
+    const deliver = may(s, 'haul') ? deliverJob(s, w) : null;
     if (deliver) return deliver;
     return (loot ? lootJob(s, w) : null) ?? goUnload(w);
   }
@@ -92,9 +94,9 @@ export function findWork(s: Survivor, w: World): Action | null {
   const hungry = foodDays(w) < HUNGRY_LOOT_DAYS;
   const order: (() => Action | null)[] = [
     () => (hungry && loot ? lootJob(s, w) : null),
-    () => (s.work.build ? buildJob(s, w) : null),
-    () => (s.work.haul ? haulJob(s, w) : null),
-    () => (s.work.chop ? chopJob(s, w) : null),
+    () => (may(s, 'build') ? buildJob(s, w) : null),
+    () => (may(s, 'haul') ? haulJob(s, w) : null),
+    () => (may(s, 'chop') ? chopJob(s, w) : null),
     () => (loot ? lootJob(s, w) : null),
   ];
   for (const job of order) {
@@ -127,19 +129,15 @@ export function isWorking(s: Survivor): boolean {
 export function stillWorthIt(s: Survivor, w: World): boolean {
   const a = s.action;
   const what = a.type === 'moveTo' ? a.then?.type : a.type;
+  // Si le mandan descansar, deja lo que esté haciendo (descargar o guardar el hacha, no).
+  if (s.sick?.plan === 'rest' && what !== 'unload' && what !== 'storeAxe') return false;
   if (what === 'chop' || what === 'takeAxe' || what === 'storeAxe') return chopStillWorth(s, w);
   if (what === 'pickUp' || what === 'fetchWood' || what === 'deliver') return haulStillWorth(s, w);
   if (what === 'build') return buildStillWorth(s, w);
   const id = targetContainerId(s);
   if (id === null || s.action.type === 'search') return true;
   const c = w.containers.find((x) => x.id === id);
-  return (
-    c !== undefined &&
-    s.work.loot &&
-    s.sick?.plan !== 'rest' &&
-    available(c, s) &&
-    canTakeSomething(c, s)
-  );
+  return c !== undefined && s.work.loot && available(c, s) && canTakeSomething(c, s);
 }
 
 /** Libera las reservas de quien ya no va a ese contenedor. */

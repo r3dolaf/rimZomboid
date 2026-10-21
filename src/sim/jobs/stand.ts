@@ -1,13 +1,19 @@
 // Dónde ponerse para trabajar en una casilla.
+import { wallPlanAt } from '../build';
 import { inBounds, isWalkable } from '../map/grid';
 import { regionOf } from '../path/astar';
 import type { Point, Survivor, World } from '../types';
 import { tileOf } from '../world';
 
-/** La casilla transitable junto a `p` (8 vecinas), alcanzable por `s`, más cercana a él. */
+/**
+ * La casilla transitable junto a `p` (8 vecinas), alcanzable por `s`, más cercana a él. Las que
+ * tienen un plano de muro o puerta, solo si no hay otra: quien se pone encima no deja terminarlo
+ * (y dos constructores podrían bloquearse el uno al otro).
+ */
 export function standBeside(w: World, s: Survivor, p: Point): Point | null {
   const at = tileOf(s.pos);
   const region = regionOf(w.grid, at.x, at.y);
+  const AVOID = w.grid.width * w.grid.width + w.grid.height * w.grid.height; // más que cualquier distancia
   let best: Point | null = null;
   let bestD = Infinity;
   for (let dy = -1; dy <= 1; dy++)
@@ -16,7 +22,7 @@ export function standBeside(w: World, s: Survivor, p: Point): Point | null {
       const y = p.y + dy;
       if ((dx === 0 && dy === 0) || !inBounds(w.grid, x, y) || !isWalkable(w.grid, x, y)) continue;
       if (regionOf(w.grid, x, y) !== region) continue;
-      const d = (x - at.x) ** 2 + (y - at.y) ** 2;
+      const d = (x - at.x) ** 2 + (y - at.y) ** 2 + (wallPlanAt(w, x, y) ? AVOID : 0);
       if (d < bestD) {
         best = { x, y };
         bestD = d;

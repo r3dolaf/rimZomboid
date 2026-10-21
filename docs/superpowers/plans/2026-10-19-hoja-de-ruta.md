@@ -45,6 +45,8 @@ Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al p
 
 **Para H6 (pulido):**
 
+- H4a: quien se queda con madera que ya no necesita (le cancelan el plano) se la lleva de saqueo en vez de descargarla; la mesa solo da gusto si está a 3 casillas del almacén (donde se come); talar a medias no guarda el avance; quien queda encerrado sin camino al almacén se queda quieto esperando en vez de pasear por su lado; arrastrar un mueble lo pone donde se empezó el arrastre.
+
 - Narrador: en partidas largas se acaban los sucesos buenos y mixtos (cumpleaños uno por colono, desconocidos hasta 8, noche de historias solo de 19 a 23 h) y las fases de calma se quedan casi vacías. Añadir uno o dos sucesos buenos que se repitan y una partida automática de más de 30 días.
 - Las partidas automáticas contestan cada decisión al momento: la caducidad y la gripe "sin decidir" solo las prueban los tests unitarios.
 

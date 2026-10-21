@@ -4,13 +4,11 @@ import { weightOf } from '../sim/items';
 import { moodModifiers, moodTarget } from '../sim/mood';
 import { issue } from '../sim/orders';
 import { opinionOf, relationLabel } from '../sim/social';
-import type { Survivor, WorkType, World } from '../sim/types';
+import type { Survivor, World } from '../sim/types';
 import { activityText, formatItems, formatModifier, signed } from './describe';
 import type { Selection } from './selection';
-import { effectiveWork } from './workPanel';
+import { effectiveWork, WORKS } from './workPanel';
 import './panels.css';
-
-const WORKS: readonly WorkType[] = ['social', 'build', 'haul', 'chop', 'loot'];
 
 /**
  * Ficha del superviviente seleccionado: qué hace, rasgos, necesidades, por qué de su ánimo y

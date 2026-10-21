@@ -1,5 +1,6 @@
 // Construir (spec H4a §4): trabajar en un plano con toda su madera y lo que sale al terminar.
-import { BUILD } from '../balance';
+import { BUILD, UNBOARD_WOOD } from '../balance';
+import { WALL_KINDS } from '../build';
 import { emptyInventory } from '../items';
 import { logEvent } from '../log';
 import { setTile } from '../map/grid';
@@ -17,8 +18,6 @@ import { atOrBeside, standBeside, standOnOrBeside } from './stand';
 
 /** Muebles: se construyen de pie encima del plano. El resto, desde al lado. */
 const ON_TILE: ReadonlySet<BuildKind> = new Set(['bed', 'table', 'campfire']);
-/** Lo que no se termina con alguien encima. */
-const BLOCKING: ReadonlySet<BuildKind> = new Set(['woodWall', 'woodDoor']);
 
 const ready = (b: Blueprint) => b.wood >= BUILD[b.kind].wood;
 
@@ -66,15 +65,17 @@ export function workOnBlueprint(w: World, s: Survivor, blueprintId: number): boo
   if (b.progress < ticks) b.progress++;
   if (b.progress < ticks) return false;
   // Un muro o una puerta no se terminan con alguien encima: espera.
-  if (BLOCKING.has(b.kind) && someoneOn(w, b.pos)) return false;
+  if (WALL_KINDS.has(b.kind) && someoneOn(w, b.pos)) return false;
   finishBuild(w, b, s);
   return true;
 }
 
+/** ¿Hay alguien en esa casilla o a punto de pisarla (es la siguiente de su camino)? */
 function someoneOn(w: World, p: { x: number; y: number }): boolean {
   const on = (x: Survivor) => {
     const t = tileOf(x.pos);
-    return t.x === p.x && t.y === p.y;
+    const next = x.path[0];
+    return (t.x === p.x && t.y === p.y) || (next?.x === p.x && next.y === p.y);
   };
   return w.survivors.some(on) || (w.stranger?.survivors.some(on) ?? false);
 }
@@ -107,8 +108,8 @@ export function finishBuild(w: World, b: Blueprint, builder: Survivor): void {
       break;
     case 'unboard':
       setTile(w.grid, x, y, Tile.Window);
-      w.woodLog.recovered += 1;
-      dropPile(w, tileOf(builder.pos), { ...emptyInventory(), wood: 1 });
+      w.woodLog.recovered += UNBOARD_WOOD;
+      dropPile(w, tileOf(builder.pos), { ...emptyInventory(), wood: UNBOARD_WOOD });
       break;
   }
   // Si quedó un montón donde ahora hay un muro, se aparta a una casilla de al lado.

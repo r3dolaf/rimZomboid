@@ -4,6 +4,7 @@ import { BUILD, TICKS_PER_DAY, TICKS_PER_HOUR } from './balance';
 import { brains } from './brain';
 import { strangersEvent } from './events/strangers';
 import { checkInvariants } from './invariants';
+import { emptyInventory } from './items';
 import { getTile } from './map/grid';
 import { issue } from './orders';
 import { step } from './step';
@@ -182,6 +183,36 @@ test('orden por criticidad: construir antes que transportar, talar o saquear; co
   expect(what()).toBe('search');
 });
 
+test('orden por criticidad: transportar antes que talar, y talar antes que saquear', () => {
+  const { w, a } = scene();
+  a.work = { social: true, build: true, haul: true, chop: true, loot: true };
+  a.equipped = 'axe';
+  w.storage.items.axe = 0;
+  w.storage.items.food = 50;
+  for (const c of w.containers) c.designated = true;
+  // El árbol más cercano a la base (para que se pueda llegar a él).
+  const r = w.base.rect;
+  let tree = -1;
+  let best = Infinity;
+  for (let i = 0; i < w.grid.tiles.length; i++) {
+    if (w.grid.tiles[i] !== Tile.Tree) continue;
+    const d = ((i % w.grid.width) - r.x) ** 2 + (Math.floor(i / w.grid.width) - r.y) ** 2;
+    if (d < best) [tree, best] = [i, d];
+  }
+  w.chopMarks.push(tree);
+  w.piles.push({ id: w.nextId++, pos: freeFloor(w), items: { ...emptyInventory(), wood: 2 } });
+  w.woodLog.chopped += 2;
+  const what = () => {
+    const d = brains.ai.decide(a, w);
+    return d?.type === 'moveTo' ? d.then?.type : d?.type;
+  };
+  expect(what()).toBe('pickUp');
+  w.piles = [];
+  expect(what()).toBe('chop');
+  w.chopMarks = [];
+  expect(what()).toBe('search');
+});
+
 test('un recién llegado ocupa antes una cama construida libre', () => {
   const { w } = scene();
   const p = freeFloor(w);
@@ -205,7 +236,6 @@ test('escenario: talar, acarrear y construir una cama para quien dormía en el s
   b.bedId = null;
   a.work = { social: false, build: true, haul: true, chop: true, loot: false };
   w.storage.items.axe = 1;
-  w.woodLog.start += 0;
   // Los dos árboles vistos más cercanos a la base.
   const r = w.base.rect;
   const trees: number[] = [];

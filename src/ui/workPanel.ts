@@ -5,7 +5,7 @@ import type { Flag } from './flag';
 import './panels.css';
 
 /** Columnas, en el orden de criticidad (spec H4a §3.1). */
-const WORKS: readonly WorkType[] = ['social', 'build', 'haul', 'chop', 'loot'];
+export const WORKS: readonly WorkType[] = ['social', 'build', 'haul', 'chop', 'loot'];
 
 /** Panel de Trabajos (spec H4a §5): una fila por colono y una casilla por trabajo. */
 export function mountWorkPanel(

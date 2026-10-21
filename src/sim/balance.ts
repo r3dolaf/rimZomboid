@@ -260,11 +260,11 @@ export const AXE_CHANCE = 0.05; // × (0,5 + distancia normalizada), por mueble
 export const CHOP_TICKS = TICKS_PER_HOUR;
 export const CHOP_WOOD_MIN = 4;
 export const CHOP_WOOD_MAX = 6;
-export const HUNGRY_LOOT_DAYS = 2;
+export const HUNGRY_LOOT_DAYS = 2; // con menos días de comida, saquear sube a lo más urgente
 export const TABLE_RANGE = 3;
 export const CAMPFIRE_RANGE = 4;
 export const FURNITURE_EVERY_TICKS = 30; // cada cuánto se renueva "Junto al fuego"
-// con menos días de comida, saquear sube a lo más urgente
+export const UNBOARD_WOOD = 1; // lo que devuelve quitar las tablas de una ventana
 /** Madera y tiempo de cada plano (spec H4a §4.1). */
 export const BUILD = {
   bed: { wood: 6, ticks: 2 * TICKS_PER_HOUR },

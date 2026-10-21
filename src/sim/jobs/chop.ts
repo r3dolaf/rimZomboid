@@ -33,30 +33,35 @@ export function returnAxeJob(s: Survivor, w: World): Action | null {
   return s.equipped === 'axe' && !s.work.chop ? toStorage(w, { type: 'storeAxe' }) : null;
 }
 
-export function chopJob(s: Survivor, w: World): Action | null {
-  if (w.chopMarks.length === 0) return null;
-  if (s.equipped !== 'axe') {
-    // Hachas libres en el almacén: las que no va a coger ya otro.
-    const others = w.survivors.filter((o) => o !== s && goingFor(o, 'takeAxe')).length;
-    return w.storage.items.axe > others ? toStorage(w, { type: 'takeAxe' }) : null;
-  }
+/** El árbol marcado más cercano que nadie más va a talar y al que puede llegar, o `null`. */
+function treeToChop(s: Survivor, w: World): { tree: number; stand: Point } | null {
   const claimed = new Set(w.survivors.filter((o) => o !== s).map(chopTarget));
   const at = tileOf(s.pos);
   let best: { tree: number; stand: Point } | null = null;
   let bestD = Infinity;
   for (const tree of w.chopMarks) {
-    if (claimed.has(tree) || !marked(w, tree)) continue;
-    const d = ((tree % w.grid.width) - at.x) ** 2 + (Math.floor(tree / w.grid.width) - at.y) ** 2;
+    if (claimed.has(tree) || w.grid.tiles[tree] !== Tile.Tree) continue;
+    const p = { x: tree % w.grid.width, y: Math.floor(tree / w.grid.width) };
+    const d = (p.x - at.x) ** 2 + (p.y - at.y) ** 2;
     if (d >= bestD) continue;
-    const stand = standBeside(w, s, {
-      x: tree % w.grid.width,
-      y: Math.floor(tree / w.grid.width),
-    });
+    const stand = standBeside(w, s, p);
     if (!stand) continue;
     best = { tree, stand };
     bestD = d;
   }
-  return best && { type: 'moveTo', target: best.stand, then: { type: 'chop', tree: best.tree } };
+  return best;
+}
+
+export function chopJob(s: Survivor, w: World): Action | null {
+  if (w.chopMarks.length === 0) return null;
+  const best = treeToChop(s, w);
+  if (!best) return null;
+  if (s.equipped !== 'axe') {
+    // Hachas libres en el almacén: las que no va a coger ya otro.
+    const others = w.survivors.filter((o) => o !== s && goingFor(o, 'takeAxe')).length;
+    return w.storage.items.axe > others ? toStorage(w, { type: 'takeAxe' }) : null;
+  }
+  return { type: 'moveTo', target: best.stand, then: { type: 'chop', tree: best.tree } };
 }
 
 /** ¿Sigue teniendo sentido lo que hace? */

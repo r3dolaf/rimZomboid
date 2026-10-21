@@ -37,6 +37,19 @@ export function treeMarked(w: World, x: number, y: number): boolean {
   return on && getTile(w.grid, x, y) === Tile.Tree;
 }
 
+/** Todos los árboles marcados (índices), contando órdenes pendientes; en un solo recorrido. */
+export function markedTrees(w: World): Set<number> {
+  const on = new Set(w.chopMarks);
+  for (const o of w.orders) {
+    if (o.type !== 'markTree' || !inBounds(w.grid, o.x, o.y)) continue;
+    const i = o.y * w.grid.width + o.x;
+    if (o.on) on.add(i);
+    else on.delete(i);
+  }
+  for (const i of on) if (w.grid.tiles[i] !== Tile.Tree) on.delete(i);
+  return on;
+}
+
 export function markTree(w: World, x: number, y: number, on: boolean): void {
   const i = y * w.grid.width + x;
   const has = w.chopMarks.includes(i);

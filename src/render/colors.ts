@@ -27,3 +27,22 @@ export const CONTAINER_COLORS = { fridge: 0xd8e4ea, wardrobe: 0x6b4a2e, shelf: 0
 export const CONTAINER_EDGE = 0x1a1a1a;
 export const DESIGNATION = 0xe08a2c;
 export const HOUSE_SELECTED = 0xffffff;
+
+// H4a: madera, muebles, montones, planos y marcas de talar.
+export const PLANK_COLOR = 0x8a6236;
+export const PLANK_SEAM = 0x4a321c;
+export const TABLE_COLOR = 0x8b5a2b;
+export const TABLE_EDGE = 0x4a2f16;
+export const CAMPFIRE_STONE = 0x6a6a6a;
+export const CAMPFIRE_FLAME = 0xff8c1a;
+export const CAMPFIRE_CORE = 0xffd24a;
+export const FIRE_GLOW = 0xff9a3c;
+export const PILE_OTHER = 0xc8c8c8;
+export const BLUEPRINT = 0x7fc3ff;
+export const BLUEPRINT_BAD = 0xd9534f;
+export const BAR_BACK = 0x111111;
+export const BAR_WOOD = 0xc08a4a;
+export const BAR_PROGRESS = 0x8fd694;
+
+/** Color de Phaser (0xRRGGBB) en CSS, para pintar en un lienzo. */
+export const css = (c: number) => `#${c.toString(16).padStart(6, '0')}`;

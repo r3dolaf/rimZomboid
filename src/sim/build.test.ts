@@ -1,6 +1,6 @@
 // H4a: órdenes de talar y construir, y dónde se puede construir.
 import { expect, test } from 'vitest';
-import { canPlace, treeMarked } from './build';
+import { canPlace, markedTrees, treeMarked } from './build';
 import { checkInvariants } from './invariants';
 import { getTile } from './map/grid';
 import { issue, ordersSystem } from './orders';
@@ -43,6 +43,24 @@ test('marcar y desmarcar árboles; solo árboles ya vistos', () => {
   issue(w, { type: 'markTree', x: t.x, y: t.y, on: true });
   ordersSystem(w);
   expect(w.chopMarks).toEqual([]);
+});
+
+test('markedTrees da lo mismo que treeMarked casilla a casilla, con órdenes pendientes', () => {
+  const w = world();
+  const trees: Point[] = [];
+  for (let i = 0; i < w.grid.tiles.length && trees.length < 4; i++)
+    if (w.grid.tiles[i] === Tile.Tree)
+      trees.push({ x: i % w.grid.width, y: Math.floor(i / w.grid.width) });
+  const [a, b, c, d] = trees as [Point, Point, Point, Point];
+  for (const t of [a, b]) issue(w, { type: 'markTree', ...t, on: true });
+  ordersSystem(w);
+  issue(w, { type: 'markTree', ...b, on: false });
+  issue(w, { type: 'markTree', ...c, on: true });
+  issue(w, { type: 'markTree', ...d, on: true });
+  issue(w, { type: 'markTree', ...d, on: false });
+  const set = markedTrees(w);
+  for (const t of trees) expect(set.has(t.y * w.grid.width + t.x)).toBe(treeMarked(w, t.x, t.y));
+  expect(set.size).toBe(2);
 });
 
 test('dónde se puede construir cada cosa', () => {

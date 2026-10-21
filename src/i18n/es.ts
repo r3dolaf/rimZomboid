@@ -220,6 +220,8 @@ export const es = {
     ruinedBirthday: 'Le amargaron el cumpleaños',
     forgottenBirthday: 'Nadie celebró su cumpleaños',
     storm: 'Tormenta',
+    ateAtTable: 'Comió en la mesa',
+    byTheFire: 'Junto al fuego',
   } satisfies Record<MoodModifierId, string>,
   /** Los recuerdos con otra persona, con su nombre. */
   modifiersWith: {

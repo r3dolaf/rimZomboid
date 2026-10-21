@@ -1,6 +1,7 @@
 import { EAT_RESTORE } from '../balance';
 import { isNight } from '../clock';
 import { finishConsoling } from '../consoling';
+import { nearTable } from '../furniture';
 import { workOnBlueprint } from '../jobs/build';
 import { finishChop } from '../jobs/chop';
 import { logEvent } from '../log';
@@ -21,6 +22,7 @@ export function activitiesSystem(w: World): void {
         if (!a.fromPack && source.food === 0) logEvent(w, { kind: 'outOfFood' });
         s.needs.hunger = Math.min(100, s.needs.hunger + EAT_RESTORE);
         addMemory(s, 'ate', w.tick);
+        if (nearTable(w, s)) addMemory(s, 'ateAtTable', w.tick);
       }
       s.action = { type: 'idle', ticksLeft: 0 };
     } else if (a.type === 'sleep') {

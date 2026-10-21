@@ -86,7 +86,10 @@ export type MemoryId =
   | 'party'
   | 'ruinedBirthday'
   | 'forgottenBirthday'
-  | 'storm';
+  | 'storm'
+  // Muebles (H4a)
+  | 'ateAtTable'
+  | 'byTheFire';
 
 /** Recuerdo con efecto en el ánimo hasta el tick `expiresAt`; `otherId`, con quién fue. */
 export interface Memory {

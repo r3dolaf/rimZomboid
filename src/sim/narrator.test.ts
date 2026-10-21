@@ -41,6 +41,9 @@ test('invariantes: decisiones de colonos que no existen y gripe sin fin', () => 
 
 // --- Narrador (tarea 2) ---
 
+/** Mundo base que se clona en los tests que repiten muchas veces (clonar es mucho más rápido). */
+const BASE4 = createWorld(4);
+
 /** Suceso de mentira que apunta cuándo sale. */
 function fake(
   id: EventId,
@@ -233,23 +236,24 @@ test('requisitos y esperas: no sale lo que no se puede dar ni repite antes de ti
 });
 
 test('en tensión, cuanto mejor va la colonia, más duros los sucesos', () => {
-  const count = (level: 'high' | 'low') => {
-    const hard = fake('theft', 'bad', { severity: 3 });
-    const soft = fake('storm', 'bad', { severity: 1 });
-    for (let i = 0; i < 600; i++) {
-      const w = createWorld(4);
-      setMood(w, level);
-      w.rng = { s: i * 7919 + 1 };
-      w.tick = 5 * TICKS_PER_DAY;
-      w.narrator.phase = 'tension';
-      w.narrator.phaseEndsAt = 1e9;
-      w.narrator.nextEventAt = w.tick;
-      // Con bienestar bajo la tensión se cortaría: se mira solo la elección.
-      narratorSystem(w, [hard.ev, soft.ev]);
-    }
-    return hard.fired.length / soft.fired.length;
-  };
-  expect(count('high')).toBeGreaterThan(2);
+  const hard = fake('theft', 'bad', { severity: 3 });
+  const soft = fake('storm', 'bad', { severity: 1 });
+  const w = structuredClone(BASE4);
+  setMood(w, 'high');
+  for (let i = 0; i < 600; i++) {
+    // Se reutiliza el mundo: solo cambia el azar y se reinicia lo que toca el narrador.
+    w.rng = { s: i * 7919 + 1 };
+    w.tick = 5 * TICKS_PER_DAY;
+    w.narrator = {
+      ...w.narrator,
+      phase: 'tension',
+      phaseEndsAt: 1e9,
+      nextEventAt: w.tick,
+      lastAt: {},
+    };
+    narratorSystem(w, [hard.ev, soft.ev]);
+  }
+  expect(hard.fired.length / soft.fired.length).toBeGreaterThan(2);
 });
 
 test('el plan B nunca da un suceso malo cuando está prohibido (Tranquilo < 40 y respiro)', () => {
@@ -271,17 +275,22 @@ test('el plan B nunca da un suceso malo cuando está prohibido (Tranquilo < 40 y
 test('en tensión con la colonia mal, los sucesos leves pesan más', () => {
   const hard = fake('theft', 'bad', { severity: 3 });
   const soft = fake('storm', 'bad', { severity: 1 });
+  const w = structuredClone(BASE4);
+  w.survivors.forEach((s) => (s.needs.mood = 30));
+  w.storage.items.food = 0;
+  expect(wellbeing(w)).toBeLessThan(40);
+  expect(wellbeing(w)).toBeGreaterThanOrEqual(25);
   for (let i = 0; i < 600; i++) {
-    const w = createWorld(4);
-    w.survivors.forEach((s) => (s.needs.mood = 30));
-    w.storage.items.food = 0;
+    // Se reutiliza el mundo: solo cambia el azar y se reinicia lo que toca el narrador.
     w.rng = { s: i * 7919 + 1 };
     w.tick = 5 * TICKS_PER_DAY + 7; // fuera de la hora en punto: la tensión no se corta
-    w.narrator.phase = 'tension';
-    w.narrator.phaseEndsAt = 1e9;
-    w.narrator.nextEventAt = w.tick;
-    expect(wellbeing(w)).toBeLessThan(40);
-    expect(wellbeing(w)).toBeGreaterThanOrEqual(25);
+    w.narrator = {
+      ...w.narrator,
+      phase: 'tension',
+      phaseEndsAt: 1e9,
+      nextEventAt: w.tick,
+      lastAt: {},
+    };
     narratorSystem(w, [hard.ev, soft.ev]);
   }
   expect(soft.fired.length / hard.fired.length).toBeGreaterThan(2);

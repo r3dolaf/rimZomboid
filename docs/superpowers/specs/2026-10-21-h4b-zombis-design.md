@@ -47,6 +47,7 @@ El cerebro de cada zombi decide cada `ZOMBIE_THINK_TICKS`, con los zombis repart
 
 - **Vagar:** paseos cortos al azar (3–8 casillas), con pausas.
   - **Agruparse:** si tiene otros zombis a 10 casillas o menos, 3 de cada 4 paseos van hacia el centro de ese grupo (con 8 casillas y la mitad de las veces, los grupos se dispersaban).
+  - **Aburrirse:** si pasan 3 h sin que nada le llame la atención (ver a alguien, un ruido, otro zombi que persigue, una hoguera), da un paseo largo, de 12 a 25 casillas. Así los grupos no se quedan para siempre donde perdieron a alguien; dentro de la base, por ejemplo, con los colonos derribados.
 - **Alertado:** va hacia `goal`, el punto de un ruido, una hoguera o adonde va otro zombi que persigue. Al llegar, vuelve a vagar.
   - **Contagio:** un zombi que vaga o está alertado y ve a otro que persigue queda alertado hacia el punto donde ese otro vio a su presa por última vez.
 - **Perseguir:** ve a un colono (no derribado) y va a por el más cercano.
@@ -94,7 +95,7 @@ Con la opción **Zombis** en _normal_:
   - si no hay sitio, va a cualquier casilla exterior;
   - **ninguno a menos de 20 casillas** de la base.
 - **Llegadas:**
-  - empiezan el **día 2**, por una casilla de borde transitable;
+  - empiezan el **día 2**, por una casilla de borde transitable, y van hacia una casa al azar (hacia el centro no, porque ahí está la base);
   - de noche llegan al doble de ritmo;
   - nunca se pasa del máximo (`World.nextZombieAt` marca la siguiente).
 - Se reparten al final de `createWorld(seed, style, level)`, con `zombieRng`. Lo demás no cambia.

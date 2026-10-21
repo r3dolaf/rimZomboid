@@ -102,8 +102,8 @@ export function arrivalInterval(w: World): number {
 }
 
 /**
- * Llega un zombi por un borde cuando toca (sin pasar del máximo) y va hacia el centro del mapa,
- * más o menos, para meterse en el pueblo.
+ * Llega un zombi por un borde cuando toca (sin pasar del máximo) y va hacia una casa al azar, para
+ * meterse en el pueblo. (Hacia el centro no: ahí está la base, y se llenaba de zombis.)
  */
 export function arrivalsSystem(w: World): void {
   if (w.tick < w.nextZombieAt) return;
@@ -118,9 +118,11 @@ export function arrivalsSystem(w: World): void {
     const y = side === 0 ? 0 : side === 1 ? height - 1 : along;
     if (!isZombieWalkable(w.grid, x, y)) continue;
     const z = newZombie(w, { x, y });
+    const house = w.houses.length > 0 ? w.houses[nextInt(rng, 0, w.houses.length - 1)]! : null;
+    const centre = house ? house.door : { x: Math.floor(width / 2), y: Math.floor(height / 2) };
     for (let k = 0; k < 20; k++) {
-      const gx = Math.floor(width / 2) + nextInt(rng, -ARRIVAL_GOAL_RADIUS, ARRIVAL_GOAL_RADIUS);
-      const gy = Math.floor(height / 2) + nextInt(rng, -ARRIVAL_GOAL_RADIUS, ARRIVAL_GOAL_RADIUS);
+      const gx = centre.x + nextInt(rng, -ARRIVAL_GOAL_RADIUS, ARRIVAL_GOAL_RADIUS);
+      const gy = centre.y + nextInt(rng, -ARRIVAL_GOAL_RADIUS, ARRIVAL_GOAL_RADIUS);
       if (!isZombieWalkable(w.grid, gx, gy)) continue;
       z.state = 'alert';
       z.goal = { x: gx, y: gy };

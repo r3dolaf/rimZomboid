@@ -193,6 +193,7 @@ export const es = {
     downed: (who: string) => `${who} ha caído`,
     gotUp: (who: string) => `${who} se ha levantado`,
     zombieKilled: (who: string) => `${who} ha matado un zombi`,
+    fled: (who: string) => `${who} huye a la base`,
     broken: (what: 'door' | 'window' | 'wall', inBase: boolean) =>
       `Los zombis han ${
         what === 'door'

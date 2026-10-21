@@ -1,5 +1,6 @@
 // Saqueo (H3): buscar contenedores, registrarlos, cargar y descargar en el almacén.
 import { expect, test } from 'vitest';
+import { withoutZombies } from './testing/fixtures';
 import { REFUSE_CHANCE, TICKS_PER_DAY } from './balance';
 import { brains } from './brain';
 import { foodDays } from './colony';
@@ -61,7 +62,7 @@ test('con dos casas marcadas nunca van dos al mismo contenedor', () => {
 });
 
 test('una casa marcada sin ver se descubre al llegar', () => {
-  const w = createWorld(4);
+  const w = withoutZombies(createWorld(4)); // la casa más lejana es la de más zombis
   w.survivors.forEach(happy);
   const far = byDistance(w).at(-1)!;
   const c = w.containers.find((x) => x.houseId === far.id)!;

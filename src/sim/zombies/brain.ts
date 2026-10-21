@@ -5,6 +5,9 @@ import {
   HERD_RANGE,
   LOSE_TRACK_TICKS,
   NOISE,
+  BORED_TICKS,
+  WANDER_FAR_MAX,
+  WANDER_FAR_MIN,
   WANDER_MAX,
   WANDER_MIN,
   WANDER_PATH_BUDGET,
@@ -75,8 +78,9 @@ function stepToward(w: World, z: Zombie, goal: Point): Point[] {
   return best ? [best] : [];
 }
 
-function alertTo(z: Zombie, goal: Point): void {
+function alertTo(w: World, z: Zombie, goal: Point): void {
   if (z.state === 'alert' && same(z.goal, goal)) return;
+  z.lastSeenAt = w.tick;
   z.state = 'alert';
   z.targetId = null;
   z.goal = { ...goal };
@@ -114,18 +118,18 @@ export function thinkZombie(w: World, z: Zombie): void {
       if (z.path.length === 0 && z.goal) planTo(w, z, z.goal);
       return;
     }
-    alertTo(z, z.goal ?? tileOf(z.pos));
+    alertTo(w, z, z.goal ?? tileOf(z.pos));
   }
   // Contagio: va adonde otro zombi que ve está persiguiendo a alguien.
   for (const o of w.zombies)
     if (o !== z && o.state === 'chase' && o.goal && zombieSees(w, z, o.pos)) {
-      alertTo(z, o.goal);
+      alertTo(w, z, o.goal);
       break;
     }
   // De noche, la hoguera.
   if (z.state === 'wander') {
     const fire = visibleCampfire(w, z);
-    if (fire) alertTo(z, fire);
+    if (fire) alertTo(w, z, fire);
   }
   if (z.state === 'alert') {
     const at = tileOf(z.pos);
@@ -139,7 +143,7 @@ export function thinkZombie(w: World, z: Zombie): void {
   wander(w, z);
 }
 
-/** Vagar: pausa, paseo corto (la mitad de las veces hacia el grupo que tenga cerca), pausa… */
+/** Vagar: pausa, paseo corto (casi siempre hacia el grupo que tenga cerca; largo si se aburre), pausa… */
 function wander(w: World, z: Zombie): void {
   if (z.path.length > 0 || w.tick < z.waitUntil) return;
   if (z.goal) {
@@ -154,7 +158,17 @@ function wander(w: World, z: Zombie): void {
     (o) => o !== z && (o.pos.x - z.pos.x) ** 2 + (o.pos.y - z.pos.y) ** 2 <= HERD_RANGE ** 2,
   );
   let target: Point | null = null;
-  if (near.length > 0 && nextFloat(rng) < HERD_CHANCE) {
+  const bored = w.tick - z.lastSeenAt > BORED_TICKS;
+  if (bored) {
+    // Aburrido (horas sin nada que le llame la atención): un paseo largo. Así los grupos no se
+    // quedan para siempre donde perdieron a alguien (p. ej., dentro de la base).
+    const angle = nextFloat(rng) * 2 * Math.PI;
+    const r = nextInt(rng, WANDER_FAR_MIN, WANDER_FAR_MAX);
+    target = {
+      x: at.x + Math.round(Math.cos(angle) * r),
+      y: at.y + Math.round(Math.sin(angle) * r),
+    };
+  } else if (near.length > 0 && nextFloat(rng) < HERD_CHANCE) {
     const cx = near.reduce((a, o) => a + o.pos.x, 0) / near.length;
     const cy = near.reduce((a, o) => a + o.pos.y, 0) / near.length;
     target = { x: Math.floor(cx) + nextInt(rng, -1, 1), y: Math.floor(cy) + nextInt(rng, -1, 1) };
@@ -173,11 +187,13 @@ function wander(w: World, z: Zombie): void {
   if (!path) return;
   z.path = path;
   z.goal = target;
+  if (bored) z.lastSeenAt = w.tick;
 }
 
 /** Un golpe a un colono: puede fallar; si acierta, le quita Salud. Siempre se oye. */
 export function zombieAttack(w: World, z: Zombie, s: Survivor): void {
   z.cooldown = ZOMBIE_HIT_TICKS;
+  if (s.action.type === 'sleep') s.action = { type: 'idle', ticksLeft: 0 }; // le despierta
   makeNoise(w, s.pos, NOISE.fightHit);
   if (nextFloat(w.zombieRng) >= ZOMBIE_HIT_CHANCE) return;
   hurtSurvivor(w, s, nextInt(w.zombieRng, ZOMBIE_DAMAGE_MIN, ZOMBIE_DAMAGE_MAX));

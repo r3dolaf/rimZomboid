@@ -2,9 +2,13 @@
 // llegadas por los bordes.
 import { expect, test } from 'vitest';
 import {
+  ARRIVAL_GOAL_RADIUS,
+  BORED_TICKS,
   LOSE_TRACK_TICKS,
-  START_HOUR,
   TICKS_PER_HOUR,
+  WANDER_FAR_MIN,
+  WANDER_MAX,
+  START_HOUR,
   ZOMBIE_DAMAGE_MAX,
   ZOMBIE_DAMAGE_MIN,
   ZOMBIE_EVERY_HOURS,
@@ -16,7 +20,7 @@ import { createRng } from '../rng';
 import { emptyWorld } from '../testing/fixtures';
 import { Tile, type Survivor, type World, type Zombie } from '../types';
 import { tileOf } from '../world';
-import { zombieAttack } from './brain';
+import { thinkZombie, zombieAttack } from './brain';
 import { arrivalInterval, newZombie, zombieMax } from './spawn';
 import { zombieSystem } from './system';
 
@@ -89,9 +93,10 @@ test('agruparse: los zombis que vagan cerca se mantienen en grupo (sin rebaño, 
     let sumLone = 0;
     let sumPairs = 0;
     let n = 0;
-    for (let t = 0; t < 3000; t++) {
+    // Antes de que se aburran (luego se van lejos, ver el test siguiente).
+    for (let t = 0; t < BORED_TICKS; t++) {
       run(w, 1);
-      if (t < 300) continue;
+      if (t < 200) continue;
       const cx = others.reduce((a, z) => a + z.pos.x, 0) / others.length;
       const cy = others.reduce((a, z) => a + z.pos.y, 0) / others.length;
       sumLone += dist(z0.pos, { x: cx, y: cy });
@@ -105,6 +110,24 @@ test('agruparse: los zombis que vagan cerca se mantienen en grupo (sin rebaño, 
   }
   expect(lone).toBeLessThan(6.3); // empezó a 6,3 del grupo
   expect(pairs).toBeLessThan(8);
+});
+
+test('aburrido (horas sin nada que le llame la atención) da un paseo largo; si no, cortos', () => {
+  for (let seed = 1; seed <= 10; seed++) {
+    const w = world(80, 80);
+    w.zombieRng = createRng(seed);
+    hide(w, w.survivors[0]!);
+    w.tick = 10 * BORED_TICKS;
+    const walkLength = (bored: boolean) => {
+      const z = zombieAt(w, 40, 40);
+      z.lastSeenAt = bored ? 0 : w.tick;
+      for (let i = 0; i < 50 && !z.goal; i++) thinkZombie(w, z); // hasta que encuentra adónde ir
+      w.zombies = [];
+      return dist(z.goal!, { x: 40, y: 40 });
+    };
+    expect(walkLength(true)).toBeGreaterThanOrEqual(WANDER_FAR_MIN - 1);
+    expect(walkLength(false)).toBeLessThanOrEqual(WANDER_MAX + 1);
+  }
 });
 
 test('persigue al colono que ve y le golpea cuando lo tiene al lado', () => {
@@ -250,4 +273,19 @@ test('llegadas por los bordes: desde el día 2, al doble de ritmo de noche y sin
   w.nextZombieAt = w.tick;
   run(w, 1);
   expect(w.zombies).toHaveLength(zombieMax('balanced', 'normal'));
+});
+
+test('los que llegan por un borde van hacia una casa (no hacia la base, que está en el centro)', () => {
+  const w = world(40, 40);
+  hide(w, w.survivors[0]!);
+  w.houses = [{ id: 1, rect: { x: 4, y: 4, w: 6, h: 6 }, door: { x: 6, y: 9 } }];
+  for (let i = 0; i < 10; i++) {
+    w.nextZombieAt = w.tick;
+    run(w, 1);
+  }
+  expect(w.zombies.length).toBe(10);
+  for (const z of w.zombies) {
+    expect(z.state).toBe('alert');
+    expect(dist(z.goal!, { x: 6, y: 9 })).toBeLessThanOrEqual(ARRIVAL_GOAL_RADIUS * Math.SQRT2);
+  }
 });

@@ -272,6 +272,9 @@ export function logText(e: LogEntry, w: World): string {
     case 'zombieKilled':
       text = l.zombieKilled(name(e.survivorId));
       break;
+    case 'fled':
+      text = l.fled(name(e.survivorId));
+      break;
   }
   return text;
 }

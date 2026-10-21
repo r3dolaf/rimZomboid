@@ -215,7 +215,7 @@ export interface Zombie {
   targetId: number | null;
   /** Adonde va (un ruido, una hoguera, donde vio a alguien, un paseo). */
   goal: Point | null;
-  /** Último tick en que vio a quien persigue. */
+  /** Último tick en que algo le llamó la atención (vio a quien persigue, oyó un ruido…). */
   lastSeenAt: number;
   /** Ticks hasta su próximo golpe. */
   cooldown: number;

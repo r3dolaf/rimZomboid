@@ -49,7 +49,8 @@ export type LogEvent =
   | { kind: 'broken'; what: 'door' | 'window' | 'wall'; x: number; y: number; inBase: boolean }
   | { kind: 'downed'; survivorId: number }
   | { kind: 'gotUp'; survivorId: number }
-  | { kind: 'zombieKilled'; survivorId: number };
+  | { kind: 'zombieKilled'; survivorId: number }
+  | { kind: 'fled'; survivorId: number };
 
 export type LogEntry = LogEvent & { tick: number };
 

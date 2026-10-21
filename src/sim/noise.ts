@@ -17,6 +17,7 @@ export function makeNoise(w: World, pos: Point, radius: number): void {
     z.state = 'alert';
     z.goal = { ...goal };
     z.path = [];
+    z.lastSeenAt = w.tick;
   }
 }
 

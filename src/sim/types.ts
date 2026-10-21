@@ -93,7 +93,9 @@ export type MemoryId =
   | 'storm'
   // Muebles (H4a)
   | 'ateAtTable'
-  | 'byTheFire';
+  | 'byTheFire'
+  // Zombis (H4b)
+  | 'downed';
 
 /** Recuerdo con efecto en el ánimo hasta el tick `expiresAt`; `otherId`, con quién fue. */
 export interface Memory {

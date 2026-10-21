@@ -190,6 +190,8 @@ export const es = {
     cache: (who: string, house: number, cans: number) =>
       `${who} recuerda una despensa en la casa ${house}: ${cans} latas`,
     built: (what: BuildKind) => es.built[what],
+    downed: (who: string) => `${who} ha caído`,
+    gotUp: (who: string) => `${who} se ha levantado`,
     broken: (what: 'door' | 'window' | 'wall', inBase: boolean) =>
       `Los zombis han ${
         what === 'door'
@@ -261,6 +263,8 @@ export const es = {
     storm: 'Tormenta',
     ateAtTable: 'Comió en la mesa',
     byTheFire: 'Junto al fuego',
+    hurt: 'Con heridas',
+    downed: 'Le derribaron',
   } satisfies Record<MoodModifierId, string>,
   /** Los recuerdos con otra persona, con su nombre. */
   modifiersWith: {

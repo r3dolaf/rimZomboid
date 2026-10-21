@@ -76,6 +76,7 @@ export const MEMORY_EFFECTS = {
   storm: { value: -6, hours: 18 },
   ateAtTable: { value: 3, hours: 6 },
   byTheFire: { value: 4, hours: 1 },
+  downed: { value: -15, hours: 24 },
 } as const;
 export const EAT_BELOW = 35;
 export const EAT_RESTORE = 60;
@@ -327,3 +328,8 @@ export const WANDER_PAUSE_MAX = 80;
 export const WANDER_PATH_BUDGET = 400;
 export const ARRIVAL_GOAL_RADIUS = 20; // los que llegan van hacia el centro del mapa, más o menos
 export const DOWNED_TICKS = 4 * TICKS_PER_HOUR;
+/** Salud que se recupera por hora (spec H4b §5). */
+export const HEALTH_PER_HOUR = { awake: 1, floor: 4, bed: 6 } as const;
+export const GET_UP_HEALTH = 15; // al levantarse tras un derribo
+export const HURT_BELOW = 50; // "Herido" por debajo de esto
+export const HURT_MOOD = -10;

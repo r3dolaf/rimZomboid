@@ -262,6 +262,12 @@ export function logText(e: LogEntry, w: World): string {
     case 'broken':
       text = l.broken(e.what, e.inBase);
       break;
+    case 'downed':
+      text = l.downed(name(e.survivorId));
+      break;
+    case 'gotUp':
+      text = l.gotUp(name(e.survivorId));
+      break;
   }
   return text;
 }

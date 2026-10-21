@@ -1,4 +1,5 @@
 import { furnitureSystem } from './furniture';
+import { healthSystem } from './health';
 import { narratorSystem } from './narrator';
 import { ordersSystem } from './orders';
 import { activitiesSystem } from './systems/activities';
@@ -17,6 +18,7 @@ import { reservationsSystem } from './work';
 export function step(w: World): void {
   ordersSystem(w);
   needsSystem(w);
+  healthSystem(w);
   furnitureSystem(w);
   moodSystem(w);
   socialSystem(w);

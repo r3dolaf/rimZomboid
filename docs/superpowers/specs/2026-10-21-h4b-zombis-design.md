@@ -259,7 +259,8 @@ Con la opción **Zombis** en _normal_:
 - **Ficha:** Salud; postura con tres botones (Pelear, Huir, Decidir); "En la mano: bate" con la casilla **Fijar**; textos de las acciones nuevas ("Peleando con un zombi", "Huyendo a la base", "Derribado").
 - **Panel de Trabajos:** columna **Postura**, un desplegable con las tres opciones.
 - **HUD:** "Zombis a la vista: N".
-- **Portada:** debajo del narrador, **Zombis: pocos / normal / muchos**. La dirección lleva `?zombies=few|normal|many`.
+- **Registro de sucesos:** se puede minimizar (botón ▾/▴ en su cabecera) y se recuerda en el navegador. Lo pidió el usuario durante H4b.
+- **Portada:** debajo del narrador, **Zombis: pocos / normal / muchos**. La dirección lleva `?zombis=pocos|normal|muchos` (en español, como `narrador`).
 
 **Avisos:**
 

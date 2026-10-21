@@ -60,6 +60,7 @@ export function activityText(s: Survivor, w?: World): string {
       if (a.then?.type === 'deliver') return t.deliver(buildName(a.then.blueprintId));
       if (a.then?.type === 'build') return t.goBuild;
       if (a.then?.type === 'swapWeapon') return t.swapWeapon;
+      if (a.run) return t.flee;
       return t.wander;
     case 'idle':
       if (a.wait === 'refused' && a.ticksLeft > 0) return t.refused;
@@ -71,6 +72,9 @@ export function activityText(s: Survivor, w?: World): string {
 /** El icono más importante para la tarjeta, o `null` si no hay nada que destacar. */
 export function statusIcon(s: Survivor): { icon: string; label: string } | null {
   const a = s.action;
+  if (a.type === 'downed') return es.status.downed;
+  if (a.type === 'melee') return es.status.meleeZombie;
+  if (a.type === 'moveTo' && a.run && !a.then) return es.status.fleeing;
   if (a.type === 'crisis' || (a.type === 'moveTo' && a.then?.type === 'crisis'))
     return es.status.crisis;
   if (a.type === 'fight') return es.status.fighting;

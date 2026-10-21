@@ -31,6 +31,16 @@ export function threatsOf(w: World, s: Survivor): Zombie[] {
     .sort((a, b) => d2(a.pos, s.pos) - d2(b.pos, s.pos));
 }
 
+/** Zombis que ve ahora algún colono (para el HUD y el mapa). */
+export function zombiesInSight(w: World): Zombie[] {
+  return w.zombies.filter((z) =>
+    w.survivors.some((s) => {
+      const range = visionFor(w, s);
+      return d2(z.pos, s.pos) <= range * range && lineOfSight(w.grid, tileOf(s.pos), tileOf(z.pos));
+    }),
+  );
+}
+
 /** ¿Hay un zombi a `range` casillas o menos (lo oiga o no lo vea)? */
 export function zombieNear(w: World, s: Survivor, range: number): boolean {
   return w.zombies.some((z) => d2(z.pos, s.pos) <= range * range);

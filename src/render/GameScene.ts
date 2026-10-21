@@ -570,6 +570,11 @@ export class GameScene extends Phaser.Scene {
     if (s) this.cameras.main.centerOn(s.pos.x * TILE_PX, s.pos.y * TILE_PX);
   }
 
+  /** Centra la cámara en una casilla (al pulsar un aviso de zombis o destrozos). */
+  centerOnTile(p: { x: number; y: number }): void {
+    this.cameras.main.centerOn((p.x + 0.5) * TILE_PX, (p.y + 0.5) * TILE_PX);
+  }
+
   /** Zoom mínimo para que el mapa siempre llene la pantalla. */
   private minZoom(): number {
     const cam = this.cameras.main;

@@ -7,7 +7,7 @@ import { opinionOf, relationLabel } from '../sim/social';
 import type { Survivor, World } from '../sim/types';
 import { activityText, formatItems, formatModifier, signed } from './describe';
 import type { Selection } from './selection';
-import { effectiveWork, WORKS } from './workPanel';
+import { effectiveLock, effectiveStance, effectiveWork, STANCES, WORKS } from './workPanel';
 import './panels.css';
 
 /**
@@ -57,11 +57,48 @@ export function mountSheet(
     work.append(label);
     return box;
   });
+  // Postura (H4b): tres botones, fijos como las casillas.
+  const stanceRow = document.createElement('div');
+  stanceRow.className = 'stance';
+  stanceRow.append(document.createTextNode(`${es.stanceTitle}: `));
+  const stanceButtons = STANCES.map((k) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = es.stances[k];
+    b.title = es.stanceHints[k];
+    b.dataset.testid = `sheet-stance-${k}`;
+    b.addEventListener('click', () => {
+      const id = opts.selection.id;
+      if (id !== null) issue(opts.world, { type: 'setStance', survivorId: id, stance: k });
+      b.blur();
+    });
+    stanceRow.append(b);
+    return b;
+  });
+
+  // Lo que lleva en la mano y la casilla Fijar.
+  const weaponRow = document.createElement('div');
+  weaponRow.className = 'weapon';
+  weaponRow.dataset.testid = 'sheet-weapon';
+  const weaponText = document.createElement('span');
+  const lockLabel = document.createElement('label');
+  lockLabel.title = es.lockWeaponHint;
+  const lock = document.createElement('input');
+  lock.type = 'checkbox';
+  lock.dataset.testid = 'sheet-weapon-lock';
+  lock.addEventListener('change', () => {
+    const id = opts.selection.id;
+    if (id !== null)
+      issue(opts.world, { type: 'lockWeapon', survivorId: id, locked: lock.checked });
+  });
+  lockLabel.append(lock, document.createTextNode(es.lockWeapon));
+  weaponRow.append(weaponText, lockLabel);
+
   const carrying = document.createElement('p');
   carrying.className = 'carrying';
 
   const body = document.createElement('div');
-  panel.append(head, work, carrying, body);
+  panel.append(head, work, stanceRow, weaponRow, carrying, body);
 
   let shown = ''; // firma de lo pintado, para no rehacer el DOM en cada fotograma
 
@@ -82,9 +119,12 @@ export function mountSheet(
         name: s.name,
         doing: activityText(s, world),
         traits: s.traits.map((t) => es.traits[t]),
-        needs: (['hunger', 'sleep', 'social'] as const).map(
-          (k) => `${es.needs[k]}: ${Math.round(s.needs[k])}`,
-        ),
+        needs: [
+          `${es.health}: ${Math.round(s.health)}`,
+          ...(['hunger', 'sleep', 'social'] as const).map(
+            (k) => `${es.needs[k]}: ${Math.round(s.needs[k])}`,
+          ),
+        ],
         mood: es.moodArrow(
           Math.round(s.needs.mood),
           Math.round(moodTarget(s, world.tick, world.base.rect)),
@@ -95,13 +135,17 @@ export function mountSheet(
       };
       // Las casillas reflejan los permisos con las órdenes pendientes ya aplicadas.
       boxes.forEach((box, i) => (box.checked = effectiveWork(world, s, WORKS[i]!)));
-      const carryText =
-        es.carrying(
-          formatItems(s.carrying),
-          weightOf(s.carrying).toFixed(1).replace('.', ','),
-          CARRY_CAPACITY_KG,
-        ) + (s.equipped ? ` · ${es.inHand(es.items[s.equipped][0])}` : '');
+      const carryText = es.carrying(
+        formatItems(s.carrying),
+        weightOf(s.carrying).toFixed(1).replace('.', ','),
+        CARRY_CAPACITY_KG,
+      );
       if (carrying.textContent !== carryText) carrying.textContent = carryText;
+      const stance = effectiveStance(world, s);
+      stanceButtons.forEach((b, i) => b.classList.toggle('selected', STANCES[i] === stance));
+      const inHand = s.equipped ? es.inHand(es.items[s.equipped][0]) : es.noWeapon;
+      if (weaponText.textContent !== inHand) weaponText.textContent = inHand;
+      lock.checked = effectiveLock(world, s);
 
       const key = JSON.stringify(view);
       panel.hidden = false;

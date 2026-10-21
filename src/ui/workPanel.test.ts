@@ -30,6 +30,7 @@ test('oculto hasta que se abre; una fila por colono y una columna por trabajo, e
     'Transportar',
     'Talar',
     'Saquear',
+    'Postura',
   ]);
   for (const s of world.survivors) expect(cell(s.id, 'loot').checked).toBe(s.work.loot);
 });

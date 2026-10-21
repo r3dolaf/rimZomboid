@@ -1,13 +1,18 @@
 import { es } from '../i18n/es';
 import { issue } from '../sim/orders';
-import type { Survivor, WorkType, World } from '../sim/types';
+import type { Stance, Survivor, WorkType, World } from '../sim/types';
 import type { Flag } from './flag';
 import './panels.css';
+
+export const STANCES: readonly Stance[] = ['fight', 'flee', 'decide'];
 
 /** Columnas, en el orden de criticidad (spec H4a §3.1). */
 export const WORKS: readonly WorkType[] = ['social', 'build', 'haul', 'chop', 'loot'];
 
-/** Panel de Trabajos (spec H4a §5): una fila por colono y una casilla por trabajo. */
+/**
+ * Panel de Trabajos (spec H4a §5): una fila por colono, una casilla por trabajo y su postura
+ * (spec H4b §8).
+ */
 export function mountWorkPanel(
   root: HTMLElement,
   opts: { world: World; open: Flag },
@@ -30,7 +35,7 @@ export function mountWorkPanel(
 
   const table = document.createElement('table');
   const headRow = document.createElement('tr');
-  for (const text of ['', ...WORKS.map((k) => es.works[k])]) {
+  for (const text of ['', ...WORKS.map((k) => es.works[k]), es.stanceTitle]) {
     const th = document.createElement('th');
     th.textContent = text;
     headRow.append(th);
@@ -43,7 +48,10 @@ export function mountWorkPanel(
   root.append(panel);
 
   // Una fila por colono; se crean y se quitan según quién está (las casillas no se rehacen).
-  const rows = new Map<number, { tr: HTMLTableRowElement; boxes: HTMLInputElement[] }>();
+  const rows = new Map<
+    number,
+    { tr: HTMLTableRowElement; boxes: HTMLInputElement[]; stance: HTMLSelectElement }
+  >();
   const addRow = (s: Survivor) => {
     const tr = document.createElement('tr');
     const name = document.createElement('td');
@@ -62,8 +70,29 @@ export function mountWorkPanel(
       tr.append(td);
       return box;
     });
+    // Postura (H4b): Pelear, Huir o Decidir.
+    const td = document.createElement('td');
+    const stance = document.createElement('select');
+    stance.dataset.testid = `work-${s.id}-stance`;
+    stance.title = `${s.name}: ${es.stanceTitle}`;
+    for (const k of STANCES) {
+      const o = document.createElement('option');
+      o.value = k;
+      o.textContent = es.stances[k];
+      o.title = es.stanceHints[k];
+      stance.append(o);
+    }
+    stance.addEventListener('change', () =>
+      issue(opts.world, {
+        type: 'setStance',
+        survivorId: s.id,
+        stance: stance.value as Stance,
+      }),
+    );
+    td.append(stance);
+    tr.append(td);
     tbody.append(tr);
-    rows.set(s.id, { tr, boxes });
+    rows.set(s.id, { tr, boxes, stance });
   };
 
   return {
@@ -79,9 +108,12 @@ export function mountWorkPanel(
         }
       for (const s of world.survivors) {
         if (!rows.has(s.id)) addRow(s);
-        rows.get(s.id)!.boxes.forEach((box, i) => {
+        const r = rows.get(s.id)!;
+        r.boxes.forEach((box, i) => {
           box.checked = effectiveWork(world, s, WORKS[i]!);
         });
+        const st = effectiveStance(world, s);
+        if (r.stance.value !== st) r.stance.value = st;
       }
     },
   };
@@ -92,5 +124,19 @@ export function effectiveWork(w: World, s: Survivor, work: WorkType): boolean {
   let on = s.work[work];
   for (const o of w.orders)
     if (o.type === 'setWork' && o.survivorId === s.id && o.work === work) on = o.enabled;
+  return on;
+}
+
+/** La postura con las órdenes pendientes ya aplicadas. */
+export function effectiveStance(w: World, s: Survivor): Stance {
+  let st = s.stance;
+  for (const o of w.orders) if (o.type === 'setStance' && o.survivorId === s.id) st = o.stance;
+  return st;
+}
+
+/** Si tiene el arma fijada, con las órdenes pendientes ya aplicadas. */
+export function effectiveLock(w: World, s: Survivor): boolean {
+  let on = s.weaponLocked;
+  for (const o of w.orders) if (o.type === 'lockWeapon' && o.survivorId === s.id) on = o.locked;
   return on;
 }

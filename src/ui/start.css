@@ -98,3 +98,24 @@
   font-size: 16px;
   font-weight: 600;
 }
+
+.start-zombies {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 0;
+}
+.start-zombies button {
+  padding: 4px 12px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #2a2d31;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.start-zombies button.selected {
+  background: #c9a227;
+  border-color: #c9a227;
+  color: #111;
+}

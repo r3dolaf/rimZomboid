@@ -9,8 +9,10 @@ import type {
   Decision,
   MemoryId,
   NarratorStyle,
+  Stance,
   TraitId,
   WorkType,
+  ZombieLevel,
 } from '../sim/types';
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -53,7 +55,8 @@ export const es = {
     repair: 'Reparar',
     fixDoor: 'Arreglar puerta',
   } satisfies Record<BuildKind, string>,
-  buildOption: (name: string, wood: number) => `${name} · ${wood}`,
+  buildOption: (name: string, wood: number | string) => `${name} · ${wood}`,
+  repairWood: '1–3',
   buildMenuHint:
     'Clic en el mapa para colocar; arrastrar para una fila de muros; clic en un plano para cancelarlo',
   storm: '🌧 Tormenta',
@@ -69,10 +72,28 @@ export const es = {
   start: {
     subtitle: 'Sobrevivir juntos, o no',
     choose: 'Elige narrador',
+    zombies: 'Zombis',
     seed: 'Semilla',
     reroll: 'Otra',
     go: 'Empezar',
   },
+  zombieLevels: { few: 'Pocos', normal: 'Normal', many: 'Muchos' } satisfies Record<
+    ZombieLevel,
+    string
+  >,
+  zombiesInSight: (n: number) => `Zombis a la vista: ${n}`,
+  health: 'Salud',
+  stanceTitle: 'Postura',
+  stances: { fight: 'Pelear', flee: 'Huir', decide: 'Decidir' } satisfies Record<Stance, string>,
+  stanceHints: {
+    fight: 'Va a por los zombis que ve',
+    flee: 'Corre a la base y se queda dentro',
+    decide: 'Pelea o huye según su Salud, su arma y cuántos zombis hay',
+  } satisfies Record<Stance, string>,
+  noWeapon: 'Sin arma',
+  lockWeapon: 'Fijar',
+  lockWeaponHint: 'No cambia ni devuelve lo que lleva en la mano',
+  logToggle: { hide: 'Minimizar el registro', show: 'Abrir el registro' },
   notices: {
     jealousy: 'Celos',
     clash: 'Choque de caracteres',
@@ -331,6 +352,7 @@ export const es = {
     consoled: (other: string) => `${other} le está consolando`,
     downed: 'En el suelo, sin fuerzas',
     melee: 'Peleando con un zombi',
+    flee: 'Huyendo a la base',
     swapWeapon: 'Va a por un arma',
   },
   containers: { fridge: 'una nevera', wardrobe: 'un armario', shelf: 'una estantería' },
@@ -389,5 +411,8 @@ export const es = {
     eating: { icon: '🍽', label: 'Comiendo' },
     edge: { icon: '⚠', label: 'Al límite' },
     sick: { icon: '🤒', label: 'Con gripe' },
+    downed: { icon: '🤕', label: 'En el suelo' },
+    meleeZombie: { icon: '⚔️', label: 'Peleando con zombis' },
+    fleeing: { icon: '🏃', label: 'Huyendo' },
   },
 };

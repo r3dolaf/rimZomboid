@@ -77,6 +77,19 @@ export function tileFits(w: World, kind: BuildKind, p: Point): boolean {
   }
 }
 
+/**
+ * Qué plano pone "Reparar" en esa casilla (spec H4b §4.2): lo dañado se repara, la puerta rota se
+ * arregla, la ventana rota se tapia y los escombros pasan a muro de madera. `null` si no hay nada.
+ */
+export function repairKindAt(w: World, p: Point): BuildKind | null {
+  if (w.damage[String(p.y * w.grid.width + p.x)] !== undefined) return 'repair';
+  const t = getTile(w.grid, p.x, p.y);
+  if (t === Tile.BrokenDoor) return 'fixDoor';
+  if (t === Tile.BrokenWindow) return 'board';
+  if (t === Tile.Rubble) return 'woodWall';
+  return null;
+}
+
 /** ¿Es un plano de reparar? (van antes que los demás, spec H4b §4.2) */
 export function isRepairPlan(w: World, b: { kind: BuildKind; pos: Point }): boolean {
   const t = getTile(w.grid, b.pos.x, b.pos.y);

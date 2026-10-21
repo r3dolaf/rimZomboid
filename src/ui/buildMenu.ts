@@ -12,6 +12,7 @@ const KINDS: readonly BuildKind[] = [
   'woodDoor',
   'board',
   'unboard',
+  'repair', // elige el plano según la casilla (spec H4b §4.2)
 ];
 
 /** Menú de la herramienta Construir (spec H4a §5): qué se coloca al hacer clic en el mapa. */
@@ -25,7 +26,8 @@ export function mountBuildMenu(root: HTMLElement, opts: { tool: Tool }): { updat
     const b = document.createElement('button');
     b.type = 'button';
     b.dataset.testid = `build-${kind}`;
-    b.textContent = es.buildOption(es.buildMenu[kind], BUILD[kind].wood);
+    const wood = kind === 'repair' ? es.repairWood : BUILD[kind].wood;
+    b.textContent = es.buildOption(es.buildMenu[kind], wood);
     b.addEventListener('click', () => {
       opts.tool.setBuildKind(kind);
       b.blur();

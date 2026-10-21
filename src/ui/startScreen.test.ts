@@ -31,7 +31,7 @@ test('elegir Caótico, sortear otra semilla y Empezar', () => {
   q('start-reroll').click();
   expect((q('start-seed') as HTMLInputElement).value).toBe('100');
   q('start-go').click();
-  expect(onStart).toHaveBeenCalledWith(100, 'chaotic');
+  expect(onStart).toHaveBeenCalledWith(100, 'chaotic', 'normal');
 });
 
 test('con una semilla no válida no empieza', () => {

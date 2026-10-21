@@ -13,6 +13,7 @@ import { checkInvariants } from '../invariants';
 import { moodModifiers } from '../mood';
 import { step } from '../step';
 import { emptyWorld } from '../testing/fixtures';
+import { newZombie } from './spawn';
 
 const world = () => {
   const w = emptyWorld(8, 8);
@@ -83,4 +84,19 @@ test('en el suelo el sueño sigue bajando, pero no se "desploma" encima: sigue d
   expect(s.action.type).toBe('downed');
   expect(s.needs.hunger).toBeLessThan(hunger);
   expect(checkInvariants(w)).toEqual([]);
+});
+
+test('a las 4 h no se levanta con zombis a 8 casillas o menos: sigue en el suelo hasta que se van', () => {
+  const w = emptyWorld(30, 30);
+  const s = w.survivors[0]!;
+  s.pos = { x: 5.5, y: 5.5 };
+  hurtSurvivor(w, s, 100);
+  const z = newZombie(w, { x: 10, y: 5 });
+  w.zombies.push(z);
+  w.tick = DOWNED_TICKS + 10;
+  healthSystem(w);
+  expect(s.action.type).toBe('downed');
+  z.pos = { x: 20.5, y: 20.5 };
+  healthSystem(w);
+  expect(s.action.type).toBe('idle');
 });

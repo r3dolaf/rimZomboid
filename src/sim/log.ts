@@ -50,7 +50,11 @@ export type LogEvent =
   | { kind: 'downed'; survivorId: number }
   | { kind: 'gotUp'; survivorId: number }
   | { kind: 'zombieKilled'; survivorId: number }
-  | { kind: 'fled'; survivorId: number };
+  | { kind: 'fled'; survivorId: number }
+  /** El primer zombi que entra en la base (x, y: por dónde). */
+  | { kind: 'zombiesInBase'; x: number; y: number }
+  /** El primer zombi que se ve cerca de la base ese día. */
+  | { kind: 'zombieSighted'; x: number; y: number };
 
 export type LogEntry = LogEvent & { tick: number };
 

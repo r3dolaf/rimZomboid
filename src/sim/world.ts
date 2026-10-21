@@ -166,6 +166,7 @@ export function createWorld(
     nextZombieId: 1,
     nextZombieAt: firstEdgeArrival(),
     damage: {},
+    zombieSightedDay: 0,
   };
   // Zombis (H4b), con su propio azar: no cambian nada de lo anterior.
   placeStartZombies(world);

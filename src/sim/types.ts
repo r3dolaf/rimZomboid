@@ -367,4 +367,6 @@ export interface World {
   nextZombieAt: number;
   /** Resistencia que le queda a cada casilla dañada, por índice y·ancho + x (lo intacto no está). */
   damage: Record<string, number>;
+  /** Día en que se avisó del primer zombi visto cerca de la base (uno al día). */
+  zombieSightedDay: number;
 }

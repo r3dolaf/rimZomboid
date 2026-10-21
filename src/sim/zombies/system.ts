@@ -7,20 +7,28 @@ import {
   ZOMBIE_SPEED,
   ZOMBIE_THINK_TICKS,
 } from '../balance';
+import { contains } from '../geom';
+import { logEvent } from '../log';
 import { isZombieWalkable } from '../map/grid';
 import { makeNoise } from '../noise';
 import { damageTile, resistanceOf } from '../structures';
 import type { World, Zombie } from '../types';
 import { thinkZombie, visibleToZombies, zombieAttack } from './brain';
+import { tileOf } from '../world';
 import { arrivalsSystem } from './spawn';
 
 export function zombieSystem(w: World): void {
+  const inBase = (z: Zombie) => contains(w.base.rect, tileOf(z.pos));
+  const already = w.zombies.some(inBase);
   arrivalsSystem(w);
   for (const z of w.zombies) {
     if (z.cooldown > 0) z.cooldown--;
     if ((w.tick + z.id) % ZOMBIE_THINK_TICKS === 0) thinkZombie(w, z);
     act(w, z);
   }
+  // Aviso: el primero que entra en la base (spec H4b §8).
+  const first = already ? undefined : w.zombies.find(inBase);
+  if (first) logEvent(w, { kind: 'zombiesInBase', ...tileOf(first.pos) });
 }
 
 /** Golpea a su presa si la tiene al lado; si no, anda o rompe lo que tiene delante. */

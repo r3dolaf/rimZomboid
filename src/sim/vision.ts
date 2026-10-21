@@ -1,6 +1,7 @@
 // Línea de visión con shadowcasting simétrico por cuadrantes.
-import { VISION_DAY, VISION_EVERY_TICKS, VISION_NIGHT } from './balance';
-import { darkness } from './clock';
+import { SIGHTED_NEAR_BASE, VISION_DAY, VISION_EVERY_TICKS, VISION_NIGHT } from './balance';
+import { darkness, gameTime } from './clock';
+import { logEvent } from './log';
 import { getTile, inBounds } from './map/grid';
 import { visionFor } from './furniture';
 import { Tile, type Grid, type Point, type World } from './types';
@@ -96,6 +97,30 @@ export function visibleTiles(w: World): Uint8Array {
 export function visionSystem(w: World): void {
   if (w.tick % VISION_EVERY_TICKS !== 0) return;
   revealFromSurvivors(w);
+  zombieSighting(w);
+}
+
+/** Aviso del primer zombi que algún colono ve cerca de la base cada día (spec H4b §8). */
+function zombieSighting(w: World): void {
+  const day = gameTime(w.tick).day;
+  if (day === w.zombieSightedDay) return;
+  const r = w.base.rect;
+  for (const z of w.zombies) {
+    const t = { x: Math.floor(z.pos.x), y: Math.floor(z.pos.y) };
+    const dx = Math.max(r.x - t.x, 0, t.x - (r.x + r.w - 1));
+    const dy = Math.max(r.y - t.y, 0, t.y - (r.y + r.h - 1));
+    if (Math.max(dx, dy) > SIGHTED_NEAR_BASE) continue;
+    const seen = w.survivors.some((s) => {
+      if (s.action.type === 'downed' || s.action.type === 'sleep') return false;
+      const range = visionFor(w, s);
+      if ((s.pos.x - z.pos.x) ** 2 + (s.pos.y - z.pos.y) ** 2 > range * range) return false;
+      return lineOfSight(w.grid, { x: Math.floor(s.pos.x), y: Math.floor(s.pos.y) }, t);
+    });
+    if (!seen) continue;
+    w.zombieSightedDay = day;
+    logEvent(w, { kind: 'zombieSighted', ...t });
+    return;
+  }
 }
 
 export function revealFromSurvivors(w: World): void {

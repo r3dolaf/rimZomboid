@@ -163,7 +163,8 @@ Con la opción **Zombis** en _normal_:
   - acción `{ type: 'downed', until }` durante 4 h, sin hacer nada y sin recuperarse;
   - el hambre y el sueño siguen bajando;
   - los zombis no lo ven, así que dejan de perseguirlo;
-  - al levantarse tiene 15 de Salud y el recuerdo "Fue derribado" (−15, 24 h);
+  - a las 4 h se levanta, pero solo si no hay zombis a 8 casillas o menos: si los hay, sigue en el suelo hasta que se vayan (si no, caía una y otra vez entre ellos);
+  - al levantarse tiene 15 de Salud y el recuerdo "Le derribaron" (−15, 24 h);
   - se registra al caer, con un aviso rojo que pausa.
 - **Lo que interrumpe** (como el peligro, §7): cualquier acción, incluidas peleas y consuelos. El otro queda libre, igual que ahora cuando alguien se desploma.
 
@@ -205,6 +206,7 @@ Con la opción **Zombis** en _normal_:
   - si la lleva, hay árboles marcados y no la tiene fijada, la devuelve y coge lo mejor que quede;
   - quien tiene Talar sigue cogiéndola para talar (H4a), dejando en el almacén lo que llevara.
 - **Fijar arma** (`Survivor.weaponLocked`, orden `lockWeapon`): no cambia ni devuelve lo que lleva. Un colono con Talar y otra arma fijada no tala.
+- **Lo que lleva encima:** equipa sin más la mejor arma que lleve en la carga, si es mejor que la suya (spec general §5.3); la de la mano pasa a la carga.
 - **Las armas no aparecen ni desaparecen:** la suma de almacén, contenedores, montones, cargas y manos es siempre la misma.
 
 ## 7. Posturas y peligro
@@ -264,7 +266,7 @@ Con la opción **Zombis** en _normal_:
 - **Rojos, que pausan:** derribado; zombis dentro de la base.
 - **Que no pausan:**
   - el primer zombi visto a 15 casillas o menos de la base, una vez al día;
-  - algo roto ("Los zombis han roto la puerta de la base");
+  - algo roto en la base ("Los zombis han roto la puerta de la base"); lo de las casas, solo en el registro;
   - un colono huye.
 - Al pulsar un aviso, la cámara va al sitio, como ahora.
 

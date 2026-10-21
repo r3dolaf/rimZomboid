@@ -16,6 +16,7 @@ import { findConsoleTarget, inCrisis as crisisNow, stillConsoling } from './cons
 import { dangerDecision, zombieNear } from './danger';
 import { logEvent } from './log';
 import { nextFloat, pick } from './rng';
+import { equipFromPack } from './jobs/weapons';
 import { findWork, isWorking, stillWorthIt } from './work';
 import type { Action, BrainId, Survivor, World } from './types';
 
@@ -30,6 +31,7 @@ export interface Brain {
 /** Prioridades del spec §8.1: peligro, comer, dormir, crisis, consolar, trabajo, pasear. */
 const AiBrain: Brain = {
   decide(s, w) {
+    equipFromPack(s, w.chopMarks.length > 0);
     // Peligro (spec H4b §7): lo primero de todo.
     const danger = dangerDecision(s, w);
     if (danger !== undefined) return danger;

@@ -48,3 +48,21 @@ export function takeBest(s: Survivor, w: World): void {
   w.storage.items[best]--;
   s.equipped = best;
 }
+
+/**
+ * Equipa sin más la mejor arma que lleve en la carga, si es mejor que la suya (spec general §5.3);
+ * la de la mano pasa a la carga. Con el arma fijada, no. El hacha, como en el almacén: no, si hay
+ * árboles marcados y no tala (ya la descargará).
+ */
+export function equipFromPack(s: Survivor, chopMarked = false): void {
+  if (s.weaponLocked) return;
+  for (const k of ['axe', 'bat', 'knife'] as const) {
+    if (s.carrying[k] <= 0) continue;
+    if (k === 'axe' && chopMarked && !canChop(s)) continue;
+    if (rank(k) <= rank(s.equipped)) return;
+    s.carrying[k]--;
+    if (s.equipped) s.carrying[s.equipped]++;
+    s.equipped = k;
+    return;
+  }
+}

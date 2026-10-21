@@ -4,6 +4,7 @@ import { HEAD_HIT_CHANCE, SURVIVOR_HIT_CHANCE, WEAPON_STATS, ZOMBIE_HEALTH } fro
 import { colonistHit, combatSystem } from '../combat';
 import { checkInvariants } from '../invariants';
 import { returnAxeJob } from '../jobs/chop';
+import { equipFromPack } from '../jobs/weapons';
 import { setTile } from '../map/grid';
 import { issue, ordersSystem } from '../orders';
 import { createRng } from '../rng';
@@ -165,4 +166,24 @@ test('quien tala coge el hacha aunque lleve otra cosa (y la deja en el almacén)
   w.storage.items.bat = 0;
   s.weaponLocked = true;
   expect(findWork(s, w)).toBeNull();
+});
+
+test('equipa sin más la mejor arma que lleve encima (spec general §5.3)', () => {
+  const w = world();
+  const s = w.survivors[0]!;
+  s.carrying.knife = 1;
+  s.carrying.bat = 1;
+  equipFromPack(s);
+  expect(s.equipped).toBe('bat');
+  expect(s.carrying.bat).toBe(0);
+  expect(s.carrying.knife).toBe(1);
+  s.carrying.axe = 1;
+  equipFromPack(s); // lo que llevaba en la mano pasa a la carga
+  expect(s.equipped).toBe('axe');
+  expect(s.carrying.bat).toBe(1);
+  s.weaponLocked = true;
+  s.equipped = 'knife';
+  s.carrying = { ...s.carrying, axe: 1 };
+  equipFromPack(s);
+  expect(s.equipped).toBe('knife'); // fijada: no la cambia
 });

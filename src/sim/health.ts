@@ -1,5 +1,12 @@
 // Salud y derribos (spec H4b §5).
-import { DOWNED_TICKS, GET_UP_HEALTH, HEALTH_PER_HOUR, TICKS_PER_HOUR } from './balance';
+import {
+  DOWNED_TICKS,
+  GET_UP_HEALTH,
+  HEALTH_PER_HOUR,
+  TICKS_PER_HOUR,
+  ZOMBIE_VISION,
+} from './balance';
+import { zombieNear } from './danger';
 import { logEvent } from './log';
 import { addMemory } from './mood';
 import type { Survivor, World } from './types';
@@ -18,7 +25,8 @@ export function healthSystem(w: World): void {
   for (const s of w.survivors) {
     const a = s.action;
     if (a.type === 'downed') {
-      if (w.tick < a.until) continue;
+      // A las 4 h se levanta, pero no con zombis al lado: se queda quieto hasta que se van.
+      if (w.tick < a.until || zombieNear(w, s, ZOMBIE_VISION)) continue;
       s.health = GET_UP_HEALTH;
       s.action = { type: 'idle', ticksLeft: 0 };
       addMemory(s, 'downed', w.tick);

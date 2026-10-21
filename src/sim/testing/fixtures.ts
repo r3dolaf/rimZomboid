@@ -69,6 +69,7 @@ export function emptyWorld(width: number, height: number): World {
     nextZombieId: 1,
     nextZombieAt: Number.MAX_SAFE_INTEGER, // sin llegadas salvo que el test las pida
     damage: {},
+    zombieSightedDay: 0,
   };
 }
 

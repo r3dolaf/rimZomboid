@@ -43,6 +43,8 @@ Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al p
 - La invariante "cada cama tiene un dueño vivo" tendrá que contemplar las muertes (liberar la cama o borrarla), igual que las parejas (la pareja de un muerto) y las acciones de dos (pelea, consuelo).
 - Probar el desplome en plena crisis de principio a fin.
 
+**Pedido por el usuario (después de H4b, antes de H4c si así lo quiere):** habilidades de los colonos en cada trabajo, que hagan las tareas más rápido o más lento y puedan fallar las complejas (construir). Pendiente de diseño. Ya estaba en la lista de "después" del spec general (§11, n.º 5).
+
 **Para H6 (pulido):**
 
 - H4a: quien se queda con madera que ya no necesita (le cancelan el plano) se la lleva de saqueo en vez de descargarla; la mesa solo da gusto si está a 3 casillas del almacén (donde se come); talar a medias no guarda el avance; quien queda encerrado sin camino al almacén se queda quieto esperando en vez de pasear por su lado; arrastrar un mueble lo pone donde se empezó el arrastre.

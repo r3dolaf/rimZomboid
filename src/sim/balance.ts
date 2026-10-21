@@ -356,3 +356,4 @@ export const UNARMED_MAX_THREATS = 1;
 export const ALLY_RANGE = 5; // compañeros peleando a esta distancia o menos
 export const WAKE_RANGE = 4; // un zombi tan cerca despierta a quien duerme
 export const SHELTER_WAIT_TICKS = 10; // en la base, sin sitio adonde ir, espera esto y vuelve a mirar
+export const SIGHTED_NEAR_BASE = 15; // aviso del primer zombi visto a esta distancia de la base

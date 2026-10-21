@@ -275,6 +275,12 @@ export function logText(e: LogEntry, w: World): string {
     case 'fled':
       text = l.fled(name(e.survivorId));
       break;
+    case 'zombiesInBase':
+      text = l.zombiesInBase;
+      break;
+    case 'zombieSighted':
+      text = l.zombieSighted;
+      break;
   }
   return text;
 }
@@ -284,6 +290,8 @@ export interface NoticeInfo {
   title: string;
   /** A quién enfoca la cámara al pulsar el aviso, si a alguien. */
   focusId: number | null;
+  /** O qué casilla (zombis, destrozos). */
+  focusAt?: { x: number; y: number };
 }
 
 /**
@@ -326,6 +334,20 @@ export function noticeFor(e: LogEntry): NoticeInfo | null {
       return { tone: 'good', title: t.strangerAccepted, focusId: null };
     case 'strangerLeft':
       return { tone: 'mixed', title: t.strangerLeft, focusId: null };
+    // Zombis (H4b §8)
+    case 'downed':
+      return { tone: 'bad', title: t.downed, focusId: e.survivorId };
+    case 'zombiesInBase':
+      return { tone: 'bad', title: t.zombiesInBase, focusId: null, focusAt: { x: e.x, y: e.y } };
+    case 'zombieSighted':
+      return { tone: 'mixed', title: t.zombieSighted, focusId: null, focusAt: { x: e.x, y: e.y } };
+    case 'broken':
+      // Solo lo de la base: lo de las casas sería ruido.
+      return e.inBase
+        ? { tone: 'mixed', title: t.broken, focusId: null, focusAt: { x: e.x, y: e.y } }
+        : null;
+    case 'fled':
+      return { tone: 'mixed', title: t.fled, focusId: e.survivorId };
     default:
       return null;
   }

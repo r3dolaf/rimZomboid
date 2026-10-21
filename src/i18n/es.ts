@@ -89,6 +89,11 @@ export const es = {
     theftIgnored: 'Desconfianza',
     strangerAccepted: 'Caras nuevas',
     strangerLeft: 'Se marchan',
+    downed: 'Derribo',
+    zombiesInBase: '¡Zombis en la base!',
+    zombieSighted: 'Zombis cerca',
+    broken: 'Destrozos',
+    fled: 'Huida',
   },
   decisions: {
     theft: {
@@ -194,6 +199,8 @@ export const es = {
     gotUp: (who: string) => `${who} se ha levantado`,
     zombieKilled: (who: string) => `${who} ha matado un zombi`,
     fled: (who: string) => `${who} huye a la base`,
+    zombiesInBase: 'Hay zombis dentro de la base',
+    zombieSighted: 'Se ven zombis cerca de la base',
     broken: (what: 'door' | 'window' | 'wall', inBase: boolean) =>
       `Los zombis han ${
         what === 'door'

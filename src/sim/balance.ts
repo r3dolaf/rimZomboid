@@ -1,6 +1,13 @@
 // Todas las cifras ajustables del juego. Se retocan jugando.
 import type { ItemKind } from './items';
-import { Tile, type BuildKind, type LootKind, type RecipeId, type Weapon } from './types';
+import {
+  Tile,
+  type BuildKind,
+  type LootKind,
+  type NarratorStyle,
+  type RecipeId,
+  type Weapon,
+} from './types';
 
 // Tiempo
 export const TICKS_PER_SECOND = 10;
@@ -405,6 +412,29 @@ export const TRAPPED = {
 /** H4f: una de cada diez casas tiene uno dentro. */
 export const TRAPPED_HOUSE_CHANCE = 0.1;
 export const ZOMBIE_EDGE_START_DAY = 2;
+// Hordas del narrador (H4e §2)
+/** Asedio: desde qué día, cada cuántos días como mucho, con cuánto aviso y cuánto se empeña. */
+export const SIEGE_FIRST_DAY = 6;
+export const SIEGE_COOLDOWN_DAYS = 6;
+export const SIEGE_WARNING_HOURS = [48, 72] as const;
+export const SIEGE_HOURS = 24;
+/** Tamaño del asedio según el narrador (más 1 cada 2 días, y por la opción de la portada). */
+export const SIEGE_SIZE = {
+  calm: [10, 15],
+  balanced: [15, 25],
+  chaotic: [25, 35],
+} as const satisfies Record<NarratorStyle, readonly [number, number]>;
+/** Errantes: desde qué día, cada cuántos días como mucho y cuántos. */
+export const WANDERERS_FIRST_DAY = 3;
+export const WANDERERS_COOLDOWN_DAYS = 3;
+export const WANDERERS_SIZE = [8, 15] as const;
+/** Al llegar, juntos: a ±SPREAD de un punto del borde y a DEPTH casillas o menos de él. */
+export const HORDE_SPAWN_SPREAD = 12;
+export const HORDE_SPAWN_DEPTH = 3;
+/** Tramo de cada búsqueda de camino de un zombi de horda hacia su destino. */
+export const HORDE_LEG = 25;
+/** Cada cuánto se mira si algún colono ve a los errantes (para el aviso). */
+export const WANDERERS_SIGHT_TICKS = 10;
 export const ZOMBIE_HEALTH = 60;
 /** Resistencia de lo que pueden romper los zombis (spec H4b §4.1). */
 export const RESISTANCE: Partial<Record<Tile, number>> = {

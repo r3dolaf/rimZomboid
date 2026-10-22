@@ -182,6 +182,9 @@ export function createWorld(
     nextBillId: 1,
     weaponLog: { fromCorpses: 0, rotted: 0 },
     town,
+    hordes: [],
+    nextHordeId: 1,
+    siege: null,
   };
   // Zombis (H4b), con su propio azar: no cambian nada de lo anterior.
   placeStartZombies(world);

@@ -1,6 +1,6 @@
 import { LOG_MAX } from './balance';
 import type { Inventory } from './items';
-import type { BuildKind, RecipeId, SkillId, World } from './types';
+import type { BuildKind, MapSide, RecipeId, SkillId, World } from './types';
 
 /** Suceso del registro: solo datos; la interfaz los convierte en texto. */
 export type LogEvent =
@@ -63,7 +63,10 @@ export type LogEvent =
   /** El primer zombi que entra en la base (x, y: por dónde). */
   | { kind: 'zombiesInBase'; x: number; y: number }
   /** El primer zombi que se ve cerca de la base ese día. */
-  | { kind: 'zombieSighted'; x: number; y: number };
+  | { kind: 'zombieSighted'; x: number; y: number }
+  // Hordas (H4e): el asedio anunciado (por qué lado y en cuántas horas) y su llegada (por dónde).
+  | { kind: 'siegeAnnounced'; side: MapSide; hours: number }
+  | { kind: 'siegeArrived'; x: number; y: number };
 
 export type LogEntry = LogEvent & { tick: number };
 

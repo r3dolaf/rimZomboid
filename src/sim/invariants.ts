@@ -158,10 +158,15 @@ export function checkInvariants(w: World): string[] {
   for (const i of w.chopMarks)
     if (w.grid.tiles[i] !== Tile.Tree) problems.push(`marca de talar en ${i}: no es un árbol`);
   // H4b: zombis y daños.
+  // Las hordas (H4e) pueden pasar del tope; los demás, no.
   const max = zombieMax(w.narrator.style, w.zombieLevel);
-  if (w.zombies.length > max) problems.push(`demasiados zombis: ${w.zombies.length} > ${max}`);
+  const loose = w.zombies.filter((z) => z.hordeId === null).length;
+  if (loose > max) problems.push(`demasiados zombis: ${loose} > ${max}`);
+  const hordeIds = new Set(w.hordes.map((h) => h.id));
   for (const z of w.zombies) {
     const who = `zombi #${z.id}`;
+    if (z.hordeId !== null && !hordeIds.has(z.hordeId))
+      problems.push(`${who}: su horda ${z.hordeId} no existe`);
     if (!Number.isFinite(z.pos.x) || !Number.isFinite(z.pos.y)) {
       problems.push(`${who}: posición no válida (${z.pos.x}, ${z.pos.y})`);
       continue;

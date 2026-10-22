@@ -10,6 +10,7 @@ import { addDecision } from '../decisions';
 import { logEvent } from '../log';
 import { nextFloat, nextInt, pick } from '../rng';
 import { freeNames, newStranger, roadEnds } from '../systems/strangers';
+import { siegeActive } from '../zombies/hordes';
 import type { GameEvent } from './types';
 
 export const strangersEvent: GameEvent = {
@@ -21,7 +22,10 @@ export const strangersEvent: GameEvent = {
     w.stranger === null &&
     w.survivors.length < COLONY_MAX &&
     freeNames(w).length > 0 &&
-    roadEnds(w).length > 0,
+    roadEnds(w).length > 0 &&
+    // Con un asedio anunciado o en marcha no llega nadie (H4e §2.2).
+    w.siege === null &&
+    !siegeActive(w),
   happen(w) {
     const start = pick(w.rng, roadEnds(w));
     const pair =

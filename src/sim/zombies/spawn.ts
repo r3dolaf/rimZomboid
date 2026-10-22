@@ -20,6 +20,7 @@ import { isNight } from '../clock';
 import { isZombieWalkable } from '../map/grid';
 import { nextFloat, nextInt } from '../rng';
 import type { NarratorStyle, Point, World, Zombie, ZombieLevel } from '../types';
+import { siegeActive } from './hordes';
 
 export function zombieStartCount(style: NarratorStyle, level: ZombieLevel): number {
   return Math.round(ZOMBIE_START[style] * ZOMBIE_LEVEL_MULT[level]);
@@ -47,6 +48,7 @@ export function newZombie(w: World, t: Point): Zombie {
     lastSeenAt: 0,
     cooldown: 0,
     waitUntil: 0,
+    hordeId: null,
   };
 }
 
@@ -155,6 +157,8 @@ export function arrivalInterval(w: World): number {
 export function arrivalsSystem(w: World): void {
   if (w.tick < w.nextZombieAt) return;
   w.nextZombieAt = w.tick + arrivalInterval(w);
+  // Mientras dura un asedio no llegan sueltos (H4e §2.2).
+  if (siegeActive(w)) return;
   if (w.zombies.length >= zombieMax(w.narrator.style, w.zombieLevel)) return;
   const rng = w.zombieRng;
   const { width, height } = w.grid;

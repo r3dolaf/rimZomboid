@@ -164,6 +164,8 @@ export const es = {
   lockWeapon: 'Fijar',
   lockWeaponHint: 'No cambia ni devuelve lo que lleva en la mano',
   logToggle: { hide: 'Minimizar el registro', show: 'Abrir el registro' },
+  /** Lados del mapa (0 norte, 1 sur, 2 oeste, 3 este). */
+  sides: ['norte', 'sur', 'oeste', 'este'],
   notices: {
     skillUp: 'Mejora',
     jealousy: 'Celos',
@@ -323,6 +325,11 @@ export const es = {
       `${who} ha mejorado en ${skill} (nivel ${level})`,
     zombiesInBase: 'Hay zombis dentro de la base',
     zombieSighted: 'Se ven zombis cerca de la base',
+    siegeAnnounced: (side: number, hours: number) =>
+      `Se acerca una horda: llegará en ${
+        hours >= 48 ? `unos ${Math.round(hours / 24)} días` : `unas ${hours} horas`
+      }, por el ${es.sides[side]}`,
+    siegeArrived: '¡La horda ha llegado!',
     broken: (what: 'door' | 'window' | 'wall', inBase: boolean) =>
       `Los zombis han ${
         what === 'door'

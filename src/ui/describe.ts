@@ -349,6 +349,12 @@ export function logText(e: LogEntry, w: World): string {
     case 'craftFailed':
       text = l.craftFailed(name(e.survivorId), es.recipes[e.recipe].fail, formatLost(e.lost));
       break;
+    case 'siegeAnnounced':
+      text = l.siegeAnnounced(e.side, e.hours);
+      break;
+    case 'siegeArrived':
+      text = l.siegeArrived;
+      break;
   }
   return text;
 }

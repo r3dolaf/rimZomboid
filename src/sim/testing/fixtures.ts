@@ -94,6 +94,9 @@ export function emptyWorld(width: number, height: number): World {
     nextBillId: 1,
     weaponLog: { fromCorpses: 0, rotted: 0 },
     town: { x: 0, y: 0, w: width, h: height },
+    hordes: [],
+    nextHordeId: 1,
+    siege: null,
   };
 }
 
@@ -138,5 +141,24 @@ export function encloseTile(w: World, t: Point): void {
 export function withoutZombies(w: World): World {
   w.zombies = [];
   w.nextZombieAt = Number.MAX_SAFE_INTEGER;
+  return w;
+}
+
+/**
+ * Una base de verdad en `rect` (muros alrededor, suelo dentro y la puerta en medio del muro de
+ * abajo), con la cama y el almacén dentro: para los tests que necesitan un dentro y un fuera.
+ */
+export function addBase(w: World, rect: { x: number; y: number; w: number; h: number }): World {
+  for (let y = rect.y; y < rect.y + rect.h; y++)
+    for (let x = rect.x; x < rect.x + rect.w; x++) {
+      const edge =
+        x === rect.x || y === rect.y || x === rect.x + rect.w - 1 || y === rect.y + rect.h - 1;
+      setTile(w.grid, x, y, edge ? Tile.Wall : Tile.Floor);
+    }
+  const door = { x: rect.x + Math.floor(rect.w / 2), y: rect.y + rect.h - 1 };
+  setTile(w.grid, door.x, door.y, Tile.Door);
+  w.base = { id: 0, kind: 'base', rect: { ...rect }, door };
+  for (const b of w.beds) b.pos = { x: rect.x + 1 + (b.id - 1), y: rect.y + 1 };
+  w.storage.tiles = [{ x: door.x, y: door.y - 1 }];
   return w;
 }

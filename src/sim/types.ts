@@ -274,6 +274,25 @@ export interface Zombie {
   cooldown: number;
   /** Al vagar, espera hasta este tick antes del siguiente paseo. */
   waitUntil: number;
+  /** La horda de la que salió (H4e), aunque ya haya terminado; `null` si no es de ninguna. */
+  hordeId: number | null;
+}
+
+/** Lado del mapa: 0 norte (y = 0), 1 sur, 2 oeste (x = 0), 3 este. */
+export type MapSide = 0 | 1 | 2 | 3;
+
+/** Una horda del narrador (spec H4e §2.1). */
+export interface Horde {
+  id: number;
+  kind: 'siege' | 'wander';
+  /** Adonde van: la base (asedio) o un punto del borde contrario (errantes). */
+  goal: Point;
+  /** Asedio: hasta cuándo se empeña en la base. */
+  until?: number;
+  /** Ya no manda en sus zombis (acabó el asedio o los errantes salieron del mapa). */
+  done: boolean;
+  /** Errantes: ya se ha avisado de que se han visto. */
+  seen?: boolean;
 }
 
 /** Trabajos, en orden de criticidad (spec H4a §3.1). */
@@ -386,7 +405,9 @@ export type EventId =
   | 'cache'
   | 'strangers'
   | 'storm'
-  | 'flu';
+  | 'flu'
+  // Hordas (H4e)
+  | 'siege';
 
 /** El narrador (spec H3c §2): cuándo y de qué tono pasan cosas. */
 export interface Narrator {
@@ -462,6 +483,11 @@ export interface World {
   weaponLog: { fromCorpses: number; rotted: number };
   /** Dónde está el pueblo (H4f): para los zombis y, en H5c, para el mapa global. */
   town: Rect;
+  // Hordas (H4e)
+  hordes: Horde[];
+  nextHordeId: number;
+  /** El asedio anunciado que aún no ha llegado. */
+  siege: { at: number; side: MapSide; size: number } | null;
 }
 
 /** Recetas de Fabricar (H4d). */

@@ -25,6 +25,11 @@ export function gameTime(tick: number): GameTime {
   };
 }
 
+/** Tick en que empieza el día `d` (a las 00:00; el día 1 empezó antes de la partida). */
+export function dayStart(d: number): number {
+  return (d - 1) * TICKS_PER_DAY - START_HOUR * TICKS_PER_HOUR;
+}
+
 /** De 22:00 a 06:00. */
 export function isNight(tick: number): boolean {
   const { hour } = gameTime(tick);

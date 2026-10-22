@@ -29,7 +29,12 @@ test('portada: opción Zombis; un zombi junto a un colono se ve en el HUD; postu
   expect((await world(page)).zombieLevel).toBe('many');
   await page.locator('[data-speed="0"]').click();
 
-  // Al empezar no hay ninguno cerca: un zombi a 3 casillas del primer colono se ve al momento.
+  // Sin zombis cerca (H4f: al empezar pueden estar a 12 casillas, a la vista), un zombi junto al
+  // primer colono se ve al momento.
+  await page.evaluate(() => {
+    const w = (window as unknown as { rimzomboid: Debug }).rimzomboid.world;
+    w.zombies = [];
+  });
   await expect(page.getByTestId('hud-zombies')).toHaveText('Zombis a la vista: 0');
   await page.evaluate(() => {
     const w = (window as unknown as { rimzomboid: Debug }).rimzomboid.world;

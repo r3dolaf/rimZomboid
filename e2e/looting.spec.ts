@@ -10,7 +10,7 @@ interface Debug {
   tileToScreen(x: number, y: number): { x: number; y: number };
 }
 
-test('niebla al empezar, herramienta Saquear y marcar una casa', async ({ page }) => {
+test('niebla al empezar, herramienta Saquear y marcar un edificio', async ({ page }) => {
   const errores: string[] = [];
   page.on('pageerror', (e) => errores.push(e.message));
   page.on('console', (m) => {
@@ -64,7 +64,10 @@ test('niebla al empezar, herramienta Saquear y marcar una casa', async ({ page }
   await page.mouse.click(facade.x, facade.y);
   const panel = page.getByTestId('house-panel');
   await expect(panel).toBeVisible();
-  await expect(panel).toContainText(`Casa ${target.id}`);
+  // H4f: el edificio, por su nombre ("Casa 4", "Supermercado", "Granja 2"…).
+  await expect(panel.locator('h2')).toHaveText(
+    /^(Casa \d+|Supermercado|Farmacia|Ferretería|Comisaría|Tienda de ropa|Gasolinera|Granja \d+|Nave)$/,
+  );
   await expect(panel).toContainText('Marcada para saquear'); // en pausa, contando la orden pendiente
   await page.keyboard.press('Escape');
   await expect(panel).toBeHidden();

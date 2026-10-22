@@ -167,3 +167,14 @@ test('el botón Fabricar abre el panel de pedidos (H4d)', () => {
   b.click();
   expect(toggleCraft).toHaveBeenCalledTimes(1);
 });
+
+test('el botón Avisos abre su menú (H4e)', () => {
+  const root = document.createElement('div');
+  const toggleNotices = vi.fn();
+  mountHud(root, { seed: 1, time: createTimeController(), toggleNotices });
+  const b = root.querySelector('[data-testid="hud-notices"]') as HTMLButtonElement;
+  expect(b.hidden).toBe(false);
+  expect(b.textContent).toBe('Avisos');
+  b.click();
+  expect(toggleNotices).toHaveBeenCalledTimes(1);
+});

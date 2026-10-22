@@ -187,3 +187,35 @@ test('zombis (H4b): derribado y zombis en la base, avisos rojos que pausan; lo d
   inBase.click();
   expect(onFocusAt).toHaveBeenCalledWith({ x: 5, y: 6 });
 });
+
+test('menú de Avisos (H4e): lo que no aparece no sale; lo que pausa o no, según lo elegido', () => {
+  const root = document.createElement('div');
+  const world = createWorld(2);
+  world.tick = 1000;
+  const time = createTimeController();
+  time.setSpeed(1);
+  let prefs: import('./noticePrefs').NoticePrefs = {
+    grief: { show: false },
+    storm: { pause: false },
+    zombieSighted: { pause: true },
+    'decision:stranger': { pause: false },
+  };
+  const notices = mountNotices(root, { world, time, prefs: { get: () => prefs } });
+  const all = () => [...root.querySelectorAll('[data-testid="notice"]')] as HTMLElement[];
+  const s = world.survivors[0]!;
+  logEvent(world, { kind: 'grief', survivorId: s.id });
+  logEvent(world, { kind: 'storm' });
+  notices.update();
+  expect(all()).toHaveLength(1); // solo la tormenta
+  expect(time.speed).toBe(1); // y no pausa
+  logEvent(world, { kind: 'zombieSighted', x: 1, y: 1 });
+  notices.update();
+  expect(time.speed).toBe(0);
+  time.setSpeed(1);
+  strangersEvent.happen(world);
+  notices.update();
+  expect(root.querySelector('[data-testid="decision-stranger"]')).not.toBeNull();
+  expect(time.speed).toBe(1);
+  prefs = {};
+  void prefs;
+});

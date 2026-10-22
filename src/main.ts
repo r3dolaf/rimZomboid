@@ -19,6 +19,8 @@ import { mountHousePanel } from './ui/housePanel';
 import { mountHud } from './ui/hud';
 import { bindTimeKeys } from './ui/keys';
 import { mountLog } from './ui/logPanel';
+import { mountNoticeMenu } from './ui/noticeMenu';
+import { createPrefsStore } from './ui/noticePrefs';
 import { mountNotices } from './ui/notices';
 import { createFlag } from './ui/flag';
 import { createSelection } from './ui/selection';
@@ -57,16 +59,25 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
   const tool = createTool();
   const workOpen = createFlag();
   const craftOpen = createFlag();
-  // Los dos paneles salen en el mismo sitio: abrir uno cierra el otro.
-  workOpen.onChange((on) => on && craftOpen.set(false));
-  craftOpen.onChange((on) => on && workOpen.set(false));
+  const noticesOpen = createFlag(); // el menú de Avisos (H4e)
+  // Los tres paneles salen en el mismo sitio: abrir uno cierra los otros.
+  const panels = [workOpen, craftOpen, noticesOpen];
+  for (const f of panels) f.onChange((on) => on && panels.forEach((o) => o !== f && o.set(false)));
+  const prefs = createPrefsStore();
   const toggles = { toggleWork: workOpen.toggle, toggleCraft: craftOpen.toggle };
   // R (H4e): modo combate para los elegidos.
   const toggleDraft = () => {
     const o = draftToggle(world, selection.ids);
     if (o) issue(world, o);
   };
-  const hud = mountHud(ui, { seed, time, tool, narrator: style, ...toggles });
+  const hud = mountHud(ui, {
+    seed,
+    time,
+    tool,
+    narrator: style,
+    ...toggles,
+    toggleNotices: noticesOpen.toggle,
+  });
   const cards = mountCards(ui, { world, selection });
   const sheet = mountSheet(ui, { world, selection });
   const group = mountGroupPanel(ui, { world, selection });
@@ -75,9 +86,11 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
   const workPanel = mountWorkPanel(ui, { world, open: workOpen });
   const craftPanel = mountCraftPanel(ui, { world, open: craftOpen });
   const buildMenu = mountBuildMenu(ui, { tool });
+  const noticeMenu = mountNoticeMenu(ui, { prefs, open: noticesOpen });
   const notices = mountNotices(ui, {
     world,
     time,
+    prefs,
     // Pulsar un aviso: la cámara va al colono y se abre su ficha.
     onFocus(id) {
       selection.set(id);
@@ -98,6 +111,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
     () => tool.active && (tool.set(null), true),
     () => workOpen.value && (workOpen.set(false), true),
     () => craftOpen.value && (craftOpen.set(false), true),
+    () => noticesOpen.value && (noticesOpen.set(false), true),
     () => houseSelection.id !== null && (houseSelection.set(null), true),
     () => selection.ids.length > 0 && (selection.set(null), true),
   ]);
@@ -139,6 +153,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
       housePanel.update();
       log.update();
       notices.update();
+      noticeMenu.update();
       workPanel.update();
       craftPanel.update();
       buildMenu.update();

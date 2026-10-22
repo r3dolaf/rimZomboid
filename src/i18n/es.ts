@@ -171,6 +171,17 @@ export const es = {
   siegeIn: (days: number, hours: number) =>
     days > 0 ? `Horda en ${days} d ${hours} h` : `Horda en ${hours} h`,
   siegeLeft: (hours: number) => `Asedio: quedan ${hours} h`,
+  // Menú de Avisos (H4e)
+  noticesButton: 'Avisos',
+  noticesButtonHint: 'Qué avisos aparecen y cuáles pausan',
+  noticeMenu: {
+    title: 'Avisos',
+    show: 'Aparece',
+    pause: 'Pausa',
+    reset: 'Como al principio',
+    decision: (title: string) => `${title} (decisión)`,
+    groups: { narrator: 'Narrador', zombies: 'Zombis', hordes: 'Hordas', colonists: 'Colonos' },
+  },
   lockWeapon: 'Fijar',
   lockWeaponHint: 'No cambia ni devuelve lo que lleva en la mano',
   logToggle: { hide: 'Minimizar el registro', show: 'Abrir el registro' },

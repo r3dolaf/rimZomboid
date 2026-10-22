@@ -6,6 +6,7 @@ import type { LogEntry } from '../sim/log';
 import { issue } from '../sim/orders';
 import type { Decision, Tone, World } from '../sim/types';
 import { formatItems, logText, noticeFor } from './describe';
+import { pauses, shows, type NoticePrefs } from './noticePrefs';
 import './panels.css';
 
 const MAX_NOTICES = 5;
@@ -28,6 +29,8 @@ export function mountNotices(
     onFocus?: (survivorId: number) => void;
     /** Centrar la cámara en una casilla (zombis, destrozos). */
     onFocusAt?: (p: { x: number; y: number }) => void;
+    /** Qué aparece y qué pausa (menú de Avisos, H4e); sin ello, lo de siempre. */
+    prefs?: { get(): NoticePrefs };
   },
 ): { update(): void } {
   const box = document.createElement('div');
@@ -72,7 +75,8 @@ export function mountNotices(
 
   function addPlain(entry: LogEntry): void {
     const info = noticeFor(entry);
-    if (!info) return;
+    const prefs = opts.prefs?.get() ?? {};
+    if (!info || !shows(prefs, entry.kind)) return;
     const el = card(
       info.tone,
       info.title,
@@ -94,7 +98,7 @@ export function mountNotices(
     el.append(x);
     plainBox.prepend(el); // el más nuevo arriba
     plain.push({ entry, el });
-    if (info.tone === 'bad') opts.time.setSpeed(0);
+    if (pauses(prefs, entry.kind, info.tone)) opts.time.setSpeed(0);
   }
 
   function remove(entry: LogEntry): void {
@@ -140,7 +144,8 @@ export function mountNotices(
     el.append(row);
     decisionsBox.append(el);
     decisions.set(d.id, { el, buttons });
-    opts.time.setSpeed(0);
+    if (pauses(opts.prefs?.get() ?? {}, `decision:${d.kind}`, DECISION_TONE[d.kind]))
+      opts.time.setSpeed(0);
   }
 
   return {

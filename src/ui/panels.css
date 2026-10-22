@@ -633,3 +633,19 @@
   cursor: pointer;
   padding: 0;
 }
+
+/* Menú de Avisos (H4e): en el sitio del panel de Trabajos. */
+.notice-menu h3 {
+  margin: 10px 0 2px;
+  font-size: 13px;
+  opacity: 0.8;
+}
+.notice-menu td:first-child {
+  padding-right: 12px;
+}
+.notice-menu td:not(:first-child) {
+  text-align: center;
+}
+.notice-menu .reset {
+  margin-top: 10px;
+}

@@ -455,6 +455,22 @@
   text-align: left;
   white-space: nowrap;
 }
+/* Nivel de cada habilidad al lado de la casilla (H4c); el mejor de la columna, en negrita. */
+.work-panel td {
+  white-space: nowrap;
+}
+.work-panel .level {
+  display: inline-block;
+  min-width: 1.4em;
+  margin: 0 4px 0 3px;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+.work-panel .level.best {
+  font-weight: 700;
+  opacity: 1;
+  color: #f2c069;
+}
 .work-panel tbody tr:nth-child(odd) {
   background: rgba(255, 255, 255, 0.04);
 }

@@ -7,6 +7,9 @@ import { createWorld } from '../sim/world';
 import { formatLogEntry, noticeFor } from './describe';
 import { createSelection } from './selection';
 import { mountSheet } from './sheet';
+import { createFlag } from './flag';
+import { mountWorkPanel } from './workPanel';
+import type { Survivor } from '../sim/types';
 
 const q = (root: HTMLElement, id: string) =>
   root.querySelector(`[data-testid="${id}"]`) as HTMLElement;
@@ -102,4 +105,48 @@ test('registro: sube de nivel, falla al construir y consuela sin éxito; solo lo
   expect(noticeFor(up!)).toEqual({ tone: 'good', title: 'Mejora', focusId: a.id });
   expect(noticeFor(failed!)).toBeNull();
   expect(noticeFor(console!)).toBeNull();
+});
+
+test('panel de Trabajos como matriz: columnas por habilidad, casilla y nivel; el mejor, en negrita', () => {
+  const root = document.createElement('div');
+  document.body.replaceChildren(root);
+  const world = createWorld(5);
+  const open = createFlag();
+  const panel = mountWorkPanel(root, { world, open });
+  open.set(true);
+  const [a, b, c] = world.survivors as [Survivor, Survivor, Survivor];
+  a.skills.build.level = 7;
+  b.skills.build.level = 3;
+  c.skills.build.level = 7;
+  a.skills.fight.level = 2;
+  b.skills.fight.level = 9;
+  c.skills.fight.level = 1;
+  panel.update();
+  expect([...root.querySelectorAll('th')].map((t) => t.textContent)).toEqual([
+    '',
+    'Social',
+    'Construir',
+    'Transportar',
+    'Talar',
+    'Saquear',
+    'Pelear',
+  ]);
+  const level = (s: Survivor, k: string) => q(root, `work-${s.id}-${k}-level`);
+  expect(level(a, 'build').textContent).toBe('7');
+  expect(level(b, 'build').textContent).toBe('3');
+  // Empatados, los dos en negrita.
+  expect(level(a, 'build').classList.contains('best')).toBe(true);
+  expect(level(c, 'build').classList.contains('best')).toBe(true);
+  expect(level(b, 'build').classList.contains('best')).toBe(false);
+  // En Pelear, el nivel junto a la postura (sin casilla).
+  expect(level(b, 'fight').classList.contains('best')).toBe(true);
+  const fightCell = level(b, 'fight').closest('td')!;
+  expect(fightCell.contains(q(root, `work-${b.id}-stance`))).toBe(true);
+  expect(fightCell.querySelector('input[type="checkbox"]')).toBeNull();
+  // Las casillas siguen dando órdenes.
+  expect(q(root, `work-${a.id}-build`).closest('td')).toBe(level(a, 'build').closest('td'));
+  b.skills.build.level = 8;
+  panel.update();
+  expect(level(b, 'build').classList.contains('best')).toBe(true);
+  expect(level(a, 'build').classList.contains('best')).toBe(false);
 });

@@ -118,7 +118,7 @@ test('ficha: Salud, postura con tres botones y arma con su casilla Fijar (con ó
   expect(q(root, 'sheet-weapon').textContent).toContain('Sin arma');
 });
 
-test('panel de Trabajos: columna Postura con un desplegable por colono', () => {
+test('panel de Trabajos: postura con un desplegable por colono (en la columna Pelear, H4c)', () => {
   const root = document.createElement('div');
   document.body.replaceChildren(root);
   const world = createWorld(5);
@@ -126,7 +126,7 @@ test('panel de Trabajos: columna Postura con un desplegable por colono', () => {
   const panel = mountWorkPanel(root, { world, open });
   open.set(true);
   panel.update();
-  expect([...root.querySelectorAll('th')].map((t) => t.textContent)).toContain('Postura');
+  expect([...root.querySelectorAll('th')].map((t) => t.textContent)).toContain('Pelear');
   const s = world.survivors[0]!;
   const sel = q(root, `work-${s.id}-stance`) as HTMLSelectElement;
   expect([...sel.options].map((o) => o.textContent)).toEqual(['Pelear', 'Huir', 'Decidir']);

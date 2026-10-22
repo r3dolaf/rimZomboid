@@ -51,6 +51,13 @@ Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al p
 
 **Pedido por el usuario (después de H4b):** habilidades en cada trabajo → H4c. Al diseñarlas, el usuario pidió también cortinas (como en Zomboid: no ves fuera, pero los zombis no te ven), tela que se saquea y se convierte en vendas o cortinas, y cuerpos de zombi que se registran (ropa y, a veces, armas o equipo) → H4d.
 
+**Para H6 (pulido), de H4f:**
+
+- Equilibrio con el pueblo (6 semillas, Equilibrado/normal, saqueando todos los edificios desde el principio, sin construir): el día 7 la colonia tiene 14–137 latas, 21–32 vendas y 13–29 armas, y ya ha registrado entre la mitad y todos los muebles (unos 115–140 por mapa); el día 30, 0–58 latas (con 4–7 colonos; en 2 semillas se acaba), unas 30 vendas, unas 50 telas, unas 78 tablas y 32–35 armas (con los cuchillos del principio). Los colonos pasan en el suelo solo un 0–5 % del tiempo (antes de H4f, un 9 %): los zombis se juntan en el pueblo (llegan hasta 80) y la base suele estar fuera.
+- En las 6 semillas la base salió cerca de un borde del mapa (a menos de 35 casillas): el campo "a más de 30 del pueblo" casi siempre cae allí, que es por donde llegan los zombis. Revisar si el campo debería quedar más hacia dentro.
+- Hay menos casas de las que suponía la spec (unas 17, no 19) y menos muebles (115–140, no ~200); la comida total sale ~155 latas.
+- Con el mapa de 150×150 cada tick cuesta 0,3–0,6 ms (antes ~0,1) y la partida larga de 30 días tarda unos 21 minutos (antes ~10), también en GitHub Actions al publicar.
+
 **Para H6 (pulido), de H4d:**
 
 - Armas y vendas (Equilibrado/normal, saqueando todas las casas, sin construir). Sin registrar cuerpos (4 semillas), el mapa queda saqueado antes del día 7: unas 8–19 armas en la colonia (con los cuchillos del principio) y 10–16 vendas, y así se queda hasta el día 30. Marcando cada mañana todos los cuerpos vistos (6 semillas, con una mesa y "vendas hasta tener 10"): el día 7, 15–25 armas, 19–33 vendas y 80–150 telas; el día 30, 45–70 armas, 48–69 vendas y unas 670 telas (se registran unos 15 cuerpos al día). Con tantas vendas de los cuerpos, el pedido de vendas casi no hace falta (1–4 fabricadas en 30 días). Los cuerpos dan mucho: revisar sus probabilidades (10 % arma, 15 % venda o lata) y quizá menos tela.

@@ -27,7 +27,15 @@ import { createRng, nextInt, pick, type RngState } from './rng';
 import type { Skill, SkillId, Survivor, TraitId, World } from './types';
 
 /** En el orden de los trabajos del panel (H4a §3.1) y Pelear al final. */
-export const SKILLS: readonly SkillId[] = ['social', 'build', 'haul', 'chop', 'loot', 'fight'];
+export const SKILLS: readonly SkillId[] = [
+  'social',
+  'build',
+  'craft',
+  'haul',
+  'chop',
+  'loot',
+  'fight',
+];
 
 /**
  * El azar de las habilidades de cada colono: la semilla del mundo y su id. Así sortearlas no

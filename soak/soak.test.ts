@@ -8,6 +8,7 @@ import { isEmpty } from '../src/sim/items';
 import { issue } from '../src/sim/orders';
 import { createRng, nextInt } from '../src/sim/rng';
 import { canPlace } from '../src/sim/build';
+import { WEAPONS } from '../src/sim/jobs/weapons';
 import {
   Tile,
   type BuildKind,
@@ -316,7 +317,7 @@ test.each([1, 2, 3])(
 
 /** Armas en todo el mundo (cuchillos, bates y hachas): nunca aparecen ni desaparecen. */
 function allWeapons(w: World): number {
-  const kinds = ['knife', 'bat', 'axe'] as const;
+  const kinds = WEAPONS; // con la palanca y el machete (H4d)
   const people = [...w.survivors, ...(w.stranger?.survivors ?? [])];
   let n = 0;
   for (const k of kinds) {

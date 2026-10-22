@@ -97,6 +97,13 @@ export const ITEM_WEIGHT_KG = {
   bat: 1.5,
   axe: 2,
   wood: 1,
+  // H4d
+  cloth: 0.2,
+  curtains: 0.5,
+  thread: 0.01, // por uso (un carrete de 10 usos, 0,1 kg)
+  needle: 0.05,
+  crowbar: 2,
+  machete: 1,
 } as const;
 export const LOOT_FOOD_TOTAL = 80; // + START_FOOD ≈ 25 días para 3 supervivientes
 export const LOOT_BANDAGE_TOTAL = 15;
@@ -260,6 +267,16 @@ export const WORKING_SICK_MOOD = -5;
 // Defensa y trabajos (H4a)
 export const LOOT_WOOD_TOTAL = 40; // en armarios y estanterías
 export const AXE_CHANCE = 0.08; // × (0,5 + distancia normalizada), por mueble
+
+// Tela, hilo, agujas, palancas y machetes (H4d): aparte, con su propio azar.
+export const LOOT_CLOTH_TOTAL = 30; // 70 % en armarios, 30 % en estanterías
+export const CLOTH_WARDROBE_SHARE = 0.7;
+export const THREAD_SPOOLS = 6;
+export const THREAD_PER_SPOOL = 10; // usos de hilo por carrete
+export const NEEDLE_TOTAL = 3;
+export const CROWBAR_CHANCE = 0.06; // × (0,5 + distancia normalizada), por mueble (no en neveras)
+export const MACHETE_CHANCE = 0.04;
+export const CRAFT_LOOT_SALT = 0x5eed7e1a; // el azar de este botín: semilla ^ esto
 export const CHOP_TICKS = TICKS_PER_HOUR;
 export const CHOP_WOOD_MIN = 4;
 export const CHOP_WOOD_MAX = 6;
@@ -310,8 +327,8 @@ export const LEARN_MULT = { fastLearner: 1.5, slowLearner: 0.5 } as const;
 export const TRAIT_SKILL_MODS = {
   brave: { fight: 2 },
   coward: { fight: -2 },
-  handy: { build: 2 },
-  clumsy: { build: -2 },
+  handy: { build: 2, craft: 2 },
+  clumsy: { build: -2, craft: -2 },
   strong: { haul: 2, chop: 2 },
   weak: { haul: -2, chop: -2 },
   pleasant: { social: 2 },
@@ -334,8 +351,10 @@ export const ZOMBIE_HEALTH = 60;
 /** Resistencia de lo que pueden romper los zombis (spec H4b §4.1). */
 export const RESISTANCE: Partial<Record<Tile, number>> = {
   [Tile.Window]: 60,
+  [Tile.CurtainedWindow]: 60, // H4d: como la ventana
   [Tile.BoardedWindow]: 180,
   [Tile.Door]: 100,
+  [Tile.LockedDoor]: 150, // H4d: atrancada, aguanta más
   [Tile.WoodWall]: 200,
   [Tile.Wall]: 800,
 };
@@ -382,6 +401,8 @@ export const WEAPON_STATS = {
   knife: { damage: 15, ticks: 10 },
   bat: { damage: 25, ticks: 15 },
   axe: { damage: 40, ticks: 20 },
+  crowbar: { damage: 30, ticks: 15 }, // H4d
+  machete: { damage: 35, ticks: 15 },
 } as const;
 
 export const HEAD_HIT_CHANCE = 1 / 6; // de los golpes que aciertan; hacen el doble

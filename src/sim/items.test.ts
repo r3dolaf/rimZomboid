@@ -2,12 +2,11 @@ import { expect, test } from 'vitest';
 import { addInto, emptyInventory, isEmpty, takeUpTo, weightOf } from './items';
 
 const inv = (food = 0, bandage = 0, knife = 0, bat = 0) => ({
+  ...emptyInventory(),
   food,
   bandage,
   knife,
   bat,
-  axe: 0,
-  wood: 0,
 });
 
 test('pesos: lata 0,5; venda 0,1; cuchillo 0,5; bate 1,5', () => {

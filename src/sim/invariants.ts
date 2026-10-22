@@ -34,6 +34,9 @@ export function checkInvariants(w: World): string[] {
     checkInventory(problems, `${who}: carga`, s.carrying);
     if (weightOf(s.carrying) > capacityKg(s) + 1e-9)
       problems.push(`${who}: carga ${weightOf(s.carrying)} kg > ${capacityKg(s)}`);
+    for (const [k, p] of Object.entries(s.priorities))
+      if (!Number.isInteger(p) || p < 1 || p > 4)
+        problems.push(`${who}: prioridad de ${k}: ${p} fuera de 1–4`);
     for (const k of SKILLS) {
       const { level, xp } = s.skills[k];
       if (!Number.isInteger(level) || level < 0 || level > SKILL_MAX)
@@ -146,6 +149,20 @@ export function checkInvariants(w: World): string[] {
     else if (!Number.isInteger(hp) || hp < 1 || hp > full - 1)
       problems.push(`daño en ${key}: resistencia ${hp} fuera de 1–${full - 1}`);
   }
+  // Cortinas (H4d): solo en ventanas (normales, corridas o tapiadas), y toda corrida, en la lista.
+  const withCurtains = new Set(w.curtains);
+  for (const i of w.curtains) {
+    const t = w.grid.tiles[i];
+    if (t !== Tile.Window && t !== Tile.CurtainedWindow && t !== Tile.BoardedWindow)
+      problems.push(`cortinas en una casilla que no es ventana: ${i} (casilla ${t})`);
+  }
+  w.grid.tiles.forEach((t, i) => {
+    if (t === Tile.CurtainedWindow && !withCurtains.has(i))
+      problems.push(`cortinas corridas sin cortinas en la lista: ${i}`);
+  });
+  for (const b of w.bills)
+    if (!Number.isInteger(b.target) || b.target < 1 || !Number.isInteger(b.done) || b.done < 0)
+      problems.push(`pedido ${b.id}: N ${b.target}, hechos ${b.done}`);
   // La madera nunca aparece ni desaparece: lo que hay más lo gastado (y lo perdido al fallar) es lo
   // repartido, talado y recuperado.
   const wood =

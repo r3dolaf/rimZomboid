@@ -92,7 +92,20 @@ test('dónde se puede construir cada cosa', () => {
   w.piles.push({
     id: 81,
     pos: { ...floor },
-    items: { food: 0, bandage: 0, knife: 0, bat: 0, axe: 0, wood: 1 },
+    items: {
+      food: 0,
+      bandage: 0,
+      knife: 0,
+      bat: 0,
+      axe: 0,
+      wood: 1,
+      cloth: 0,
+      curtains: 0,
+      thread: 0,
+      needle: 0,
+      crowbar: 0,
+      machete: 0,
+    },
   });
   expect(canPlace(w, 'table', floor)).toBe(false);
   w.piles = [];

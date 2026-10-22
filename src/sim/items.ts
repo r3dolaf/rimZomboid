@@ -1,15 +1,54 @@
 import { ITEM_WEIGHT_KG } from './balance';
 
-export type ItemKind = 'food' | 'bandage' | 'knife' | 'bat' | 'axe' | 'wood';
+export type ItemKind =
+  | 'food'
+  | 'bandage'
+  | 'knife'
+  | 'bat'
+  | 'axe'
+  | 'wood'
+  // Tela, cortinas y armas nuevas (H4d). El hilo se cuenta en usos.
+  | 'cloth'
+  | 'curtains'
+  | 'thread'
+  | 'needle'
+  | 'crowbar'
+  | 'machete';
 
 /** Orden en el que se cogen las cosas al registrar un contenedor. */
-export const ITEM_KINDS: readonly ItemKind[] = ['food', 'bandage', 'knife', 'bat', 'axe', 'wood'];
+export const ITEM_KINDS: readonly ItemKind[] = [
+  'food',
+  'bandage',
+  'knife',
+  'bat',
+  'axe',
+  'wood',
+  'cloth',
+  'curtains',
+  'thread',
+  'needle',
+  'crowbar',
+  'machete',
+];
 
 /** Recuento de objetos por tipo. Lo usan el almacén, los contenedores y la carga. */
 export type Inventory = Record<ItemKind, number>;
 
 export function emptyInventory(): Inventory {
-  return { food: 0, bandage: 0, knife: 0, bat: 0, axe: 0, wood: 0 };
+  return {
+    food: 0,
+    bandage: 0,
+    knife: 0,
+    bat: 0,
+    axe: 0,
+    wood: 0,
+    cloth: 0,
+    curtains: 0,
+    thread: 0,
+    needle: 0,
+    crowbar: 0,
+    machete: 0,
+  };
 }
 
 export function weightOf(inv: Inventory): number {

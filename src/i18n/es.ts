@@ -40,6 +40,7 @@ export const es = {
   works: {
     social: 'Social',
     build: 'Construir',
+    craft: 'Fabricar',
     haul: 'Transportar',
     chop: 'Talar',
     loot: 'Saquear',
@@ -50,6 +51,7 @@ export const es = {
   skills: {
     social: 'Social',
     build: 'Construir',
+    craft: 'Fabricar',
     haul: 'Transportar',
     chop: 'Talar',
     loot: 'Saquear',
@@ -177,6 +179,12 @@ export const es = {
     bat: ['bate', 'bates'],
     axe: ['hacha', 'hachas'],
     wood: ['tabla', 'tablas'],
+    cloth: ['tela', 'telas'],
+    curtains: ['juego de cortinas', 'juegos de cortinas'],
+    thread: ['uso de hilo', 'usos de hilo'],
+    needle: ['aguja', 'agujas'],
+    crowbar: ['palanca', 'palancas'],
+    machete: ['machete', 'machetes'],
   } satisfies Record<ItemKind, [string, string]>,
   log: {
     found: (who: string, what: string, house: number) =>
@@ -275,8 +283,8 @@ export const es = {
     sleepyhead: { name: 'Dormilón', desc: 'Se cansa más rápido.' },
     optimist: { name: 'Optimista', desc: 'Ve el lado bueno: +10 de ánimo.' },
     pessimist: { name: 'Pesimista', desc: 'Todo le pesa más: −10 de ánimo.' },
-    handy: { name: 'Manitas', desc: '+2 en Construir.' },
-    clumsy: { name: 'Torpe', desc: '−2 en Construir, y falla más al construir.' },
+    handy: { name: 'Manitas', desc: '+2 en Construir y en Fabricar.' },
+    clumsy: { name: 'Torpe', desc: '−2 en Construir y en Fabricar, y falla más.' },
     strong: { name: 'Fuerte', desc: '+2 en Transportar y en Talar.' },
     weak: { name: 'Débil', desc: '−2 en Transportar y en Talar.' },
     fastLearner: { name: 'Aprende rápido', desc: 'La práctica le cunde un 50 % más.' },

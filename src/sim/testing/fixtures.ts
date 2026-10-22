@@ -41,7 +41,8 @@ export function emptyWorld(width: number, height: number): World {
         memories: [],
         bedId: 1,
         carrying: emptyInventory(),
-        work: { social: true, build: true, haul: true, chop: true, loot: true },
+        work: { social: true, build: true, craft: true, haul: true, chop: true, loot: true },
+        priorities: { social: 3, build: 3, craft: 3, haul: 3, chop: 3, loot: 3 },
         equipped: null,
         weaponLocked: false,
         health: 100,
@@ -83,6 +84,10 @@ export function emptyWorld(width: number, height: number): World {
     nextZombieAt: Number.MAX_SAFE_INTEGER, // sin llegadas salvo que el test las pida
     damage: {},
     zombieSightedDay: 0,
+    curtains: [],
+    bills: [],
+    nextBillId: 1,
+    weaponLog: { fromCorpses: 0, rotted: 0 },
   };
 }
 

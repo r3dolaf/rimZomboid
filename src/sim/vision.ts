@@ -14,7 +14,9 @@ export function isOpaque(g: Grid, x: number, y: number): boolean {
     t === Tile.Tree ||
     t === Tile.Door ||
     t === Tile.WoodWall ||
-    t === Tile.BoardedWindow
+    t === Tile.BoardedWindow ||
+    t === Tile.CurtainedWindow ||
+    t === Tile.LockedDoor
   );
 }
 

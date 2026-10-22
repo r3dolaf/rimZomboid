@@ -7,6 +7,7 @@ import {
   INITIAL_REVEAL,
   NEED_START_MAX,
   NEED_START_MIN,
+  CRAFT_LOOT_SALT,
   START_FOOD,
   START_WEAPON,
   START_OPINION_MAX,
@@ -15,7 +16,7 @@ import {
   TICKS_PER_DAY,
 } from './balance';
 import { emptyInventory } from './items';
-import { distributeWoodAndAxes, placeContainers } from './loot';
+import { distributeCraftLoot, distributeWoodAndAxes, placeContainers } from './loot';
 import { revealFromSurvivors } from './vision';
 import { generateMap } from './map/generate';
 import { getTile } from './map/grid';
@@ -81,6 +82,7 @@ export function createWorld(
     bedId: i + 1,
     carrying: emptyInventory(),
     work: defaultWork([]), // se ajusta abajo con los rasgos
+    priorities: defaultPriorities(),
     equipped: START_WEAPON,
     weaponLocked: false,
     health: 100,
@@ -128,6 +130,8 @@ export function createWorld(
   const calmEndsAt = nextInt(rng, CALM_DAYS_MIN * TICKS_PER_DAY, CALM_DAYS_MAX * TICKS_PER_DAY);
   // Madera y hachas (H4a), lo último de todo.
   distributeWoodAndAxes(base, houses, containers, rng);
+  // Tela, hilo, agujas, palancas y machetes (H4d), con su propio azar: no cambian nada de lo anterior.
+  distributeCraftLoot(base, houses, containers, createRng((seed ^ CRAFT_LOOT_SALT) >>> 0));
 
   const world: World = {
     seed,
@@ -172,6 +176,11 @@ export function createWorld(
     nextZombieAt: firstEdgeArrival(),
     damage: {},
     zombieSightedDay: 0,
+    // Al empezar, todas las ventanas tienen las cortinas abiertas (H4d).
+    curtains: grid.tiles.flatMap((t, i) => (t === Tile.Window ? [i] : [])),
+    bills: [],
+    nextBillId: 1,
+    weaponLog: { fromCorpses: 0, rotted: 0 },
   };
   // Zombis (H4b), con su propio azar: no cambian nada de lo anterior.
   placeStartZombies(world);
@@ -210,7 +219,12 @@ function takeDistinct<T>(rng: RngState, items: readonly T[], n: number): T[] {
 /** Trabajos por defecto: todos, salvo que el Cobarde no sale de la base (ni saquea ni tala). */
 export function defaultWork(traits: readonly TraitId[]): Record<WorkType, boolean> {
   const out = !traits.includes('coward');
-  return { social: true, build: true, haul: true, chop: out, loot: out };
+  return { social: true, build: true, craft: true, haul: true, chop: out, loot: out };
+}
+
+/** Prioridades al empezar (H4d): todo a 3, y así se trabaja como antes. */
+export function defaultPriorities(): Record<WorkType, number> {
+  return { social: 3, build: 3, craft: 3, haul: 3, chop: 3, loot: 3 };
 }
 
 /** Postura por defecto (spec H4b §7): el Cobarde huye, el Valiente pelea y el resto decide. */

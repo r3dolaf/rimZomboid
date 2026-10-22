@@ -6,13 +6,54 @@ import { formatItems, formatLogEntry } from './describe';
 import { mountLog } from './logPanel';
 
 test('formatItems: plurales y lista legible', () => {
-  expect(formatItems({ food: 4, bandage: 1, knife: 0, bat: 2, axe: 0, wood: 0 })).toBe(
-    '4 latas, 1 venda y 2 bates',
-  );
-  expect(formatItems({ food: 1, bandage: 0, knife: 1, bat: 0, axe: 0, wood: 0 })).toBe(
-    '1 lata y 1 cuchillo',
-  );
-  expect(formatItems({ food: 0, bandage: 0, knife: 0, bat: 0, axe: 0, wood: 0 })).toBe('nada');
+  expect(
+    formatItems({
+      food: 4,
+      bandage: 1,
+      knife: 0,
+      bat: 2,
+      axe: 0,
+      wood: 0,
+      cloth: 0,
+      curtains: 0,
+      thread: 0,
+      needle: 0,
+      crowbar: 0,
+      machete: 0,
+    }),
+  ).toBe('4 latas, 1 venda y 2 bates');
+  expect(
+    formatItems({
+      food: 1,
+      bandage: 0,
+      knife: 1,
+      bat: 0,
+      axe: 0,
+      wood: 0,
+      cloth: 0,
+      curtains: 0,
+      thread: 0,
+      needle: 0,
+      crowbar: 0,
+      machete: 0,
+    }),
+  ).toBe('1 lata y 1 cuchillo');
+  expect(
+    formatItems({
+      food: 0,
+      bandage: 0,
+      knife: 0,
+      bat: 0,
+      axe: 0,
+      wood: 0,
+      cloth: 0,
+      curtains: 0,
+      thread: 0,
+      needle: 0,
+      crowbar: 0,
+      machete: 0,
+    }),
+  ).toBe('nada');
 });
 
 test('cada suceso se convierte en una frase con día y hora', () => {
@@ -23,7 +64,20 @@ test('cada suceso se convierte en una frase con día y hora', () => {
     kind: 'found',
     survivorId: s.id,
     houseId: 3,
-    items: { food: 4, bandage: 1, knife: 0, bat: 0, axe: 0, wood: 0 },
+    items: {
+      food: 4,
+      bandage: 1,
+      knife: 0,
+      bat: 0,
+      axe: 0,
+      wood: 0,
+      cloth: 0,
+      curtains: 0,
+      thread: 0,
+      needle: 0,
+      crowbar: 0,
+      machete: 0,
+    },
   });
   expect(formatLogEntry(w.log.at(-1)!, w)).toBe(
     `Día 1, 10:14 · ${s.name} ha encontrado 4 latas y 1 venda en la casa 3`,

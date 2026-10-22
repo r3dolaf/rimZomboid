@@ -86,7 +86,20 @@ test('la ✕ no se reconstruye al cambiar los datos (si no, un clic puede perder
 test('muestra lo que lleva encima y su peso', () => {
   const { root, world, selection, sheet } = setup();
   const s = world.survivors[0]!;
-  s.carrying = { food: 6, bandage: 1, knife: 0, bat: 0, axe: 0, wood: 0 };
+  s.carrying = {
+    food: 6,
+    bandage: 1,
+    knife: 0,
+    bat: 0,
+    axe: 0,
+    wood: 0,
+    cloth: 0,
+    curtains: 0,
+    thread: 0,
+    needle: 0,
+    crowbar: 0,
+    machete: 0,
+  };
   s.skills.haul.level = 5;
   selection.set(s.id);
   sheet.update();
@@ -100,7 +113,7 @@ test('muestra lo que lleva encima y su peso', () => {
 test('una casilla por trabajo y "En la mano: hacha"', () => {
   const { root, world, selection, sheet } = setup();
   const s = world.survivors[0]!;
-  s.work = { social: true, build: false, haul: true, chop: false, loot: true };
+  s.work = { social: true, build: false, craft: false, haul: true, chop: false, loot: true };
   s.equipped = 'axe';
   selection.set(s.id);
   sheet.update();

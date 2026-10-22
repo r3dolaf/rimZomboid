@@ -21,7 +21,7 @@ import { nextFloat, nextInt, pick } from '../rng';
 import { rollSkills, skillRng } from '../skills';
 import { rollTraits } from '../traits';
 import { Tile, type Point, type Survivor, type World } from '../types';
-import { defaultStance, defaultWork, tileOf } from '../world';
+import { defaultPriorities, defaultStance, defaultWork, tileOf } from '../world';
 import { walkStep } from './movement';
 
 /** La caminata hasta la puerta, la espera y la marcha. */
@@ -105,7 +105,8 @@ export function newStranger(w: World, start: Point): Survivor {
       food: nextInt(w.rng, 0, STRANGER_FOOD_MAX),
       bandage: nextFloat(w.rng) < STRANGER_BANDAGE_CHANCE ? 1 : 0,
     },
-    work: { social: true, build: true, haul: true, chop: false, loot: false },
+    work: { social: true, build: true, craft: true, haul: true, chop: false, loot: false },
+    priorities: defaultPriorities(),
     equipped: null,
     weaponLocked: false,
     health: 100,

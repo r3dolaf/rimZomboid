@@ -55,6 +55,7 @@ test('Habilidades: una fila por habilidad con su nivel y la barrita de la práct
   expect(rows.map((r) => r.querySelector('.name')!.textContent)).toEqual([
     'Social',
     'Construir',
+    'Fabricar',
     'Transportar',
     'Talar',
     'Saquear',
@@ -83,7 +84,7 @@ test('los rasgos nuevos salen con su explicación', () => {
   s.traits = ['handy', 'fastLearner'];
   sheet.update();
   const text = q(root, 'sheet-pane-general').textContent!;
-  expect(text).toContain('Manitas — +2 en Construir.');
+  expect(text).toContain('Manitas — +2 en Construir y en Fabricar.');
   expect(text).toContain('Aprende rápido — La práctica le cunde un 50 % más.');
 });
 
@@ -126,6 +127,7 @@ test('panel de Trabajos como matriz: columnas por habilidad, casilla y nivel; el
     '',
     'Social',
     'Construir',
+    'Fabricar',
     'Transportar',
     'Talar',
     'Saquear',

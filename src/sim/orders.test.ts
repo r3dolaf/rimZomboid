@@ -33,7 +33,20 @@ test('marcar una casa no marca los contenedores ya registrados y vacíos', () =>
   const h = w.houses[0]!;
   const [c1, c2] = w.containers.filter((c) => c.houseId === h.id);
   c1!.searched = true;
-  c1!.items = { food: 0, bandage: 0, knife: 0, bat: 0, axe: 0, wood: 0 };
+  c1!.items = {
+    food: 0,
+    bandage: 0,
+    knife: 0,
+    bat: 0,
+    axe: 0,
+    wood: 0,
+    cloth: 0,
+    curtains: 0,
+    thread: 0,
+    needle: 0,
+    crowbar: 0,
+    machete: 0,
+  };
   issue(w, { type: 'designateHouse', houseId: h.id, on: true });
   step(w);
   expect(c1!.designated).toBe(false);

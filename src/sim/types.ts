@@ -30,6 +30,9 @@ export const Tile = {
   BrokenWindow: 9,
   BrokenDoor: 10,
   Rubble: 11,
+  // H4d: ventana con las cortinas corridas (tapa la vista) y puerta de casa atrancada.
+  CurtainedWindow: 12,
+  LockedDoor: 13,
 } as const;
 export type Tile = (typeof Tile)[keyof typeof Tile];
 
@@ -189,6 +192,8 @@ export interface Survivor {
   carrying: Inventory;
   /** Trabajos permitidos (casillas del panel de Trabajos). */
   work: Record<WorkType, boolean>;
+  /** Prioridad de cada trabajo, de 1 (lo primero) a 4 (H4d). */
+  priorities: Record<WorkType, number>;
   /** Lo que lleva en la mano (no cuenta como carga): herramienta y arma. */
   equipped: Weapon | null;
   /** No cambia ni devuelve lo que lleva en la mano. */
@@ -217,7 +222,7 @@ export interface Stranger {
 }
 
 /** Armas que se llevan en la mano, de mejor a peor (spec H4b §6.2). */
-export type Weapon = 'axe' | 'bat' | 'knife';
+export type Weapon = 'machete' | 'crowbar' | 'axe' | 'bat' | 'knife';
 
 /** Pelear, Huir o Decidir (spec H4b §7). */
 export type Stance = 'fight' | 'flee' | 'decide';
@@ -245,7 +250,7 @@ export interface Zombie {
 }
 
 /** Trabajos, en orden de criticidad (spec H4a §3.1). */
-export type WorkType = 'social' | 'build' | 'haul' | 'chop' | 'loot';
+export type WorkType = 'social' | 'build' | 'craft' | 'haul' | 'chop' | 'loot';
 
 /** Habilidades (H4c): una por trabajo y Pelear. */
 export type SkillId = WorkType | 'fight';
@@ -400,4 +405,24 @@ export interface World {
   damage: Record<string, number>;
   /** Día en que se avisó del primer zombi visto cerca de la base (uno al día). */
   zombieSightedDay: number;
+  // Tela, cortinas y cuerpos (H4d)
+  /** Ventanas con cortinas (corridas o no, también tapiadas), por índice y·ancho + x. */
+  curtains: number[];
+  /** Pedidos de Fabricar, de arriba abajo. */
+  bills: Bill[];
+  nextBillId: number;
+  /** Armas que salen de los cuerpos y que se pudren con ellos (para que las cuentas cuadren). */
+  weaponLog: { fromCorpses: number; rotted: number };
+}
+
+/** Recetas de Fabricar (H4d). */
+export type RecipeId = 'bandages' | 'curtains' | 'unpick';
+
+/** Un pedido: `count`, hacer N veces (`done` lleva la cuenta); `until`, hasta tener N en el almacén. */
+export interface Bill {
+  id: number;
+  recipe: RecipeId;
+  mode: 'count' | 'until';
+  target: number;
+  done: number;
 }

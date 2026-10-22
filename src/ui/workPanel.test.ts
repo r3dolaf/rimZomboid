@@ -27,6 +27,7 @@ test('oculto hasta que se abre; una fila por colono y una columna por trabajo, e
     '',
     'Social',
     'Construir',
+    'Fabricar',
     'Transportar',
     'Talar',
     'Saquear',

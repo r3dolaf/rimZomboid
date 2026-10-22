@@ -14,6 +14,8 @@ export const TILE_COLORS: Record<Tile, number> = {
   [Tile.BrokenWindow]: 0x3c5560,
   [Tile.BrokenDoor]: 0x4a3420,
   [Tile.Rubble]: 0x6e6a64,
+  [Tile.CurtainedWindow]: 0x6a4a5e, // H4d: cortinas corridas
+  [Tile.LockedDoor]: 0x5e3a1e, // H4d: puerta atrancada
 };
 
 export const SURVIVOR_COLOR = 0xf2c641;

@@ -10,16 +10,20 @@ import { Tile, type World } from './types';
 /** En qué se convierte cada cosa al romperse. */
 const BROKEN: Partial<Record<Tile, Tile>> = {
   [Tile.Window]: Tile.BrokenWindow,
+  [Tile.CurtainedWindow]: Tile.BrokenWindow,
   [Tile.BoardedWindow]: Tile.BrokenWindow,
   [Tile.Door]: Tile.BrokenDoor,
+  [Tile.LockedDoor]: Tile.BrokenDoor,
   [Tile.WoodWall]: Tile.Rubble,
   [Tile.Wall]: Tile.Rubble,
 };
 
 const WHAT: Partial<Record<Tile, 'door' | 'window' | 'wall'>> = {
   [Tile.Window]: 'window',
+  [Tile.CurtainedWindow]: 'window',
   [Tile.BoardedWindow]: 'window',
   [Tile.Door]: 'door',
+  [Tile.LockedDoor]: 'door',
   [Tile.WoodWall]: 'wall',
   [Tile.Wall]: 'wall',
 };
@@ -54,6 +58,9 @@ export function damageTile(w: World, x: number, y: number, amount: number): bool
   const tile = getTile(w.grid, x, y);
   delete w.damage[k];
   setTile(w.grid, x, y, BROKEN[tile]!);
+  // Una ventana rota pierde sus cortinas (H4d).
+  const i = y * w.grid.width + x;
+  if (w.curtains.includes(i)) w.curtains = w.curtains.filter((c) => c !== i);
   for (const b of w.blueprints.filter((p) => p.pos.x === x && p.pos.y === y))
     if (!tileFits(w, b.kind, { x, y })) cancelBlueprint(w, b.id);
   logEvent(w, { kind: 'broken', what: WHAT[tile]!, x, y, inBase: contains(w.base.rect, { x, y }) });

@@ -215,7 +215,20 @@ test('alijo en una casa ya saqueada: una despensa escondida que vuelve a estar p
   const { w } = calm(12);
   for (const c of w.containers) {
     c.searched = true;
-    c.items = { food: 0, bandage: 0, knife: 0, bat: 0, axe: 0, wood: c.items.wood }; // la madera no se toca: tiene que cuadrar
+    c.items = {
+      food: 0,
+      bandage: 0,
+      knife: 0,
+      bat: 0,
+      axe: 0,
+      wood: c.items.wood,
+      cloth: 0,
+      curtains: 0,
+      thread: 0,
+      needle: 0,
+      crowbar: 0,
+      machete: 0,
+    }; // la madera no se toca: tiene que cuadrar
   }
   expect(cacheEvent.canHappen(w)).toBe(true);
   cacheEvent.happen(w);

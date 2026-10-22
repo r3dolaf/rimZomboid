@@ -27,7 +27,20 @@ test('update cambia la hora y refleja cambios de velocidad hechos con el teclado
   time.togglePause();
   hud.update(
     { day: 2, hour: 13, minute: 30 },
-    { food: 35, bandage: 0, knife: 0, bat: 0, axe: 0, wood: 0 },
+    {
+      food: 35,
+      bandage: 0,
+      knife: 0,
+      bat: 0,
+      axe: 0,
+      wood: 0,
+      cloth: 0,
+      curtains: 0,
+      thread: 0,
+      needle: 0,
+      crowbar: 0,
+      machete: 0,
+    },
   );
   expect(root.querySelector('[data-testid="hud-time"]')!.textContent).toBe('Día 2, 13:30');
   expect(root.querySelector('[data-speed="0"]')!.classList.contains('active')).toBe(true);
@@ -55,7 +68,20 @@ test('muestra la comida del almacén', () => {
   const hud = mountHud(root, { seed: 1, time: createTimeController() });
   hud.update(
     { day: 1, hour: 8, minute: 0 },
-    { food: 12, bandage: 3, knife: 0, bat: 0, axe: 0, wood: 0 },
+    {
+      food: 12,
+      bandage: 3,
+      knife: 0,
+      bat: 0,
+      axe: 0,
+      wood: 0,
+      cloth: 0,
+      curtains: 0,
+      thread: 0,
+      needle: 0,
+      crowbar: 0,
+      machete: 0,
+    },
   );
   expect(root.querySelector('[data-testid="hud-food"]')!.textContent).toBe('Comida: 12');
   expect(root.querySelector('[data-testid="hud-bandages"]')!.textContent).toBe('Vendas: 3');
@@ -85,7 +111,20 @@ test('muestra la madera del almacén y el botón Trabajos abre el panel', () => 
   const hud = mountHud(root, { seed: 1, time: createTimeController(), toggleWork });
   hud.update(
     { day: 1, hour: 9, minute: 0 },
-    { food: 1, bandage: 0, knife: 0, bat: 0, axe: 0, wood: 7 },
+    {
+      food: 1,
+      bandage: 0,
+      knife: 0,
+      bat: 0,
+      axe: 0,
+      wood: 7,
+      cloth: 0,
+      curtains: 0,
+      thread: 0,
+      needle: 0,
+      crowbar: 0,
+      machete: 0,
+    },
   );
   expect(root.querySelector('[data-testid="hud-wood"]')!.textContent).toBe('Madera: 7');
   (root.querySelector('[data-testid="hud-work"]') as HTMLButtonElement).click();
@@ -97,7 +136,20 @@ test('muestra el narrador y la tormenta mientras dura', () => {
   const hud = mountHud(root, { seed: 1, time: createTimeController(), narrator: 'chaotic' });
   expect(root.querySelector('[data-testid="hud-narrator"]')!.textContent).toBe('Narrador: Caótico');
   const weather = root.querySelector('[data-testid="hud-weather"]') as HTMLElement;
-  const stock = { food: 1, bandage: 0, knife: 0, bat: 0, axe: 0, wood: 0 };
+  const stock = {
+    food: 1,
+    bandage: 0,
+    knife: 0,
+    bat: 0,
+    axe: 0,
+    wood: 0,
+    cloth: 0,
+    curtains: 0,
+    thread: 0,
+    needle: 0,
+    crowbar: 0,
+    machete: 0,
+  };
   hud.update({ day: 1, hour: 9, minute: 0 }, stock, false);
   expect(weather.hidden).toBe(true);
   hud.update({ day: 1, hour: 9, minute: 0 }, stock, true);

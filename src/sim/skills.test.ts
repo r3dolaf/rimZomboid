@@ -10,17 +10,17 @@ import { INCOMPATIBLE, TRAITS } from './traits';
 import type { TraitId } from './types';
 import { createWorld } from './world';
 
-test('seis habilidades, en el orden de los trabajos y Pelear al final', () => {
-  expect(SKILLS).toEqual(['social', 'build', 'haul', 'chop', 'loot', 'fight']);
+test('siete habilidades (H4d: Fabricar), en el orden de los trabajos y Pelear al final', () => {
+  expect(SKILLS).toEqual(['social', 'build', 'craft', 'haul', 'chop', 'loot', 'fight']);
 });
 
-test('al empezar: cinco entre 0 y 3, una especialidad entre 5 y 7, sin práctica', () => {
+test('al empezar: todas entre 0 y 3 salvo una especialidad entre 5 y 7, sin práctica', () => {
   const rng = createRng(9);
   const special = new Set<string>();
   for (let i = 0; i < 300; i++) {
     const skills = rollSkills(rng, []);
     const levels = SKILLS.map((k) => skills[k].level);
-    expect(levels.filter((l) => l >= 0 && l <= 3)).toHaveLength(5);
+    expect(levels.filter((l) => l >= 0 && l <= 3)).toHaveLength(SKILLS.length - 1);
     const top = SKILLS.find((k) => skills[k].level >= 5)!;
     expect(skills[top].level).toBeGreaterThanOrEqual(5);
     expect(skills[top].level).toBeLessThanOrEqual(7);
@@ -34,8 +34,8 @@ test('los rasgos suman o restan 2, sin bajar de 0 ni pasar de 10', () => {
   expect(TRAIT_SKILL_MODS).toEqual({
     brave: { fight: 2 },
     coward: { fight: -2 },
-    handy: { build: 2 },
-    clumsy: { build: -2 },
+    handy: { build: 2, craft: 2 },
+    clumsy: { build: -2, craft: -2 },
     strong: { haul: 2, chop: 2 },
     weak: { haul: -2, chop: -2 },
     pleasant: { social: 2 },

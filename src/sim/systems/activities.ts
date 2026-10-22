@@ -5,6 +5,7 @@ import { finishConsoling } from '../consoling';
 import { nearTable } from '../furniture';
 import { workOnBlueprint } from '../jobs/build';
 import { finishChop } from '../jobs/chop';
+import { finishCraft } from '../jobs/craft';
 import { logEvent } from '../log';
 import { makeNoise } from '../noise';
 import { addMemory } from '../mood';
@@ -75,6 +76,12 @@ export function activitiesSystem(w: World): void {
       if (--a.ticksLeft % CHOP_NOISE_TICKS === 0) makeNoise(w, s.pos, NOISE.chop);
       if (a.ticksLeft > 0) continue;
       finishChop(w, a.tree);
+      s.action = { type: 'idle', ticksLeft: 0 };
+    } else if (a.type === 'craft') {
+      // Fabricar en la mesa (H4d): se aprende con cada momento de trabajo.
+      practice(w, s, 'craft', 1);
+      if (--a.ticksLeft > 0) continue;
+      finishCraft(w, s, a);
       s.action = { type: 'idle', ticksLeft: 0 };
     } else if (a.type === 'pry') {
       // Forzar una puerta atrancada (H4d): se aprende y cada golpe se oye.

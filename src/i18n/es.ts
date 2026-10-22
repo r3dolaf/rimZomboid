@@ -11,6 +11,7 @@ import type {
   NarratorStyle,
   Stance,
   TraitId,
+  RecipeId,
   SkillId,
   WorkType,
   ZombieLevel,
@@ -46,6 +47,32 @@ export const es = {
     loot: 'Saquear',
   } satisfies Record<WorkType, string>,
   sheetTabs: { general: 'General', skills: 'Habilidades' },
+  /** Recetas de Fabricar (H4d): nombre, lo que hace quien la trabaja, cómo queda en el registro. */
+  recipes: {
+    bandages: {
+      name: 'Vendas',
+      doing: 'Haciendo vendas',
+      done: 'ha hecho 2 vendas',
+      fail: 'hacer las vendas',
+    },
+    curtains: {
+      name: 'Cortinas',
+      doing: 'Cosiendo unas cortinas',
+      done: 'ha cosido unas cortinas',
+      fail: 'coser las cortinas',
+    },
+    unpick: {
+      name: 'Deshacer cortinas',
+      doing: 'Deshaciendo unas cortinas',
+      done: 'ha deshecho unas cortinas en 3 telas',
+      fail: 'deshacer las cortinas',
+    },
+  } satisfies Record<RecipeId, { name: string; doing: string; done: string; fail: string }>,
+  /** Materiales que se pierden al fallar (sin plural): "−2 de tela". */
+  materials: { cloth: 'tela', thread: 'hilo', curtains: 'cortinas' } as Partial<
+    Record<ItemKind, string>
+  >,
+  lostItem: (n: number, what: string) => `−${n} de ${what}`,
   skillMax: 'máx.',
   /** Habilidades (H4c): las de los trabajos y Pelear. */
   skills: {
@@ -250,6 +277,9 @@ export const es = {
     consoleFailed: (who: string, other: string) =>
       `${who} ha intentado consolar a ${other}, sin éxito`,
     forced: (who: string, house: number) => `${who} ha forzado la puerta de la casa ${house}`,
+    crafted: (who: string, what: string) => `${who} ${what}`,
+    craftFailed: (who: string, what: string, lost: string) =>
+      `${who} ha fallado al ${what} (${lost})`,
     skillUp: (who: string, skill: string, level: number) =>
       `${who} ha mejorado en ${skill} (nivel ${level})`,
     zombiesInBase: 'Hay zombis dentro de la base',
@@ -400,6 +430,8 @@ export const es = {
     flee: 'Huyendo a la base',
     swapWeapon: 'Va a por un arma',
     takeCrowbar: 'Va a por la palanca',
+    fetchCraft: 'Va a por materiales',
+    goCraft: 'Va a la mesa',
     goPry: 'Va a forzar una puerta',
     pry: 'Forzando una puerta',
   },

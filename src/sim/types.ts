@@ -150,7 +150,10 @@ export type Activity =
   | { type: 'swapWeapon' }
   // Puertas atrancadas (H4d): coger la palanca del almacén y forzar la puerta de la casilla `door`.
   | { type: 'takeCrowbar' }
-  | { type: 'pry'; door: number };
+  | { type: 'pry'; door: number }
+  // Fabricar (H4d): coger del almacén los materiales del pedido y trabajarlos en la mesa `tableId`.
+  | { type: 'fetchCraft'; billId: number }
+  | { type: 'craft'; billId: number; tableId: number };
 
 export type Action =
   /** `wait`: esperando tras no encontrar camino (no se consulta al cerebro) o tras negarse a trabajar. */
@@ -175,7 +178,9 @@ export type Action =
   | { type: 'downed'; until: number }
   | { type: 'melee'; zombieId: number; cooldown: number }
   // Forzando una puerta atrancada (H4d).
-  | { type: 'pry'; door: number; ticksLeft: number };
+  | { type: 'pry'; door: number; ticksLeft: number }
+  // Fabricando en una mesa (H4d): `recipe` por si el pedido se quita a medias.
+  | { type: 'craft'; billId: number; tableId: number; recipe: RecipeId; ticksLeft: number };
 
 export interface Survivor {
   id: number;

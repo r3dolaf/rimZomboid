@@ -1,7 +1,8 @@
 import { isEmpty } from './items';
 import { resolveDecision } from './events/resolve';
 import { cancelBlueprint, markTree, placeBlueprint } from './build';
-import type { BuildKind, Container, Stance, WorkType, World } from './types';
+import { BILL_DEFAULT_TARGET } from './balance';
+import type { BuildKind, Container, RecipeId, Stance, WorkType, World } from './types';
 
 /** Lo que pide el jugador. La interfaz solo cambia el mundo mediante órdenes. */
 export type Order =
@@ -18,7 +19,13 @@ export type Order =
   | { type: 'cancelBlueprint'; id: number }
   // Zombis (H4b)
   | { type: 'lockWeapon'; survivorId: number; locked: boolean }
-  | { type: 'setStance'; survivorId: number; stance: Stance };
+  | { type: 'setStance'; survivorId: number; stance: Stance }
+  // Pedidos de Fabricar (H4d)
+  | { type: 'addBill'; recipe: RecipeId }
+  | { type: 'removeBill'; billId: number }
+  | { type: 'setBill'; billId: number; mode?: 'count' | 'until'; target?: number }
+  /** Sube (-1) o baja (+1) un puesto en la lista. */
+  | { type: 'moveBill'; billId: number; dir: -1 | 1 };
 
 /** Encola una orden; se aplica al principio del siguiente tick. */
 export function issue(w: World, order: Order): void {
@@ -63,6 +70,32 @@ export function ordersSystem(w: World): void {
       case 'setWork': {
         const s = w.survivors.find((x) => x.id === o.survivorId);
         if (s) s.work[o.work] = o.enabled;
+        break;
+      }
+      case 'addBill':
+        w.bills.push({
+          id: w.nextBillId++,
+          recipe: o.recipe,
+          mode: 'until',
+          target: BILL_DEFAULT_TARGET,
+          done: 0,
+        });
+        break;
+      case 'removeBill':
+        w.bills = w.bills.filter((b) => b.id !== o.billId);
+        break;
+      case 'setBill': {
+        const b = w.bills.find((x) => x.id === o.billId);
+        if (!b) break;
+        if (o.mode) b.mode = o.mode;
+        if (o.target !== undefined && Number.isInteger(o.target)) b.target = Math.max(1, o.target);
+        break;
+      }
+      case 'moveBill': {
+        const i = w.bills.findIndex((x) => x.id === o.billId);
+        const j = i + o.dir;
+        if (i < 0 || j < 0 || j >= w.bills.length) break;
+        [w.bills[i], w.bills[j]] = [w.bills[j]!, w.bills[i]!];
         break;
       }
       case 'setPriority': {

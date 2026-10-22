@@ -2,6 +2,7 @@ import {
   BUILD,
   CURTAINS_COST,
   OPINION_LIMIT,
+  RECIPES,
   RESISTANCE,
   SKILL_MAX,
   ZOMBIE_HEALTH,
@@ -172,8 +173,15 @@ export function checkInvariants(w: World): string[] {
       problems.push(`cortinas corridas sin cortinas en la lista: ${i}`);
   });
   for (const b of w.bills)
-    if (!Number.isInteger(b.target) || b.target < 1 || !Number.isInteger(b.done) || b.done < 0)
-      problems.push(`pedido ${b.id}: N ${b.target}, hechos ${b.done}`);
+    if (
+      !(b.recipe in RECIPES) ||
+      (b.mode !== 'count' && b.mode !== 'until') ||
+      !Number.isInteger(b.target) ||
+      b.target < 1 ||
+      !Number.isInteger(b.done) ||
+      b.done < 0
+    )
+      problems.push(`pedido ${b.id}: ${b.recipe}, ${b.mode}, N ${b.target}, hechos ${b.done}`);
   // La madera nunca aparece ni desaparece: lo que hay más lo gastado (y lo perdido al fallar) es lo
   // repartido, talado y recuperado.
   const wood =

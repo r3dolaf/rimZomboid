@@ -47,6 +47,8 @@ export function activityText(s: Survivor, w?: World): string {
       return t.melee;
     case 'pry':
       return t.pry;
+    case 'craft':
+      return es.recipes[a.recipe].doing;
     case 'moveTo':
       if (a.then?.type === 'search') return t.goLoot(container(a.then.containerId)?.houseId ?? 0);
       if (a.then?.type === 'unload') return t.goUnload;
@@ -64,6 +66,8 @@ export function activityText(s: Survivor, w?: World): string {
       if (a.then?.type === 'swapWeapon') return t.swapWeapon;
       if (a.then?.type === 'takeCrowbar') return t.takeCrowbar;
       if (a.then?.type === 'pry') return t.goPry;
+      if (a.then?.type === 'fetchCraft') return t.fetchCraft;
+      if (a.then?.type === 'craft') return t.goCraft;
       if (a.run) return t.flee;
       return t.wander;
     case 'idle':
@@ -138,6 +142,13 @@ export function formatItems(inv: Inventory): string {
   if (parts.length === 0) return es.nothing;
   if (parts.length === 1) return parts[0]!;
   return `${parts.slice(0, -1).join(', ')} ${es.and} ${parts.at(-1)}`;
+}
+
+/** Lo que se pierde al fallar al fabricar: "−2 de tela, −1 de hilo". */
+export function formatLost(inv: Inventory): string {
+  return ITEM_KINDS.filter((k) => inv[k] > 0)
+    .map((k) => es.lostItem(inv[k], es.materials[k] ?? es.items[k][1]))
+    .join(', ');
 }
 
 /** "Día 2, 10:14 · Ana ha encontrado 4 latas en la casa 3". */
@@ -300,6 +311,12 @@ export function logText(e: LogEntry, w: World): string {
       break;
     case 'forced':
       text = l.forced(name(e.survivorId), e.houseId);
+      break;
+    case 'crafted':
+      text = l.crafted(name(e.survivorId), es.recipes[e.recipe].done);
+      break;
+    case 'craftFailed':
+      text = l.craftFailed(name(e.survivorId), es.recipes[e.recipe].fail, formatLost(e.lost));
       break;
   }
   return text;

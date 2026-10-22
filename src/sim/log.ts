@@ -1,6 +1,6 @@
 import { LOG_MAX } from './balance';
 import type { Inventory } from './items';
-import type { BuildKind, SkillId, World } from './types';
+import type { BuildKind, RecipeId, SkillId, World } from './types';
 
 /** Suceso del registro: solo datos; la interfaz los convierte en texto. */
 export type LogEvent =
@@ -57,6 +57,8 @@ export type LogEvent =
   | { kind: 'consoleFailed'; survivorId: number; otherId: number }
   // H4d
   | { kind: 'forced'; survivorId: number; houseId: number }
+  | { kind: 'crafted'; survivorId: number; recipe: RecipeId }
+  | { kind: 'craftFailed'; survivorId: number; recipe: RecipeId; lost: Inventory }
   /** El primer zombi que entra en la base (x, y: por dónde). */
   | { kind: 'zombiesInBase'; x: number; y: number }
   /** El primer zombi que se ve cerca de la base ese día. */

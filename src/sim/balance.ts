@@ -1,5 +1,6 @@
 // Todas las cifras ajustables del juego. Se retocan jugando.
-import { Tile, type BuildKind } from './types';
+import type { ItemKind } from './items';
+import { Tile, type BuildKind, type RecipeId } from './types';
 
 // Tiempo
 export const TICKS_PER_SECOND = 10;
@@ -277,6 +278,37 @@ export const NEEDLE_TOTAL = 3;
 export const CROWBAR_CHANCE = 0.06; // × (0,5 + distancia normalizada), por mueble (no en neveras)
 export const MACHETE_CHANCE = 0.04;
 export const CRAFT_LOOT_SALT = 0x5eed7e1a; // el azar de este botín: semilla ^ esto
+
+// Fabricar (H4d): recetas de la mesa y pedidos.
+export interface Recipe {
+  input: Partial<Record<ItemKind, number>>;
+  /** Herramienta que hace falta (no se gasta): la aguja, en el almacén; el cuchillo, también en la mano. */
+  tool: 'needle' | 'knife' | null;
+  output: Partial<Record<ItemKind, number>>;
+  /** Con Fabricar 5. */
+  ticks: number;
+}
+export const RECIPES: Record<RecipeId, Recipe> = {
+  bandages: {
+    input: { cloth: 1 },
+    tool: null,
+    output: { bandage: 2 },
+    ticks: 0.25 * TICKS_PER_HOUR,
+  },
+  curtains: {
+    input: { cloth: 3, thread: 2 },
+    tool: 'needle',
+    output: { curtains: 1 },
+    ticks: TICKS_PER_HOUR,
+  },
+  unpick: {
+    input: { curtains: 1 },
+    tool: 'knife',
+    output: { cloth: 3 },
+    ticks: 0.25 * TICKS_PER_HOUR,
+  },
+};
+export const BILL_DEFAULT_TARGET = 5; // un pedido nuevo: "hasta tener 5"
 
 // Puertas atrancadas (H4d): se fuerzan con la palanca.
 export const LOCKED_DOOR_CHANCE = 0.25; // por casa (la base, nunca)

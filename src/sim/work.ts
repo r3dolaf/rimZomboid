@@ -6,6 +6,7 @@ import { foodDays } from './colony';
 import { buildJob, buildStillWorth } from './jobs/build';
 import { chopJob, chopStillWorth, returnAxeJob } from './jobs/chop';
 import { pryJob, pryStillWorth } from './jobs/pry';
+import { craftJob, craftStillWorth } from './jobs/craft';
 import { deliverJob, haulJob, haulStillWorth } from './jobs/haul';
 import { swapWeaponStillWorth, weaponJob } from './jobs/weapons';
 import { isEmpty, ITEM_KINDS, weightOf } from './items';
@@ -104,6 +105,7 @@ export function findWork(s: Survivor, w: World): Action | null {
   // Por prioridad (1 primero, H4d) y, a igual prioridad, por criticidad.
   const jobs: [WorkType, () => Action | null][] = [
     ['build', () => buildJob(s, w)],
+    ['craft', () => craftJob(s, w)],
     ['haul', () => haulJob(s, w)],
     ['chop', () => chopJob(s, w)],
     // Saquear: antes, forzar las puertas atrancadas de las casas marcadas (H4d).
@@ -132,6 +134,8 @@ const WORK_ACTIONS: ReadonlySet<string> = new Set([
   'swapWeapon',
   'takeCrowbar',
   'pry',
+  'fetchCraft',
+  'craft',
 ]);
 
 /** ¿Está trabajando (o yendo a trabajar)? */
@@ -152,6 +156,7 @@ export function stillWorthIt(s: Survivor, w: World): boolean {
   if (what === 'build') return buildStillWorth(s, w);
   if (what === 'swapWeapon') return swapWeaponStillWorth(s, w);
   if (what === 'takeCrowbar' || what === 'pry') return pryStillWorth(s, w);
+  if (what === 'fetchCraft' || what === 'craft') return craftStillWorth(s, w);
   const id = targetContainerId(s);
   if (id === null || s.action.type === 'search') return true;
   const c = w.containers.find((x) => x.id === id);

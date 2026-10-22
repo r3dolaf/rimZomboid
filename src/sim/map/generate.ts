@@ -1,4 +1,7 @@
-import { HOUSE_COUNT_MAX, HOUSE_COUNT_MIN, MAP_SIZE, TREE_DENSITY } from '../balance';
+import { HOUSE_COUNT_MAX, HOUSE_COUNT_MIN, TREE_DENSITY } from '../balance';
+
+/** El mapa de antes de H4f, hasta que lo sustituya el trazado nuevo (H4f, tarea 3). */
+const MAP_SIZE = 100;
 import { contains, expand, intersects } from '../geom';
 import { findPath } from '../path/astar';
 import { nextFloat, nextInt, type RngState } from '../rng';

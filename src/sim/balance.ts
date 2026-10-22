@@ -9,10 +9,15 @@ export const TICKS_PER_DAY = 24 * TICKS_PER_HOUR; // 7200 = 12 minutos reales a 
 export const START_HOUR = 8;
 
 // Mundo
-export const MAP_SIZE = 100;
+export const MAP_SIZE = 150; // H4f (antes, 100)
 export const HOUSE_COUNT_MIN = 6;
 export const HOUSE_COUNT_MAX = 10;
 export const TREE_DENSITY = 0.03;
+/** H4f: árboles en la hierba, del 2 % junto a las carreteras y en el pueblo al 8 % lejos (bosque). */
+export const TREE_DENSITY_NEAR = 0.02;
+export const TREE_DENSITY_FAR = 0.08;
+/** H4f: dónde sale la base: en el pueblo, en las afueras y (el resto) en el campo. */
+export const BASE_PLACE = { town: 0.2, outskirts: 0.4, country: 0.4 } as const;
 
 // Supervivientes
 export const SURVIVOR_COUNT = 3;

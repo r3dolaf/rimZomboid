@@ -73,3 +73,11 @@ test('F abre y cierra el panel Fabricar (H4d)', () => {
   press(window, { code: 'KeyF', key: 'f' });
   expect(toggleCraft).toHaveBeenCalledTimes(1);
 });
+
+test('R: modo combate para los elegidos (H4e)', () => {
+  const time = createTimeController();
+  const toggleDraft = vi.fn();
+  bindTimeKeys(window, time, undefined, { toggleDraft });
+  press(window, { code: 'KeyR', key: 'r' });
+  expect(toggleDraft).toHaveBeenCalledTimes(1);
+});

@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { draftToggle } from './game/command';
 import { parseNarrator, parseSeed, parseZombies, randomSeed, startUrl } from './game/seed';
 import { createTimeController } from './game/timeController';
 import { BACKGROUND } from './render/colors';
@@ -6,10 +7,12 @@ import { GameScene, type GameSceneData } from './render/GameScene';
 import { gameTime } from './sim/clock';
 import { zombiesInSight } from './sim/danger';
 import type { NarratorStyle, ZombieLevel } from './sim/types';
+import { issue } from './sim/orders';
 import { createWorld } from './sim/world';
 import { mountBuildMenu } from './ui/buildMenu';
 import { mountCards } from './ui/cards';
 import { mountCraftPanel } from './ui/craftPanel';
+import { mountGroupPanel } from './ui/groupPanel';
 import { bindEscape } from './ui/escape';
 import { mountHousePanel } from './ui/housePanel';
 import { mountHud } from './ui/hud';
@@ -57,9 +60,15 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
   workOpen.onChange((on) => on && craftOpen.set(false));
   craftOpen.onChange((on) => on && workOpen.set(false));
   const toggles = { toggleWork: workOpen.toggle, toggleCraft: craftOpen.toggle };
+  // R (H4e): modo combate para los elegidos.
+  const toggleDraft = () => {
+    const o = draftToggle(world, selection.ids);
+    if (o) issue(world, o);
+  };
   const hud = mountHud(ui, { seed, time, tool, narrator: style, ...toggles });
   const cards = mountCards(ui, { world, selection });
   const sheet = mountSheet(ui, { world, selection });
+  const group = mountGroupPanel(ui, { world, selection });
   const housePanel = mountHousePanel(ui, { world, selection: houseSelection });
   const log = mountLog(ui, { world });
   const workPanel = mountWorkPanel(ui, { world, open: workOpen });
@@ -80,7 +89,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
   });
 
   // Solo una ficha abierta a la vez: superviviente o casa.
-  selection.onChange((id) => id !== null && houseSelection.set(null));
+  selection.onChange(() => selection.ids.length > 0 && houseSelection.set(null));
   houseSelection.onChange((id) => id !== null && selection.set(null));
   // Esc cierra por capas: primero la herramienta, luego el panel de Trabajos o el de Fabricar, la
   // ficha de la casa y la del superviviente.
@@ -89,7 +98,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
     () => workOpen.value && (workOpen.set(false), true),
     () => craftOpen.value && (craftOpen.set(false), true),
     () => houseSelection.id !== null && (houseSelection.set(null), true),
-    () => selection.id !== null && (selection.set(null), true),
+    () => selection.ids.length > 0 && (selection.set(null), true),
   ]);
   // El cursor indica qué herramienta está activa.
   tool.onChange((mode) => {
@@ -97,7 +106,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
       document.body.classList.toggle(`tool-${m}`, mode === m);
   });
 
-  bindTimeKeys(window, time, tool, toggles);
+  bindTimeKeys(window, time, tool, { ...toggles, toggleDraft });
 
   const game = new Phaser.Game({
     type: Phaser.AUTO,
@@ -124,6 +133,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
       );
       cards.update();
       sheet.update();
+      group.update();
       housePanel.update();
       log.update();
       notices.update();

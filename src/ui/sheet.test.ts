@@ -213,3 +213,23 @@ test('los motivos del ánimo con otra persona llevan su nombre', () => {
   expect(items).toContain(`Le insultó ${b!.name} −8 (quedan 12 h)`);
   root.remove();
 });
+
+test('botón Combate (H4e): pone y quita el modo combate; apagado si está derribado', () => {
+  const root = document.createElement('div');
+  const world = createWorld(5);
+  const selection = createSelection();
+  const sheet = mountSheet(root, { world, selection });
+  const s = world.survivors[0]!;
+  selection.set(s.id);
+  sheet.update();
+  const b = root.querySelector('[data-testid="sheet-draft"]') as HTMLButtonElement;
+  b.click();
+  expect(world.orders).toEqual([{ type: 'draft', survivorIds: [s.id], on: true }]);
+  sheet.update();
+  expect(b.classList.contains('active')).toBe(true);
+  world.orders = [];
+  s.health = 0;
+  s.action = { type: 'downed', until: 1e9 };
+  sheet.update();
+  expect(b.disabled).toBe(true);
+});

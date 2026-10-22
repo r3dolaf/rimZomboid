@@ -23,6 +23,8 @@ export const SURVIVOR_OUTLINE = 0x111111;
 export const STRANGER_COLOR = 0x9a9a9a;
 export const BACKGROUND = 0x111111;
 export const SELECTION_RING = 0xffffff;
+/** Las espadas sobre la cabeza de quien está en modo combate (H4e). */
+export const DRAFT_MARK = 0xd9534f;
 export const BED_COLOR = 0x4f6f96;
 export const PILLOW_COLOR = 0xe8e6e3;
 export const STORAGE_COLOR = 0x8a6a3a;

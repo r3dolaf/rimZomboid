@@ -1,6 +1,8 @@
 import { es } from '../i18n/es';
 import { weightOf } from '../sim/items';
 import { moodModifiers, moodTarget } from '../sim/mood';
+import { draftToggle, effectiveDrafted } from '../game/command';
+import { canDraft } from '../sim/draft';
 import { issue } from '../sim/orders';
 import { SKILL_MAX } from '../sim/balance';
 import { capacityKg, SKILLS, xpToNext } from '../sim/skills';
@@ -67,6 +69,18 @@ export function mountSheet(
     work.append(cell);
     return { cell, prio };
   });
+  // Modo combate (H4e): el botón Combate, fijo como lo demás.
+  const draft = document.createElement('button');
+  draft.type = 'button';
+  draft.className = 'draft';
+  draft.dataset.testid = 'sheet-draft';
+  draft.textContent = es.draftButton;
+  draft.title = es.draftHint;
+  draft.addEventListener('click', () => {
+    const o = draftToggle(opts.world, opts.selection.ids);
+    if (o) issue(opts.world, o);
+    draft.blur();
+  });
   // Postura (H4b): tres botones, fijos como las prioridades.
   const stanceRow = document.createElement('div');
   stanceRow.className = 'stance';
@@ -112,7 +126,7 @@ export function mountSheet(
   // Pestañas (H4c): General, lo de siempre; Habilidades, sus niveles y la práctica.
   const general = document.createElement('div');
   general.dataset.testid = 'sheet-pane-general';
-  general.append(work, stanceRow, weaponRow, carrying, body);
+  general.append(work, draft, stanceRow, weaponRow, carrying, body);
   const skillsPane = document.createElement('div');
   skillsPane.className = 'skills';
   skillsPane.dataset.testid = 'sheet-pane-skills';
@@ -206,6 +220,9 @@ export function mountSheet(
         kg(capacityKg(s)),
       );
       if (carrying.textContent !== carryText) carrying.textContent = carryText;
+      const drafted = effectiveDrafted(world, s);
+      draft.classList.toggle('active', drafted);
+      draft.disabled = !drafted && !canDraft(s);
       const stance = effectiveStance(world, s);
       stanceButtons.forEach((b, i) => b.classList.toggle('selected', STANCES[i] === stance));
       const inHand = s.equipped ? es.inHand(es.items[s.equipped][0]) : es.noWeapon;

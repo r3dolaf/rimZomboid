@@ -89,6 +89,7 @@ export function activityText(s: Survivor, w?: World): string {
 
 /** El icono más importante para la tarjeta, o `null` si no hay nada que destacar. */
 export function statusIcon(s: Survivor): { icon: string; label: string } | null {
+  if (s.drafted) return es.status.drafted; // H4e: lo primero
   const a = s.action;
   if (a.type === 'downed') return es.status.downed;
   if (a.type === 'melee') return es.status.meleeZombie;

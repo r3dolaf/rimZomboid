@@ -163,6 +163,10 @@ export const es = {
     decide: 'Pelea o huye según su Salud, su arma y cuántos zombis hay',
   } satisfies Record<Stance, string>,
   noWeapon: 'Sin arma',
+  // Modo combate (H4e)
+  draftButton: '⚔️ Combate',
+  draftHint: 'Modo combate (R): solo obedece; clic derecho para ir, atacar a un zombi o rescatar',
+  groupTitle: (n: number) => `${n} elegidos`,
   lockWeapon: 'Fijar',
   lockWeaponHint: 'No cambia ni devuelve lo que lleva en la mano',
   logToggle: { hide: 'Minimizar el registro', show: 'Abrir el registro' },
@@ -595,5 +599,6 @@ export const es = {
     downed: { icon: '🤕', label: 'En el suelo' },
     meleeZombie: { icon: '⚔️', label: 'Peleando con zombis' },
     fleeing: { icon: '🏃', label: 'Huyendo' },
+    drafted: { icon: '⚔️', label: 'En modo combate' },
   },
 };

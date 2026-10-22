@@ -127,3 +127,31 @@ test('con el CSS real, las barras Sueño y Social cambian de color al bajar', as
   root.remove();
   style.remove();
 });
+
+test('Mayús + clic añade o quita de la selección (H4e); sin Mayús, solo ese', () => {
+  const { root, world, selection, cards } = setup();
+  const [a, b] = [world.survivors[0]!, world.survivors[1]!];
+  const card = (id: number) => root.querySelector(`[data-testid="card-${id}"]`) as HTMLElement;
+  card(a.id).click();
+  card(b.id).dispatchEvent(new MouseEvent('click', { shiftKey: true, bubbles: true }));
+  expect(selection.ids).toEqual([a.id, b.id]);
+  cards.update();
+  expect(card(a.id).classList.contains('selected')).toBe(true);
+  expect(card(b.id).classList.contains('selected')).toBe(true);
+  card(a.id).dispatchEvent(new MouseEvent('click', { shiftKey: true, bubbles: true }));
+  expect(selection.ids).toEqual([b.id]);
+  card(a.id).click();
+  expect(selection.ids).toEqual([a.id]);
+});
+
+test('en modo combate: ⚔ (lo primero) y la tarjeta marcada', () => {
+  const { root, world, cards } = setup();
+  const s = world.survivors[0]!;
+  s.drafted = true;
+  s.action = { type: 'sleep', inBed: true }; // aunque haya otra cosa que mostrar
+  cards.update();
+  const card = root.querySelector(`[data-testid="card-${s.id}"]`)!;
+  expect(card.querySelector('.status')!.textContent).toBe('⚔️');
+  expect((card.querySelector('.status') as HTMLElement).title).toBe('En modo combate');
+  expect(card.classList.contains('drafted')).toBe(true);
+});

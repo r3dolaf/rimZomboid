@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { markCorpsesIn, toggleContainer, toggleHouse } from '../game/designate';
 import { containerAt, houseAt, survivorAt, tableAt } from '../game/pick';
+import { commandAt, effectiveDrafted } from '../game/command';
 import { runTicks } from '../game/runTicks';
 import type { TimeController } from '../game/timeController';
 import {
@@ -18,7 +19,7 @@ import { canPlace, markedTrees } from '../sim/build';
 import { darkness } from '../sim/clock';
 import { CATALOG } from '../sim/events/catalog';
 import { isEmpty } from '../sim/items';
-import { effectiveDesignated, houseMarked } from '../sim/orders';
+import { effectiveDesignated, houseMarked, issue } from '../sim/orders';
 import { doorSide } from '../sim/map/recipes';
 import {
   Tile,
@@ -27,6 +28,7 @@ import {
   type Point,
   type Survivor,
   type World,
+  type Zombie,
 } from '../sim/types';
 import { buildingTitle } from '../ui/describe';
 import { visibleTiles } from '../sim/vision';
@@ -63,6 +65,7 @@ import {
   PLANK_SEAM,
   RUBBLE_BITS,
   SELECTION_RING,
+  DRAFT_MARK,
   STORAGE_COLOR,
   STORAGE_EDGE,
   STRANGER_COLOR,
@@ -96,6 +99,7 @@ const ZOOM_MIN = 0.5; // como mínimo; nunca tan lejos que el mapa no llene la p
 const ZOOM_MAX = 4;
 const ZOOM_STEP = 1.1;
 const PICK_RADIUS = 0.6; // casillas
+const CLICK_SLOP_PX = 6; // soltar más lejos que esto (en pantalla) es arrastrar, no un clic
 const SLEEPING_ALPHA = 0.45;
 const FOG_SEEN_ALPHA = 140; // 0–255: penumbra de lo visto pero no visible ahora
 const FOG_EVERY_FRAMES = 4;
@@ -147,6 +151,10 @@ export class GameScene extends Phaser.Scene {
   private storageTiles = new Set<number>();
   /** Arrastre con Talar o Construir, de casilla a casilla. */
   private drag: { mode: ToolMode; from: Point; to: Point } | null = null;
+  /** Rectángulo para elegir a varios (H4e), en casillas (continuas) y dónde empezó en pantalla. */
+  private box: { from: Point; to: Point; screen: Point; add: boolean } | null = null;
+  /** Dónde se pulsó el botón derecho (en pantalla): si se suelta cerca, es una orden (H4e). */
+  private rightFrom: Point | null = null;
   private hover: Point | null = null;
   private fog!: Phaser.Textures.CanvasTexture;
   /** Lo que ven ahora los colonos (se rehace con la niebla): solo ahí se dibujan los zombis. */
@@ -306,11 +314,29 @@ export class GameScene extends Phaser.Scene {
     g.clear();
     for (const s of this.world.survivors) {
       const [x, y] = [s.pos.x * TILE_PX, s.pos.y * TILE_PX];
-      if (s.id === this.selection.id) {
+      if (this.selection.ids.includes(s.id)) {
         g.lineStyle(2, SELECTION_RING, 1);
         g.strokeCircle(x, y, SURVIVOR_RADIUS + 4);
       }
       this.drawPerson(g, s, SURVIVOR_COLOR);
+      // Modo combate (H4e): dos espadas cruzadas sobre la cabeza.
+      if (effectiveDrafted(this.world, s)) {
+        const top = y - SURVIVOR_RADIUS - 6;
+        g.lineStyle(2, DRAFT_MARK, 1);
+        g.lineBetween(x - 3, top - 3, x + 3, top + 3);
+        g.lineBetween(x + 3, top - 3, x - 3, top + 3);
+      }
+    }
+    // El rectángulo para elegir a varios.
+    const b = this.box;
+    if (b) {
+      const [x0, y0] = [Math.min(b.from.x, b.to.x) * TILE_PX, Math.min(b.from.y, b.to.y) * TILE_PX];
+      const bw = Math.abs(b.from.x - b.to.x) * TILE_PX;
+      const bh = Math.abs(b.from.y - b.to.y) * TILE_PX;
+      g.fillStyle(SELECTION_RING, 0.1);
+      g.fillRect(x0, y0, bw, bh);
+      g.lineStyle(1, SELECTION_RING, 0.9);
+      g.strokeRect(x0, y0, bw, bh);
     }
     // El desconocido, en gris, hasta que lo aceptan.
     for (const s of this.world.stranger?.survivors ?? []) this.drawPerson(g, s, STRANGER_COLOR);
@@ -413,34 +439,87 @@ export class GameScene extends Phaser.Scene {
     this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
       this.hover = this.tileAt(p);
       if (this.drag) this.drag.to = this.hover;
+      if (this.box) this.box.to = { x: p.worldX / TILE_PX, y: p.worldY / TILE_PX };
     });
-    this.input.on('pointerup', () => this.finishDrag());
-    this.input.on('pointerupoutside', () => (this.drag = null));
+    this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
+      if (p.button === 2) return this.finishRight(p);
+      if (this.box) return this.finishBox(p);
+      this.finishDrag();
+    });
+    this.input.on('pointerupoutside', () => {
+      this.drag = null;
+      this.box = null;
+      this.rightFrom = null;
+    });
     this.input.on('gameout', () => (this.hover = null));
     this.tool.onChange(() => (this.drag = null));
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
+      if (p.rightButtonDown()) {
+        this.rightFrom = { x: p.x, y: p.y };
+        return;
+      }
       if (!p.leftButtonDown()) return;
       const w = this.world;
       const { x: tx, y: ty } = this.tileAt(p);
-      const seen = w.seen[ty * w.grid.width + tx] === 1;
       const mode = this.tool.mode;
       if (mode === 'chop' || mode === 'build' || mode === 'loot') {
         this.drag = { mode, from: { x: tx, y: ty }, to: { x: tx, y: ty } };
         return;
       }
+      const shift = (p.event as MouseEvent | undefined)?.shiftKey === true;
       const s = survivorAt(w, p.worldX / TILE_PX, p.worldY / TILE_PX, PICK_RADIUS);
       if (s) {
-        this.selection.set(s.id);
+        if (shift) this.selection.toggle(s.id);
+        else this.selection.set(s.id);
         return;
       }
       if (tableAt(w, tx, ty)) {
         this.openCraft?.();
         return;
       }
+      // Lo demás se decide al soltar: un clic (edificio o nadie) o un rectángulo (H4e).
+      const at = { x: p.worldX / TILE_PX, y: p.worldY / TILE_PX };
+      this.box = { from: at, to: { ...at }, screen: { x: p.x, y: p.y }, add: shift };
+    });
+  }
+
+  /** ¿Se ha movido el puntero desde `from` (en pantalla) lo bastante como para ser un arrastre? */
+  private dragged(p: Phaser.Input.Pointer, from: Point): boolean {
+    return (p.x - from.x) ** 2 + (p.y - from.y) ** 2 > CLICK_SLOP_PX * CLICK_SLOP_PX;
+  }
+
+  /** Al soltar sin herramienta: un clic abre el edificio (o deja a nadie); un rectángulo elige. */
+  private finishBox(p: Phaser.Input.Pointer): void {
+    const b = this.box!;
+    this.box = null;
+    const w = this.world;
+    if (!this.dragged(p, b.screen)) {
+      const { x: tx, y: ty } = this.tileAt(p);
+      const seen = w.seen[ty * w.grid.width + tx] === 1;
       const h = seen ? houseAt(w, tx, ty) : null;
       this.selection.set(null);
       this.houseSelection.set(h?.id ?? null);
-    });
+      return;
+    }
+    const [x0, x1] = [Math.min(b.from.x, b.to.x), Math.max(b.from.x, b.to.x)];
+    const [y0, y1] = [Math.min(b.from.y, b.to.y), Math.max(b.from.y, b.to.y)];
+    const inside = w.survivors
+      .filter((s) => s.pos.x >= x0 && s.pos.x <= x1 && s.pos.y >= y0 && s.pos.y <= y1)
+      .map((s) => s.id);
+    this.selection.setMany(b.add ? [...this.selection.ids, ...inside] : inside);
+  }
+
+  /** Clic derecho (sin arrastrar, que mueve la cámara): una orden del modo combate (H4e). */
+  private finishRight(p: Phaser.Input.Pointer): void {
+    const from = this.rightFrom;
+    this.rightFrom = null;
+    if (!from || this.dragged(p, from)) return;
+    const w = this.world;
+    const seen = (z: Zombie) =>
+      this.visible[Math.floor(z.pos.y) * w.grid.width + Math.floor(z.pos.x)] === 1;
+    const at = { x: p.worldX / TILE_PX, y: p.worldY / TILE_PX };
+    const order = commandAt(w, this.selection.ids, at, seen);
+    if (order) issue(w, order);
   }
 
   /**

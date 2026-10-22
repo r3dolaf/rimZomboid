@@ -29,6 +29,15 @@
   border-color: #f2c641;
   box-shadow: 0 0 0 1px #f2c641;
 }
+/* En modo combate (H4e): borde rojo (y amarillo por fuera si además está elegido). */
+.card.drafted {
+  border-color: #d9534f;
+}
+.card.drafted.selected {
+  box-shadow:
+    0 0 0 1px #d9534f,
+    0 0 0 3px #f2c641;
+}
 .card-head {
   display: flex;
   justify-content: space-between;
@@ -588,4 +597,39 @@
 }
 .craft-panel .craft-add button {
   padding: 3px 8px;
+}
+
+/* Modo combate (H4e): el botón de la ficha y de la lista de varios. */
+.sheet button.draft {
+  margin: 6px 0 2px;
+  padding: 2px 10px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #2a2d31;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.sheet button.draft.active {
+  background: #d9534f;
+  border-color: #d9534f;
+  color: #111;
+}
+.sheet button.draft:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.sheet.group .names div {
+  display: flex;
+  justify-content: space-between;
+  margin: 2px 0;
+}
+.sheet.group .names button {
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
 }

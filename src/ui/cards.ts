@@ -1,5 +1,6 @@
 import { es } from '../i18n/es';
 import type { Needs, Survivor, World } from '../sim/types';
+import { effectiveDrafted } from '../game/command';
 import { barLevel, statusIcon } from './describe';
 import type { Selection } from './selection';
 import './panels.css';
@@ -32,8 +33,10 @@ export function mountCards(
     card.type = 'button';
     card.className = 'card';
     card.dataset.testid = `card-${s.id}`;
-    card.addEventListener('click', () => {
-      opts.selection.set(opts.selection.id === s.id ? null : s.id);
+    card.addEventListener('click', (ev) => {
+      // Mayús (H4e): lo añade o lo quita; si no, solo él (o nadie, si ya era el único).
+      if (ev.shiftKey) opts.selection.toggle(s.id);
+      else opts.selection.set(opts.selection.id === s.id ? null : s.id);
       card.blur();
     });
 
@@ -107,7 +110,8 @@ export function mountCards(
         }
         const coupled = s.partnerId !== null;
         if (c.love.hidden === coupled) c.love.hidden = !coupled;
-        c.card.classList.toggle('selected', opts.selection.id === s.id);
+        c.card.classList.toggle('selected', opts.selection.ids.includes(s.id));
+        c.card.classList.toggle('drafted', effectiveDrafted(opts.world, s));
       }
     },
   };

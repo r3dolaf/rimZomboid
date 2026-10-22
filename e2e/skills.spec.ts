@@ -29,7 +29,7 @@ test('ficha: pestaña Habilidades con sus niveles; panel de Trabajos como matriz
   await page.getByTestId('sheet-tab-skills').click();
   await expect(page.getByTestId('sheet-pane-skills')).toBeVisible();
   await expect(page.getByTestId('sheet-pane-general')).toBeHidden();
-  await expect(sheet.locator('[data-testid^="sheet-skill-"]')).toHaveCount(7); // H4d: también Fabricar
+  await expect(sheet.locator('[data-testid^="sheet-skill-"]')).toHaveCount(8); // H4d: también Fabricar; H4e: Sanar
   await expect(page.getByTestId('sheet-skill-build').locator('.level')).toHaveText(
     String(first.build),
   );

@@ -4,13 +4,14 @@ import {
   BUILD,
   BUILD_NOISE_TICKS,
   CHOP_TICKS,
+  CONSOLE_TICKS,
   SEARCH_TICKS,
   SOCIAL_XP,
   TICKS_PER_HOUR,
   WEAPON_STATS,
 } from './balance';
 import { colonistHit } from './combat';
-import { needsConsoling } from './consoling';
+import { needsConsoling, tryStartConsoling } from './consoling';
 import { checkInvariants } from './invariants';
 import { workOnBlueprint } from './jobs/build';
 import { haulJob } from './jobs/haul';
@@ -405,4 +406,29 @@ test('Social: cada charla agradable da un poco de práctica a los dos', () => {
   expect(b.skills.social.xp).toBe(SOCIAL_XP.chat);
   applyChat(w, a, b, 'neutral');
   expect(a.skills.social.xp).toBe(SOCIAL_XP.chat);
+});
+
+test('consolar sin éxito no reinicia la crisis: sigue donde estaba y no se vuelve a registrar', () => {
+  let failed = false;
+  for (let seed = 1; seed <= 50 && !failed; seed++) {
+    const w = world();
+    w.rng = createRng(seed);
+    const c = w.survivors[0]!;
+    c.skills.social.level = 0;
+    const t = addSurvivor(w, { x: 1, y: 0 }, 'Bea');
+    t.needs.mood = 5;
+    t.action = { type: 'crisis', ticksLeft: 400 };
+    c.opinions[t.id] = 80;
+    c.pos = { x: 1.5, y: 1.5 };
+    expect(tryStartConsoling(w, c, t.id)).toBe(true);
+    for (let i = 0; i < CONSOLE_TICKS && c.action.type === 'console'; i++) activitiesSystem(w);
+    if (t.memories.some((m) => m.id === 'consoled')) continue;
+    failed = true;
+    // Donde la dejó (en el mismo tick ya avanza uno).
+    expect(t.action.type).toBe('crisis');
+    expect(t.action.type === 'crisis' && t.action.ticksLeft).toBeGreaterThanOrEqual(399);
+    expect(w.log.filter((e) => e.kind === 'crisis')).toHaveLength(0);
+    expect(checkInvariants(w)).toEqual([]);
+  }
+  expect(failed).toBe(true);
 });

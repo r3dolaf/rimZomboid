@@ -160,7 +160,8 @@ export type Action =
   | { type: 'fight'; otherId: number; ticksLeft: number }
   /** Consuela a `otherId`, que mientras tanto está en `consoled` (lo lleva el que consuela). */
   | { type: 'console'; otherId: number; ticksLeft: number }
-  | { type: 'consoled'; otherId: number }
+  /** `crisisLeft`: lo que le quedaba de crisis, para seguir con ella si el consuelo sale mal (H4c). */
+  | { type: 'consoled'; otherId: number; crisisLeft?: number }
   | { type: 'chop'; tree: number; ticksLeft: number }
   /** El avance se guarda en el plano (si se deja a medias, no se pierde). */
   | { type: 'build'; blueprintId: number }

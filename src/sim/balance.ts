@@ -1,5 +1,5 @@
 // Todas las cifras ajustables del juego. Se retocan jugando.
-import { Tile } from './types';
+import { Tile, type BuildKind } from './types';
 
 // Tiempo
 export const TICKS_PER_SECOND = 10;
@@ -297,7 +297,13 @@ export const BUILD = {
   // Reparar (H4b): lo dañado sin romper, y una puerta rota.
   repair: { wood: 1, ticks: 0.25 * TICKS_PER_HOUR },
   fixDoor: { wood: 2, ticks: TICKS_PER_HOUR },
+  // Cortinas (H4d): no gastan madera; colgarlas gasta unas cortinas (CURTAINS_COST).
+  curtains: { wood: 0, ticks: 5 * (TICKS_PER_HOUR / 60) },
+  takeDownCurtains: { wood: 0, ticks: 10 * (TICKS_PER_HOUR / 60) },
+  hangCurtains: { wood: 0, ticks: 15 * (TICKS_PER_HOUR / 60) },
 } as const;
+/** Cortinas que necesita cada plano (H4d). */
+export const CURTAINS_COST: Partial<Record<BuildKind, number>> = { hangCurtains: 1 };
 
 // Habilidades (H4c)
 export const SKILL_MAX = 10;

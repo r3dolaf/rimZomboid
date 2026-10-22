@@ -1,4 +1,11 @@
-import { BUILD, OPINION_LIMIT, RESISTANCE, SKILL_MAX, ZOMBIE_HEALTH } from './balance';
+import {
+  BUILD,
+  CURTAINS_COST,
+  OPINION_LIMIT,
+  RESISTANCE,
+  SKILL_MAX,
+  ZOMBIE_HEALTH,
+} from './balance';
 import { ITEM_KINDS, weightOf, type Inventory } from './items';
 import { inBounds, isWalkable, isZombieWalkable } from './map/grid';
 import { capacityKg, SKILLS, xpToNext } from './skills';
@@ -122,6 +129,10 @@ export function checkInvariants(w: World): string[] {
     const cost = BUILD[b.kind].wood;
     if (!Number.isInteger(b.wood) || b.wood < 0 || b.wood > cost)
       problems.push(`plano ${b.id} (${b.kind}): madera ${b.wood} fuera de 0–${cost}`);
+    const curtains = b.curtains ?? 0;
+    const needs = CURTAINS_COST[b.kind] ?? 0;
+    if (!Number.isInteger(curtains) || curtains < 0 || curtains > needs)
+      problems.push(`plano ${b.id} (${b.kind}): cortinas ${curtains} fuera de 0–${needs}`);
     if (!Number.isFinite(b.progress) || b.progress < 0 || b.progress > BUILD[b.kind].ticks)
       problems.push(`plano ${b.id}: avance no válido (${b.progress})`);
   }

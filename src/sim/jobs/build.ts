@@ -1,10 +1,10 @@
 // Construir (spec H4a §4): trabajar en un plano con toda su madera y lo que sale al terminar.
-import { BUILD, BUILD_NOISE_TICKS, NOISE, UNBOARD_WOOD } from '../balance';
+import { BUILD, BUILD_NOISE_TICKS, CURTAINS_COST, NOISE, UNBOARD_WOOD } from '../balance';
 import { isRepairPlan, WALL_KINDS } from '../build';
 import { emptyInventory } from '../items';
 import { logEvent } from '../log';
 import { makeNoise } from '../noise';
-import { isWalkable, setTile } from '../map/grid';
+import { getTile, isWalkable, setTile } from '../map/grid';
 import { dropPile, pileAt } from '../piles';
 import { nextFloat } from '../rng';
 import { buildFailChance, practice, skillSpeed } from '../skills';
@@ -27,7 +27,8 @@ export const FAR = 1e9;
 /** Muebles: se construyen de pie encima del plano. El resto, desde al lado. */
 const ON_TILE: ReadonlySet<BuildKind> = new Set(['bed', 'table', 'campfire']);
 
-const ready = (b: Blueprint) => b.wood >= BUILD[b.kind].wood;
+const ready = (b: Blueprint) =>
+  b.wood >= BUILD[b.kind].wood && (b.curtains ?? 0) >= (CURTAINS_COST[b.kind] ?? 0);
 
 /** Plano en el que trabaja o al que va a trabajar, o `null`. */
 export function buildTarget(s: Survivor): number | null {
@@ -149,6 +150,25 @@ export function finishBuild(w: World, b: Blueprint, builder: Survivor): void {
       break;
     case 'fixDoor':
       setTile(w.grid, x, y, Tile.Door);
+      break;
+    // Cortinas (H4d).
+    case 'curtains':
+      setTile(
+        w.grid,
+        x,
+        y,
+        getTile(w.grid, x, y) === Tile.Window ? Tile.CurtainedWindow : Tile.Window,
+      );
+      break;
+    case 'takeDownCurtains': {
+      setTile(w.grid, x, y, Tile.Window);
+      const i = y * w.grid.width + x;
+      w.curtains = w.curtains.filter((c) => c !== i);
+      dropPile(w, tileOf(builder.pos), { ...emptyInventory(), curtains: 1 });
+      break;
+    }
+    case 'hangCurtains':
+      w.curtains.push(y * w.grid.width + x);
       break;
   }
   // Si quedó un montón donde ya no se puede pisar (un muro, unas tablas), se aparta al lado.

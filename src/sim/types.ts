@@ -285,15 +285,21 @@ export type BuildKind =
   | 'unboard'
   // Reparar (H4b): devolver la resistencia a lo dañado y rehacer una puerta rota.
   | 'repair'
-  | 'fixDoor';
+  | 'fixDoor'
+  // Cortinas (H4d): correrlas o abrirlas, descolgarlas y colgar unas.
+  | 'curtains'
+  | 'takeDownCurtains'
+  | 'hangCurtains';
 
-/** Algo por construir: madera entregada y ticks trabajados. */
+/** Algo por construir: madera (y cortinas, H4d) entregadas y ticks trabajados. */
 export interface Blueprint {
   id: number;
   kind: BuildKind;
   pos: Point;
   wood: number;
   progress: number;
+  /** Cortinas entregadas (solo para colgarlas; si falta, 0). */
+  curtains?: number;
 }
 
 export interface Furniture {

@@ -68,6 +68,9 @@ export const es = {
     unboard: 'Quitar tablas',
     repair: 'Reparar',
     fixDoor: 'Arreglar puerta',
+    curtains: 'Cortinas',
+    takeDownCurtains: 'Descolgar cortinas',
+    hangCurtains: 'Colgar cortinas',
   } satisfies Record<BuildKind, string>,
   buildOption: (name: string, wood: number | string) => `${name} · ${wood}`,
   repairWood: '1–3',
@@ -406,6 +409,9 @@ export const es = {
     unboard: 'Se han quitado las tablas de una ventana',
     repair: 'Se ha hecho una reparación',
     fixDoor: 'Se ha arreglado una puerta',
+    curtains: 'Se han corrido (o abierto) unas cortinas',
+    takeDownCurtains: 'Se han descolgado unas cortinas',
+    hangCurtains: 'Se han colgado unas cortinas',
   } satisfies Record<BuildKind, string>,
   /** Lo que intentaba quien falla al construir: "ha fallado al levantar el muro". */
   buildFail: {
@@ -418,6 +424,9 @@ export const es = {
     unboard: 'quitar las tablas',
     repair: 'hacer la reparación',
     fixDoor: 'arreglar la puerta',
+    curtains: 'correr las cortinas',
+    takeDownCurtains: 'descolgar las cortinas',
+    hangCurtains: 'colgar las cortinas',
   } satisfies Record<BuildKind, string>,
   /** Lo que hace quien trabaja en cada plano. */
   building: {
@@ -430,6 +439,9 @@ export const es = {
     unboard: 'Quitando las tablas de una ventana',
     repair: 'Reparando',
     fixDoor: 'Arreglando una puerta',
+    curtains: 'Corriendo unas cortinas',
+    takeDownCurtains: 'Descolgando unas cortinas',
+    hangCurtains: 'Colgando unas cortinas',
   } satisfies Record<BuildKind, string>,
   /** Cada plano, para las frases ("Llevando madera a una cama"). */
   builds: {
@@ -442,6 +454,9 @@ export const es = {
     unboard: 'una ventana',
     repair: 'una reparación',
     fixDoor: 'una puerta rota',
+    curtains: 'unas cortinas',
+    takeDownCurtains: 'unas cortinas',
+    hangCurtains: 'una ventana sin cortinas',
   } satisfies Record<BuildKind, string>,
 
   /** Iconos sobre la cabeza en el mapa. */

@@ -1,7 +1,7 @@
 // Transportar (spec H4a §3.3): madera a los planos y montones al almacén.
-import { BUILD } from '../balance';
+import { BUILD, CURTAINS_COST } from '../balance';
 import { isRepairPlan } from '../build';
-import { emptyInventory, isEmpty, takeUpTo } from '../items';
+import { emptyInventory, isEmpty, takeUpTo, type Inventory } from '../items';
 import { capacityKg } from '../skills';
 import { findPath, regionOf } from '../path/astar';
 import { prunePiles } from '../piles';
@@ -14,6 +14,16 @@ import { atOrBeside, standOnOrBeside } from './stand';
 /** Madera que le falta al plano. */
 export function woodNeeded(b: Blueprint): number {
   return BUILD[b.kind].wood - b.wood;
+}
+
+/** Cortinas que le faltan al plano (H4d: solo para colgarlas). */
+export function curtainsNeeded(b: Blueprint): number {
+  return (CURTAINS_COST[b.kind] ?? 0) - (b.curtains ?? 0);
+}
+
+/** ¿Le falta algo al plano que haya en `from` (el almacén o lo que lleva)? */
+function canSupply(b: Blueprint, from: Inventory): boolean {
+  return (woodNeeded(b) > 0 && from.wood > 0) || (curtainsNeeded(b) > 0 && from.curtains > 0);
 }
 
 /** Plano que abastece (va a por madera o a entregarla), o `null`. */
@@ -36,14 +46,14 @@ const dist2 = (s: Survivor, p: { x: number; y: number }) => {
 };
 
 /**
- * El plano sin abastecer que necesita madera más cercano, con dónde ponerse para entregarla. Los
- * de reparar van antes (spec H4b §4.2).
+ * El plano sin abastecer más cercano al que le falta algo de lo que hay en `from`, con dónde
+ * ponerse para entregarlo. Los de reparar van antes (spec H4b §4.2).
  */
-function blueprintToSupply(s: Survivor, w: World) {
+function blueprintToSupply(s: Survivor, w: World, from: Inventory) {
   const claimed = new Set(w.survivors.filter((o) => o !== s).map(supplyTarget));
   let best: { b: Blueprint; stand: { x: number; y: number }; d: number } | null = null;
   for (const b of w.blueprints) {
-    if (woodNeeded(b) <= 0 || claimed.has(b.id)) continue;
+    if (!canSupply(b, from) || claimed.has(b.id)) continue;
     const d = (isRepairPlan(w, b) ? 0 : FAR) + dist2(s, b.pos);
     if (best && d >= best.d) continue;
     const stand = standOnOrBeside(w, s, b.pos);
@@ -52,16 +62,16 @@ function blueprintToSupply(s: Survivor, w: World) {
   return best;
 }
 
-/** Si lleva madera y algún plano la necesita, va a entregarla. */
+/** Si lleva madera (o cortinas) y algún plano la necesita, va a entregarla. */
 export function deliverJob(s: Survivor, w: World): Action | null {
-  if (s.carrying.wood <= 0) return null;
-  const t = blueprintToSupply(s, w);
+  if (s.carrying.wood <= 0 && s.carrying.curtains <= 0) return null;
+  const t = blueprintToSupply(s, w, s.carrying);
   return t && { type: 'moveTo', target: t.stand, then: { type: 'deliver', blueprintId: t.b.id } };
 }
 
 export function haulJob(s: Survivor, w: World): Action | null {
-  if (w.storage.items.wood > 0) {
-    const t = blueprintToSupply(s, w);
+  if (w.storage.items.wood > 0 || w.storage.items.curtains > 0) {
+    const t = blueprintToSupply(s, w, w.storage.items);
     if (t)
       return {
         type: 'moveTo',
@@ -95,8 +105,7 @@ export function haulStillWorth(s: Survivor, w: World): boolean {
   if (a.then.type === 'fetchWood' || a.then.type === 'deliver') {
     const id = a.then.blueprintId;
     const b = w.blueprints.find((x) => x.id === id);
-    if (!b || woodNeeded(b) <= 0) return false;
-    return a.then.type === 'deliver' ? s.carrying.wood > 0 : w.storage.items.wood > 0;
+    return !!b && canSupply(b, a.then.type === 'deliver' ? s.carrying : w.storage.items);
   }
   return true;
 }
@@ -128,18 +137,27 @@ export function startHaulActivity(
     return next(s, pick(w.rng, w.storage.tiles), { type: 'unload' }, w);
   }
   const b = w.blueprints.find((x) => x.id === activity.blueprintId);
-  if (!b || woodNeeded(b) <= 0) return idle;
+  if (!b || (woodNeeded(b) <= 0 && curtainsNeeded(b) <= 0)) return idle;
   if (activity.type === 'fetchWood') {
-    const want = Math.min(woodNeeded(b), w.storage.items.wood);
-    const taken = takeUpTo({ ...emptyInventory(), wood: want }, s.carrying, capacityKg(s));
+    // Madera y, si es para colgar cortinas, las cortinas (H4d).
+    const want = {
+      ...emptyInventory(),
+      wood: Math.max(0, Math.min(woodNeeded(b), w.storage.items.wood)),
+      curtains: Math.max(0, Math.min(curtainsNeeded(b), w.storage.items.curtains)),
+    };
+    const taken = takeUpTo(want, s.carrying, capacityKg(s));
     w.storage.items.wood -= taken.wood;
-    if (taken.wood === 0) return idle;
+    w.storage.items.curtains -= taken.curtains;
+    if (taken.wood === 0 && taken.curtains === 0) return idle;
     const stand = standOnOrBeside(w, s, b.pos);
     return stand ? next(s, stand, { type: 'deliver', blueprintId: b.id }, w) : idle;
   }
   if (!atOrBeside(s, b.pos)) return idle;
-  const given = Math.min(woodNeeded(b), s.carrying.wood);
+  const given = Math.max(0, Math.min(woodNeeded(b), s.carrying.wood));
   s.carrying.wood -= given;
   b.wood += given;
+  const curtains = Math.max(0, Math.min(curtainsNeeded(b), s.carrying.curtains));
+  s.carrying.curtains -= curtains;
+  b.curtains = (b.curtains ?? 0) + curtains;
   return idle;
 }

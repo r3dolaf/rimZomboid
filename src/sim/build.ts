@@ -57,12 +57,23 @@ const GROUND_KINDS: ReadonlySet<BuildKind> = new Set([
   'woodDoor',
 ]);
 
+/** ¿Tiene cortinas esa ventana? (H4d) */
+export function hasCurtains(w: World, p: Point): boolean {
+  return w.curtains.includes(p.y * w.grid.width + p.x);
+}
+
 /** ¿Encaja `kind` con la casilla tal como está? (sin mirar lo que haya encima) */
 export function tileFits(w: World, kind: BuildKind, p: Point): boolean {
   const t = getTile(w.grid, p.x, p.y);
   switch (kind) {
     case 'board':
-      return t === Tile.Window || t === Tile.BrokenWindow;
+      return t === Tile.Window || t === Tile.CurtainedWindow || t === Tile.BrokenWindow;
+    // Cortinas (H4d): en ventanas sin tapiar, con o sin cortinas según el plano.
+    case 'curtains':
+    case 'takeDownCurtains':
+      return (t === Tile.Window || t === Tile.CurtainedWindow) && hasCurtains(w, p);
+    case 'hangCurtains':
+      return t === Tile.Window && !hasCurtains(w, p);
     case 'unboard':
       return t === Tile.BoardedWindow;
     case 'repair':
@@ -135,13 +146,13 @@ export function markTree(w: World, x: number, y: number, on: boolean): void {
 
 export function placeBlueprint(w: World, kind: BuildKind, x: number, y: number): void {
   if (!canPlace(w, kind, { x, y })) return;
-  w.blueprints.push({ id: w.nextId++, kind, pos: { x, y }, wood: 0, progress: 0 });
+  w.blueprints.push({ id: w.nextId++, kind, pos: { x, y }, wood: 0, progress: 0, curtains: 0 });
 }
 
-/** Quita el plano; la madera que tuviera queda en un montón. */
+/** Quita el plano; la madera (y las cortinas) que tuviera quedan en un montón. */
 export function cancelBlueprint(w: World, id: number): void {
   const b = w.blueprints.find((x) => x.id === id);
   if (!b) return;
   w.blueprints = w.blueprints.filter((x) => x !== b);
-  dropPile(w, b.pos, { ...emptyInventory(), wood: b.wood });
+  dropPile(w, b.pos, { ...emptyInventory(), wood: b.wood, curtains: b.curtains ?? 0 });
 }

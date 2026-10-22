@@ -1,6 +1,5 @@
 // Cuántos zombis hay y dónde aparecen (spec H4b §2.3).
 import {
-  ARRIVAL_GOAL_RADIUS,
   START_HOUR,
   TICKS_PER_DAY,
   TICKS_PER_HOUR,
@@ -12,7 +11,11 @@ import {
   ZOMBIE_MAX,
   ZOMBIE_SAFE_RADIUS,
   ZOMBIE_START,
+  ZOMBIE_TOWN_SHARE,
+  TRAPPED,
+  TRAPPED_HOUSE_CHANCE,
 } from '../balance';
+import { contains, intersects } from '../geom';
 import { isNight } from '../clock';
 import { isZombieWalkable } from '../map/grid';
 import { nextFloat, nextInt } from '../rng';
@@ -60,38 +63,76 @@ function spawnable(w: World, x: number, y: number): boolean {
 }
 
 /**
- * Los zombis del principio: junto a una casa (las lejanas, más probables) y ninguno cerca de la
- * base. Con `zombieRng`, para no cambiar nada más del mundo.
+ * Los zombis del principio (spec H4f §5): primero los encerrados en los edificios grandes (como
+ * mucho la mitad), luego, de los demás, 7 de cada 10 por las calles del pueblo y el resto en el
+ * campo, junto a los edificios sueltos; ninguno cerca de la base. Con `zombieRng`, para no cambiar
+ * nada más del mundo.
  */
 export function placeStartZombies(w: World): void {
   const rng = w.zombieRng;
-  const c = baseCenter(w);
-  const dist = (p: Point) => Math.sqrt((p.x - c.x) ** 2 + (p.y - c.y) ** 2);
-  const far = Math.max(1, ...w.houses.map((h) => dist(h.door)));
-  const weights = w.houses.map((h) => 0.5 + dist(h.door) / far);
-  const total = weights.reduce((a, b) => a + b, 0);
   const n = zombieStartCount(w.narrator.style, w.zombieLevel);
+  const inBuilding = (x: number, y: number) =>
+    w.houses.some((h) => contains(h.rect, { x, y })) || contains(w.base.rect, { x, y });
+  // Encerrados: en el suelo de su edificio, si queda lejos de la base.
+  let trapped = 0;
+  for (const h of w.houses) {
+    const range = h.kind in TRAPPED ? TRAPPED[h.kind as keyof typeof TRAPPED] : null;
+    let want =
+      range !== null
+        ? nextInt(rng, range[0], range[1])
+        : h.kind === 'house' && nextFloat(rng) < TRAPPED_HOUSE_CHANCE
+          ? 1
+          : 0;
+    want = Math.min(want, Math.floor(n / 2) - trapped);
+    for (let k = 0; k < want; k++) {
+      const spot = tryFind(30, () => {
+        const x = nextInt(rng, h.rect.x + 1, h.rect.x + h.rect.w - 2);
+        const y = nextInt(rng, h.rect.y + 1, h.rect.y + h.rect.h - 2);
+        return spawnable(w, x, y) ? { x, y } : null;
+      });
+      if (!spot) break;
+      w.zombies.push(newZombie(w, spot));
+      trapped++;
+    }
+  }
+  // Los de fuera: por las calles del pueblo o junto a los edificios sueltos.
+  const rest = n - trapped;
+  const town = Math.round(rest * ZOMBIE_TOWN_SHARE);
+  const loose = w.houses.filter((h) => !intersects(h.rect, w.town));
   const { width, height } = w.grid;
-  for (let i = 0; i < n; i++) {
+  for (let i = 0; i < rest; i++) {
+    const outside = (x: number, y: number) => spawnable(w, x, y) && !inBuilding(x, y);
     let spot: Point | null = null;
-    if (w.houses.length > 0) {
-      let roll = nextFloat(rng) * total;
-      let k = 0;
-      while (k < weights.length - 1 && roll >= weights[k]!) roll -= weights[k++]!;
-      const r = w.houses[k]!.rect;
-      for (let tries = 0; tries < 30 && !spot; tries++) {
+    if (i < town)
+      spot = tryFind(50, () => {
+        const x = nextInt(rng, w.town.x, w.town.x + w.town.w - 1);
+        const y = nextInt(rng, w.town.y, w.town.y + w.town.h - 1);
+        return outside(x, y) ? { x, y } : null;
+      });
+    else if (loose.length > 0) {
+      const r = loose[nextInt(rng, 0, loose.length - 1)]!.rect;
+      spot = tryFind(30, () => {
         const x = nextInt(rng, r.x - ZOMBIE_HOUSE_RADIUS, r.x + r.w - 1 + ZOMBIE_HOUSE_RADIUS);
         const y = nextInt(rng, r.y - ZOMBIE_HOUSE_RADIUS, r.y + r.h - 1 + ZOMBIE_HOUSE_RADIUS);
-        if (spawnable(w, x, y)) spot = { x, y };
-      }
+        return outside(x, y) ? { x, y } : null;
+      });
     }
-    for (let tries = 0; tries < 500 && !spot; tries++) {
+    spot ??= tryFind(500, () => {
       const x = nextInt(rng, 0, width - 1);
       const y = nextInt(rng, 0, height - 1);
-      if (spawnable(w, x, y)) spot = { x, y };
-    }
+      return outside(x, y) ? { x, y } : null;
+    });
     if (spot) w.zombies.push(newZombie(w, spot));
   }
+}
+
+/** Prueba `f` hasta `tries` veces; la primera casilla que devuelve, o `null`. */
+function tryFind(tries: number, f: () => Point | null): Point | null {
+  for (let k = 0; k < tries; k++) {
+    const p = f();
+    if (p) return p;
+  }
+  return null;
 }
 
 /** Ticks hasta la siguiente llegada por los bordes: según narrador y opción, la mitad de noche. */
@@ -102,8 +143,7 @@ export function arrivalInterval(w: World): number {
 }
 
 /**
- * Llega un zombi por un borde cuando toca (sin pasar del máximo) y va hacia una casa al azar, para
- * meterse en el pueblo. (Hacia el centro no: ahí está la base, y se llenaba de zombis.)
+ * Llega un zombi por un borde cuando toca (sin pasar del máximo) y va hacia el pueblo (H4f).
  */
 export function arrivalsSystem(w: World): void {
   if (w.tick < w.nextZombieAt) return;
@@ -118,11 +158,10 @@ export function arrivalsSystem(w: World): void {
     const y = side === 0 ? 0 : side === 1 ? height - 1 : along;
     if (!isZombieWalkable(w.grid, x, y)) continue;
     const z = newZombie(w, { x, y });
-    const house = w.houses.length > 0 ? w.houses[nextInt(rng, 0, w.houses.length - 1)]! : null;
-    const centre = house ? house.door : { x: Math.floor(width / 2), y: Math.floor(height / 2) };
+    // Van hacia una casilla del pueblo (H4f; antes, hacia una casa al azar).
     for (let k = 0; k < 20; k++) {
-      const gx = centre.x + nextInt(rng, -ARRIVAL_GOAL_RADIUS, ARRIVAL_GOAL_RADIUS);
-      const gy = centre.y + nextInt(rng, -ARRIVAL_GOAL_RADIUS, ARRIVAL_GOAL_RADIUS);
+      const gx = nextInt(rng, w.town.x, w.town.x + w.town.w - 1);
+      const gy = nextInt(rng, w.town.y, w.town.y + w.town.h - 1);
       if (!isZombieWalkable(w.grid, gx, gy)) continue;
       z.state = 'alert';
       z.goal = { x: gx, y: gy };

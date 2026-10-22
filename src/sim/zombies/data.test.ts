@@ -8,6 +8,7 @@ import {
   TICKS_PER_HOUR,
   ZOMBIE_SAFE_RADIUS,
 } from '../balance';
+import { contains } from '../geom';
 import { checkInvariants } from '../invariants';
 import { createGrid, isWalkable, isZombieWalkable, setTile } from '../map/grid';
 import { Tile, type NarratorStyle, type ZombieLevel } from '../types';
@@ -50,9 +51,9 @@ test('al empezar: Salud 100, postura según los rasgos y sin arma fijada', () =>
 });
 
 test('cuántos zombis hay al empezar y cuántos como mucho, según el narrador y la opción', () => {
-  // Caótico y Muchos, más suaves que al principio: con 35/70 y ×1,5 caían el 80 % del tiempo.
-  const start = { calm: 15, balanced: 25, chaotic: 30 };
-  const max = { calm: 30, balanced: 50, chaotic: 60 };
+  // H4f: con el mapa de 150×150, más (antes 15/25/30 y 30/50/60).
+  const start = { calm: 25, balanced: 40, chaotic: 50 };
+  const max = { calm: 50, balanced: 80, chaotic: 100 };
   const mult = { few: 0.5, normal: 1, many: 1.25 };
   for (const style of ['calm', 'balanced', 'chaotic'] as NarratorStyle[])
     for (const level of ['few', 'normal', 'many'] as ZombieLevel[]) {
@@ -65,34 +66,28 @@ test('cuántos zombis hay al empezar y cuántos como mucho, según el narrador y
     }
 });
 
-test('al empezar, ninguno cerca de la base, todos donde pueden pisar y más junto a las casas lejanas', () => {
-  let nearFar = 0;
-  let nearClose = 0;
-  for (let seed = 1; seed <= 10; seed++) {
+test('al empezar: ninguno a menos de 12 de la base, todos donde pueden pisar; 7 de cada 10 de los de fuera, en el pueblo', () => {
+  expect(ZOMBIE_SAFE_RADIUS).toBe(12);
+  let inTown = 0;
+  let outside = 0;
+  for (let seed = 1; seed <= 12; seed++) {
     const w = createWorld(seed);
     const r = w.base.rect;
     const [cx, cy] = [r.x + r.w / 2, r.y + r.h / 2];
-    const dist = (p: { x: number; y: number }) => Math.sqrt((p.x - cx) ** 2 + (p.y - cy) ** 2);
-    const houses = [...w.houses].sort((a, b) => dist(a.door) - dist(b.door));
-    const half = Math.floor(houses.length / 2);
     for (const z of w.zombies) {
-      expect(dist(z.pos)).toBeGreaterThanOrEqual(ZOMBIE_SAFE_RADIUS);
-      expect(isZombieWalkable(w.grid, Math.floor(z.pos.x), Math.floor(z.pos.y))).toBe(true);
+      expect(Math.sqrt((z.pos.x - cx) ** 2 + (z.pos.y - cy) ** 2)).toBeGreaterThanOrEqual(12);
+      const t = { x: Math.floor(z.pos.x), y: Math.floor(z.pos.y) };
+      expect(isZombieWalkable(w.grid, t.x, t.y)).toBe(true);
       expect(z.health).toBe(60);
       expect(z.state).toBe('wander');
-      // La casa más cercana al zombi: ¿de la mitad lejana o de la cercana?
-      const near = houses.reduce((best, h) =>
-        dist2(h.door, z.pos) < dist2(best.door, z.pos) ? h : best,
-      );
-      if (houses.indexOf(near) >= half) nearFar++;
-      else nearClose++;
+      if (w.houses.some((h) => contains(h.rect, t))) continue; // encerrados (su test, aparte)
+      outside++;
+      if (contains(w.town, t)) inTown++;
     }
   }
-  expect(nearFar).toBeGreaterThan(nearClose);
+  expect(inTown / outside).toBeGreaterThan(0.6);
+  expect(inTown / outside).toBeLessThan(0.8);
 });
-
-const dist2 = (a: { x: number; y: number }, b: { x: number; y: number }) =>
-  (a.x - b.x) ** 2 + (a.y - b.y) ** 2;
 
 test('los zombis usan su propio azar: lo demás del mundo no cambia con la opción', () => {
   const few = createWorld(9, 'balanced', 'few');

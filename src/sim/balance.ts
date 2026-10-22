@@ -386,13 +386,24 @@ export const TRAIT_SKILL_MODS = {
 // Zombis (H4b)
 /** Zombis al empezar, máximo y cada cuántas horas llega uno por los bordes, según el narrador. */
 // Caótico era 35/70/1 h y Muchos ×1,5: sin defensas, en Caótico/muchos caían el 80 % del tiempo.
-export const ZOMBIE_START = { calm: 15, balanced: 25, chaotic: 30 } as const;
-export const ZOMBIE_MAX = { calm: 30, balanced: 50, chaotic: 60 } as const;
+export const ZOMBIE_START = { calm: 25, balanced: 40, chaotic: 50 } as const; // H4f (antes 15/25/30)
+export const ZOMBIE_MAX = { calm: 50, balanced: 80, chaotic: 100 } as const; // H4f (antes 30/50/60)
 export const ZOMBIE_EVERY_HOURS = { calm: 4, balanced: 2, chaotic: 1.5 } as const;
 /** Opción Zombis de la portada: multiplica lo anterior (y el ritmo de llegada). */
 export const ZOMBIE_LEVEL_MULT = { few: 0.5, normal: 1, many: 1.25 } as const;
-export const ZOMBIE_SAFE_RADIUS = 20; // al empezar, ninguno más cerca de la base
-export const ZOMBIE_HOUSE_RADIUS = 6; // al empezar, junto a una casa
+export const ZOMBIE_SAFE_RADIUS = 12; // al empezar, ninguno más cerca de la base (H4f; antes 20)
+export const ZOMBIE_HOUSE_RADIUS = 6; // al empezar, en el campo, junto a un edificio suelto
+/** H4f: de los del principio que no están encerrados, cuántos en el pueblo. */
+export const ZOMBIE_TOWN_SHARE = 0.7;
+/** H4f: zombis encerrados al empezar en los edificios grandes (de los del principio). */
+export const TRAPPED = {
+  supermarket: [3, 5],
+  police: [2, 4],
+  warehouse: [2, 4],
+  farm: [0, 2],
+} as const satisfies Partial<Record<LootKind, readonly [number, number]>>;
+/** H4f: una de cada diez casas tiene uno dentro. */
+export const TRAPPED_HOUSE_CHANCE = 0.1;
 export const ZOMBIE_EDGE_START_DAY = 2;
 export const ZOMBIE_HEALTH = 60;
 /** Resistencia de lo que pueden romper los zombis (spec H4b §4.1). */
@@ -442,7 +453,6 @@ export const WANDER_FAR_MAX = 25;
 export const WANDER_PAUSE_MIN = 20;
 export const WANDER_PAUSE_MAX = 80;
 export const WANDER_PATH_BUDGET = 1500;
-export const ARRIVAL_GOAL_RADIUS = 6; // los que llegan van hacia una casa al azar, a esta distancia o menos
 export const DOWNED_TICKS = 4 * TICKS_PER_HOUR;
 export const DOWNED_MAX_TICKS = 8 * TICKS_PER_HOUR; // con zombis a la vista espera, pero no más de esto
 /** Salud que se recupera por hora (spec H4b §5). */

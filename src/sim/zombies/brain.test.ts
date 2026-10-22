@@ -1,8 +1,8 @@
 // H4b §2.2–2.3: el cerebro de los zombis (vagar, rebaño, perseguir, rastro, golpes, romper) y las
 // llegadas por los bordes.
 import { expect, test } from 'vitest';
+import { contains } from '../geom';
 import {
-  ARRIVAL_GOAL_RADIUS,
   BORED_TICKS,
   LOSE_TRACK_TICKS,
   TICKS_PER_HOUR,
@@ -278,10 +278,10 @@ test('llegadas por los bordes: desde el día 2, al doble de ritmo de noche y sin
   expect(w.zombies).toHaveLength(zombieMax('balanced', 'normal'));
 });
 
-test('los que llegan por un borde van hacia una casa (no hacia la base, que está en el centro)', () => {
+test('los que llegan por un borde van hacia el pueblo (H4f; no hacia la base)', () => {
   const w = world(40, 40);
   hide(w, w.survivors[0]!);
-  w.houses = [{ id: 1, kind: 'house', rect: { x: 4, y: 4, w: 6, h: 6 }, door: { x: 6, y: 9 } }];
+  w.town = { x: 4, y: 4, w: 8, h: 8 };
   for (let i = 0; i < 10; i++) {
     w.nextZombieAt = w.tick;
     run(w, 1);
@@ -289,7 +289,7 @@ test('los que llegan por un borde van hacia una casa (no hacia la base, que est�
   expect(w.zombies.length).toBe(10);
   for (const z of w.zombies) {
     expect(z.state).toBe('alert');
-    expect(dist(z.goal!, { x: 6, y: 9 })).toBeLessThanOrEqual(ARRIVAL_GOAL_RADIUS * Math.SQRT2);
+    expect(contains(w.town, z.goal!)).toBe(true);
   }
 });
 

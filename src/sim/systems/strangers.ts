@@ -105,7 +105,15 @@ export function newStranger(w: World, start: Point): Survivor {
       food: nextInt(w.rng, 0, STRANGER_FOOD_MAX),
       bandage: nextFloat(w.rng) < STRANGER_BANDAGE_CHANCE ? 1 : 0,
     },
-    work: { social: true, build: true, craft: true, haul: true, chop: false, loot: false },
+    work: {
+      heal: true,
+      social: true,
+      build: true,
+      craft: true,
+      haul: true,
+      chop: false,
+      loot: false,
+    },
     priorities: defaultPriorities(),
     equipped: null,
     weaponLocked: false,
@@ -118,6 +126,7 @@ export function newStranger(w: World, start: Point): Survivor {
     sick: null,
     celebrated: false,
     drafted: false,
+    carryingId: null,
   };
   s.needs.mood = moodTarget(s, w.tick, w.base.rect);
   s.stance = defaultStance(s.traits);

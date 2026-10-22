@@ -46,8 +46,16 @@ export function emptyWorld(width: number, height: number): World {
         memories: [],
         bedId: 1,
         carrying: emptyInventory(),
-        work: { social: true, build: true, craft: true, haul: true, chop: true, loot: true },
-        priorities: { social: 3, build: 3, craft: 3, haul: 3, chop: 3, loot: 3 },
+        work: {
+          heal: true,
+          social: true,
+          build: true,
+          craft: true,
+          haul: true,
+          chop: true,
+          loot: true,
+        },
+        priorities: { heal: 1, social: 3, build: 3, craft: 3, haul: 3, chop: 3, loot: 3 },
         equipped: null,
         weaponLocked: false,
         health: 100,
@@ -59,6 +67,7 @@ export function emptyWorld(width: number, height: number): World {
         sick: null,
         celebrated: false,
         drafted: false,
+        carryingId: null,
       },
     ],
     beds: [{ id: 1, pos: { x: width - 1, y: 0 }, ownerId: 1 }],
@@ -122,6 +131,7 @@ export function addSurvivor(w: World, t: Point, name = 'Bea'): Survivor {
     sick: null,
     celebrated: false,
     drafted: false,
+    carryingId: null,
   };
   w.survivors.push(s);
   return s;

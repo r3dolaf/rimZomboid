@@ -40,6 +40,7 @@ export const es = {
   inHand: (what: string) => `En la mano: ${what}`,
   /** Trabajos, en el orden del panel. */
   works: {
+    heal: 'Sanar',
     social: 'Social',
     build: 'Construir',
     craft: 'Fabricar',
@@ -101,6 +102,7 @@ export const es = {
   skillMax: 'máx.',
   /** Habilidades (H4c): las de los trabajos y Pelear. */
   skills: {
+    heal: 'Sanar',
     social: 'Social',
     build: 'Construir',
     craft: 'Fabricar',
@@ -333,6 +335,7 @@ export const es = {
     siegeRepelled: 'Habéis resistido el asedio',
     siegeEnded: 'La horda se dispersa',
     wanderersSighted: 'Una horda errante cruza el mapa',
+    rescued: (who: string, other: string) => `${who} ha rescatado a ${other}`,
     broken: (what: 'door' | 'window' | 'wall', inBase: boolean) =>
       `Los zombis han ${
         what === 'door'

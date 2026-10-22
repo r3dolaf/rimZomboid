@@ -30,7 +30,15 @@ function scene(): { w: World; a: Survivor } {
     // Como antes de H4c, y Construir 8 para que nunca falle (los fallos, en skillsWork.test).
     s.skills = skillsAt(5);
     s.skills.build.level = 8;
-    s.work = { social: false, build: false, craft: false, haul: false, chop: false, loot: false };
+    s.work = {
+      heal: false,
+      social: false,
+      build: false,
+      craft: false,
+      haul: false,
+      chop: false,
+      loot: false,
+    };
   }
   const a = w.survivors[0]!;
   a.work.build = true;
@@ -166,7 +174,15 @@ test('si lo dejan a medias, el avance se guarda', () => {
 
 test('orden por criticidad: construir antes que transportar, talar o saquear; con hambre, saquear primero', () => {
   const { w, a } = scene();
-  a.work = { social: true, build: true, craft: false, haul: true, chop: true, loot: true };
+  a.work = {
+    heal: false,
+    social: true,
+    build: true,
+    craft: false,
+    haul: true,
+    chop: true,
+    loot: true,
+  };
   a.equipped = 'axe';
   w.storage.items.axe = 0;
   for (const c of w.containers) c.designated = true;
@@ -189,7 +205,15 @@ test('orden por criticidad: construir antes que transportar, talar o saquear; co
 
 test('orden por criticidad: transportar antes que talar, y talar antes que saquear', () => {
   const { w, a } = scene();
-  a.work = { social: true, build: true, craft: false, haul: true, chop: true, loot: true };
+  a.work = {
+    heal: false,
+    social: true,
+    build: true,
+    craft: false,
+    haul: true,
+    chop: true,
+    loot: true,
+  };
   a.equipped = 'axe';
   w.storage.items.axe = 0;
   w.storage.items.food = 50;
@@ -238,7 +262,15 @@ test('escenario: talar, acarrear y construir una cama para quien dormía en el s
   const b = w.survivors[1]!;
   w.beds = w.beds.filter((x) => x.ownerId !== b.id);
   b.bedId = null;
-  a.work = { social: false, build: true, craft: false, haul: true, chop: true, loot: false };
+  a.work = {
+    heal: false,
+    social: false,
+    build: true,
+    craft: false,
+    haul: true,
+    chop: true,
+    loot: false,
+  };
   w.storage.items.axe = 1;
   // Los dos árboles vistos más cercanos a la base.
   const r = w.base.rect;

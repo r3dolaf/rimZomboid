@@ -488,6 +488,11 @@ export const DOWNED_MAX_TICKS = 8 * TICKS_PER_HOUR; // con zombis a la vista esp
 /** Salud que se recupera por hora (spec H4b §5). */
 export const HEALTH_PER_HOUR = { awake: 1, floor: 4, bed: 6 } as const;
 export const GET_UP_HEALTH = 15; // al levantarse tras un derribo
+export const GET_UP_HEALTH_BED = 40; // H4e: si lo han dejado en una cama
+/** Sanar (H4e §4): no se sale a rescatar si se ve un zombi a esta distancia del derribado. */
+export const RESCUE_SAFE_RANGE = 8;
+/** Con alguien en brazos se anda a esta parte de la velocidad. */
+export const CARRY_SPEED = 0.6;
 export const HURT_BELOW = 50; // "Herido" por debajo de esto
 export const HURT_MOOD = -10;
 /** Golpes de los colonos según lo que llevan en la mano (spec H4b §6.1). */

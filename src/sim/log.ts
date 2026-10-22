@@ -72,7 +72,9 @@ export type LogEvent =
   /** Ha pasado su día: los que quedan se dispersan. */
   | { kind: 'siegeEnded' }
   /** Un colono ve por primera vez a uno de los errantes (dónde). */
-  | { kind: 'wanderersSighted'; x: number; y: number };
+  | { kind: 'wanderersSighted'; x: number; y: number }
+  // Sanar (H4e)
+  | { kind: 'rescued'; survivorId: number; otherId: number };
 
 export type LogEntry = LogEvent & { tick: number };
 

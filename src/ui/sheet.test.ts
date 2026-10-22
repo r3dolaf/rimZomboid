@@ -113,8 +113,16 @@ test('muestra lo que lleva encima y su peso', () => {
 test('una prioridad por trabajo ("—" sin permiso) y "En la mano: hacha"', () => {
   const { root, world, selection, sheet } = setup();
   const s = world.survivors[0]!;
-  s.work = { social: true, build: false, craft: false, haul: true, chop: false, loot: true };
-  s.priorities = { social: 3, build: 3, craft: 3, haul: 1, chop: 3, loot: 4 };
+  s.work = {
+    heal: false,
+    social: true,
+    build: false,
+    craft: false,
+    haul: true,
+    chop: false,
+    loot: true,
+  };
+  s.priorities = { heal: 3, social: 3, build: 3, craft: 3, haul: 1, chop: 3, loot: 4 };
   s.equipped = 'axe';
   selection.set(s.id);
   sheet.update();

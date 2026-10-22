@@ -10,8 +10,8 @@ import { INCOMPATIBLE, TRAITS } from './traits';
 import type { TraitId } from './types';
 import { createWorld } from './world';
 
-test('siete habilidades (H4d: Fabricar), en el orden de los trabajos y Pelear al final', () => {
-  expect(SKILLS).toEqual(['social', 'build', 'craft', 'haul', 'chop', 'loot', 'fight']);
+test('ocho habilidades (H4e: Sanar, la primera), en el orden de los trabajos y Pelear al final', () => {
+  expect(SKILLS).toEqual(['heal', 'social', 'build', 'craft', 'haul', 'chop', 'loot', 'fight']);
 });
 
 test('al empezar: todas entre 0 y 3 salvo una especialidad entre 5 y 7, sin práctica', () => {
@@ -27,7 +27,9 @@ test('al empezar: todas entre 0 y 3 salvo una especialidad entre 5 y 7, sin prá
     special.add(top);
     for (const k of SKILLS) expect(skills[k].xp).toBe(0);
   }
-  expect(special.size).toBe(SKILLS.length); // cualquiera puede ser la especialidad
+  // Cualquiera puede ser la especialidad, salvo Sanar (H4e: va aparte, para no cambiar partidas).
+  expect(special.size).toBe(SKILLS.length - 1);
+  expect(special.has('heal')).toBe(false);
 });
 
 test('los rasgos suman o restan 2, sin bajar de 0 ni pasar de 10', () => {

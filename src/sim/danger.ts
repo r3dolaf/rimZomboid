@@ -116,6 +116,8 @@ export function dangerDecision(
     return undefined;
   }
   if (willFight(w, s, threats)) return melee(s, threats[0]!);
+  // Lleva a un derribado (Sanar, H4e): sigue llevándolo, que ya va a la base.
+  if (s.carryingId !== null) return null;
 
   // Huye. Acorralado (ya en la base o sin camino): pelea con el que tenga al lado.
   const near = threats.find((z) => d2(z.pos, s.pos) <= SURVIVOR_REACH * SURVIVOR_REACH);

@@ -26,7 +26,15 @@ function scene(): { w: World; a: Survivor } {
     s.needs.mood = 60;
     s.nextChatAt = 1e9;
     s.traits = [];
-    s.work = { social: false, build: false, craft: false, haul: false, chop: false, loot: false };
+    s.work = {
+      heal: false,
+      social: false,
+      build: false,
+      craft: false,
+      haul: false,
+      chop: false,
+      loot: false,
+    };
   }
   const a = w.survivors[0]!;
   a.work.haul = true;

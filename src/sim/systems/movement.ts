@@ -1,4 +1,5 @@
 import {
+  CARRY_SPEED,
   CRISIS_TICKS,
   EAT_TICKS,
   IDLE_TICKS_MAX,
@@ -14,6 +15,7 @@ import { tryStartConsoling } from '../consoling';
 import { startBuildActivity } from '../jobs/build';
 import { startChopActivity } from '../jobs/chop';
 import { startHaulActivity } from '../jobs/haul';
+import { startHealActivity } from '../jobs/heal';
 import { startCraftActivity } from '../jobs/craft';
 import { startPryActivity } from '../jobs/pry';
 import { startSwapWeapon } from '../jobs/weapons';
@@ -32,7 +34,10 @@ export function movementSystem(w: World): void {
   for (const s of w.survivors) {
     if (s.action.type !== 'moveTo') continue;
     const run = s.action.run === true;
-    const step = walkStep(s, w.grid, run ? SURVIVOR_RUN_SPEED : SURVIVOR_WALK_SPEED);
+    // Con alguien en brazos (Sanar, H4e), más despacio.
+    const speed =
+      (run ? SURVIVOR_RUN_SPEED : SURVIVOR_WALK_SPEED) * (s.carryingId !== null ? CARRY_SPEED : 1);
+    const step = walkStep(s, w.grid, speed);
     if (step === 'walking' && weightOf(s.carrying) > 0) practice(w, s, 'haul', 1);
     // Quien corre hace ruido (spec H4b §3).
     if (run && step === 'walking' && w.tick % RUN_NOISE_TICKS === 0) makeNoise(w, s.pos, NOISE.run);
@@ -123,6 +128,9 @@ function startActivity(s: Survivor, activity: Activity, w: World): Action {
     case 'fetchCraft':
     case 'craft':
       return startCraftActivity(s, w, activity);
+    case 'rescue':
+    case 'dropOff':
+      return startHealActivity(s, w, activity);
     case 'console':
       // Si se ha movido o está ocupado, vuelve a decidir (y a acercarse) en el siguiente tick.
       return tryStartConsoling(w, s, activity.otherId) ? s.action : { type: 'idle', ticksLeft: 0 };

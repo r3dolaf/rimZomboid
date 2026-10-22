@@ -2,6 +2,7 @@ import { corpsesSystem } from './corpses';
 import { combatSystem } from './combat';
 import { furnitureSystem } from './furniture';
 import { healthSystem } from './health';
+import { carrySystem } from './jobs/heal';
 import { narratorSystem } from './narrator';
 import { ordersSystem } from './orders';
 import { activitiesSystem } from './systems/activities';
@@ -31,6 +32,7 @@ export function step(w: World): void {
   combatSystem(w);
   strangerSystem(w);
   activitiesSystem(w);
+  carrySystem(w); // H4e: el llevado va con quien lo lleva
   corpsesSystem(w);
   reservationsSystem(w);
   visionSystem(w);

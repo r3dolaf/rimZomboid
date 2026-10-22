@@ -61,7 +61,15 @@ function scene(): World {
   w.storage.tiles = [{ x: 1, y: 4 }];
   const s = w.survivors[0]!;
   s.pos = { x: 1.5, y: 4.5 };
-  s.work = { social: false, build: false, craft: false, haul: false, chop: false, loot: true };
+  s.work = {
+    heal: false,
+    social: false,
+    build: false,
+    craft: false,
+    haul: false,
+    chop: false,
+    loot: true,
+  };
   s.equipped = null;
   return w;
 }
@@ -172,7 +180,15 @@ test('quien no saquea no se queda la única palanca si hay puertas que forzar: l
   const ana = w.survivors[0]!;
   ana.equipped = 'machete';
   const bea = addSurvivor(w, { x: 2, y: 4 });
-  bea.work = { social: false, build: false, craft: false, haul: false, chop: false, loot: false };
+  bea.work = {
+    heal: false,
+    social: false,
+    build: false,
+    craft: false,
+    haul: false,
+    chop: false,
+    loot: false,
+  };
   bea.equipped = 'knife';
   w.storage.items.crowbar = 1;
   w.containers[0]!.designated = false; // aún nada marcado: la palanca es una buena arma

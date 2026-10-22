@@ -4,13 +4,14 @@
 import { SURVIVOR_REACH } from './balance';
 import { crisisDue } from './brain';
 import { inCrisis } from './consoling';
+import { rescueOrder } from './jobs/heal';
 import { inBounds, isWalkable } from './map/grid';
 import type { Order } from './orders';
 import { findPath } from './path/astar';
 import type { Action, Point, Survivor, World } from './types';
 import { tileOf } from './world';
 
-type DraftOrder = Extract<Order, { type: 'draft' | 'draftMove' | 'draftAttack' }>;
+type DraftOrder = Extract<Order, { type: 'draft' | 'draftMove' | 'draftAttack' | 'draftRescue' }>;
 
 /** ¿Se le puede poner? No derribado ni en crisis (ni yendo a tenerla). */
 export function canDraft(s: Survivor): boolean {
@@ -63,6 +64,18 @@ function spotsAround(w: World, p: Point, n: number): Point[] {
 
 /** Aplica una orden del modo combate (la llama `ordersSystem`). */
 export function applyDraftOrder(w: World, o: DraftOrder): void {
+  if (o.type === 'draftRescue') {
+    const s = w.survivors.find((x) => x.id === o.survivorId);
+    const d = w.survivors.find((x) => x.id === o.downedId);
+    if (!s?.drafted || !d || d === s) return;
+    const a = rescueOrder(w, s, d);
+    const path = a?.type === 'moveTo' ? findPath(w.grid, tileOf(s.pos), a.target) : null;
+    if (!a || !path) return;
+    release(w, s);
+    s.action = a;
+    s.path = path;
+    return;
+  }
   const ss = o.survivorIds
     .map((id) => w.survivors.find((s) => s.id === id))
     .filter((s): s is Survivor => s !== undefined);

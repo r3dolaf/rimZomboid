@@ -28,6 +28,7 @@ import type { Skill, SkillId, Survivor, TraitId, World } from './types';
 
 /** En el orden de los trabajos del panel (H4a §3.1) y Pelear al final. */
 export const SKILLS: readonly SkillId[] = [
+  'heal',
   'social',
   'build',
   'craft',
@@ -36,6 +37,9 @@ export const SKILLS: readonly SkillId[] = [
   'loot',
   'fight',
 ];
+
+/** Las que se sortean como en H4c (Sanar va aparte; ver `rollSkills`). */
+const ROLLED: readonly SkillId[] = SKILLS.filter((k) => k !== 'heal');
 
 /**
  * El azar de las habilidades de cada colono: la semilla del mundo y su id. Así sortearlas no
@@ -48,8 +52,10 @@ export function skillRng(seed: number, id: number): RngState {
 /** Cada una entre 0 y 3, una especialidad entre 5 y 7, y lo que sumen o resten los rasgos. */
 export function rollSkills(rng: RngState, traits: readonly TraitId[]): Record<SkillId, Skill> {
   const out = {} as Record<SkillId, Skill>;
-  for (const k of SKILLS) out[k] = { level: nextInt(rng, 0, SKILL_START_MAX), xp: 0 };
-  out[pick(rng, SKILLS)].level = nextInt(rng, SPECIALTY_MIN, SPECIALTY_MAX);
+  for (const k of ROLLED) out[k] = { level: nextInt(rng, 0, SKILL_START_MAX), xp: 0 };
+  out[pick(rng, ROLLED)].level = nextInt(rng, SPECIALTY_MIN, SPECIALTY_MAX);
+  // Sanar (H4e), después y sin poder ser la especialidad: así lo de antes sale igual.
+  out.heal = { level: nextInt(rng, 0, SKILL_START_MAX), xp: 0 };
   for (const t of traits) {
     const mods: Partial<Record<SkillId, number>> =
       t in TRAIT_SKILL_MODS ? TRAIT_SKILL_MODS[t as keyof typeof TRAIT_SKILL_MODS] : {};

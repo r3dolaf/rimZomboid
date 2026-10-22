@@ -86,6 +86,29 @@ export function checkInvariants(w: World): string[] {
     else if (!isWalkable(w.grid, t.x, t.y))
       problems.push(`${who}: en una casilla no transitable (${t.x}, ${t.y})`);
   }
+  // Sanar (H4e): quien lleva a alguien y el llevado, a la par.
+  for (const s of w.survivors) {
+    if (s.carryingId !== null) {
+      const d = w.survivors.find((x) => x.id === s.carryingId);
+      const ok =
+        d !== undefined &&
+        d.action.type === 'downed' &&
+        d.action.carriedBy === s.id &&
+        d.pos.x === s.pos.x &&
+        d.pos.y === s.pos.y &&
+        s.action.type !== 'downed';
+      if (!ok)
+        problems.push(
+          `${s.name}: lleva a ${d?.name ?? `#${s.carryingId}`}, que no va derribado con él`,
+        );
+    }
+    const a = s.action;
+    if (a.type === 'downed' && a.carriedBy !== undefined) {
+      const c = w.survivors.find((x) => x.id === a.carriedBy);
+      if (!c || c.carryingId !== s.id)
+        problems.push(`${s.name}: lo lleva #${a.carriedBy}, que no lo lleva`);
+    }
+  }
   for (const s of w.survivors)
     if (s.sick && !(Number.isFinite(s.sick.until) && s.sick.until >= 0))
       problems.push(`${s.name}: gripe con fin no válido (${s.sick.until})`);

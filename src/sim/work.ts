@@ -8,6 +8,7 @@ import { chopJob, chopStillWorth, returnAxeJob } from './jobs/chop';
 import { pryJob, pryStillWorth } from './jobs/pry';
 import { craftJob, craftStillWorth } from './jobs/craft';
 import { deliverJob, haulJob, haulStillWorth } from './jobs/haul';
+import { healJob, healStillWorth } from './jobs/heal';
 import { swapWeaponStillWorth, weaponJob } from './jobs/weapons';
 import { isEmpty, ITEM_KINDS, weightOf } from './items';
 import { regionOf } from './path/astar';
@@ -104,6 +105,7 @@ export function findWork(s: Survivor, w: World): Action | null {
   }
   // Por prioridad (1 primero, H4d) y, a igual prioridad, por criticidad.
   const jobs: [WorkType, () => Action | null][] = [
+    ['heal', () => healJob(s, w)], // H4e
     ['build', () => buildJob(s, w)],
     ['craft', () => craftJob(s, w)],
     ['haul', () => haulJob(s, w)],
@@ -136,6 +138,8 @@ const WORK_ACTIONS: ReadonlySet<string> = new Set([
   'pry',
   'fetchCraft',
   'craft',
+  'rescue',
+  'dropOff',
 ]);
 
 /** ¿Está trabajando (o yendo a trabajar)? */
@@ -149,8 +153,9 @@ export function stillWorthIt(s: Survivor, w: World): boolean {
   const a = s.action;
   const what = a.type === 'moveTo' ? a.then?.type : a.type;
   // Si le mandan descansar, deja lo que esté haciendo (descargar o cambiar de arma, no).
-  if (s.sick?.plan === 'rest' && what !== 'unload' && what !== 'storeAxe' && what !== 'swapWeapon')
-    return false;
+  const finishing = what === 'unload' || what === 'storeAxe' || what === 'swapWeapon';
+  if (s.sick?.plan === 'rest' && !finishing && what !== 'dropOff') return false;
+  if (what === 'rescue' || what === 'dropOff') return healStillWorth(s, w);
   if (what === 'chop' || what === 'takeAxe' || what === 'storeAxe') return chopStillWorth(s, w);
   if (what === 'pickUp' || what === 'fetchWood' || what === 'deliver') return haulStillWorth(s, w);
   if (what === 'build') return buildStillWorth(s, w);

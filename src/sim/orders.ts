@@ -30,7 +30,8 @@ export type Order =
   // Modo combate (H4e §3.1)
   | { type: 'draft'; survivorIds: number[]; on: boolean }
   | { type: 'draftMove'; survivorIds: number[]; x: number; y: number }
-  | { type: 'draftAttack'; survivorIds: number[]; zombieId: number };
+  | { type: 'draftAttack'; survivorIds: number[]; zombieId: number }
+  | { type: 'draftRescue'; survivorId: number; downedId: number };
 
 /** Encola una orden; se aplica al principio del siguiente tick. */
 export function issue(w: World, order: Order): void {
@@ -158,6 +159,7 @@ export function ordersSystem(w: World): void {
       case 'draft':
       case 'draftMove':
       case 'draftAttack':
+      case 'draftRescue':
         applyDraftOrder(w, o);
         break;
     }

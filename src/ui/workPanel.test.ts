@@ -25,6 +25,7 @@ test('oculto hasta que se abre; una fila por colono y una columna por trabajo, e
   expect(el.hidden).toBe(false);
   expect([...el.querySelectorAll('th')].map((t) => t.textContent)).toEqual([
     '',
+    'Sanar', // H4e
     'Social',
     'Construir',
     'Fabricar',

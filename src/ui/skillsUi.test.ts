@@ -53,6 +53,7 @@ test('Habilidades: una fila por habilidad con su nivel y la barrita de la práct
   sheet.update();
   const rows = [...root.querySelectorAll('[data-testid^="sheet-skill-"]')];
   expect(rows.map((r) => r.querySelector('.name')!.textContent)).toEqual([
+    'Sanar', // H4e
     'Social',
     'Construir',
     'Fabricar',
@@ -125,6 +126,7 @@ test('panel de Trabajos como matriz: columnas por habilidad, casilla y nivel; el
   panel.update();
   expect([...root.querySelectorAll('th')].map((t) => t.textContent)).toEqual([
     '',
+    'Sanar', // H4e
     'Social',
     'Construir',
     'Fabricar',

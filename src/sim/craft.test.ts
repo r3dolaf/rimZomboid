@@ -22,7 +22,15 @@ function world(): World {
   w.storage.items.cloth = 6;
   const s = w.survivors[0]!;
   s.pos = { x: 1.5, y: 2.5 };
-  s.work = { social: false, build: false, craft: true, haul: false, chop: false, loot: false };
+  s.work = {
+    heal: false,
+    social: false,
+    build: false,
+    craft: true,
+    haul: false,
+    chop: false,
+    loot: false,
+  };
   s.skills.craft.level = 10; // no falla (los fallos, en su test)
   s.needs = { hunger: 100, sleep: 100, mood: 60, social: 100 };
   s.nextChatAt = 1e9;
@@ -182,7 +190,7 @@ test('al terminar lleva lo hecho al almacén antes de nada, aunque tenga Saquear
   const w = world();
   const s = w.survivors[0]!;
   s.work.loot = true;
-  s.priorities = { social: 3, build: 3, craft: 1, haul: 3, chop: 3, loot: 3 };
+  s.priorities = { heal: 3, social: 3, build: 3, craft: 1, haul: 3, chop: 3, loot: 3 };
   w.containers.push({
     id: 90,
     houseId: -1,

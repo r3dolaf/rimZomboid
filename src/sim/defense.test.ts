@@ -49,6 +49,7 @@ test('al empezar: sin montones, planos, muebles ni marcas; cada uno con su cuchi
     expect(s.equipped).toBe('knife'); // H4b: sin arma caían enseguida
     const coward = s.traits.includes('coward');
     expect(s.work).toEqual({
+      heal: true, // H4e: Sanar, todos
       social: true,
       build: true,
       craft: true, // H4d: Fabricar, todos

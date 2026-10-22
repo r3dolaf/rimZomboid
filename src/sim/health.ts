@@ -3,6 +3,7 @@ import {
   DOWNED_MAX_TICKS,
   DOWNED_TICKS,
   GET_UP_HEALTH,
+  GET_UP_HEALTH_BED,
   HEALTH_PER_HOUR,
   TICKS_PER_HOUR,
   ZOMBIE_VISION,
@@ -31,7 +32,7 @@ export function healthSystem(w: World): void {
       // hasta las 8 h, que si no podía quedarse ahí para siempre).
       const limit = a.until - DOWNED_TICKS + DOWNED_MAX_TICKS;
       if (w.tick < a.until || (w.tick < limit && zombieInSight(w, s, ZOMBIE_VISION))) continue;
-      s.health = GET_UP_HEALTH;
+      s.health = a.inBed ? GET_UP_HEALTH_BED : GET_UP_HEALTH; // en cama, mejor (H4e)
       s.action = { type: 'idle', ticksLeft: 0 };
       addMemory(s, 'downed', w.tick);
       logEvent(w, { kind: 'gotUp', survivorId: s.id });

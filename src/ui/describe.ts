@@ -364,6 +364,9 @@ export function logText(e: LogEntry, w: World): string {
     case 'wanderersSighted':
       text = l.wanderersSighted;
       break;
+    case 'rescued':
+      text = l.rescued(name(e.survivorId), name(e.otherId));
+      break;
   }
   return text;
 }

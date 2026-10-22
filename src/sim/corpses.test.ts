@@ -92,7 +92,15 @@ test('se marcan como cualquier mueble, y quien saquea los registra: "ha registra
   expect(c.designated).toBe(true);
   const s = w.survivors[0]!;
   s.pos = { x: 1.5, y: 1.5 };
-  s.work = { social: false, build: false, craft: false, haul: false, chop: false, loot: true };
+  s.work = {
+    heal: false,
+    social: false,
+    build: false,
+    craft: false,
+    haul: false,
+    chop: false,
+    loot: true,
+  };
   for (let i = 0; i < 400 && !c.searched; i++) step(w);
   expect(c.searched).toBe(true);
   expect(w.log.some((e) => e.kind === 'corpseSearched' && e.survivorId === s.id)).toBe(true);

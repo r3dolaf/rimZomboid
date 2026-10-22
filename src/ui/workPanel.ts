@@ -8,7 +8,15 @@ import './panels.css';
 export const STANCES: readonly Stance[] = ['fight', 'flee', 'decide'];
 
 /** Columnas, en el orden de criticidad (spec H4a §3.1). */
-export const WORKS: readonly WorkType[] = ['social', 'build', 'craft', 'haul', 'chop', 'loot'];
+export const WORKS: readonly WorkType[] = [
+  'heal',
+  'social',
+  'build',
+  'craft',
+  'haul',
+  'chop',
+  'loot',
+];
 
 /**
  * Panel de Trabajos (spec H4a §5) como matriz (spec H4c §5): una fila por colono y una columna por

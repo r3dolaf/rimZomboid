@@ -170,7 +170,10 @@ export type Activity =
   | { type: 'pry'; door: number }
   // Fabricar (H4d): coger del almacén los materiales del pedido y trabajarlos en la mesa `tableId`.
   | { type: 'fetchCraft'; billId: number }
-  | { type: 'craft'; billId: number; tableId: number };
+  | { type: 'craft'; billId: number; tableId: number }
+  // Sanar (H4e): coger al derribado y dejarlo en su sitio.
+  | { type: 'rescue'; downedId: number }
+  | { type: 'dropOff'; downedId: number };
 
 export type Action =
   /** `wait`: esperando tras no encontrar camino (no se consulta al cerebro) o tras negarse a trabajar. */
@@ -192,7 +195,8 @@ export type Action =
   /** El avance se guarda en el plano (si se deja a medias, no se pierde). */
   | { type: 'build'; blueprintId: number }
   // Zombis (H4b): en el suelo hasta `until`; peleando con un zombi.
-  | { type: 'downed'; until: number }
+  /** `inBed`: lo han dejado en una cama (H4e); `carriedBy`: quién lo lleva en brazos. */
+  | { type: 'downed'; until: number; inBed?: boolean; carriedBy?: number }
   /** `hold` (modo combate, H4e): golpea sin moverse; si el zombi se aleja, no lo persigue. */
   | { type: 'melee'; zombieId: number; cooldown: number; hold?: boolean }
   // Forzando una puerta atrancada (H4d).
@@ -242,6 +246,8 @@ export interface Survivor {
   celebrated: boolean;
   /** En modo combate (H4e): solo obedece al jugador. */
   drafted: boolean;
+  /** El derribado que lleva en brazos (Sanar, H4e), o `null`. */
+  carryingId: number | null;
 }
 
 /** Uno o dos desconocidos que esperan a la puerta a que el jugador decida (su decisión caduca). */
@@ -298,8 +304,8 @@ export interface Horde {
   seen?: boolean;
 }
 
-/** Trabajos, en orden de criticidad (spec H4a §3.1). */
-export type WorkType = 'social' | 'build' | 'craft' | 'haul' | 'chop' | 'loot';
+/** Trabajos, en orden de criticidad (spec H4a §3.1; Sanar, de H4e, el primero). */
+export type WorkType = 'heal' | 'social' | 'build' | 'craft' | 'haul' | 'chop' | 'loot';
 
 /** Habilidades (H4c): una por trabajo y Pelear. */
 export type SkillId = WorkType | 'fight';

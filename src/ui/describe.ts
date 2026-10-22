@@ -361,6 +361,8 @@ export function noticeFor(e: LogEntry): NoticeInfo | null {
         : null;
     case 'fled':
       return { tone: 'mixed', title: t.fled, focusId: e.survivorId };
+    case 'skillUp':
+      return { tone: 'good', title: t.skillUp, focusId: e.survivorId };
     default:
       return null;
   }

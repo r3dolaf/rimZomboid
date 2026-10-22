@@ -2,7 +2,8 @@ import { es } from '../i18n/es';
 import { weightOf } from '../sim/items';
 import { moodModifiers, moodTarget } from '../sim/mood';
 import { issue } from '../sim/orders';
-import { capacityKg } from '../sim/skills';
+import { SKILL_MAX } from '../sim/balance';
+import { capacityKg, SKILLS, xpToNext } from '../sim/skills';
 import { opinionOf, relationLabel } from '../sim/social';
 import type { Survivor, World } from '../sim/types';
 import { activityText, formatItems, formatModifier, signed } from './describe';
@@ -11,8 +12,8 @@ import { effectiveLock, effectiveStance, effectiveWork, STANCES, WORKS } from '.
 import './panels.css';
 
 /**
- * Ficha del superviviente seleccionado: qué hace, rasgos, necesidades, por qué de su ánimo y
- * relaciones.
+ * Ficha del superviviente seleccionado, en dos pestañas: General (qué hace, trabajos, postura, arma,
+ * carga, rasgos, necesidades, por qué de su ánimo y relaciones) y Habilidades (H4c).
  */
 export function mountSheet(
   root: HTMLElement,
@@ -98,7 +99,58 @@ export function mountSheet(
   carrying.className = 'carrying';
 
   const body = document.createElement('div');
-  panel.append(head, work, stanceRow, weaponRow, carrying, body);
+
+  // Pestañas (H4c): General, lo de siempre; Habilidades, sus niveles y la práctica.
+  const general = document.createElement('div');
+  general.dataset.testid = 'sheet-pane-general';
+  general.append(work, stanceRow, weaponRow, carrying, body);
+  const skillsPane = document.createElement('div');
+  skillsPane.className = 'skills';
+  skillsPane.dataset.testid = 'sheet-pane-skills';
+  const skillRows = SKILLS.map((k) => {
+    const row = document.createElement('div');
+    row.className = 'skill';
+    row.dataset.testid = `sheet-skill-${k}`;
+    const name = document.createElement('span');
+    name.className = 'name';
+    name.textContent = es.skills[k];
+    const level = document.createElement('span');
+    level.className = 'level';
+    const bar = document.createElement('span');
+    bar.className = 'bar';
+    const fill = document.createElement('span');
+    fill.className = 'fill';
+    bar.append(fill);
+    const note = document.createElement('span');
+    note.className = 'note';
+    row.append(name, level, bar, note);
+    skillsPane.append(row);
+    return { k, level, fill, note };
+  });
+  const tabs = document.createElement('nav');
+  tabs.className = 'tabs';
+  const panes: Record<SheetTab, HTMLElement> = { general, skills: skillsPane };
+  let tab = loadTab();
+  const tabButtons = (['general', 'skills'] as const).map((k) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = es.sheetTabs[k];
+    b.dataset.testid = `sheet-tab-${k}`;
+    b.addEventListener('click', () => {
+      tab = k;
+      saveTab(k);
+      showTab();
+      b.blur();
+    });
+    tabs.append(b);
+    return { k, b };
+  });
+  const showTab = () => {
+    for (const { k, b } of tabButtons) b.classList.toggle('selected', k === tab);
+    for (const k of ['general', 'skills'] as const) panes[k].hidden = k !== tab;
+  };
+  showTab();
+  panel.append(head, tabs, general, skillsPane);
 
   let shown = ''; // firma de lo pintado, para no rehacer el DOM en cada fotograma
 
@@ -146,6 +198,16 @@ export function mountSheet(
       const inHand = s.equipped ? es.inHand(es.items[s.equipped][0]) : es.noWeapon;
       if (weaponText.textContent !== inHand) weaponText.textContent = inHand;
       lock.checked = effectiveLock(world, s);
+      for (const r of skillRows) {
+        const { level, xp } = s.skills[r.k];
+        const max = level >= SKILL_MAX;
+        const levelText = String(level);
+        if (r.level.textContent !== levelText) r.level.textContent = levelText;
+        const width = `${max ? 100 : Math.round((100 * xp) / xpToNext(level))}%`;
+        if (r.fill.style.width !== width) r.fill.style.width = width;
+        const note = max ? es.skillMax : '';
+        if (r.note.textContent !== note) r.note.textContent = note;
+      }
 
       const key = JSON.stringify(view);
       panel.hidden = false;
@@ -157,13 +219,33 @@ export function mountSheet(
   };
 }
 
-/** "Bea: +45 · Amistad" por cada colono, de quien mejor le cae a quien peor. */
 /** Kilos con una cifra decimal, salvo si son justos: "8", "7,2". */
 const kg = (n: number) =>
   Number.isInteger(Math.round(n * 10) / 10)
     ? String(Math.round(n))
     : n.toFixed(1).replace('.', ',');
 
+type SheetTab = 'general' | 'skills';
+const TAB_KEY = 'rimzomboid.sheetTab';
+
+/** La última pestaña que abrió; si el navegador no deja guardarlo, General. */
+function loadTab(): SheetTab {
+  try {
+    return localStorage.getItem(TAB_KEY) === 'skills' ? 'skills' : 'general';
+  } catch {
+    return 'general';
+  }
+}
+
+function saveTab(tab: SheetTab): void {
+  try {
+    localStorage.setItem(TAB_KEY, tab);
+  } catch {
+    // sin poder guardarlo, la próxima vez se abre General
+  }
+}
+
+/** "Bea: +45 · Amistad" por cada colono, de quien mejor le cae a quien peor. */
 function relations(s: Survivor, w: World): string[] {
   return w.survivors
     .filter((o) => o !== s)

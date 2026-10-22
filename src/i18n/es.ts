@@ -44,6 +44,8 @@ export const es = {
     chop: 'Talar',
     loot: 'Saquear',
   } satisfies Record<WorkType, string>,
+  sheetTabs: { general: 'General', skills: 'Habilidades' },
+  skillMax: 'máx.',
   /** Habilidades (H4c): las de los trabajos y Pelear. */
   skills: {
     social: 'Social',
@@ -105,6 +107,7 @@ export const es = {
   lockWeaponHint: 'No cambia ni devuelve lo que lleva en la mano',
   logToggle: { hide: 'Minimizar el registro', show: 'Abrir el registro' },
   notices: {
+    skillUp: 'Mejora',
     jealousy: 'Celos',
     clash: 'Choque de caracteres',
     grief: 'Malos recuerdos',

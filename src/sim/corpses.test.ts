@@ -164,3 +164,21 @@ test('un cuerpo no impide construir encima: tapar el boquete donde cayó (al ter
   kill(w, 7, 7);
   expect(canPlace(w, 'campfire', { x: 7, y: 7 })).toBe(true);
 });
+
+test('no desaparece mientras alguien va a registrarlo: se va cuando ya nadie lo tiene reservado', () => {
+  const w = world();
+  const c = kill(w, 9, 9);
+  const s = w.survivors[0]!;
+  s.pos = { x: 1.5, y: 1.5 };
+  s.action = { type: 'moveTo', target: c.pos, then: { type: 'search', containerId: c.id } };
+  c.designated = true;
+  c.reservedBy = s.id;
+  w.tick = c.until!;
+  corpsesSystem(w);
+  expect(w.containers).toContain(c);
+  expect(checkInvariants(w)).toEqual([]);
+  s.action = { type: 'idle', ticksLeft: 0 };
+  c.reservedBy = null;
+  corpsesSystem(w);
+  expect(w.containers).not.toContain(c);
+});

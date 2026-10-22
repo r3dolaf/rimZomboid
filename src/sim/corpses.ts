@@ -38,20 +38,22 @@ export function leaveCorpse(w: World, z: Zombie): void {
   w.containers.push(c);
 }
 
-/** Registrado y vacío, se va en un día; si no, se pudre a los 3 días con lo que lleve. */
+/**
+ * Registrado y vacío, se va en un día; si no, se pudre a los 3 días con lo que lleve. Mientras
+ * alguien va a registrarlo (lo tiene reservado), espera: si no, llegaría a un cuerpo que ya no está.
+ */
 export function corpsesSystem(w: World): void {
+  const due = (c: Container) =>
+    c.kind === 'corpse' && c.until !== undefined && w.tick >= c.until && c.reservedBy === null;
   let gone = false;
   for (const c of w.containers) {
     if (c.kind !== 'corpse' || c.until === undefined) continue;
     if (c.searched && isEmpty(c.items) && c.until > w.tick + CORPSE_EMPTY_TICKS)
       c.until = w.tick + CORPSE_EMPTY_TICKS;
-    if (w.tick >= c.until) {
+    if (due(c)) {
       w.weaponLog.rotted += weaponsIn(c);
       gone = true;
     }
   }
-  if (gone)
-    w.containers = w.containers.filter(
-      (c) => c.kind !== 'corpse' || c.until === undefined || w.tick < c.until,
-    );
+  if (gone) w.containers = w.containers.filter((c) => !due(c));
 }

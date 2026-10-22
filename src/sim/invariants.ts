@@ -103,6 +103,8 @@ export function checkInvariants(w: World): string[] {
   checkInventory(problems, 'almacén', w.storage.items);
   for (const c of w.containers) {
     checkInventory(problems, `contenedor ${c.id}`, c.items);
+    if (c.kind === 'corpse' && !isWalkable(w.grid, c.pos.x, c.pos.y))
+      problems.push(`cuerpo ${c.id}: en una casilla que no se pisa (${c.pos.x}, ${c.pos.y})`);
     if (c.reservedBy !== null) {
       const holder = w.survivors.find((s) => s.id === c.reservedBy);
       if (!holder)

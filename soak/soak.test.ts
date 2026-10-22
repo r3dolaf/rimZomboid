@@ -315,7 +315,7 @@ test.each([1, 2, 3])(
   240_000,
 );
 
-/** Armas en todo el mundo (cuchillos, bates y hachas): nunca aparecen ni desaparecen. */
+/** Armas en todo el mundo: solo aparecen en los cuerpos y desaparecen al pudrirse (H4d). */
 function allWeapons(w: World): number {
   const kinds = WEAPONS; // con la palanca y el machete (H4d)
   const people = [...w.survivors, ...(w.stranger?.survivors ?? [])];
@@ -384,7 +384,9 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
         if (!down.has(s.id) && !cut)
           expect(moved.has(s.id), `día ${day}: ${s.name} no se ha movido`).toBe(true);
       }
-      expect(allWeapons(w), `día ${day}: armas`).toBe(weapons);
+      // Las de los cuerpos (H4d) entran al morir el zombi y salen si el cuerpo se pudre.
+      const log = w.weaponLog;
+      expect(allWeapons(w), `día ${day}: armas`).toBe(weapons + log.fromCorpses - log.rotted);
     }
     // Límite generoso (en local va por 0,1–0,2 ms por tick).
     expect(ms / (DAYS * TICKS_PER_DAY), 'ms por tick').toBeLessThan(1);

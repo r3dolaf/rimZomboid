@@ -7,6 +7,7 @@ import {
   SURVIVOR_RUN_SPEED,
   WEAPON_STATS,
 } from './balance';
+import { leaveCorpse } from './corpses';
 import { weightOf } from './items';
 import { logEvent } from './log';
 import { makeNoise } from './noise';
@@ -27,6 +28,7 @@ export function colonistHit(w: World, s: Survivor, z: Zombie): void {
   z.health -= WEAPON_STATS[s.equipped ?? 'none'].damage * (head ? 2 : 1);
   if (z.health > 0) return;
   w.zombies = w.zombies.filter((x) => x !== z);
+  leaveCorpse(w, z); // H4d
   logEvent(w, { kind: 'zombieKilled', survivorId: s.id });
 }
 

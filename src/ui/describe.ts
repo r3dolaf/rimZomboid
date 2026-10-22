@@ -312,6 +312,9 @@ export function logText(e: LogEntry, w: World): string {
     case 'forced':
       text = l.forced(name(e.survivorId), e.houseId);
       break;
+    case 'corpseSearched':
+      text = l.corpseSearched(name(e.survivorId), formatItems(e.items));
+      break;
     case 'crafted':
       text = l.crafted(name(e.survivorId), es.recipes[e.recipe].done);
       break;

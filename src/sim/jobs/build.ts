@@ -5,7 +5,7 @@ import { emptyInventory } from '../items';
 import { logEvent } from '../log';
 import { makeNoise } from '../noise';
 import { getTile, isWalkable, setTile } from '../map/grid';
-import { dropPile, pileAt } from '../piles';
+import { dropPile, pileAt, walkableNear } from '../piles';
 import { nextFloat } from '../rng';
 import { buildFailChance, practice, skillSpeed } from '../skills';
 import { repairTile } from '../structures';
@@ -186,5 +186,10 @@ export function finishBuild(w: World, b: Blueprint, builder: Survivor): void {
     w.piles = w.piles.filter((p) => p !== pile);
     dropPile(w, { x, y }, pile.items);
   }
+  // Lo mismo con un cuerpo de zombi (H4d).
+  if (!isWalkable(w.grid, x, y))
+    for (const c of w.containers)
+      if (c.kind === 'corpse' && c.pos.x === x && c.pos.y === y)
+        c.pos = walkableNear(w, c.pos) ?? c.pos;
   logEvent(w, { kind: 'built', what: b.kind });
 }

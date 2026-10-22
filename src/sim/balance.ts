@@ -310,6 +310,16 @@ export const RECIPES: Record<RecipeId, Recipe> = {
 };
 export const BILL_DEFAULT_TARGET = 5; // un pedido nuevo: "hasta tener 5"
 
+// Cuerpos de zombi (H4d): lo que llevan (con el azar de los zombis) y cuándo desaparecen.
+export const CORPSE_CLOTH_MIN = 1;
+export const CORPSE_CLOTH_MAX = 2;
+export const CORPSE_WEAPON_CHANCE = 0.1;
+/** Qué arma, si lleva (pesos). */
+export const CORPSE_WEAPONS = { knife: 35, bat: 25, crowbar: 15, machete: 15, axe: 10 } as const;
+export const CORPSE_SMALL_CHANCE = 0.15; // una venda o una lata, mitad y mitad
+export const CORPSE_ROT_TICKS = 3 * TICKS_PER_DAY; // sin registrar, se pudre (con lo que lleve)
+export const CORPSE_EMPTY_TICKS = TICKS_PER_DAY; // registrado y vacío, desaparece
+
 // Puertas atrancadas (H4d): se fuerzan con la palanca.
 export const LOCKED_DOOR_CHANCE = 0.25; // por casa (la base, nunca)
 export const LOCKED_DOOR_SALT = 0x10cd00e5; // su azar: semilla ^ esto

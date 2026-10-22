@@ -1,3 +1,4 @@
+import { corpsesSystem } from './corpses';
 import { combatSystem } from './combat';
 import { furnitureSystem } from './furniture';
 import { healthSystem } from './health';
@@ -30,6 +31,7 @@ export function step(w: World): void {
   combatSystem(w);
   strangerSystem(w);
   activitiesSystem(w);
+  corpsesSystem(w);
   reservationsSystem(w);
   visionSystem(w);
   w.tick++;

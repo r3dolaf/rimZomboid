@@ -278,6 +278,7 @@ export const es = {
       `${who} ha intentado consolar a ${other}, sin éxito`,
     forced: (who: string, house: number) => `${who} ha forzado la puerta de la casa ${house}`,
     crafted: (who: string, what: string) => `${who} ${what}`,
+    corpseSearched: (who: string, what: string) => `${who} ha registrado un cuerpo: ${what}`,
     craftFailed: (who: string, what: string, lost: string) =>
       `${who} ha fallado al ${what} (${lost})`,
     skillUp: (who: string, skill: string, level: number) =>
@@ -435,7 +436,12 @@ export const es = {
     goPry: 'Va a forzar una puerta',
     pry: 'Forzando una puerta',
   },
-  containers: { fridge: 'una nevera', wardrobe: 'un armario', shelf: 'una estantería' },
+  containers: {
+    fridge: 'una nevera',
+    wardrobe: 'un armario',
+    shelf: 'una estantería',
+    corpse: 'un cuerpo',
+  },
   built: {
     bed: 'Se ha construido una cama',
     table: 'Se ha construido una mesa',

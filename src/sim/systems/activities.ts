@@ -118,6 +118,12 @@ function finishSearch(w: World, s: Survivor, containerId: number): void {
   const taken = takeUpTo(c.items, s.carrying, capacityKg(s));
   c.searched = true;
   c.reservedBy = null;
+  // Un cuerpo (H4d) no es de ninguna casa.
+  if (c.kind === 'corpse') {
+    logEvent(w, { kind: 'corpseSearched', survivorId: s.id, items: taken });
+    if (isEmpty(c.items)) c.designated = false;
+    return;
+  }
   if (wasEmpty) logEvent(w, { kind: 'emptyContainer', survivorId: s.id, houseId: c.houseId });
   else if (!isEmpty(taken))
     logEvent(w, { kind: 'found', survivorId: s.id, houseId: c.houseId, items: taken });

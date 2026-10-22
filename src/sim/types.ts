@@ -326,7 +326,8 @@ export interface Storage {
   items: Inventory;
 }
 
-export type ContainerKind = 'fridge' | 'wardrobe' | 'shelf';
+/** `corpse`: el cuerpo de un zombi (H4d), que se registra como un mueble más. */
+export type ContainerKind = 'fridge' | 'wardrobe' | 'shelf' | 'corpse';
 
 /** Mueble de una casa con objetos. Transitable: se registra de pie sobre él. */
 export interface Container {
@@ -341,6 +342,8 @@ export interface Container {
   designated: boolean;
   /** Superviviente que va a registrarlo, para que no vayan dos. */
   reservedBy: number | null;
+  /** Cuerpos (H4d): tick en que desaparece. */
+  until?: number;
 }
 
 export type NarratorStyle = 'calm' | 'balanced' | 'chaotic';

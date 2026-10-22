@@ -8,69 +8,34 @@ import {
   NEEDLE_TOTAL,
   THREAD_PER_SPOOL,
   THREAD_SPOOLS,
-  CONTAINERS_MAX,
-  CONTAINERS_MIN,
   KNIFE_CHANCE,
   LOOT_BANDAGE_TOTAL,
   LOOT_FOOD_TOTAL,
   LOOT_WOOD_TOTAL,
 } from './balance';
 import { emptyInventory } from './items';
-import { getTile } from './map/grid';
-import { nextFloat, nextInt, pick, type RngState } from './rng';
-import {
-  Tile,
-  type Building,
-  type Container,
-  type ContainerKind,
-  type Grid,
-  type Point,
-} from './types';
+import { nextFloat, nextInt, type RngState } from './rng';
+import type { Building, Container, ContainerKind, Point } from './types';
 
-const KINDS: readonly ContainerKind[] = ['fridge', 'wardrobe', 'shelf'];
-
-/** Contenedores de todas las casas, con el botín ya repartido. */
+/** Los muebles del mapa como contenedores (sin registrar ni marcar), con el botín ya repartido. */
 export function placeContainers(
-  grid: Grid,
   base: Building,
   houses: Building[],
+  furniture: { houseId: number; pos: Point; kind: ContainerKind }[],
   rng: RngState,
 ): Container[] {
-  const containers: Container[] = [];
-  for (const h of houses) {
-    const spots = candidateSpots(grid, h);
-    const n = Math.min(spots.length, nextInt(rng, CONTAINERS_MIN, CONTAINERS_MAX));
-    for (let i = 0; i < n; i++) {
-      const [pos] = spots.splice(nextInt(rng, 0, spots.length - 1), 1);
-      containers.push({
-        id: containers.length + 1,
-        houseId: h.id,
-        pos: pos!,
-        kind: pick(rng, KINDS),
-        items: emptyInventory(),
-        searched: false,
-        designated: false,
-        reservedBy: null,
-      });
-    }
-  }
+  const containers: Container[] = furniture.map((f, i) => ({
+    id: i + 1,
+    houseId: f.houseId,
+    pos: f.pos,
+    kind: f.kind,
+    items: emptyInventory(),
+    searched: false,
+    designated: false,
+    reservedBy: null,
+  }));
   distributeLoot(base, houses, containers, rng);
   return containers;
-}
-
-/** Suelo de la casa junto a una pared, lejos de la puerta y fuera de los pasos entre muros. */
-function candidateSpots(grid: Grid, h: Building): Point[] {
-  const out: Point[] = [];
-  const wall = (x: number, y: number) => getTile(grid, x, y) === Tile.Wall;
-  for (let y = h.rect.y + 1; y < h.rect.y + h.rect.h - 1; y++)
-    for (let x = h.rect.x + 1; x < h.rect.x + h.rect.w - 1; x++) {
-      if (getTile(grid, x, y) !== Tile.Floor) continue;
-      if (Math.max(Math.abs(x - h.door.x), Math.abs(y - h.door.y)) <= 1) continue;
-      const isGap = (wall(x - 1, y) && wall(x + 1, y)) || (wall(x, y - 1) && wall(x, y + 1));
-      if (isGap) continue;
-      if (wall(x - 1, y) || wall(x + 1, y) || wall(x, y - 1) || wall(x, y + 1)) out.push({ x, y });
-    }
-  return out;
 }
 
 /**

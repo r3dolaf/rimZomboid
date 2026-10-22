@@ -1,7 +1,8 @@
 // Revisión final de H4a: muros que se terminan con gente caminando, camas de los recién llegados,
 // constructores que se bloquean y la gripe con "Que descanse".
 import { expect, test } from 'vitest';
-import { BED_SLOTS, BUILD } from './balance';
+import { BUILD } from './balance';
+import { baseLayout } from './base';
 import { emptyInventory } from './items';
 import { workOnBlueprint } from './jobs/build';
 import { standBeside } from './jobs/stand';
@@ -91,8 +92,7 @@ test('si se queda dentro de algo que no se pisa, el camino sale por la casilla d
 });
 
 function freeSlots(w: World) {
-  const r = w.base.rect;
-  return BED_SLOTS.map((b) => ({ x: r.x + b.dx, y: r.y + b.dy })).filter(
+  return baseLayout(w.base).beds.filter(
     (p) => !w.beds.some((b) => b.pos.x === p.x && b.pos.y === p.y),
   );
 }

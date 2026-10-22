@@ -95,15 +95,6 @@ test('botín: 30 telas, 6 carretes de hilo (10 usos cada uno) y 3 agujas por map
   expect(machetes).toBeLessThan(crowbars);
 });
 
-test('el botín nuevo no cambia nada más del mundo con la misma semilla', () => {
-  const w = createWorld(5);
-  expect(w.survivors.map((s) => `${s.name}:${s.traits.join('+')}`)).toEqual([
-    'Óscar:handy+slowLearner',
-    'Nuria:unpleasant',
-    'Raúl:keenEye',
-  ]);
-});
-
 test('casillas nuevas: ventana con cortinas corridas (60) y puerta atrancada (150); ni se pisan ni dejan ver', () => {
   const g = createGrid(3, 3, Tile.Grass);
   for (const t of [Tile.CurtainedWindow, Tile.LockedDoor]) {

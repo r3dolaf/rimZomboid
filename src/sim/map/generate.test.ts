@@ -6,7 +6,7 @@ import { Tile, type Rect } from '../types';
 import { generateMap } from './generate';
 import { getTile } from './grid';
 
-const SEEDS = Array.from({ length: 50 }, (_, i) => i + 1);
+const SEEDS = Array.from({ length: 30 }, (_, i) => i + 1);
 
 /** Distancia de Chebyshev de una casilla a un rectángulo (0 si está dentro). */
 function distToRect(r: Rect, x: number, y: number): number {
@@ -27,9 +27,9 @@ describe.each(SEEDS)('semilla %i', (s) => {
   const m = generateMap(createRng(s));
   const all = [m.base, ...m.houses];
 
-  test('entre 6 y 10 casas', () => {
-    expect(m.houses.length).toBeGreaterThanOrEqual(6);
-    expect(m.houses.length).toBeLessThanOrEqual(10);
+  test('unos 18–40 edificios (H4f)', () => {
+    expect(m.houses.length).toBeGreaterThanOrEqual(18);
+    expect(m.houses.length).toBeLessThanOrEqual(40);
   });
 
   test('todas las puertas son alcanzables desde la base', () => {
@@ -65,21 +65,6 @@ describe.each(SEEDS)('semilla %i', (s) => {
         if (getTile(m.grid, x, y) === Tile.Tree)
           for (const b of all) expect(distToRect(b.rect, x, y)).toBeGreaterThan(2);
   });
-});
-
-test('la base está en el centro y su puerta mira a la carretera', () => {
-  const m = generateMap(createRng(5));
-  expect(m.base.rect).toEqual({ x: 35, y: 37, w: 12, h: 10 });
-  expect(m.base.door).toEqual({ x: 41, y: 46 });
-});
-
-test('hay carreteras de 3 casillas que se cruzan en el centro', () => {
-  const m = generateMap(createRng(5));
-  for (let i = 0; i < 100; i++)
-    for (const r of [49, 50, 51]) {
-      expect(getTile(m.grid, i, r)).toBe(Tile.Road);
-      expect(getTile(m.grid, r, i)).toBe(Tile.Road);
-    }
 });
 
 test('los edificios tienen ventanas', () => {

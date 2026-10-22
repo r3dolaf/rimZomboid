@@ -1,5 +1,4 @@
 import {
-  BED_SLOTS,
   CALM_DAYS_MAX,
   CALM_DAYS_MIN,
   CHAT_EVERY_MAX,
@@ -17,6 +16,7 @@ import {
   SURVIVOR_COUNT,
   TICKS_PER_DAY,
 } from './balance';
+import { baseLayout } from './base';
 import { emptyInventory } from './items';
 import { distributeCraftLoot, distributeWoodAndAxes, placeContainers } from './loot';
 import { revealFromSurvivors } from './vision';
@@ -56,7 +56,7 @@ export function createWorld(
   zombieLevel: ZombieLevel = 'normal',
 ): World {
   const rng = createRng(seed);
-  const { grid, base, houses, town } = generateMap(rng);
+  const { grid, base, houses, town, furniture } = generateMap(rng);
 
   const floor: Point[] = [];
   for (let y = base.rect.y; y < base.rect.y + base.rect.h; y++)
@@ -102,23 +102,21 @@ export function createWorld(
     s.skills = rollSkills(skillRng(seed, s.id), s.traits);
   }
 
-  // Muebles de la base (spec H2 §7): camas arriba, almacén abajo junto a la puerta.
+  // Muebles de la base (spec H2 §7): camas al fondo, almacén junto a la puerta (girados, H4f).
   const r = base.rect;
+  const layout = baseLayout(base);
   const beds: Bed[] = survivors.map((s, i) => ({
     id: i + 1,
-    pos: { x: r.x + BED_SLOTS[i]!.dx, y: r.y + BED_SLOTS[i]!.dy },
+    pos: layout.beds[i]!,
     ownerId: s.id,
   }));
   const storage: Storage = {
-    tiles: [
-      { x: r.x + 7, y: r.y + r.h - 2 },
-      { x: r.x + 8, y: r.y + r.h - 2 },
-    ],
+    tiles: layout.storage,
     items: { ...emptyInventory(), food: START_FOOD },
   };
 
   // Después de los supervivientes, para no cambiar partidas anteriores con la misma semilla.
-  const containers = placeContainers(grid, base, houses, rng);
+  const containers = placeContainers(base, houses, furniture, rng);
 
   // Relaciones (H3b), también después para no cambiar partidas anteriores.
   for (const s of survivors) {

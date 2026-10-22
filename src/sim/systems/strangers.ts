@@ -1,7 +1,6 @@
 // Recién llegados (spec H3b §6 y H3c §3.3): caminan hasta la puerta, esperan y se unen o se van.
 // Cuándo llegan lo decide el narrador (events/strangers.ts).
 import {
-  BED_SLOTS,
   CHAT_EVERY_MAX,
   COLONY_MAX,
   STRANGER_BANDAGE_CHANCE,
@@ -9,6 +8,7 @@ import {
   STRANGER_NEED_MAX,
   STRANGER_NEED_MIN,
 } from '../balance';
+import { baseLayout } from '../base';
 import { freeFloor } from '../build';
 import { contains } from '../geom';
 import { emptyInventory } from '../items';
@@ -155,7 +155,6 @@ export function acceptStrangers(w: World): void {
     leaveStrangers(w);
     return;
   }
-  const r = w.base.rect;
   for (const s of st.survivors) {
     s.action = { type: 'idle', ticksLeft: 0 };
     s.path = [];
@@ -163,9 +162,7 @@ export function acceptStrangers(w: World): void {
     s.nextChatAt = w.tick + nextInt(w.rng, 0, CHAT_EVERY_MAX);
     // Primero una cama construida que esté libre (H4a); si no, uno de los sitios de serie.
     const spare = w.beds.find((b) => b.ownerId === null);
-    const free = BED_SLOTS.map((b) => ({ x: r.x + b.dx, y: r.y + b.dy })).find((p) =>
-      freeFloor(w, p),
-    );
+    const free = baseLayout(w.base).beds.find((p) => freeFloor(w, p));
     if (spare) {
       spare.ownerId = s.id;
       s.bedId = spare.id;

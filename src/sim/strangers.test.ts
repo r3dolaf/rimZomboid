@@ -1,6 +1,7 @@
 // Recién llegados (H3b §6, H3c §3.3): el narrador los trae y el jugador decide.
 import { expect, test } from 'vitest';
-import { BED_SLOTS, COLONY_MAX, TICKS_PER_DAY } from './balance';
+import { COLONY_MAX, TICKS_PER_DAY } from './balance';
+import { baseLayout } from './base';
 import { strangersEvent } from './events/strangers';
 import { checkInvariants } from './invariants';
 import { getTile } from './map/grid';
@@ -133,12 +134,12 @@ test('Aceptar (opción 0): todos pasan a la colonia con cama mientras quede', ()
   step(w);
   expect(w.stranger).toBeNull();
   expect(w.decisions).toEqual([]);
-  const r = w.base.rect;
+  const slots = baseLayout(w.base).beds;
   ids.forEach((id, i) => {
     const s = w.survivors.find((x) => x.id === id)!;
     expect(s.work.loot).toBe(!s.traits.includes('coward'));
     const bed = w.beds.find((b) => b.id === s.bedId)!;
-    expect(bed.pos).toEqual({ x: r.x + BED_SLOTS[3 + i]!.dx, y: r.y + BED_SLOTS[3 + i]!.dy });
+    expect(bed.pos).toEqual(slots[3 + i]);
   });
   expect(w.log.at(-1)).toMatchObject({ kind: 'strangerAccepted' });
   expect(checkInvariants(w)).toEqual([]);

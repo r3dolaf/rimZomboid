@@ -126,7 +126,12 @@ export function addSurvivor(w: World, t: Point, name = 'Bea'): Survivor {
 export function encloseTile(w: World, t: Point): void {
   for (let dy = -1; dy <= 1; dy++)
     for (let dx = -1; dx <= 1; dx++)
-      if (dx !== 0 || dy !== 0) setTile(w.grid, t.x + dx, t.y + dy, Tile.Wall);
+      if (dx !== 0 || dy !== 0) {
+        setTile(w.grid, t.x + dx, t.y + dy, Tile.Wall);
+        // Si era una ventana, sus cortinas se van con ella (H4d).
+        const i = (t.y + dy) * w.grid.width + t.x + dx;
+        w.curtains = w.curtains.filter((c) => c !== i);
+      }
 }
 
 /** Sin zombis ni llegadas: para los tests de lo que no tiene que ver con ellos (antes de H4b). */

@@ -190,6 +190,11 @@ export const BED_SLOTS: readonly { dx: number; dy: number }[] = [
   { dx: 2, dy: 3 },
   { dx: 9, dy: 3 },
 ];
+/** El almacén: 2 casillas junto a la puerta (medidas como las camas, con la puerta abajo). */
+export const STORAGE_SLOTS: readonly { dx: number; dy: number }[] = [
+  { dx: 7, dy: 8 },
+  { dx: 8, dy: 8 },
+];
 export const COLONY_MAX = 8;
 export const STRANGER_FIRST_TICK = 3 * TICKS_PER_DAY;
 export const STRANGER_PAIR_CHANCE = 0.25;

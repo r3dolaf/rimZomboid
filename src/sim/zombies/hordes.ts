@@ -1,13 +1,15 @@
 // Las hordas del narrador (spec H4e §2): la llegada del asedio, su empeño en la base y su fin; los
 // errantes que cruzan el mapa. Las posiciones, con `zombieRng`, para no cambiar el resto.
 import {
-  BORED_TICKS,
   HORDE_LEG,
+  HORDE_LEG_SNAP,
   HORDE_SPAWN_DEPTH,
   HORDE_SPAWN_SPREAD,
+  SIEGE_GIVE_UP_HOURS,
   SIEGE_HOURS,
   SIEGE_SIZE,
   TICKS_PER_HOUR,
+  WANDERERS_EXIT_RANGE,
   WANDERERS_SIGHT_TICKS,
   WANDERERS_SIZE,
   ZOMBIE_LEVEL_MULT,
@@ -20,7 +22,7 @@ import { isZombieWalkable } from '../map/grid';
 import { nextInt } from '../rng';
 import type { Horde, MapSide, Point, World, Zombie } from '../types';
 import { tileOf } from '../world';
-import { newZombie } from './spawn';
+import { indoors, newZombie } from './spawn';
 
 /** ¿Hay un asedio en marcha (llegado y sin terminar)? */
 export function siegeActive(w: World): boolean {
@@ -107,8 +109,10 @@ function spawnHorde(
 
 /** Llega el asedio anunciado: por su lado, hacia la base, empeñado en ella un día. */
 function siegeArrives(w: World, side: MapSide, size: number): void {
-  const { horde, at } = spawnHorde(w, 'siege', side, size, hordeCenter(w, side), w.base.door);
+  const center = hordeCenter(w, side);
+  const { horde, at } = spawnHorde(w, 'siege', side, size, center, w.base.door);
   horde.until = w.tick + SIEGE_HOURS * TICKS_PER_HOUR;
+  horde.from = { side, center };
   logEvent(w, { kind: 'siegeArrived', x: at.x, y: at.y });
 }
 
@@ -132,7 +136,8 @@ export function spawnWanderers(w: World, side: MapSide, size: number): Horde {
 
 /**
  * Punto intermedio hacia `goal` (spec H4e §2.2, tramos): a HORDE_LEG casillas como mucho en línea
- * recta, en la casilla que se pisa más cercana (a 3 o menos); si no la hay, `goal`.
+ * recta, en la casilla de fuera (que se pisa y no está en un edificio: así no van rompiendo casas)
+ * más cercana, a HORDE_LEG_SNAP o menos; si no la hay, `goal`.
  */
 export function legToward(w: World, from: Point, goal: Point): Point {
   const dx = goal.x - from.x;
@@ -141,10 +146,11 @@ export function legToward(w: World, from: Point, goal: Point): Point {
   if (d <= HORDE_LEG) return goal;
   const cx = Math.round(from.x + (dx / d) * HORDE_LEG);
   const cy = Math.round(from.y + (dy / d) * HORDE_LEG);
-  for (let r = 0; r <= 3; r++)
+  const outside = (x: number, y: number) => isZombieWalkable(w.grid, x, y) && !indoors(w, x, y);
+  for (let r = 0; r <= HORDE_LEG_SNAP; r++)
     for (let j = -r; j <= r; j++)
       for (let i = -r; i <= r; i++)
-        if (Math.max(Math.abs(i), Math.abs(j)) === r && isZombieWalkable(w.grid, cx + i, cy + j))
+        if (Math.max(Math.abs(i), Math.abs(j)) === r && outside(cx + i, cy + j))
           return { x: cx + i, y: cy + j };
   return goal;
 }
@@ -156,17 +162,39 @@ export function activeHorde(w: World, z: Zombie): Horde | null {
   return h && !h.done ? h : null;
 }
 
-/** Termina un asedio: sus zombis vuelven a ser normales, aburridos (se irán lejos al vagar). */
+/**
+ * Termina un asedio: la horda se va por donde vino, como unos errantes (revisión de H4e: si se
+ * quedaban rondando la base, derribaban otra vez a quien se levantaba). El que persigue a alguien
+ * sigue con lo suyo y, cuando lo pierde, se va con los demás.
+ */
 function endSiege(w: World, h: Horde, mine: Zombie[]): void {
-  h.done = true;
+  h.kind = 'wander';
+  h.goal = h.from ? backTo(w, h.from) : { ...h.goal };
+  h.seen = true; // no es una horda errante nueva: sin aviso
+  delete h.until;
+  delete h.allDownSince;
   for (const z of mine) {
-    z.lastSeenAt = w.tick - BORED_TICKS - 1;
     if (z.state === 'chase') continue;
-    z.state = 'wander';
-    z.goal = null;
+    z.state = 'alert';
+    z.goal = { ...h.goal };
     z.path = [];
-    z.waitUntil = w.tick;
+    z.lastSeenAt = w.tick;
   }
+}
+
+/** Una casilla que se pisa del borde de `from`, cerca de por donde llegó la horda. */
+function backTo(w: World, from: { side: MapSide; center: number }): Point {
+  const spread = spreadOf(w, from.side);
+  for (let k = 0; k < 30; k++) {
+    const t = edgeTile(
+      w,
+      from.side,
+      from.center + nextInt(w.zombieRng, -spread, spread),
+      nextInt(w.zombieRng, 0, HORDE_SPAWN_DEPTH),
+    );
+    if (isZombieWalkable(w.grid, t.x, t.y)) return t;
+  }
+  return edgeTile(w, from.side, from.center, 0);
 }
 
 /** Cada tick, antes de las llegadas por los bordes: llega el asedio anunciado si es su hora. */
@@ -183,15 +211,24 @@ export function hordeSystem(w: World): void {
       if (mine.length === 0) {
         h.done = true;
         logEvent(w, { kind: 'siegeRepelled' });
-      } else if (w.tick >= h.until!) {
+        continue;
+      }
+      // Sin nadie en pie un rato, se cansa (si no, se levantaban entre ellos y volvían a caer).
+      if (w.survivors.some((s) => s.action.type !== 'downed')) delete h.allDownSince;
+      else h.allDownSince ??= w.tick;
+      const tired =
+        h.allDownSince !== undefined &&
+        w.tick - h.allDownSince >= SIEGE_GIVE_UP_HOURS * TICKS_PER_HOUR;
+      if (tired || w.tick >= h.until!) {
         endSiege(w, h, mine);
         logEvent(w, { kind: 'siegeEnded' });
       }
       continue;
     }
     // Errantes: los que llegan a su destino salen del mapa.
+    const r2 = WANDERERS_EXIT_RANGE * WANDERERS_EXIT_RANGE;
     const out = new Set(
-      mine.filter((z) => (z.pos.x - h.goal.x - 0.5) ** 2 + (z.pos.y - h.goal.y - 0.5) ** 2 <= 2.25),
+      mine.filter((z) => (z.pos.x - h.goal.x - 0.5) ** 2 + (z.pos.y - h.goal.y - 0.5) ** 2 <= r2),
     );
     if (out.size > 0) {
       w.zombies = w.zombies.filter((z) => !out.has(z));

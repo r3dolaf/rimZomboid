@@ -59,9 +59,11 @@ Llegan las crisis grandes y, con ellas, las herramientas para manejarlas. El nar
   - van alertados hacia la base;
   - la horda dura hasta `until = llegada + 1 día`;
   - registro y aviso rojo que pausa: "¡La horda ha llegado!" (al pulsarlo, la cámara va al punto central).
-- **Empeñados en la base** (mientras `tick < until`): un zombi del asedio que no persigue a nadie no vaga ni se aburre: va a una casilla al azar del suelo de la base (rompiendo lo que haga falta). Si llega, elige otra. Se acercan por **tramos** de hasta 25 casillas hacia su destino (así cada búsqueda de camino es corta).
+- **Empeñados en la base** (mientras `tick < until`): un zombi del asedio que no persigue a nadie no vaga ni se aburre: va a una casilla al azar del suelo de la base (rompiendo lo que haga falta). Si llega, elige otra. Se acercan por **tramos** de hasta 25 casillas hacia su destino (así cada búsqueda de camino es corta); cada tramo acaba fuera de los edificios, para no ir rompiendo casas por el pueblo.
 - **Fin:**
-  - al llegar `until`, la horda termina: sus zombis vuelven a ser normales y "aburridos" (`lastSeenAt` lo bastante atrás para que su siguiente paseo sea largo) y se dispersan. Registro y aviso: "La horda se dispersa" (no pausa);
+  - al llegar `until`, la horda termina. Registro y aviso: "La horda se dispersa" (no pausa);
+  - también termina así si pasan **2 h sin ningún colono en pie** (`SIEGE_GIVE_UP_HOURS`; se añadió en la revisión final: sin defensas, los colonos se levantaban entre los zombis y volvían a caer una y otra vez);
+  - al terminar, la horda **se va por donde vino**: pasa a comportarse como unos errantes, con destino en un punto de su borde de llegada, y sus zombis salen del mapa al llegar (también se añadió en la revisión: si se quedaban rondando la base, seguían derribando a quien se levantaba). No hay aviso de horda errante;
   - si antes se matan todos los zombis del asedio, la horda termina con aviso verde: "Habéis resistido el asedio".
 - **Mientras dura el asedio no llegan zombis sueltos** por los bordes (el reloj de llegadas sigue corriendo).
 - **Mientras haya asedio anunciado o en marcha, no llegan desconocidos.**
@@ -132,6 +134,7 @@ Llegan las crisis grandes y, con ellas, las herramientas para manejarlas. El nar
 - **Si aparecen zombis por el camino:** si le toca pelear, lo suelta en el suelo donde está y pelea; si le toca huir, sigue cargándolo (ya va a la base).
 - **Si lo derriban a él o deja de llevarlo por cualquier otra razón**, el derribado queda en el suelo donde iba.
 - **En cama**, el derribado se levanta a la hora de siempre, pero con **40** de Salud (`GET_UP_HEALTH_BED`) en vez de 15.
+- **Levantarse** (cambio de la revisión final, para todos los derribados): pasadas las 8 h, si tiene un zombi a 3 casillas o menos (`GET_UP_CLEAR_RANGE`) sigue en el suelo, hasta las 16 h como mucho (`DOWNED_HARD_MAX_TICKS`). Antes se levantaba a las 8 h aunque lo tuviera encima, y volvía a caer al momento.
 
 ### 4.3 Vendar
 
@@ -144,7 +147,7 @@ Llegan las crisis grandes y, con ellas, las herramientas para manejarlas. El nar
 
 - Los zombis ven, persiguen y golpean a los desconocidos (`w.stranger.survivors`) como a los colonos (no a los derribados).
 - **Los desconocidos se defienden como un colono con Decidir** (su postura no cuenta): si pueden con los zombis que ven, pelean (`melee`, con lo que lleven en la mano); si no, **huyen todos juntos**: su decisión se quita, se registra "Los desconocidos han huido" (aviso, no pausa) y se van corriendo al extremo de carretera más cercano, como al rechazarlos. Al llegar, desaparecen.
-- **Derribados:** como los colonos: caen a 0 de Salud, se levantan a las 4 h (o hasta 8 h si ven zombis). Registro "Un desconocido ha caído: X" (sin aviso).
+- **Derribados:** como los colonos: caen a 0 de Salud, se levantan a las 4 h (o hasta 8 h si ven zombis; ver §4.2). Registro "Un desconocido ha caído: X" (sin aviso).
   - Si se les acepta en el suelo, entran en la colonia derribados (y Sanar puede rescatarlos).
   - Si se les rechaza o caduca su decisión mientras están en el suelo, se van al levantarse; los demás esperan a que se levante.
 - Lo que aprenden peleando no se registra ni avisa (no son de la colonia), y sus muertes de zombi tampoco.

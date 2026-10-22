@@ -1,7 +1,7 @@
 // Partida larga sin pantalla: solo IA, a toda velocidad. Comprueba que nada se rompe.
 // Las de antes de H4b, sin zombis (prueban lo suyo); las de H4b, al final, con zombis.
 import { describe, expect, test } from 'vitest';
-import { TICKS_PER_DAY } from '../src/sim/balance';
+import { TICKS_PER_DAY, TICKS_PER_HOUR } from '../src/sim/balance';
 import { checkInvariants } from '../src/sim/invariants';
 import { step } from '../src/sim/step';
 import { isEmpty } from '../src/sim/items';
@@ -488,6 +488,42 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
     if (DAYS >= 10) expect(levels(w), 'las habilidades han subido').toBeGreaterThan(levelsAtStart);
   }, 600_000);
 });
+
+test.each([1, 2, 3])(
+  'semilla %i: un asedio de 25 a la hora de empezar, sin defender — nadie se pasa un día en el suelo ni cae sin parar',
+  (seed) => {
+    const w = createWorld(seed, 'balanced', 'normal');
+    for (const h of w.houses) issue(w, { type: 'designateHouse', houseId: h.id, on: true });
+    w.siege = { at: TICKS_PER_DAY / 24, side: (seed % 4) as 0 | 1 | 2 | 3, size: 25 };
+    const downs = new Map<number, number>();
+    const streak = new Map<number, number>();
+    const downTicks = new Map<number, number>();
+    let arrived = false;
+    for (let i = 0; i < 2 * TICKS_PER_DAY; i++) {
+      const last = w.log.at(-1);
+      step(w);
+      const problems = checkInvariants(w);
+      if (problems.length > 0) expect(problems, `tick ${w.tick}`).toEqual([]);
+      for (const e of w.log.slice(last ? w.log.lastIndexOf(last) + 1 : 0)) {
+        if (e.kind === 'downed') downs.set(e.survivorId, (downs.get(e.survivorId) ?? 0) + 1);
+        if (e.kind === 'siegeArrived') arrived = true;
+      }
+      for (const s of w.survivors) {
+        const n = s.action.type === 'downed' ? (streak.get(s.id) ?? 0) + 1 : 0;
+        streak.set(s.id, n);
+        if (n > 0) downTicks.set(s.id, (downTicks.get(s.id) ?? 0) + 1);
+        expect(n, `${s.name}, un día entero en el suelo`).toBeLessThan(TICKS_PER_DAY);
+      }
+    }
+    expect(arrived, 'ha llegado el asedio').toBe(true);
+    // Antes de la revisión de H4e caían 4–7 veces cada uno y pasaban 35–43 de las 48 h en el
+    // suelo: se levantaban entre los zombis, que luego se quedaban rondando la base.
+    for (const [id, n] of downs) expect(n, `#${id} ha caído ${n} veces`).toBeLessThanOrEqual(4);
+    for (const [id, t] of downTicks)
+      expect(t / TICKS_PER_HOUR, `#${id}, horas en el suelo`).toBeLessThan(30);
+  },
+  300_000,
+);
 
 test('con zombis se pelea, alguien cae, algo se rompe, se fabrica y se registran cuerpos', () => {
   if (DAYS < 10) return;

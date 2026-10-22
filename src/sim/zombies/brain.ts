@@ -71,11 +71,12 @@ const same = (a: Point | null, b: Point) => a !== null && a.x === b.x && a.y ===
 
 /**
  * Camino hacia `goal` (rompiendo lo que haga falta); si no hay, un paso en línea recta. Los de una
- * horda (H4e), por tramos: así las búsquedas de camino son cortas aunque vengan de lejos.
+ * horda (H4e; también al volverse cuando termina), por tramos: así las búsquedas de camino son
+ * cortas aunque vengan de lejos.
  */
 function planTo(w: World, z: Zombie, goal: Point): void {
   const at = tileOf(z.pos);
-  const target = activeHorde(w, z) ? legToward(w, at, goal) : goal;
+  const target = z.hordeId !== null ? legToward(w, at, goal) : goal;
   z.path = zombiePath(w, at, target) ?? stepToward(w, z, target);
 }
 

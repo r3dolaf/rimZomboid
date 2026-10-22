@@ -1,8 +1,10 @@
 // Salud y derribos (spec H4b §5).
 import {
+  DOWNED_HARD_MAX_TICKS,
   DOWNED_MAX_TICKS,
   DOWNED_TICKS,
   GET_UP_HEALTH,
+  GET_UP_CLEAR_RANGE,
   GET_UP_HEALTH_BED,
   HEALTH_PER_HOUR,
   TICKS_PER_HOUR,
@@ -36,9 +38,16 @@ function healthOf(w: World, s: Survivor, colonist: boolean): void {
   const a = s.action;
   if (a.type === 'downed') {
     // A las 4 h se levanta, pero no si ve zombis cerca: se queda quieto hasta que se van (o
-    // hasta las 8 h, que si no podía quedarse ahí para siempre).
-    const limit = a.until - DOWNED_TICKS + DOWNED_MAX_TICKS;
-    if (w.tick < a.until || (w.tick < limit && zombieInSight(w, s, ZOMBIE_VISION))) return;
+    // hasta las 8 h, que si no podía quedarse ahí para siempre). Pasadas las 8 h, si tiene uno
+    // encima, tampoco (H4e: en un asedio volvía a caer al momento), pero no más de 16 h.
+    const since = w.tick - (a.until - DOWNED_TICKS);
+    const range =
+      since < DOWNED_MAX_TICKS
+        ? ZOMBIE_VISION
+        : since < DOWNED_HARD_MAX_TICKS
+          ? GET_UP_CLEAR_RANGE
+          : 0;
+    if (w.tick < a.until || (range > 0 && zombieInSight(w, s, range))) return;
     s.health = a.inBed ? GET_UP_HEALTH_BED : GET_UP_HEALTH; // en cama, mejor (H4e)
     s.action = { type: 'idle', ticksLeft: 0 };
     if (!colonist) return;

@@ -307,6 +307,10 @@ export interface Horde {
   done: boolean;
   /** Errantes: ya se ha avisado de que se han visto. */
   seen?: boolean;
+  /** Asedio: desde cuándo no queda ningún colono en pie (se cansa a las SIEGE_GIVE_UP_HOURS). */
+  allDownSince?: number;
+  /** Asedio: por dónde llegó (el lado y el punto a lo largo de él), para volverse por ahí. */
+  from?: { side: MapSide; center: number };
 }
 
 /** Trabajos, en orden de criticidad (spec H4a §3.1; Sanar, de H4e, el primero). */

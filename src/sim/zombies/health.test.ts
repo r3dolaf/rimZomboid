@@ -1,6 +1,7 @@
 // H4b §5: la Salud se recupera, "Herido", derribos y levantarse.
 import { expect, test } from 'vitest';
 import {
+  DOWNED_HARD_MAX_TICKS,
   DOWNED_MAX_TICKS,
   DOWNED_TICKS,
   GET_UP_HEALTH,
@@ -130,7 +131,7 @@ test('en el suelo (o peleando con zombis) nadie le consuela ni le habla: sigue e
   expect(needsConsoling(t, w)).toBe(false);
 });
 
-test('para levantarse solo cuentan los zombis que ve; y con uno al lado, a las 8 h se levanta igual', () => {
+test('para levantarse solo cuentan los zombis que ve; con uno al lado, ni a las 8 h (H4e: hasta las 16)', () => {
   const w = emptyWorld(30, 30);
   const s = w.survivors[0]!;
   s.pos = { x: 5.5, y: 5.5 };
@@ -144,10 +145,10 @@ test('para levantarse solo cuentan los zombis que ve; y con uno al lado, a las 8
 
   hurtSurvivor(w, s, 100);
   z.pos = { x: 6.5, y: 5.5 }; // al lado
-  w.tick += DOWNED_MAX_TICKS - 1;
+  w.tick += DOWNED_MAX_TICKS;
   healthSystem(w);
-  expect(s.action.type).toBe('downed');
-  w.tick++;
+  expect(s.action.type).toBe('downed'); // H4e: si se levantara con él al lado, volvería a caer
+  w.tick += DOWNED_HARD_MAX_TICKS - DOWNED_MAX_TICKS;
   healthSystem(w);
   expect(s.action.type).toBe('idle');
   expect(DOWNED_MAX_TICKS).toBe(8 * TICKS_PER_HOUR);

@@ -2,6 +2,10 @@
 import { expect, test } from 'vitest';
 import {
   BORED_TICKS,
+  DOWNED_HARD_MAX_TICKS,
+  DOWNED_MAX_TICKS,
+  GET_UP_CLEAR_RANGE,
+  SIEGE_GIVE_UP_HOURS,
   HORDE_LEG,
   SIEGE_COOLDOWN_DAYS,
   SIEGE_HOURS,
@@ -16,15 +20,23 @@ import { siegeEvent } from '../events/siege';
 import { strangersEvent } from '../events/strangers';
 import { wanderersEvent } from '../events/wanderers';
 import { contains } from '../geom';
+import { healthSystem, hurtSurvivor } from '../health';
 import { checkInvariants } from '../invariants';
 import { createRng } from '../rng';
 import { chooseEvent } from '../narrator';
-import { addBase, emptyWorld, withoutZombies } from '../testing/fixtures';
+import { addBase, emptyWorld, encloseTile, withoutZombies } from '../testing/fixtures';
 import { setTile } from '../map/grid';
 import { Tile, type World } from '../types';
 import { tileOf } from '../world';
 import { thinkZombie } from './brain';
-import { hordeSystem, siegeActive, siegeSize, spawnWanderers, wanderersSize } from './hordes';
+import {
+  hordeSystem,
+  legToward,
+  siegeActive,
+  siegeSize,
+  spawnWanderers,
+  wanderersSize,
+} from './hordes';
 import { arrivalsSystem, newZombie } from './spawn';
 import { zombieSystem } from './system';
 
@@ -235,36 +247,41 @@ test('tramos: el camino de un zombi de horda acaba a 25 casillas o menos de dond
 
 test('el asedio llega a la base: en 1500 ticks están todos en ella o en sus muros', () => {
   const w = besieged(15);
+  // La colona, encerrada lejos y en pie (si la derribaran, la horda acabaría cansándose).
+  w.survivors[0]!.pos = { x: 77.5, y: 77.5 };
+  encloseTile(w, { x: 77, y: 77 });
   runZ(w, 1500);
   for (const z of w.zombies) expect(fromBase(w, z.pos)).toBeLessThanOrEqual(3);
   expect(checkInvariants(w)).toEqual([]);
 });
 
-test('fin al día: la horda termina, sus zombis se aburren y se dispersan; vuelven las llegadas', () => {
+test('fin al día: la horda se va por donde vino (como unos errantes) y sale del mapa; vuelven las llegadas', () => {
   const w = besieged(8);
   const h = w.hordes[0]!;
+  // Ya en la base, y la colona encerrada lejos (si los viera, irían a por ella).
+  w.survivors[0]!.pos = { x: 77.5, y: 77.5 };
+  encloseTile(w, { x: 77, y: 77 });
+  w.zombies.forEach((z, i) => (z.pos = { x: 37.5 + (i % 6), y: 37.5 + Math.floor(i / 6) }));
   w.tick = h.until!;
   hordeSystem(w);
-  expect(h.done).toBe(true);
   expect(siegeActive(w)).toBe(false);
+  expect(h).toMatchObject({ kind: 'wander', seen: true });
+  expect(h.goal.y).toBeLessThanOrEqual(3); // al borde norte, por donde llegaron
   expect(w.log.at(-1)).toMatchObject({ kind: 'siegeEnded' });
   for (const z of w.zombies) {
-    expect(z.hordeId).toBe(h.id); // se acuerda de su horda
-    expect(w.tick - z.lastSeenAt).toBeGreaterThan(BORED_TICKS);
+    expect(z.hordeId).toBe(h.id);
+    expect(z).toMatchObject({ state: 'alert', goal: h.goal });
   }
   w.nextZombieAt = w.tick;
   const before = w.zombies.length;
   arrivalsSystem(w);
   expect(w.zombies.length).toBe(before + 1);
-  // Al vagar, aburridos: el paseo es largo.
-  const z = w.zombies[0]!;
-  z.state = 'wander';
-  z.goal = null;
-  z.path = [];
-  z.waitUntil = 0;
-  thinkZombie(w, z);
-  expect(z.state).toBe('wander');
-  expect(siegeActive(w)).toBe(false);
+  w.zombies.pop();
+  runZ(w, 3000);
+  expect(w.zombies.filter((z) => z.hordeId === h.id)).toHaveLength(0);
+  expect(w.hordes).toHaveLength(0);
+  expect(w.log.some((e) => e.kind === 'wanderersSighted')).toBe(false);
+  expect(checkInvariants(w)).toEqual([]);
 });
 
 test('fin por matarlos: aviso verde y la horda se borra', () => {
@@ -381,4 +398,75 @@ test('"sin zombis" (para los tests de antes) es también sin hordas del narrador
   w.tick = dayStart(20);
   expect(siegeEvent.canHappen(w)).toBe(true); // por sus requisitos, sí…
   expect(chooseEvent(w, [siegeEvent, wanderersEvent])).toBeNull(); // …pero nunca le toca
+});
+
+// --- Arreglos de la revisión final ---
+
+test('derribado: no se levanta con un zombi a 3 casillas o menos, ni pasadas las 8 h (sí a las 16)', () => {
+  expect([GET_UP_CLEAR_RANGE, DOWNED_HARD_MAX_TICKS]).toEqual([3, 16 * TICKS_PER_HOUR]);
+  const w = world();
+  const s = w.survivors[0]!;
+  s.pos = { x: 60.5, y: 60.5 };
+  hurtSurvivor(w, s, 200);
+  const start = w.tick;
+  const z = newZombie(w, { x: 62, y: 60 });
+  w.zombies.push(z);
+  w.tick = start + DOWNED_MAX_TICKS; // pasadas las 8 h…
+  healthSystem(w);
+  expect(s.action.type).toBe('downed'); // …con uno al lado, sigue en el suelo
+  z.pos = { x: 66.5, y: 60.5 }; // a 6: lo ve, pero ya no está encima
+  healthSystem(w);
+  expect(s.action.type).toBe('idle');
+  hurtSurvivor(w, s, 200);
+  const again = w.tick;
+  z.pos = { x: 61.5, y: 60.5 };
+  w.tick = again + DOWNED_HARD_MAX_TICKS;
+  healthSystem(w);
+  expect(s.action.type).toBe('idle'); // a las 16 h, sí o sí
+});
+
+test('sin nadie en pie durante 2 h, la horda del asedio se cansa y se dispersa', () => {
+  expect(SIEGE_GIVE_UP_HOURS).toBe(2);
+  const w = besieged(5);
+  const s = w.survivors[0]!;
+  hurtSurvivor(w, s, 200);
+  hordeSystem(w);
+  w.tick += SIEGE_GIVE_UP_HOURS * TICKS_PER_HOUR - 1;
+  hordeSystem(w);
+  expect(siegeActive(w)).toBe(true);
+  w.tick += 1;
+  hordeSystem(w);
+  expect(siegeActive(w)).toBe(false);
+  expect(w.log.at(-1)).toMatchObject({ kind: 'siegeEnded' });
+});
+
+test('si alguien se levanta, la cuenta de "nadie en pie" vuelve a empezar', () => {
+  const w = besieged(5);
+  const s = w.survivors[0]!;
+  hurtSurvivor(w, s, 200);
+  hordeSystem(w);
+  w.tick += TICKS_PER_HOUR;
+  s.action = { type: 'idle', ticksLeft: 0 };
+  s.health = 15;
+  hordeSystem(w);
+  hurtSurvivor(w, s, 200);
+  w.tick += TICKS_PER_HOUR + 10;
+  hordeSystem(w);
+  expect(siegeActive(w)).toBe(true);
+});
+
+test('los tramos de las hordas no acaban dentro de un edificio (no van rompiendo casas)', () => {
+  const w = world();
+  // Una nave grande justo en medio del camino, de (10, 20) a (30, 40).
+  const rect = { x: 10, y: 20, w: 21, h: 21 };
+  for (let y = rect.y; y < rect.y + rect.h; y++)
+    for (let x = rect.x; x < rect.x + rect.w; x++) {
+      const edge =
+        x === rect.x || y === rect.y || x === rect.x + rect.w - 1 || y === rect.y + rect.h - 1;
+      setTile(w.grid, x, y, edge ? Tile.Wall : Tile.Floor);
+    }
+  w.houses = [{ id: 7, kind: 'warehouse', rect, door: { x: 20, y: 40 } }];
+  const leg = legToward(w, { x: 20, y: 2 }, { x: 20, y: 70 }); // a 25: (20, 27), dentro
+  expect(contains(rect, leg)).toBe(false);
+  expect(Math.hypot(leg.x - 20, leg.y - 2)).toBeLessThanOrEqual(HORDE_LEG + 10);
 });

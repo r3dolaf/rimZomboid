@@ -61,7 +61,7 @@ function fromBase(w: World, x: number, y: number): number {
 }
 
 /** ¿Está dentro de un edificio (o de la base)? */
-function indoors(w: World, x: number, y: number): boolean {
+export function indoors(w: World, x: number, y: number): boolean {
   return w.houses.some((h) => contains(h.rect, { x, y })) || contains(w.base.rect, { x, y });
 }
 

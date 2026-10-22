@@ -418,6 +418,8 @@ export const SIEGE_FIRST_DAY = 6;
 export const SIEGE_COOLDOWN_DAYS = 6;
 export const SIEGE_WARNING_HOURS = [48, 72] as const;
 export const SIEGE_HOURS = 24;
+/** Sin ningún colono en pie este tiempo, la horda del asedio se cansa y se dispersa. */
+export const SIEGE_GIVE_UP_HOURS = 2;
 /** Tamaño del asedio según el narrador (más 1 cada 2 días, y por la opción de la portada). */
 export const SIEGE_SIZE = {
   calm: [10, 15],
@@ -433,6 +435,10 @@ export const HORDE_SPAWN_SPREAD = 12;
 export const HORDE_SPAWN_DEPTH = 3;
 /** Tramo de cada búsqueda de camino de un zombi de horda hacia su destino. */
 export const HORDE_LEG = 25;
+/** Hasta dónde se busca, alrededor del final de un tramo, una casilla de fuera (no en un edificio). */
+export const HORDE_LEG_SNAP = 10;
+/** A esta distancia de su destino, un errante sale del mapa. */
+export const WANDERERS_EXIT_RANGE = 1.5;
 /** Cada cuánto se mira si algún colono ve a los errantes (para el aviso). */
 export const WANDERERS_SIGHT_TICKS = 10;
 export const ZOMBIE_HEALTH = 60;
@@ -485,6 +491,10 @@ export const WANDER_PAUSE_MAX = 80;
 export const WANDER_PATH_BUDGET = 1500;
 export const DOWNED_TICKS = 4 * TICKS_PER_HOUR;
 export const DOWNED_MAX_TICKS = 8 * TICKS_PER_HOUR; // con zombis a la vista espera, pero no más de esto
+/** H4e: pasadas esas 8 h, sigue en el suelo mientras tenga un zombi a esta distancia (si no, al
+ * levantarse con 15 de Salud volvía a caer al momento), pero no más de DOWNED_HARD_MAX_TICKS. */
+export const GET_UP_CLEAR_RANGE = 3;
+export const DOWNED_HARD_MAX_TICKS = 16 * TICKS_PER_HOUR;
 /** Salud que se recupera por hora (spec H4b §5). */
 export const HEALTH_PER_HOUR = { awake: 1, floor: 4, bed: 6 } as const;
 export const GET_UP_HEALTH = 15; // al levantarse tras un derribo
@@ -493,6 +503,8 @@ export const GET_UP_HEALTH_BED = 40; // H4e: si lo han dejado en una cama
 export const RESCUE_SAFE_RANGE = 8;
 /** Con alguien en brazos se anda a esta parte de la velocidad. */
 export const CARRY_SPEED = 0.6;
+/** Casillas de centro a centro para coger al derribado. */
+export const RESCUE_REACH = 1.5;
 /** Vendar (H4e §4.3): a quién, cuánto tarda y cuánto cura (más por nivel de Sanar) y dura. */
 export const BANDAGE_BELOW = 50;
 export const BANDAGE_TICKS = 0.5 * TICKS_PER_HOUR;

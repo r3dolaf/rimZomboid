@@ -166,7 +166,7 @@ export const es = {
   // Modo combate (H4e)
   draftButton: '⚔️ Combate',
   draftHint: 'Modo combate (R): solo obedece; clic derecho para ir, atacar a un zombi o rescatar',
-  groupTitle: (n: number) => `${n} elegidos`,
+  groupTitle: (n: number) => `Grupo de ${n}`,
   // Cuenta atrás del asedio (H4e)
   siegeIn: (days: number, hours: number) =>
     days > 0 ? `Horda en ${days} d ${hours} h` : `Horda en ${hours} h`,

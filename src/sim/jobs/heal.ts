@@ -7,6 +7,7 @@ import {
   BANDAGE_PER_LEVEL,
   BANDAGE_RANGE,
   BANDAGE_TICKS,
+  RESCUE_REACH,
   RESCUE_SAFE_RANGE,
   TICKS_PER_HOUR,
 } from '../balance';
@@ -216,7 +217,7 @@ export function startHealActivity(
   const d = w.survivors.find((x) => x.id === activity.downedId);
   if (activity.type === 'rescue') {
     if (!d || d.action.type !== 'downed' || !rescuable(w, d, s)) return idle;
-    if ((d.pos.x - s.pos.x) ** 2 + (d.pos.y - s.pos.y) ** 2 > 2.25) return idle;
+    if ((d.pos.x - s.pos.x) ** 2 + (d.pos.y - s.pos.y) ** 2 > RESCUE_REACH ** 2) return idle;
     const spot = rescueSpot(w, d);
     if (spot === null) return idle;
     const target = spot === 'floor' ? pick(w.rng, baseFloor(w)) : spot;

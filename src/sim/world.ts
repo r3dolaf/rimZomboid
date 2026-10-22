@@ -56,7 +56,7 @@ export function createWorld(
   zombieLevel: ZombieLevel = 'normal',
 ): World {
   const rng = createRng(seed);
-  const { grid, base, houses } = generateMap(rng);
+  const { grid, base, houses, town } = generateMap(rng);
 
   const floor: Point[] = [];
   for (let y = base.rect.y; y < base.rect.y + base.rect.h; y++)
@@ -187,6 +187,7 @@ export function createWorld(
     bills: [],
     nextBillId: 1,
     weaponLog: { fromCorpses: 0, rotted: 0 },
+    town,
   };
   // Zombis (H4b), con su propio azar: no cambian nada de lo anterior.
   placeStartZombies(world);

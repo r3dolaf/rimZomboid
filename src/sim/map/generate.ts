@@ -9,6 +9,8 @@ export interface GeneratedMap {
   grid: Grid;
   base: Building;
   houses: Building[];
+  /** Dónde está el pueblo (H4f). */
+  town: Rect;
 }
 
 type Side = 'top' | 'bottom' | 'left' | 'right';
@@ -37,10 +39,10 @@ export function generateMap(rng: RngState): GeneratedMap {
 function tryGenerate(rng: RngState): GeneratedMap {
   const grid = createGrid(MAP_SIZE, MAP_SIZE, Tile.Grass);
   placeRoads(grid);
-  const base = placeBuilding(grid, rng, 0, BASE_RECT, 'bottom');
+  const base = { ...placeBuilding(grid, rng, 0, BASE_RECT, 'bottom'), kind: 'base' as const };
   const houses = placeHouses(grid, rng, base);
   placeTrees(grid, rng, [base, ...houses]);
-  return { grid, base, houses };
+  return { grid, base, houses, town: { x: 0, y: 0, w: MAP_SIZE, h: MAP_SIZE } };
 }
 
 function placeRoads(grid: Grid): void {
@@ -68,7 +70,10 @@ function placeHouses(grid: Grid, rng: RngState, base: Building): Building[] {
     if (intersects(zone, ROAD_H) || intersects(zone, ROAD_V)) continue;
     if (taken.some((t) => intersects(zone, t))) continue;
     taken.push(rect);
-    houses.push(placeBuilding(grid, rng, houses.length + 1, rect, sideFacingRoad(rect)));
+    houses.push({
+      ...placeBuilding(grid, rng, houses.length + 1, rect, sideFacingRoad(rect)),
+      kind: 'house',
+    });
   }
   return houses;
 }
@@ -98,7 +103,13 @@ function doorOn(r: Rect, side: Side): Point {
   }
 }
 
-function placeBuilding(grid: Grid, rng: RngState, id: number, r: Rect, side: Side): Building {
+function placeBuilding(
+  grid: Grid,
+  rng: RngState,
+  id: number,
+  r: Rect,
+  side: Side,
+): Omit<Building, 'kind'> {
   const x1 = r.x + r.w - 1;
   const y1 = r.y + r.h - 1;
   for (let y = r.y; y <= y1; y++)

@@ -33,6 +33,11 @@ export const CONTAINER_COLORS = {
   wardrobe: 0x6b4a2e,
   shelf: 0x9a7b4f,
   corpse: 0x3b4436, // H4d: cuerpo de zombi
+  // H4f
+  counter: 0x8a7a68,
+  locker: 0x5f6b78,
+  crate: 0xa3824f,
+  medicine: 0xe6eef0,
 } as const;
 export const CONTAINER_EDGE = 0x1a1a1a;
 export const DESIGNATION = 0xe08a2c;

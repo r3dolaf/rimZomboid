@@ -467,6 +467,10 @@ export const es = {
     wardrobe: 'un armario',
     shelf: 'una estantería',
     corpse: 'un cuerpo',
+    counter: 'un mostrador',
+    locker: 'una taquilla',
+    crate: 'una caja',
+    medicine: 'un botiquín',
   },
   built: {
     bed: 'Se ha construido una cama',

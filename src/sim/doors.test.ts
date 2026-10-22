@@ -43,7 +43,7 @@ function scene(): World {
     for (let x = 6; x <= 10; x++)
       setTile(w.grid, x, y, x === 6 || x === 10 || y === 2 || y === 6 ? Tile.Wall : Tile.Floor);
   setTile(w.grid, 6, 4, Tile.LockedDoor);
-  w.houses = [{ id: 1, rect: { x: 6, y: 2, w: 5, h: 5 }, door: { x: 6, y: 4 } }];
+  w.houses = [{ id: 1, kind: 'house', rect: { x: 6, y: 2, w: 5, h: 5 }, door: { x: 6, y: 4 } }];
   w.containers = [
     {
       id: 7,

@@ -1,5 +1,6 @@
 import {
   BUILD,
+  BUILDINGS,
   CURTAINS_COST,
   OPINION_LIMIT,
   RECIPES,
@@ -11,9 +12,12 @@ import { ITEM_KINDS, weightOf, type Inventory } from './items';
 import { inBounds, isWalkable, isZombieWalkable } from './map/grid';
 import { capacityKg, SKILLS, xpToNext } from './skills';
 import { targetContainerId } from './work';
-import { Tile, type World } from './types';
+import { contains, intersects } from './geom';
+import { Tile, type BuildingKind, type World } from './types';
 import { tileOf } from './world';
 import { zombieMax } from './zombies/spawn';
+
+const BUILDING_KINDS: ReadonlySet<BuildingKind> = new Set(Object.keys(BUILDINGS) as BuildingKind[]);
 
 /** Reglas que nunca deben romperse. Devuelve los problemas encontrados (vacío si todo va bien). */
 export function checkInvariants(w: World): string[] {
@@ -101,6 +105,18 @@ export function checkInvariants(w: World): string[] {
     if (!isWalkable(w.grid, t.x, t.y)) problems.push(`${who}: en una casilla no transitable`);
   }
   checkInventory(problems, 'almacén', w.storage.items);
+  // Edificios (H4f): tipo válido, sin solaparse y cada mueble dentro del suyo.
+  const byId = new Map(w.houses.map((h) => [h.id, h]));
+  w.houses.forEach((h, i) => {
+    if (!BUILDING_KINDS.has(h.kind)) problems.push(`edificio ${h.id}: tipo ${h.kind} no válido`);
+    for (const o of w.houses.slice(i + 1))
+      if (intersects(h.rect, o.rect)) problems.push(`edificios ${h.id} y ${o.id} se solapan`);
+  });
+  for (const c of w.containers) {
+    const home = byId.get(c.houseId);
+    if (c.kind !== 'corpse' && home && !contains(home.rect, c.pos))
+      problems.push(`mueble ${c.id}: fuera de su edificio ${c.houseId}`);
+  }
   for (const c of w.containers) {
     checkInventory(problems, `contenedor ${c.id}`, c.items);
     if (c.kind === 'corpse' && !isWalkable(w.grid, c.pos.x, c.pos.y))

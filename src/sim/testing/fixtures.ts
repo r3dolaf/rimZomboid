@@ -19,7 +19,12 @@ export function withSkills(w: World, level = 5): World {
 /** Mundo de hierba sin edificios, con un superviviente en el centro de la casilla (0, 0). */
 export function emptyWorld(width: number, height: number): World {
   const grid = createGrid(width, height, Tile.Grass);
-  const building = { id: 0, rect: { x: 0, y: 0, w: width, h: height }, door: { x: 0, y: 0 } };
+  const building = {
+    id: 0,
+    kind: 'base' as const,
+    rect: { x: 0, y: 0, w: width, h: height },
+    door: { x: 0, y: 0 },
+  };
   return {
     seed: 1,
     tick: 0,
@@ -88,6 +93,7 @@ export function emptyWorld(width: number, height: number): World {
     bills: [],
     nextBillId: 1,
     weaponLog: { fromCorpses: 0, rotted: 0 },
+    town: { x: 0, y: 0, w: width, h: height },
   };
 }
 

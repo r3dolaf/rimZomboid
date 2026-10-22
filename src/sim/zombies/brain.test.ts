@@ -281,7 +281,7 @@ test('llegadas por los bordes: desde el día 2, al doble de ritmo de noche y sin
 test('los que llegan por un borde van hacia una casa (no hacia la base, que está en el centro)', () => {
   const w = world(40, 40);
   hide(w, w.survivors[0]!);
-  w.houses = [{ id: 1, rect: { x: 4, y: 4, w: 6, h: 6 }, door: { x: 6, y: 9 } }];
+  w.houses = [{ id: 1, kind: 'house', rect: { x: 4, y: 4, w: 6, h: 6 }, door: { x: 6, y: 9 } }];
   for (let i = 0; i < 10; i++) {
     w.nextZombieAt = w.tick;
     run(w, 1);

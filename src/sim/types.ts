@@ -46,8 +46,25 @@ export interface Grid {
 }
 
 /** Un edificio: `rect` incluye los muros; `door` es la casilla de la puerta, en el muro. */
+/** Tipos de edificio (H4f); la base es `base`. */
+export type BuildingKind =
+  | 'base'
+  | 'house'
+  | 'supermarket'
+  | 'pharmacy'
+  | 'hardware'
+  | 'police'
+  | 'clothes'
+  | 'gas'
+  | 'farm'
+  | 'warehouse';
+
+/** Los que se saquean (todos menos la base). */
+export type LootKind = Exclude<BuildingKind, 'base'>;
+
 export interface Building {
   id: number;
+  kind: BuildingKind;
   rect: Rect;
   door: Point;
 }
@@ -327,7 +344,16 @@ export interface Storage {
 }
 
 /** `corpse`: el cuerpo de un zombi (H4d), que se registra como un mueble más. */
-export type ContainerKind = 'fridge' | 'wardrobe' | 'shelf' | 'corpse';
+export type ContainerKind =
+  | 'fridge'
+  | 'wardrobe'
+  | 'shelf'
+  | 'corpse'
+  // H4f
+  | 'counter'
+  | 'locker'
+  | 'crate'
+  | 'medicine';
 
 /** Mueble de una casa con objetos. Transitable: se registra de pie sobre él. */
 export interface Container {
@@ -434,6 +460,8 @@ export interface World {
   nextBillId: number;
   /** Armas que salen de los cuerpos y que se pudren con ellos (para que las cuentas cuadren). */
   weaponLog: { fromCorpses: number; rotted: number };
+  /** Dónde está el pueblo (H4f): para los zombis y, en H5c, para el mapa global. */
+  town: Rect;
 }
 
 /** Recetas de Fabricar (H4d). */

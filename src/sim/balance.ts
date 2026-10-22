@@ -1,6 +1,6 @@
 // Todas las cifras ajustables del juego. Se retocan jugando.
 import type { ItemKind } from './items';
-import { Tile, type BuildKind, type RecipeId } from './types';
+import { Tile, type BuildKind, type LootKind, type RecipeId, type Weapon } from './types';
 
 // Tiempo
 export const TICKS_PER_SECOND = 10;
@@ -484,3 +484,72 @@ export const WAKE_MIN_SLEEP = 5; // rendido de sueño (desplomado), solo le desp
 export const FLED_LOG_TICKS = TICKS_PER_HOUR; // "huye a la base", como mucho una vez por hora y colono
 export const SHELTER_WAIT_TICKS = 10; // en la base, sin sitio adonde ir, espera esto y vuelve a mirar
 export const SIGHTED_NEAR_BASE = 15; // aviso del primer zombi visto a esta distancia de la base
+
+// H4f Pueblo: edificios y su botín.
+
+/** Tamaño (ancho y alto), muebles de saqueo y probabilidad de puerta atrancada (spec H4f §3). */
+export const BUILDINGS: Record<
+  LootKind,
+  { w: [number, number]; h: [number, number]; containers: [number, number]; locked: number }
+> = {
+  house: { w: [8, 12], h: [7, 10], containers: [2, 5], locked: 0.25 },
+  supermarket: { w: [14, 18], h: [12, 16], containers: [12, 20], locked: 0.4 },
+  pharmacy: { w: [8, 10], h: [7, 9], containers: [3, 6], locked: 0.4 },
+  hardware: { w: [10, 14], h: [8, 12], containers: [5, 8], locked: 0.4 },
+  police: { w: [12, 16], h: [10, 14], containers: [5, 8], locked: 0.5 },
+  clothes: { w: [10, 12], h: [8, 10], containers: [5, 8], locked: 0.4 },
+  gas: { w: [8, 8], h: [6, 6], containers: [3, 5], locked: 0.25 },
+  farm: { w: [14, 18], h: [10, 14], containers: [5, 8], locked: 0.15 },
+  warehouse: { w: [16, 22], h: [12, 16], containers: [10, 16], locked: 0.5 },
+};
+
+/** Cuánto de algo: un rango que se sortea, o "a veces uno" con su probabilidad. */
+export type LootAmount = [number, number] | { chance: number };
+
+/** Lo que se reparte (el hilo, en carretes de THREAD_PER_SPOOL usos). */
+export type LootItem = 'food' | 'bandage' | 'wood' | 'cloth' | 'thread' | 'needle' | Weapon;
+
+/** El botín de cada tipo de edificio (spec H4f §4). */
+export const LOOT: Record<LootKind, Partial<Record<LootItem, LootAmount>>> = {
+  house: {
+    food: [2, 5],
+    bandage: [0, 1],
+    wood: [0, 2],
+    cloth: [0, 2],
+    thread: { chance: 0.2 },
+    needle: { chance: 0.05 },
+    knife: { chance: 0.25 },
+    bat: { chance: 0.15 },
+  },
+  supermarket: { food: [40, 60], bandage: [1, 3], knife: [1, 1] },
+  pharmacy: { food: [0, 4], bandage: [12, 18], needle: [1, 1] },
+  hardware: {
+    bandage: [0, 2],
+    wood: [16, 24],
+    thread: [2, 2],
+    needle: [1, 1],
+    axe: [2, 2],
+    crowbar: [2, 2],
+    machete: [1, 1],
+    knife: [1, 1],
+  },
+  police: { food: [2, 6], bandage: [2, 4], bat: [2, 2], crowbar: [1, 1], machete: [1, 1] },
+  clothes: { cloth: [20, 30], thread: [6, 6], needle: [3, 3] },
+  gas: { food: [8, 16], bandage: [0, 2], bat: [1, 1] },
+  farm: {
+    food: [8, 16],
+    bandage: [0, 2],
+    wood: [6, 10],
+    cloth: [1, 3],
+    axe: [1, 1],
+    machete: [1, 1],
+  },
+  warehouse: {
+    food: [2, 6],
+    bandage: [0, 2],
+    wood: [20, 30],
+    cloth: [5, 10],
+    crowbar: [1, 1],
+    axe: [1, 1],
+  },
+};

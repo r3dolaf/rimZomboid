@@ -18,7 +18,8 @@ import { wanderersEvent } from '../events/wanderers';
 import { contains } from '../geom';
 import { checkInvariants } from '../invariants';
 import { createRng } from '../rng';
-import { addBase, emptyWorld } from '../testing/fixtures';
+import { chooseEvent } from '../narrator';
+import { addBase, emptyWorld, withoutZombies } from '../testing/fixtures';
 import { setTile } from '../map/grid';
 import { Tile, type World } from '../types';
 import { tileOf } from '../world';
@@ -373,4 +374,11 @@ test('errantes: aviso (una vez) cuando un colono ve a uno', () => {
   expect(w.hordes[0]!.seen).toBe(true);
   runZ(w, 30);
   expect(w.log.filter((e) => e.kind === 'wanderersSighted')).toHaveLength(1);
+});
+
+test('"sin zombis" (para los tests de antes) es también sin hordas del narrador', () => {
+  const w = withoutZombies(world());
+  w.tick = dayStart(20);
+  expect(siegeEvent.canHappen(w)).toBe(true); // por sus requisitos, sí…
+  expect(chooseEvent(w, [siegeEvent, wanderersEvent])).toBeNull(); // …pero nunca le toca
 });

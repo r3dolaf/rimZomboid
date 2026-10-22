@@ -356,7 +356,39 @@ const ZOMBIE_GAMES: [NarratorStyle, ZombieLevel][] = [
   ['balanced', 'normal'],
   ['chaotic', 'many'],
 ];
-const zombieTotals = { kills: 0, downs: 0, broken: 0, crafted: 0, corpses: 0 };
+const zombieTotals = {
+  kills: 0,
+  downs: 0,
+  broken: 0,
+  crafted: 0,
+  corpses: 0,
+  // H4e
+  sieges: 0,
+  wanderers: 0,
+  healed: 0,
+  strangersFled: 0,
+};
+
+/**
+ * H4e: cada día, a mediodía, el jugador pone a dos en modo combate, los manda a la puerta, ataca
+ * al zombi que vean y, una hora después, lo quita.
+ */
+function drill(w: World, inDay: number): void {
+  const ids = w.survivors.slice(0, 2).map((s) => s.id);
+  const noon = TICKS_PER_DAY / 6; // 12:00 (se empieza a las 8)
+  if (inDay === noon) {
+    issue(w, { type: 'draft', survivorIds: ids, on: true });
+    const d = w.base.door;
+    issue(w, { type: 'draftMove', survivorIds: ids, x: d.x, y: d.y });
+  } else if (inDay === noon + 150) {
+    const z = w.zombies.find((x) =>
+      w.survivors.some((s) => (s.pos.x - x.pos.x) ** 2 + (s.pos.y - x.pos.y) ** 2 < 64),
+    );
+    if (z) issue(w, { type: 'draftAttack', survivorIds: ids, zombieId: z.id });
+  } else if (inDay === noon + 300) {
+    issue(w, { type: 'draft', survivorIds: ids, on: false });
+  }
+}
 
 /**
  * H4d, desde el primer día: una mesa (con su madera), pedidos de vendas (hasta 10), unas cortinas
@@ -411,6 +443,7 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
           issue(w, { type: 'decide', decisionId: d.id, option: nextInt(r, 0, 1) as 0 | 1 });
         const before = new Map(w.survivors.map((s) => [s.id, { ...s.pos }]));
         const last = w.log.at(-1);
+        drill(w, i);
         const t0 = performance.now();
         step(w);
         ms += performance.now() - t0;
@@ -422,6 +455,10 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
           if (e.kind === 'broken') zombieTotals.broken++;
           if (e.kind === 'crafted') zombieTotals.crafted++;
           if (e.kind === 'corpseSearched') zombieTotals.corpses++;
+          if (e.kind === 'siegeArrived') zombieTotals.sieges++;
+          if (e.kind === 'wanderersSighted') zombieTotals.wanderers++;
+          if (e.kind === 'rescued' || e.kind === 'bandaged') zombieTotals.healed++;
+          if (e.kind === 'strangersFled') zombieTotals.strangersFled++;
         }
         for (const s of w.survivors) {
           const b = before.get(s.id);
@@ -459,4 +496,8 @@ test('con zombis se pelea, alguien cae, algo se rompe, se fabrica y se registran
   expect(zombieTotals.broken).toBeGreaterThan(0);
   expect(zombieTotals.crafted, 'fabricado').toBeGreaterThan(0);
   expect(zombieTotals.corpses, 'cuerpos registrados').toBeGreaterThan(0);
+  // H4e: llegan asedios, se rescata o se venda a alguien.
+  expect(zombieTotals.sieges, 'asedios').toBeGreaterThan(0);
+  expect(zombieTotals.healed, 'rescates y vendajes').toBeGreaterThan(0);
+  console.log('H4e, en las 3 partidas con zombis:', zombieTotals);
 });

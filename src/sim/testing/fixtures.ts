@@ -151,10 +151,15 @@ export function encloseTile(w: World, t: Point): void {
       }
 }
 
-/** Sin zombis ni llegadas: para los tests de lo que no tiene que ver con ellos (antes de H4b). */
+/**
+ * Sin zombis, llegadas ni hordas del narrador (H4e): para los tests de lo que no tiene que ver con
+ * ellos (antes de H4b). Las hordas, como si acabaran de salir para siempre.
+ */
 export function withoutZombies(w: World): World {
   w.zombies = [];
   w.nextZombieAt = Number.MAX_SAFE_INTEGER;
+  w.narrator.lastAt.siege = Number.MAX_SAFE_INTEGER;
+  w.narrator.lastAt.wanderers = Number.MAX_SAFE_INTEGER;
   return w;
 }
 

@@ -50,6 +50,7 @@ test('portada: opción Zombis; un zombi junto a un colono se ve en el HUD; postu
       lastSeenAt: 0,
       cooldown: 0,
       waitUntil: 0,
+      hordeId: null, // H4e
     });
   });
   await expect(page.getByTestId('hud-zombies')).toHaveText('Zombis a la vista: 1');

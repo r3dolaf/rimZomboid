@@ -18,6 +18,7 @@ function scene() {
     s.needs.sleep = 100;
     s.needs.mood = 60;
     s.work.loot = false;
+    s.skills.social.level = 10; // consolar siempre funciona (lo que falla, en skillsWork.test)
     for (const o of w.survivors) if (o !== s) s.opinions[o.id] = 0;
   }
   const [t, c, x] = w.survivors as [Survivor, Survivor, Survivor];

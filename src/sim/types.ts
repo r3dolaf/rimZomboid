@@ -111,7 +111,9 @@ export type MemoryId =
   | 'ateAtTable'
   | 'byTheFire'
   // Zombis (H4b)
-  | 'downed';
+  | 'downed'
+  // Habilidades (H4c): tras un consuelo que no funciona, 1 h sin que nadie lo intente (no pesa).
+  | 'notConsoled';
 
 /** Recuerdo con efecto en el ánimo hasta el tick `expiresAt`; `otherId`, con quién fue. */
 export interface Memory {

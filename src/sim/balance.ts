@@ -77,6 +77,7 @@ export const MEMORY_EFFECTS = {
   ateAtTable: { value: 3, hours: 6 },
   byTheFire: { value: 4, hours: 1 },
   downed: { value: -15, hours: 24 },
+  notConsoled: { value: 0, hours: 1 }, // no pesa en el ánimo: solo bloquea consolar
 } as const;
 export const EAT_BELOW = 35;
 export const EAT_RESTORE = 60;
@@ -295,6 +296,12 @@ export const CARRY_BASE_KG = 6; // capacidad con Transportar 0…
 export const CARRY_PER_LEVEL_KG = 0.4; // …y lo que sube por nivel (con 5, los 8 kg de antes)
 export const LOAD_BRAKE_BASE = 0.4; // a plena carga, cuánto frena con Transportar 0…
 export const LOAD_BRAKE_PER_LEVEL = 0.03; // …y lo que baja por nivel (25 % con 5, 10 % con 10)
+export const FIGHT_HIT_BASE = 0.5; // acierto con Pelear 0…
+export const FIGHT_HIT_PER_LEVEL = 0.04; // …y lo que sube por nivel (70 % con 5, como antes)
+export const CONSOLE_OK_BASE = 0.5; // consolar sale bien con Social 0…
+export const CONSOLE_OK_PER_LEVEL = 0.05; // …y lo que sube por nivel (75 % con 5, siempre con 10)
+/** Práctica de Social: por consolar (salga bien o mal) y por charla agradable. */
+export const SOCIAL_XP = { console: 60, chat: 10 } as const;
 /** Aprende rápido / despacio: cuánto cuenta la práctica. */
 export const LEARN_MULT = { fastLearner: 1.5, slowLearner: 0.5 } as const;
 /** Lo que suma o resta cada rasgo a las habilidades al empezar. */
@@ -374,7 +381,7 @@ export const WEAPON_STATS = {
   bat: { damage: 25, ticks: 15 },
   axe: { damage: 40, ticks: 20 },
 } as const;
-export const SURVIVOR_HIT_CHANCE = 0.7;
+
 export const HEAD_HIT_CHANCE = 1 / 6; // de los golpes que aciertan; hacen el doble
 export const SURVIVOR_REACH = 1.5; // casillas de centro a centro para golpear
 // Posturas y peligro (spec H4b §7)

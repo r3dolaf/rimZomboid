@@ -5,6 +5,10 @@ import {
   CARRY_PER_LEVEL_KG,
   BUILD_FAIL_PER_LEVEL,
   CLUMSY_FAIL,
+  CONSOLE_OK_BASE,
+  CONSOLE_OK_PER_LEVEL,
+  FIGHT_HIT_BASE,
+  FIGHT_HIT_PER_LEVEL,
   LEARN_MULT,
   LOAD_BRAKE_BASE,
   LOAD_BRAKE_PER_LEVEL,
@@ -66,6 +70,16 @@ export function capacityKg(s: Survivor): number {
 export function loadFactor(s: Survivor): number {
   const brake = LOAD_BRAKE_BASE - LOAD_BRAKE_PER_LEVEL * s.skills.haul.level;
   return 1 - brake * Math.min(1, weightOf(s.carrying) / capacityKg(s));
+}
+
+/** Acierto de un golpe a un zombi: 50 % con Pelear 0, 70 % con 5, 90 % con 10. */
+export function hitChance(level: number): number {
+  return FIGHT_HIT_BASE + FIGHT_HIT_PER_LEVEL * level;
+}
+
+/** Probabilidad de que consolar salga bien: 50 % con Social 0, 75 % con 5, siempre con 10. */
+export function consoleChance(level: number): number {
+  return Math.min(1, CONSOLE_OK_BASE + CONSOLE_OK_PER_LEVEL * level);
 }
 
 /** Rapidez con ese nivel: ×0,5 con 0, ×1 con 5 (como antes de H4c) y ×1,5 con 10. */

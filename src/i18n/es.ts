@@ -232,6 +232,8 @@ export const es = {
     fled: (who: string) => `${who} huye a la base`,
     buildFailed: (who: string, what: BuildKind, wood: number) =>
       `${who} ha fallado al ${es.buildFail[what]} (−${wood} de madera)`,
+    consoleFailed: (who: string, other: string) =>
+      `${who} ha intentado consolar a ${other}, sin éxito`,
     skillUp: (who: string, skill: string, level: number) =>
       `${who} ha mejorado en ${skill} (nivel ${level})`,
     zombiesInBase: 'Hay zombis dentro de la base',
@@ -321,6 +323,7 @@ export const es = {
     byTheFire: 'Junto al fuego',
     hurt: 'Con heridas',
     downed: 'Le derribaron',
+    notConsoled: 'No le supieron consolar',
   } satisfies Record<MoodModifierId, string>,
   /** Los recuerdos con otra persona, con su nombre. */
   modifiersWith: {

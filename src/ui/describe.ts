@@ -288,6 +288,9 @@ export function logText(e: LogEntry, w: World): string {
     case 'buildFailed':
       text = l.buildFailed(name(e.survivorId), e.what, e.wood);
       break;
+    case 'consoleFailed':
+      text = l.consoleFailed(name(e.survivorId), name(e.otherId));
+      break;
     case 'skillUp':
       text = l.skillUp(name(e.survivorId), es.skills[e.skill], e.level);
       break;

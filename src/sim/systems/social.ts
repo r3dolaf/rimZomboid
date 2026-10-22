@@ -20,10 +20,11 @@ import {
   PARTNER_OPINION,
   SHARE_HUNGER_BELOW,
   SHARE_OPINION,
+  SOCIAL_XP,
   TICKS_PER_DAY,
 } from '../balance';
 import { weightOf } from '../items';
-import { capacityKg } from '../skills';
+import { capacityKg, practice } from '../skills';
 import { logEvent } from '../log';
 import { addMemory } from '../mood';
 import { nextFloat, nextInt, weightedPick } from '../rng';
@@ -95,6 +96,8 @@ export function applyChat(w: World, a: Survivor, b: Survivor, kind: ChatKind): v
   setBubble(w, a, bubble);
   setBubble(w, b, bubble);
   if (kind === 'pleasant') {
+    practice(w, a, 'social', SOCIAL_XP.chat);
+    practice(w, b, 'social', SOCIAL_XP.chat);
     addMemory(a, 'goodChat', w.tick, b.id);
     addMemory(b, 'goodChat', w.tick, a.id);
     maybeCouple(w, a, b);

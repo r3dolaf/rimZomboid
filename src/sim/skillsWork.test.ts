@@ -1,10 +1,22 @@
 // H4c §3–4: lo que cambia cada habilidad en el trabajo, y la práctica que da.
 import { expect, test } from 'vitest';
-import { BUILD, BUILD_NOISE_TICKS, CHOP_TICKS, SEARCH_TICKS } from './balance';
+import {
+  BUILD,
+  BUILD_NOISE_TICKS,
+  CHOP_TICKS,
+  SEARCH_TICKS,
+  SOCIAL_XP,
+  TICKS_PER_HOUR,
+  WEAPON_STATS,
+} from './balance';
+import { colonistHit } from './combat';
+import { needsConsoling } from './consoling';
 import { checkInvariants } from './invariants';
 import { workOnBlueprint } from './jobs/build';
 import { haulJob } from './jobs/haul';
-import { buildFailChance, capacityKg, loadFactor } from './skills';
+import { moodModifiers } from './mood';
+import { buildFailChance, capacityKg, consoleChance, hitChance, loadFactor } from './skills';
+import { applyChat } from './systems/social';
 import { damageTile } from './structures';
 import { newZombie } from './zombies/spawn';
 import { startChopActivity } from './jobs/chop';
@@ -192,7 +204,7 @@ test('con nivel 8 no falla nunca; quitar tablas (sin madera) tampoco, ni con niv
 });
 
 test('tras fallar, el plano vuelve a pedir madera: quien acarrea va a por lo que falta', () => {
-  for (let seed = 1; ; seed++) {
+  for (let seed = 1; seed <= 50; seed++) {
     const w = world();
     w.rng = createRng(seed);
     const s = w.survivors[0]!;
@@ -300,4 +312,96 @@ test('andando y huyendo, quien va cargado avanza menos por tick; y practica Tran
   expect(walk(false)).toBeCloseTo(emptyWalk * 0.75, 9);
   expect(walk(true)).toBeCloseTo(emptyRun * 0.75, 9);
   expect(s.skills.haul.xp).toBe(2);
+});
+
+test('Pelear: acierta un 50 % con 0, un 70 % con 5 (como antes) y un 90 % con 10', () => {
+  expect(hitChance(0)).toBeCloseTo(0.5, 9);
+  expect(hitChance(5)).toBeCloseTo(0.7, 9);
+  expect(hitChance(10)).toBeCloseTo(0.9, 9);
+  for (const level of [0, 10]) {
+    const w = world();
+    const s = w.survivors[0]!;
+    s.skills.fight.level = level;
+    const z = newZombie(w, { x: 1, y: 0 });
+    w.zombies.push(z);
+    let hits = 0;
+    for (let i = 0; i < 3000; i++) {
+      s.skills.fight = { level, xp: 0 }; // si no, aprendería y subiría de nivel
+      z.health = 1000;
+      colonistHit(w, s, z);
+      if (z.health < 1000) hits++;
+    }
+    expect(hits / 3000).toBeCloseTo(hitChance(level), 1);
+  }
+});
+
+test('Pelear: cada golpe, acierte o no, da la práctica de lo que tarda el arma', () => {
+  const w = world();
+  const s = w.survivors[0]!;
+  s.equipped = 'bat';
+  const z = newZombie(w, { x: 1, y: 0 });
+  w.zombies.push(z);
+  z.health = 1000;
+  for (let i = 0; i < 4; i++) colonistHit(w, s, z);
+  expect(s.skills.fight.xp).toBe(4 * WEAPON_STATS.bat.ticks);
+});
+
+/** Ana (en crisis) consuela Bea, a su lado. */
+function consoling(seed: number) {
+  const w = world();
+  w.rng = createRng(seed);
+  const c = w.survivors[0]!;
+  const t = addSurvivor(w, { x: 1, y: 0 }, 'Bea');
+  t.needs.mood = 5;
+  c.action = { type: 'console', otherId: t.id, ticksLeft: 1 };
+  t.action = { type: 'consoled', otherId: c.id };
+  return { w, c, t };
+}
+
+test('Social: consolar sale bien un 50 % con 0, un 75 % con 5 y siempre con 10; y da práctica', () => {
+  expect(consoleChance(0)).toBeCloseTo(0.5, 9);
+  expect(consoleChance(5)).toBeCloseTo(0.75, 9);
+  expect(consoleChance(10)).toBe(1);
+  for (const level of [0, 10]) {
+    let ok = 0;
+    for (let seed = 1; seed <= 400; seed++) {
+      const { w, c, t } = consoling(seed);
+      c.skills.social.level = level;
+      activitiesSystem(w);
+      if (t.memories.some((m) => m.id === 'consoled')) ok++;
+      expect(c.skills.social.xp).toBe(level === 10 ? 0 : SOCIAL_XP.console);
+    }
+    expect(ok / 400).toBeCloseTo(consoleChance(level), 1);
+  }
+});
+
+test('consolar sin éxito: sin "Le consoló", al registro, y durante 1 h nadie vuelve a intentarlo', () => {
+  let failed = false;
+  for (let seed = 1; seed <= 50 && !failed; seed++) {
+    const { w, c, t } = consoling(seed);
+    c.skills.social.level = 0;
+    activitiesSystem(w);
+    if (t.memories.some((m) => m.id === 'consoled')) continue;
+    expect(w.log.at(-1)).toMatchObject({ kind: 'consoleFailed', survivorId: c.id, otherId: t.id });
+    expect(c.action.type).toBe('idle');
+    expect(t.action.type).toBe('idle');
+    expect(needsConsoling(t, w)).toBe(false);
+    expect(moodModifiers(t, w.tick).some((m) => m.id === 'notConsoled')).toBe(false); // no pesa
+    w.tick += TICKS_PER_HOUR;
+    expect(needsConsoling(t, w)).toBe(true);
+    expect(checkInvariants(w)).toEqual([]);
+    failed = true;
+  }
+  expect(failed).toBe(true);
+});
+
+test('Social: cada charla agradable da un poco de práctica a los dos', () => {
+  const w = world();
+  const a = w.survivors[0]!;
+  const b = addSurvivor(w, { x: 1, y: 0 }, 'Bea');
+  applyChat(w, a, b, 'pleasant');
+  expect(a.skills.social.xp).toBe(SOCIAL_XP.chat);
+  expect(b.skills.social.xp).toBe(SOCIAL_XP.chat);
+  applyChat(w, a, b, 'neutral');
+  expect(a.skills.social.xp).toBe(SOCIAL_XP.chat);
 });

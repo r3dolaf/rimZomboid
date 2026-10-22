@@ -2,7 +2,19 @@
 import { emptyInventory } from '../items';
 import { createGrid, setTile } from '../map/grid';
 import { createRng } from '../rng';
-import { Tile, type Point, type Survivor, type World } from '../types';
+import { SKILLS } from '../skills';
+import { Tile, type Point, type Skill, type SkillId, type Survivor, type World } from '../types';
+
+/** Todas las habilidades a `level` (con 5, rapidez, carga y acierto como antes de H4c). */
+export function skillsAt(level: number): Record<SkillId, Skill> {
+  return Object.fromEntries(SKILLS.map((k) => [k, { level, xp: 0 }])) as Record<SkillId, Skill>;
+}
+
+/** Pone a todos los colonos con todas las habilidades a `level`. */
+export function withSkills(w: World, level = 5): World {
+  for (const s of w.survivors) s.skills = skillsAt(level);
+  return w;
+}
 
 /** Mundo de hierba sin edificios, con un superviviente en el centro de la casilla (0, 0). */
 export function emptyWorld(width: number, height: number): World {
@@ -25,6 +37,7 @@ export function emptyWorld(width: number, height: number): World {
         path: [],
         needs: { hunger: 100, sleep: 100, mood: 50, social: 100 },
         traits: [],
+        skills: skillsAt(5), // nivel 5: todo va como antes de H4c
         memories: [],
         bedId: 1,
         carrying: emptyInventory(),
@@ -62,7 +75,7 @@ export function emptyWorld(width: number, height: number): World {
     blueprints: [],
     furniture: [],
     chopMarks: [],
-    woodLog: { start: 0, chopped: 0, recovered: 0, spent: 0 },
+    woodLog: { start: 0, chopped: 0, recovered: 0, spent: 0, wasted: 0 },
     zombies: [],
     zombieRng: createRng(2),
     zombieLevel: 'normal',

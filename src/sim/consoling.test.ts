@@ -18,6 +18,7 @@ function scene() {
     s.needs.sleep = 100;
     s.needs.mood = 60;
     s.work.loot = false;
+    s.skills.social.level = 10; // consolar siempre funciona (lo que falla, en skillsWork.test)
     for (const o of w.survivors) if (o !== s) s.opinions[o.id] = 0;
   }
   const [t, c, x] = w.survivors as [Survivor, Survivor, Survivor];
@@ -55,7 +56,7 @@ test('un amigo cerca consuela a quien está en crisis: la crisis termina', () =>
 test('consolar dura 30 ticks y los dos se quedan juntos mientras', () => {
   const { w, t, c } = scene();
   expect(runUntil(w, () => c.action.type === 'console', TICKS_PER_HOUR)).toBe(true);
-  expect(t.action).toEqual({ type: 'consoled', otherId: c.id });
+  expect(t.action).toMatchObject({ type: 'consoled', otherId: c.id }); // (y lo que le quedaba de crisis)
   expect(c.bubble?.kind).toBe('console');
   // El tick en que empieza ya cuenta.
   for (let i = 0; i < CONSOLE_TICKS - 2; i++) step(w);

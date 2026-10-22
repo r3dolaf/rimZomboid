@@ -222,6 +222,7 @@ test.each([1, 2, 3])(
     const cx = w.base.rect.x + Math.floor(w.base.rect.w / 2);
     const cy = w.base.rect.y + Math.floor(w.base.rect.h / 2);
     const axesAtStart = axes(w);
+    const levelsAtStart = levels(w);
     for (let day = 1; day <= DAYS; day++) {
       // Cada mañana: marcar algunos árboles vistos y poner unos planos cerca de la base.
       for (let k = 0; k < 40; k++) {
@@ -258,10 +259,21 @@ test.each([1, 2, 3])(
         w.grid.tiles.includes(Tile.BoardedWindow) || w.woodLog.recovered > 0,
         'se ha tapiado',
       ).toBe(true);
+      // H4c: practicando se mejora, y los fallos al construir no se comen la madera.
+      expect(levels(w), 'las habilidades han subido').toBeGreaterThan(levelsAtStart);
+      expect(w.woodLog.wasted, 'madera perdida al fallar').toBeLessThan(w.woodLog.spent / 2);
     }
   },
   240_000,
 );
+
+/** La suma de los niveles de todas las habilidades de los colonos de ahora. */
+function levels(w: World): number {
+  return w.survivors.reduce(
+    (n, s) => n + Object.values(s.skills).reduce((m, k) => m + k.level, 0),
+    0,
+  );
+}
 
 const WALL_DAYS = Math.min(DAYS, 10);
 
@@ -330,6 +342,7 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
     for (const h of w.houses) issue(w, { type: 'designateHouse', houseId: h.id, on: true });
     const r = createRng(17);
     const weapons = allWeapons(w);
+    const levelsAtStart = levels(w);
     let ms = 0;
     for (let day = 1; day <= DAYS; day++) {
       const present = new Set(w.survivors.map((s) => s.id));
@@ -374,6 +387,7 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
     }
     // Límite generoso (en local va por 0,1–0,2 ms por tick).
     expect(ms / (DAYS * TICKS_PER_DAY), 'ms por tick').toBeLessThan(1);
+    if (DAYS >= 10) expect(levels(w), 'las habilidades han subido').toBeGreaterThan(levelsAtStart);
   }, 600_000);
 });
 

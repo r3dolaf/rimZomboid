@@ -130,6 +130,62 @@
 .sheet .muted {
   opacity: 0.6;
 }
+/* Pestañas de la ficha (H4c) */
+.sheet .tabs {
+  display: flex;
+  gap: 4px;
+  margin: 8px 0 4px;
+  border-bottom: 1px solid #444;
+}
+.sheet .tabs button {
+  padding: 3px 10px;
+  border: 1px solid #444;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  background: #24272b;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  opacity: 0.7;
+}
+.sheet .tabs button.selected {
+  background: #33373c;
+  opacity: 1;
+  font-weight: 600;
+}
+.sheet [hidden] {
+  display: none;
+}
+.sheet .skills {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+}
+.sheet .skill {
+  display: grid;
+  grid-template-columns: 90px 24px 1fr 32px;
+  align-items: center;
+  gap: 6px;
+}
+.sheet .skill .level {
+  font-weight: 600;
+  text-align: right;
+}
+.sheet .skill .bar {
+  height: 6px;
+  border-radius: 3px;
+  background: #3a3e44;
+  overflow: hidden;
+}
+.sheet .skill .fill {
+  display: block;
+  height: 100%;
+  background: #6fb3e0;
+}
+.sheet .skill .note {
+  font-size: 11px;
+  opacity: 0.7;
+}
 
 .log {
   position: fixed;
@@ -398,6 +454,22 @@
 .work-panel td:first-child {
   text-align: left;
   white-space: nowrap;
+}
+/* Nivel de cada habilidad al lado de la casilla (H4c); el mejor de la columna, en negrita. */
+.work-panel td {
+  white-space: nowrap;
+}
+.work-panel .level {
+  display: inline-block;
+  min-width: 1.4em;
+  margin: 0 4px 0 3px;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+.work-panel .level.best {
+  font-weight: 700;
+  opacity: 1;
+  color: #f2c069;
 }
 .work-panel tbody tr:nth-child(odd) {
   background: rgba(255, 255, 255, 0.04);

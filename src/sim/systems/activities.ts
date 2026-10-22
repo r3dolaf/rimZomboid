@@ -8,6 +8,7 @@ import { logEvent } from '../log';
 import { makeNoise } from '../noise';
 import { addMemory } from '../mood';
 import { addInto, isEmpty, takeUpTo } from '../items';
+import { capacityKg, practice } from '../skills';
 import type { Survivor, World } from '../types';
 
 /** Avanzan y terminan las actividades: comer, dormir, crisis, registrar, descargar, pelear y consolar. */
@@ -38,6 +39,7 @@ export function activitiesSystem(w: World): void {
       }
       s.action = { type: 'idle', ticksLeft: 0 };
     } else if (a.type === 'search') {
+      practice(w, s, 'loot', 1);
       if (--a.ticksLeft > 0) continue;
       finishSearch(w, s, a.containerId);
       s.action = { type: 'idle', ticksLeft: 0 };
@@ -67,6 +69,7 @@ export function activitiesSystem(w: World): void {
     } else if (a.type === 'build') {
       if (workOnBlueprint(w, s, a.blueprintId)) s.action = { type: 'idle', ticksLeft: 0 };
     } else if (a.type === 'chop') {
+      practice(w, s, 'chop', 1);
       // Cada hachazo se oye (spec H4b §3).
       if (--a.ticksLeft % CHOP_NOISE_TICKS === 0) makeNoise(w, s.pos, NOISE.chop);
       if (a.ticksLeft > 0) continue;
@@ -86,7 +89,7 @@ function finishSearch(w: World, s: Survivor, containerId: number): void {
   const c = w.containers.find((x) => x.id === containerId);
   if (!c) return;
   const wasEmpty = isEmpty(c.items);
-  const taken = takeUpTo(c.items, s.carrying);
+  const taken = takeUpTo(c.items, s.carrying, capacityKg(s));
   c.searched = true;
   c.reservedBy = null;
   if (wasEmpty) logEvent(w, { kind: 'emptyContainer', survivorId: s.id, houseId: c.houseId });

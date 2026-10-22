@@ -77,6 +77,7 @@ export const MEMORY_EFFECTS = {
   ateAtTable: { value: 3, hours: 6 },
   byTheFire: { value: 4, hours: 1 },
   downed: { value: -15, hours: 24 },
+  notConsoled: { value: 0, hours: 1 }, // no pesa en el ánimo: solo bloquea consolar
 } as const;
 export const EAT_BELOW = 35;
 export const EAT_RESTORE = 60;
@@ -97,7 +98,6 @@ export const ITEM_WEIGHT_KG = {
   axe: 2,
   wood: 1,
 } as const;
-export const CARRY_CAPACITY_KG = 8;
 export const LOOT_FOOD_TOTAL = 80; // + START_FOOD ≈ 25 días para 3 supervivientes
 export const LOOT_BANDAGE_TOTAL = 15;
 export const CONTAINERS_MIN = 2;
@@ -282,6 +282,43 @@ export const BUILD = {
   fixDoor: { wood: 2, ticks: TICKS_PER_HOUR },
 } as const;
 
+// Habilidades (H4c)
+export const SKILL_MAX = 10;
+export const SKILL_START_MAX = 3; // al empezar, cada una entre 0 y esto…
+export const SPECIALTY_MIN = 5; // …salvo la especialidad, entre esto…
+export const SPECIALTY_MAX = 7; // …y esto
+export const SKILL_SPEED_MIN = 0.5; // rapidez con nivel 0…
+export const SKILL_SPEED_PER_LEVEL = 0.1; // …y lo que sube por nivel (con 5, ×1, como antes)
+export const BUILD_FAIL_BASE = 0.3; // probabilidad de fallar al terminar con nivel 0…
+export const BUILD_FAIL_PER_LEVEL = 0.04; // …lo que baja por nivel (10 % con 5, 0 desde 8)
+export const CLUMSY_FAIL = 0.1; // Torpe: lo que suma
+export const CARRY_BASE_KG = 6; // capacidad con Transportar 0…
+export const CARRY_PER_LEVEL_KG = 0.4; // …y lo que sube por nivel (con 5, los 8 kg de antes)
+export const LOAD_BRAKE_BASE = 0.4; // a plena carga, cuánto frena con Transportar 0…
+export const LOAD_BRAKE_PER_LEVEL = 0.03; // …y lo que baja por nivel (25 % con 5, 10 % con 10)
+// Acierto con Pelear 0 y lo que sube por nivel: 60 % con 0, 75 % con 5, 90 % con 10. (Con 50 %
+// a nivel 0, como casi todos empiezan entre 0 y 3, caían 4 veces más la primera semana.)
+export const FIGHT_HIT_BASE = 0.6;
+export const FIGHT_HIT_PER_LEVEL = 0.03;
+export const CONSOLE_OK_BASE = 0.5; // consolar sale bien con Social 0…
+export const CONSOLE_OK_PER_LEVEL = 0.05; // …y lo que sube por nivel (75 % con 5, siempre con 10)
+/** Práctica de Social: por consolar (salga bien o mal) y por charla agradable. */
+export const SOCIAL_XP = { console: 60, chat: 10 } as const;
+/** Aprende rápido / despacio: cuánto cuenta la práctica. */
+export const LEARN_MULT = { fastLearner: 1.5, slowLearner: 0.5 } as const;
+/** Lo que suma o resta cada rasgo a las habilidades al empezar. */
+export const TRAIT_SKILL_MODS = {
+  brave: { fight: 2 },
+  coward: { fight: -2 },
+  handy: { build: 2 },
+  clumsy: { build: -2 },
+  strong: { haul: 2, chop: 2 },
+  weak: { haul: -2, chop: -2 },
+  pleasant: { social: 2 },
+  unpleasant: { social: -2 },
+  keenEye: { loot: 2 },
+} as const;
+
 // Zombis (H4b)
 /** Zombis al empezar, máximo y cada cuántas horas llega uno por los bordes, según el narrador. */
 // Caótico era 35/70/1 h y Muchos ×1,5: sin defensas, en Caótico/muchos caían el 80 % del tiempo.
@@ -346,7 +383,7 @@ export const WEAPON_STATS = {
   bat: { damage: 25, ticks: 15 },
   axe: { damage: 40, ticks: 20 },
 } as const;
-export const SURVIVOR_HIT_CHANCE = 0.7;
+
 export const HEAD_HIT_CHANCE = 1 / 6; // de los golpes que aciertan; hacen el doble
 export const SURVIVOR_REACH = 1.5; // casillas de centro a centro para golpear
 // Posturas y peligro (spec H4b §7)

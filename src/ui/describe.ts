@@ -285,6 +285,15 @@ export function logText(e: LogEntry, w: World): string {
     case 'zombieSighted':
       text = l.zombieSighted;
       break;
+    case 'buildFailed':
+      text = l.buildFailed(name(e.survivorId), e.what, e.wood);
+      break;
+    case 'consoleFailed':
+      text = l.consoleFailed(name(e.survivorId), name(e.otherId));
+      break;
+    case 'skillUp':
+      text = l.skillUp(name(e.survivorId), es.skills[e.skill], e.level);
+      break;
   }
   return text;
 }
@@ -352,6 +361,8 @@ export function noticeFor(e: LogEntry): NoticeInfo | null {
         : null;
     case 'fled':
       return { tone: 'mixed', title: t.fled, focusId: e.survivorId };
+    case 'skillUp':
+      return { tone: 'good', title: t.skillUp, focusId: e.survivorId };
     default:
       return null;
   }

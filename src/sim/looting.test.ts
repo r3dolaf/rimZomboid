@@ -1,6 +1,6 @@
 // Saqueo (H3): buscar contenedores, registrarlos, cargar y descargar en el almacén.
 import { expect, test } from 'vitest';
-import { withoutZombies } from './testing/fixtures';
+import { withoutZombies, withSkills } from './testing/fixtures';
 import { REFUSE_CHANCE, TICKS_PER_DAY } from './balance';
 import { brains } from './brain';
 import { foodDays } from './colony';
@@ -27,7 +27,7 @@ const dist = (w: World, id: number) => {
 const byDistance = (w: World) => [...w.houses].sort((a, b) => dist(w, a.id) - dist(w, b.id));
 
 test('marcar la casa más cercana: la vacían y sus objetos acaban en el almacén', () => {
-  const w = createWorld(3);
+  const w = withSkills(createWorld(3));
   w.survivors.forEach(happy);
   const house = byDistance(w)[0]!;
   const inHouse = w.containers.filter((c) => c.houseId === house.id);
@@ -51,7 +51,7 @@ test('marcar la casa más cercana: la vacían y sus objetos acaban en el almacé
 });
 
 test('con dos casas marcadas nunca van dos al mismo contenedor', () => {
-  const w = createWorld(6);
+  const w = withSkills(createWorld(6));
   w.survivors.forEach(happy);
   for (const h of byDistance(w).slice(0, 2))
     issue(w, { type: 'designateHouse', houseId: h.id, on: true });
@@ -63,7 +63,7 @@ test('con dos casas marcadas nunca van dos al mismo contenedor', () => {
 });
 
 test('una casa marcada sin ver se descubre al llegar', () => {
-  const w = withoutZombies(createWorld(4)); // la casa más lejana es la de más zombis
+  const w = withoutZombies(withSkills(createWorld(4))); // la casa más lejana es la de más zombis
   w.survivors.forEach(happy);
   const far = byDistance(w).at(-1)!;
   const c = w.containers.find((x) => x.houseId === far.id)!;
@@ -75,7 +75,7 @@ test('una casa marcada sin ver se descubre al llegar', () => {
 });
 
 function goingToLoot(seed: number) {
-  const w = createWorld(seed);
+  const w = withSkills(createWorld(seed));
   w.survivors.forEach(happy);
   const s = w.survivors[0]!;
   w.survivors.slice(1).forEach((x) => (x.work.loot = false));
@@ -105,7 +105,7 @@ test('desmarcar la casa mientras va hacia ella: lo deja y libera la reserva', ()
 });
 
 test('sin permiso para saquear no sale, pero si lleva algo lo descarga', () => {
-  const w = createWorld(5);
+  const w = withSkills(createWorld(5));
   w.survivors.forEach(happy);
   const s = w.survivors[0]!;
   s.work.loot = false;
@@ -119,7 +119,7 @@ test('sin permiso para saquear no sale, pero si lleva algo lo descarga', () => {
 });
 
 test('lleno, va a descargar al almacén', () => {
-  const w = createWorld(5);
+  const w = withSkills(createWorld(5));
   w.survivors.forEach(happy);
   const s = w.survivors[0]!;
   issue(w, { type: 'designateHouse', houseId: w.houses[0]!.id, on: true });
@@ -131,7 +131,7 @@ test('lleno, va a descargar al almacén', () => {
 });
 
 test('al límite se niega a trabajar más o menos la mitad de las veces', () => {
-  const w = createWorld(5);
+  const w = withSkills(createWorld(5));
   w.survivors.forEach(happy);
   const s = w.survivors[0]!;
   issue(w, { type: 'designateHouse', houseId: w.houses[0]!.id, on: true });
@@ -151,7 +151,7 @@ test('al límite se niega a trabajar más o menos la mitad de las veces', () => 
 });
 
 test('mientras espera tras negarse, no trabaja pero sí atiende urgencias', () => {
-  const w = createWorld(5);
+  const w = withSkills(createWorld(5));
   const s = w.survivors[0]!;
   happy(s);
   issue(w, { type: 'designateHouse', houseId: w.houses[0]!.id, on: true });
@@ -164,7 +164,7 @@ test('mientras espera tras negarse, no trabaja pero sí atiende urgencias', () =
 });
 
 test('el Cobarde tiene −10 de ánimo fuera de la base', () => {
-  const w = createWorld(5);
+  const w = withSkills(createWorld(5));
   const s = w.survivors[0]!;
   s.traits = ['coward'];
   expect(moodModifiers(s, w.tick, w.base.rect).map((m) => m.id)).not.toContain('scaredOutside');
@@ -173,7 +173,7 @@ test('el Cobarde tiene −10 de ánimo fuera de la base', () => {
 });
 
 test('una reserva de un superviviente que no va a ese contenedor se libera', () => {
-  const w = createWorld(5);
+  const w = withSkills(createWorld(5));
   const c = w.containers[0]!;
   c.reservedBy = w.survivors[0]!.id;
   step(w);
@@ -195,7 +195,7 @@ test('registrar un contenedor sin espacio deja lo que no cabe y sigue marcado', 
 });
 
 test('si lo que queda en los contenedores no le cabe, va a descargar (sin bucles)', () => {
-  const w = createWorld(5);
+  const w = withSkills(createWorld(5));
   w.survivors.forEach(happy);
   const s = w.survivors[0]!;
   issue(w, { type: 'designateHouse', houseId: w.houses[0]!.id, on: true });
@@ -211,7 +211,7 @@ test('si lo que queda en los contenedores no le cabe, va a descargar (sin bucles
 });
 
 test('un bate que no cabe no le hace volver al mismo contenedor una y otra vez', () => {
-  const w = createWorld(5);
+  const w = withSkills(createWorld(5));
   w.survivors.forEach(happy);
   const s = w.survivors[0]!;
   issue(w, { type: 'designateHouse', houseId: w.houses[0]!.id, on: true });
@@ -227,7 +227,7 @@ test('un bate que no cabe no le hace volver al mismo contenedor una y otra vez',
 });
 
 test('con hambre y comida encima, se come una lata de las que lleva', () => {
-  const w = createWorld(5);
+  const w = withSkills(createWorld(5));
   const s = w.survivors[0]!;
   happy(s);
   w.storage.items.food = 0;
@@ -239,7 +239,7 @@ test('con hambre y comida encima, se come una lata de las que lleva', () => {
 });
 
 test('con el almacén sin comida, quien lleva comida va primero a descargarla', () => {
-  const w = createWorld(5);
+  const w = withSkills(createWorld(5));
   w.survivors.forEach(happy);
   const s = w.survivors[0]!;
   issue(w, { type: 'designateHouse', houseId: w.houses[0]!.id, on: true });
@@ -252,7 +252,7 @@ test('con el almacén sin comida, quien lleva comida va primero a descargarla', 
 });
 
 test('un contenedor sin registrar no se sabe qué tiene: merece el viaje si cabe lo más ligero', () => {
-  const w = createWorld(5);
+  const w = withSkills(createWorld(5));
   w.survivors.forEach(happy);
   const s = w.survivors[0]!;
   issue(w, { type: 'designateHouse', houseId: w.houses[0]!.id, on: true });
@@ -265,7 +265,7 @@ test('un contenedor sin registrar no se sabe qué tiene: merece el viaje si cabe
 });
 
 test('lleno del todo (8 kg), no va a contenedores sin registrar: descarga', () => {
-  const w = createWorld(5);
+  const w = withSkills(createWorld(5));
   w.survivors.forEach(happy);
   const s = w.survivors[0]!;
   issue(w, { type: 'designateHouse', houseId: w.houses[0]!.id, on: true });
@@ -278,7 +278,7 @@ test('lleno del todo (8 kg), no va a contenedores sin registrar: descarga', () =
 });
 
 test('días de comida: latas entre lo que comen todos al día', () => {
-  const w = createWorld(3);
+  const w = withSkills(createWorld(3));
   for (const s of w.survivors) s.carrying.food = 0;
   w.storage.items.food = 7;
   expect(foodDays(w)).toBeCloseTo(7 / (3 * (70 / 60)), 9);

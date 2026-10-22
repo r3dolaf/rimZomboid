@@ -3,15 +3,16 @@ import {
   HEAD_HIT_CHANCE,
   NOISE,
   RUN_NOISE_TICKS,
-  SURVIVOR_HIT_CHANCE,
   SURVIVOR_REACH,
   SURVIVOR_RUN_SPEED,
   WEAPON_STATS,
 } from './balance';
+import { weightOf } from './items';
 import { logEvent } from './log';
 import { makeNoise } from './noise';
 import { findPath } from './path/astar';
 import { nextFloat } from './rng';
+import { hitChance, practice } from './skills';
 import { walkStep } from './systems/movement';
 import type { Survivor, World, Zombie } from './types';
 import { tileOf } from './world';
@@ -19,7 +20,9 @@ import { tileOf } from './world';
 /** Un golpe a un zombi: puede fallar; 1 de cada 6 aciertos, a la cabeza (doble). Se oye siempre. */
 export function colonistHit(w: World, s: Survivor, z: Zombie): void {
   makeNoise(w, s.pos, NOISE.fightHit);
-  if (nextFloat(w.rng) >= SURVIVOR_HIT_CHANCE) return;
+  // Se aprende con cada golpe, acierte o no (spec H4c §4); acierta según Pelear (§3.6).
+  practice(w, s, 'fight', WEAPON_STATS[s.equipped ?? 'none'].ticks);
+  if (nextFloat(w.rng) >= hitChance(s.skills.fight.level)) return;
   const head = nextFloat(w.rng) < HEAD_HIT_CHANCE;
   z.health -= WEAPON_STATS[s.equipped ?? 'none'].damage * (head ? 2 : 1);
   if (z.health > 0) return;
@@ -60,7 +63,8 @@ export function combatSystem(w: World): void {
       }
       s.path = path;
     }
-    if (walkStep(s, w.grid, SURVIVOR_RUN_SPEED) === 'walking' && w.tick % RUN_NOISE_TICKS === 0)
-      makeNoise(w, s.pos, NOISE.run);
+    const step = walkStep(s, w.grid, SURVIVOR_RUN_SPEED);
+    if (step === 'walking' && weightOf(s.carrying) > 0) practice(w, s, 'haul', 1);
+    if (step === 'walking' && w.tick % RUN_NOISE_TICKS === 0) makeNoise(w, s.pos, NOISE.run);
   }
 }

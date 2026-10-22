@@ -1,6 +1,6 @@
 // H4a §3.2: talar con hacha.
 import { expect, test } from 'vitest';
-import { withoutZombies } from './testing/fixtures';
+import { skillsAt, withoutZombies } from './testing/fixtures';
 import { TICKS_PER_HOUR } from './balance';
 import { brains } from './brain';
 import { checkInvariants } from './invariants';
@@ -25,6 +25,7 @@ function scene(): { w: World; a: Survivor; tree: { x: number; y: number } } {
     s.needs.mood = 60;
     s.nextChatAt = 1e9;
     s.traits = [];
+    s.skills = skillsAt(5); // las duraciones de antes de H4c
     s.work = { social: false, build: false, haul: false, chop: false, loot: false };
   }
   const a = w.survivors[0]!;

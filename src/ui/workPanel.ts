@@ -1,6 +1,7 @@
 import { es } from '../i18n/es';
 import { issue } from '../sim/orders';
-import type { Stance, Survivor, WorkType, World } from '../sim/types';
+import { SKILLS } from '../sim/skills';
+import type { SkillId, Stance, Survivor, WorkType, World } from '../sim/types';
 import type { Flag } from './flag';
 import './panels.css';
 
@@ -10,8 +11,9 @@ export const STANCES: readonly Stance[] = ['fight', 'flee', 'decide'];
 export const WORKS: readonly WorkType[] = ['social', 'build', 'haul', 'chop', 'loot'];
 
 /**
- * Panel de Trabajos (spec H4a §5): una fila por colono, una casilla por trabajo y su postura
- * (spec H4b §8).
+ * Panel de Trabajos (spec H4a §5) como matriz (spec H4c §5): una fila por colono y una columna por
+ * habilidad, con la casilla del trabajo y su nivel (el mejor de cada columna, en negrita); en
+ * Pelear, el nivel y la postura (spec H4b §8).
  */
 export function mountWorkPanel(
   root: HTMLElement,
@@ -35,7 +37,7 @@ export function mountWorkPanel(
 
   const table = document.createElement('table');
   const headRow = document.createElement('tr');
-  for (const text of ['', ...WORKS.map((k) => es.works[k]), es.stanceTitle]) {
+  for (const text of ['', ...WORKS.map((k) => es.works[k]), es.skills.fight]) {
     const th = document.createElement('th');
     th.textContent = text;
     headRow.append(th);
@@ -50,13 +52,26 @@ export function mountWorkPanel(
   // Una fila por colono; se crean y se quitan según quién está (las casillas no se rehacen).
   const rows = new Map<
     number,
-    { tr: HTMLTableRowElement; boxes: HTMLInputElement[]; stance: HTMLSelectElement }
+    {
+      tr: HTMLTableRowElement;
+      boxes: HTMLInputElement[];
+      stance: HTMLSelectElement;
+      levels: Record<SkillId, HTMLSpanElement>;
+    }
   >();
+  const levelSpan = (s: Survivor, k: SkillId) => {
+    const span = document.createElement('span');
+    span.className = 'level';
+    span.dataset.testid = `work-${s.id}-${k}-level`;
+    span.title = `${s.name}: ${es.skills[k]}`;
+    return span;
+  };
   const addRow = (s: Survivor) => {
     const tr = document.createElement('tr');
     const name = document.createElement('td');
     name.textContent = s.name;
     tr.append(name);
+    const levels = {} as Record<SkillId, HTMLSpanElement>;
     const boxes = WORKS.map((work) => {
       const td = document.createElement('td');
       const box = document.createElement('input');
@@ -66,7 +81,8 @@ export function mountWorkPanel(
       box.addEventListener('change', () =>
         issue(opts.world, { type: 'setWork', survivorId: s.id, work, enabled: box.checked }),
       );
-      td.append(box);
+      levels[work] = levelSpan(s, work);
+      td.append(box, levels[work]);
       tr.append(td);
       return box;
     });
@@ -89,10 +105,11 @@ export function mountWorkPanel(
         stance: stance.value as Stance,
       }),
     );
-    td.append(stance);
+    levels.fight = levelSpan(s, 'fight');
+    td.append(levels.fight, stance);
     tr.append(td);
     tbody.append(tr);
-    rows.set(s.id, { tr, boxes, stance });
+    rows.set(s.id, { tr, boxes, stance, levels });
   };
 
   return {
@@ -106,9 +123,18 @@ export function mountWorkPanel(
           r.tr.remove();
           rows.delete(id);
         }
+      // El mejor de cada columna (si empatan, todos) va en negrita.
+      const best = {} as Record<SkillId, number>;
+      for (const k of SKILLS) best[k] = Math.max(...world.survivors.map((s) => s.skills[k].level));
       for (const s of world.survivors) {
         if (!rows.has(s.id)) addRow(s);
         const r = rows.get(s.id)!;
+        for (const k of SKILLS) {
+          const span = r.levels[k];
+          const text = String(s.skills[k].level);
+          if (span.textContent !== text) span.textContent = text;
+          span.classList.toggle('best', s.skills[k].level === best[k]);
+        }
         r.boxes.forEach((box, i) => {
           box.checked = effectiveWork(world, s, WORKS[i]!);
         });

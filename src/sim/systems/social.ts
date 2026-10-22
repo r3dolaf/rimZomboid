@@ -2,7 +2,6 @@ import {
   BREAKUP_BELOW,
   BREAKUP_OPINION_LOSS,
   BUBBLE_TICKS,
-  CARRY_CAPACITY_KG,
   CHAT_EFFECTS,
   CHAT_EVERY_MAX,
   CHAT_EVERY_MIN,
@@ -21,9 +20,11 @@ import {
   PARTNER_OPINION,
   SHARE_HUNGER_BELOW,
   SHARE_OPINION,
+  SOCIAL_XP,
   TICKS_PER_DAY,
 } from '../balance';
 import { weightOf } from '../items';
+import { capacityKg, practice } from '../skills';
 import { logEvent } from '../log';
 import { addMemory } from '../mood';
 import { nextFloat, nextInt, weightedPick } from '../rng';
@@ -95,6 +96,8 @@ export function applyChat(w: World, a: Survivor, b: Survivor, kind: ChatKind): v
   setBubble(w, a, bubble);
   setBubble(w, b, bubble);
   if (kind === 'pleasant') {
+    practice(w, a, 'social', SOCIAL_XP.chat);
+    practice(w, b, 'social', SOCIAL_XP.chat);
     addMemory(a, 'goodChat', w.tick, b.id);
     addMemory(b, 'goodChat', w.tick, a.id);
     maybeCouple(w, a, b);
@@ -113,7 +116,7 @@ export function applyChat(w: World, a: Survivor, b: Survivor, kind: ChatKind): v
 function maybeShareFood(w: World, a: Survivor, b: Survivor): void {
   if (b.needs.hunger >= SHARE_HUNGER_BELOW || a.carrying.food === 0) return;
   if (opinionOf(a, b.id) < 0) return;
-  if (weightOf(b.carrying) + ITEM_WEIGHT_KG.food > CARRY_CAPACITY_KG + 1e-9) return;
+  if (weightOf(b.carrying) + ITEM_WEIGHT_KG.food > capacityKg(b) + 1e-9) return;
   a.carrying.food--;
   b.carrying.food++;
   changeOpinion(a, b.id, SHARE_OPINION);

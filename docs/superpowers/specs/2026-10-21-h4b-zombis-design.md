@@ -13,7 +13,7 @@ Los zombis llegan al mundo. Vagan en grupos, los atrae el ruido, persiguen a los
 - los colonos pelean o huyen según su postura y su arma, los derriban y se levantan;
 - los zombis rompen puertas y ventanas, y el jugador las repara.
 
-**Queda para H4c:**
+**Queda para H4e** (antes H4c; luego se añadieron H4c Habilidades y H4d Tela, cortinas y cuerpos)**:**
 
 - hordas del narrador, de asedio y errantes;
 - modo combate (R) con varios colonos;

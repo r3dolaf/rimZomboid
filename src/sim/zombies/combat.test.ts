@@ -1,6 +1,7 @@
 // H4b §6: golpes de los colonos, matar zombis y las armas en la mano.
 import { expect, test } from 'vitest';
-import { HEAD_HIT_CHANCE, SURVIVOR_HIT_CHANCE, WEAPON_STATS, ZOMBIE_HEALTH } from '../balance';
+import { HEAD_HIT_CHANCE, WEAPON_STATS, ZOMBIE_HEALTH } from '../balance';
+import { hitChance } from '../skills';
 import { colonistHit, combatSystem } from '../combat';
 import { checkInvariants } from '../invariants';
 import { returnAxeJob } from '../jobs/chop';
@@ -20,7 +21,7 @@ function world(): World {
   return w;
 }
 
-test('cada golpe de colono: 70 % de acierto, el daño de su arma y 1 de cada 6 a la cabeza (doble)', () => {
+test('cada golpe de colono: el acierto de su nivel (75 % con 5), el daño de su arma y 1 de cada 6 a la cabeza (doble)', () => {
   for (const weapon of [null, 'knife', 'bat', 'axe'] as (Weapon | null)[]) {
     const w = world();
     w.rng = createRng(11);
@@ -33,6 +34,7 @@ test('cada golpe de colono: 70 % de acierto, el daño de su arma y 1 de cada 6 a
     let heads = 0;
     const n = 3000;
     for (let i = 0; i < n; i++) {
+      s.skills.fight = { level: 5, xp: 0 }; // nivel 5 todo el rato (sin subir de nivel)
       z.health = 1000;
       colonistHit(w, s, z);
       const lost = 1000 - z.health;
@@ -41,7 +43,7 @@ test('cada golpe de colono: 70 % de acierto, el daño de su arma y 1 de cada 6 a
       if (lost === 2 * dmg) heads++;
       else expect(lost).toBe(dmg);
     }
-    expect(hits / n).toBeCloseTo(SURVIVOR_HIT_CHANCE, 1);
+    expect(hits / n).toBeCloseTo(hitChance(5), 1);
     expect(heads / hits).toBeCloseTo(HEAD_HIT_CHANCE, 1);
   }
 });

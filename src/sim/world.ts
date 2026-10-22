@@ -23,6 +23,7 @@ import { moodTarget } from './mood';
 import { NAMES } from './names';
 import { createRng, nextInt, type RngState } from './rng';
 import { firstEdgeArrival, placeStartZombies } from './zombies/spawn';
+import { rollSkills, skillRng } from './skills';
 import { rollTraits } from './traits';
 import {
   Tile,
@@ -75,6 +76,7 @@ export function createWorld(
       social: 0, // se sortea abajo, después de los contenedores
     },
     traits: rollTraits(rng),
+    skills: rollSkills(skillRng(seed, i + 1), []), // se sortea abajo con los rasgos
     memories: [],
     bedId: i + 1,
     carrying: emptyInventory(),
@@ -93,6 +95,7 @@ export function createWorld(
   for (const s of survivors) {
     s.work = defaultWork(s.traits);
     s.stance = defaultStance(s.traits);
+    s.skills = rollSkills(skillRng(seed, s.id), s.traits);
   }
 
   // Muebles de la base (spec H2 §7): camas arriba, almacén abajo junto a la puerta.
@@ -160,6 +163,7 @@ export function createWorld(
       chopped: 0,
       recovered: 0,
       spent: 0,
+      wasted: 0,
     },
     zombies: [],
     zombieRng: createRng((seed ^ ZOMBIE_RNG_SALT) >>> 0),

@@ -1,6 +1,6 @@
 // H4a §4: construir cada cosa, el orden de los trabajos y el escenario completo.
 import { expect, test } from 'vitest';
-import { withoutZombies } from './testing/fixtures';
+import { skillsAt, withoutZombies } from './testing/fixtures';
 import { BUILD, TICKS_PER_DAY, TICKS_PER_HOUR } from './balance';
 import { brains } from './brain';
 import { strangersEvent } from './events/strangers';
@@ -27,6 +27,9 @@ function scene(): { w: World; a: Survivor } {
     s.needs.mood = 60;
     s.nextChatAt = 1e9;
     s.traits = [];
+    // Como antes de H4c, y Construir 8 para que nunca falle (los fallos, en skillsWork.test).
+    s.skills = skillsAt(5);
+    s.skills.build.level = 8;
     s.work = { social: false, build: false, haul: false, chop: false, loot: false };
   }
   const a = w.survivors[0]!;

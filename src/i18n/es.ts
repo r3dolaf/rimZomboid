@@ -11,6 +11,7 @@ import type {
   NarratorStyle,
   Stance,
   TraitId,
+  SkillId,
   WorkType,
   ZombieLevel,
 } from '../sim/types';
@@ -43,6 +44,17 @@ export const es = {
     chop: 'Talar',
     loot: 'Saquear',
   } satisfies Record<WorkType, string>,
+  sheetTabs: { general: 'General', skills: 'Habilidades' },
+  skillMax: 'máx.',
+  /** Habilidades (H4c): las de los trabajos y Pelear. */
+  skills: {
+    social: 'Social',
+    build: 'Construir',
+    haul: 'Transportar',
+    chop: 'Talar',
+    loot: 'Saquear',
+    fight: 'Pelear',
+  } satisfies Record<SkillId, string>,
   /** Lo que se puede construir, para el menú. */
   buildMenu: {
     bed: 'Cama',
@@ -95,6 +107,7 @@ export const es = {
   lockWeaponHint: 'No cambia ni devuelve lo que lleva en la mano',
   logToggle: { hide: 'Minimizar el registro', show: 'Abrir el registro' },
   notices: {
+    skillUp: 'Mejora',
     jealousy: 'Celos',
     clash: 'Choque de caracteres',
     grief: 'Malos recuerdos',
@@ -148,7 +161,7 @@ export const es = {
   speedLabel: (n: number) => `Velocidad x${n}`,
   close: 'Cerrar',
   logTitle: 'Sucesos',
-  carrying: (what: string, kg: string, max: number) => `Lleva: ${what} (${kg} / ${max} kg)`,
+  carrying: (what: string, kg: string, max: string) => `Lleva: ${what} (${kg} / ${max} kg)`,
   house: (id: number) => `Casa ${id}`,
   houseMarked: 'Marcada para saquear',
   houseUnmarked: 'Sin marcar',
@@ -220,6 +233,12 @@ export const es = {
     gotUp: (who: string) => `${who} se ha levantado`,
     zombieKilled: (who: string) => `${who} ha matado un zombi`,
     fled: (who: string) => `${who} huye a la base`,
+    buildFailed: (who: string, what: BuildKind, wood: number) =>
+      `${who} ha fallado al ${es.buildFail[what]} (−${wood} de madera)`,
+    consoleFailed: (who: string, other: string) =>
+      `${who} ha intentado consolar a ${other}, sin éxito`,
+    skillUp: (who: string, skill: string, level: number) =>
+      `${who} ha mejorado en ${skill} (nivel ${level})`,
     zombiesInBase: 'Hay zombis dentro de la base',
     zombieSighted: 'Se ven zombis cerca de la base',
     broken: (what: 'door' | 'window' | 'wall', inBase: boolean) =>
@@ -247,12 +266,24 @@ export const es = {
   hoursLeft: (h: number) => `quedan ${h} h`,
 
   traits: {
-    brave: { name: 'Valiente', desc: 'Aguanta más cerca de los zombis antes de huir.' },
-    coward: { name: 'Cobarde', desc: 'Huye antes y no le gusta saquear.' },
+    brave: {
+      name: 'Valiente',
+      desc: 'Aguanta más cerca de los zombis antes de huir. +2 en Pelear.',
+    },
+    coward: { name: 'Cobarde', desc: 'Huye antes y no le gusta saquear. −2 en Pelear.' },
     glutton: { name: 'Glotón', desc: 'Le entra hambre más rápido.' },
     sleepyhead: { name: 'Dormilón', desc: 'Se cansa más rápido.' },
     optimist: { name: 'Optimista', desc: 'Ve el lado bueno: +10 de ánimo.' },
     pessimist: { name: 'Pesimista', desc: 'Todo le pesa más: −10 de ánimo.' },
+    handy: { name: 'Manitas', desc: '+2 en Construir.' },
+    clumsy: { name: 'Torpe', desc: '−2 en Construir, y falla más al construir.' },
+    strong: { name: 'Fuerte', desc: '+2 en Transportar y en Talar.' },
+    weak: { name: 'Débil', desc: '−2 en Transportar y en Talar.' },
+    fastLearner: { name: 'Aprende rápido', desc: 'La práctica le cunde un 50 % más.' },
+    slowLearner: { name: 'Aprende despacio', desc: 'La práctica le cunde la mitad.' },
+    pleasant: { name: 'Agradable', desc: '+2 en Social.' },
+    unpleasant: { name: 'Desagradable', desc: '−2 en Social.' },
+    keenEye: { name: 'Buen ojo', desc: '+2 en Saquear.' },
   } satisfies Record<TraitId, { name: string; desc: string }>,
 
   modifiers: {
@@ -295,6 +326,7 @@ export const es = {
     byTheFire: 'Junto al fuego',
     hurt: 'Con heridas',
     downed: 'Le derribaron',
+    notConsoled: 'No le supieron consolar',
   } satisfies Record<MoodModifierId, string>,
   /** Los recuerdos con otra persona, con su nombre. */
   modifiersWith: {
@@ -366,6 +398,18 @@ export const es = {
     unboard: 'Se han quitado las tablas de una ventana',
     repair: 'Se ha hecho una reparación',
     fixDoor: 'Se ha arreglado una puerta',
+  } satisfies Record<BuildKind, string>,
+  /** Lo que intentaba quien falla al construir: "ha fallado al levantar el muro". */
+  buildFail: {
+    bed: 'construir la cama',
+    table: 'construir la mesa',
+    campfire: 'hacer la hoguera',
+    woodWall: 'levantar el muro',
+    woodDoor: 'poner la puerta',
+    board: 'tapiar la ventana',
+    unboard: 'quitar las tablas',
+    repair: 'hacer la reparación',
+    fixDoor: 'arreglar la puerta',
   } satisfies Record<BuildKind, string>,
   /** Lo que hace quien trabaja en cada plano. */
   building: {

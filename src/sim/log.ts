@@ -1,6 +1,6 @@
 import { LOG_MAX } from './balance';
 import type { Inventory } from './items';
-import type { BuildKind, World } from './types';
+import type { BuildKind, SkillId, World } from './types';
 
 /** Suceso del registro: solo datos; la interfaz los convierte en texto. */
 export type LogEvent =
@@ -51,6 +51,10 @@ export type LogEvent =
   | { kind: 'gotUp'; survivorId: number }
   | { kind: 'zombieKilled'; survivorId: number }
   | { kind: 'fled'; survivorId: number }
+  // Habilidades (H4c)
+  | { kind: 'skillUp'; survivorId: number; skill: SkillId; level: number }
+  | { kind: 'buildFailed'; survivorId: number; what: BuildKind; wood: number }
+  | { kind: 'consoleFailed'; survivorId: number; otherId: number }
   /** El primer zombi que entra en la base (x, y: por dónde). */
   | { kind: 'zombiesInBase'; x: number; y: number }
   /** El primer zombi que se ve cerca de la base ese día. */

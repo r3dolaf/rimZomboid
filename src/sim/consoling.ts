@@ -5,10 +5,13 @@ import {
   CONSOLE_RANGE,
   CONSOLE_TICKS,
   MOOD_EDGE,
+  SOCIAL_XP,
 } from './balance';
 import { logEvent } from './log';
 import { addMemory } from './mood';
 import { regionOf } from './path/astar';
+import { nextFloat } from './rng';
+import { consoleChance, practice } from './skills';
 import { changeOpinion, opinionOf } from './social';
 import type { Survivor, World } from './types';
 
@@ -32,7 +35,9 @@ export function needsConsoling(t: Survivor, w: World): boolean {
   if (a === 'downed' || a === 'melee') return false;
   if (!inCrisis(t) && t.needs.mood >= MOOD_EDGE) return false;
   return !t.memories.some(
-    (m) => (m.id === 'consoled' || m.id === 'consoledByPartner') && m.expiresAt > w.tick,
+    (m) =>
+      (m.id === 'consoled' || m.id === 'consoledByPartner' || m.id === 'notConsoled') &&
+      m.expiresAt > w.tick,
   );
 }
 
@@ -87,14 +92,31 @@ export function tryStartConsoling(w: World, c: Survivor, targetId: number): bool
   if (dx * dx + dy * dy > CONSOLE_RANGE * CONSOLE_RANGE) return false;
   c.action = { type: 'console', otherId: t.id, ticksLeft: CONSOLE_TICKS };
   c.path = [];
-  t.action = { type: 'consoled', otherId: c.id };
+  t.action =
+    t.action.type === 'crisis'
+      ? { type: 'consoled', otherId: c.id, crisisLeft: t.action.ticksLeft }
+      : { type: 'consoled', otherId: c.id };
   t.path = [];
   for (const s of [c, t]) s.bubble = { kind: 'console', until: w.tick + CONSOLE_TICKS };
   return true;
 }
 
-/** Termina bien: "Le consoló X" (o su pareja), +CONSOLE_OPINION_GAIN de opinión los dos y al registro. */
+/**
+ * Termina: con suerte según Social (spec H4c §3.5), "Le consoló X" (o su pareja),
+ * +CONSOLE_OPINION_GAIN de opinión los dos y al registro. Si sale mal, nadie lo vuelve a intentar
+ * con él en 1 h. Se aprende en los dos casos.
+ */
 export function finishConsoling(w: World, c: Survivor, t: Survivor): void {
+  practice(w, c, 'social', SOCIAL_XP.console);
+  if (nextFloat(w.rng) >= consoleChance(c.skills.social.level)) {
+    addMemory(t, 'notConsoled', w.tick, c.id);
+    logEvent(w, { kind: 'consoleFailed', survivorId: c.id, otherId: t.id });
+    c.action = { type: 'idle', ticksLeft: 0 };
+    // Si estaba en crisis, sigue con ella donde la dejó (sin empezar otra ni registrarla).
+    const left = t.action.type === 'consoled' ? t.action.crisisLeft : undefined;
+    t.action = left ? { type: 'crisis', ticksLeft: left } : { type: 'idle', ticksLeft: 0 };
+    return;
+  }
   addMemory(t, c.partnerId === t.id ? 'consoledByPartner' : 'consoled', w.tick, c.id);
   changeOpinion(c, t.id, CONSOLE_OPINION_GAIN);
   changeOpinion(t, c.id, CONSOLE_OPINION_GAIN);

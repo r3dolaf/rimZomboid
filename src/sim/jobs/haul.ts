@@ -2,6 +2,7 @@
 import { BUILD } from '../balance';
 import { isRepairPlan } from '../build';
 import { emptyInventory, isEmpty, takeUpTo } from '../items';
+import { capacityKg } from '../skills';
 import { findPath, regionOf } from '../path/astar';
 import { prunePiles } from '../piles';
 import { pick } from '../rng';
@@ -121,7 +122,7 @@ export function startHaulActivity(
   if (activity.type === 'pickUp') {
     const p = w.piles.find((x) => x.id === activity.pileId);
     if (!p || !atOrBeside(s, p.pos)) return idle;
-    const taken = takeUpTo(p.items, s.carrying);
+    const taken = takeUpTo(p.items, s.carrying, capacityKg(s));
     prunePiles(w);
     if (isEmpty(taken)) return idle;
     return next(s, pick(w.rng, w.storage.tiles), { type: 'unload' }, w);
@@ -130,7 +131,7 @@ export function startHaulActivity(
   if (!b || woodNeeded(b) <= 0) return idle;
   if (activity.type === 'fetchWood') {
     const want = Math.min(woodNeeded(b), w.storage.items.wood);
-    const taken = takeUpTo({ ...emptyInventory(), wood: want }, s.carrying);
+    const taken = takeUpTo({ ...emptyInventory(), wood: want }, s.carrying, capacityKg(s));
     w.storage.items.wood -= taken.wood;
     if (taken.wood === 0) return idle;
     const stand = standOnOrBeside(w, s, b.pos);

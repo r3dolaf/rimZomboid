@@ -1,14 +1,7 @@
-import {
-  BUILD,
-  CARRY_CAPACITY_KG,
-  OPINION_LIMIT,
-  RESISTANCE,
-  SKILL_MAX,
-  ZOMBIE_HEALTH,
-} from './balance';
+import { BUILD, OPINION_LIMIT, RESISTANCE, SKILL_MAX, ZOMBIE_HEALTH } from './balance';
 import { ITEM_KINDS, weightOf, type Inventory } from './items';
 import { inBounds, isWalkable, isZombieWalkable } from './map/grid';
-import { SKILLS, xpToNext } from './skills';
+import { capacityKg, SKILLS, xpToNext } from './skills';
 import { targetContainerId } from './work';
 import { Tile, type World } from './types';
 import { tileOf } from './world';
@@ -39,8 +32,8 @@ export function checkInvariants(w: World): string[] {
     if (s.action.type === 'downed' && s.health !== 0)
       problems.push(`${who}: derribado con Salud ${s.health}`);
     checkInventory(problems, `${who}: carga`, s.carrying);
-    if (weightOf(s.carrying) > CARRY_CAPACITY_KG + 1e-9)
-      problems.push(`${who}: carga ${weightOf(s.carrying)} kg > ${CARRY_CAPACITY_KG}`);
+    if (weightOf(s.carrying) > capacityKg(s) + 1e-9)
+      problems.push(`${who}: carga ${weightOf(s.carrying)} kg > ${capacityKg(s)}`);
     for (const k of SKILLS) {
       const { level, xp } = s.skills[k];
       if (!Number.isInteger(level) || level < 0 || level > SKILL_MAX)

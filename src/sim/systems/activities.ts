@@ -8,7 +8,7 @@ import { logEvent } from '../log';
 import { makeNoise } from '../noise';
 import { addMemory } from '../mood';
 import { addInto, isEmpty, takeUpTo } from '../items';
-import { practice } from '../skills';
+import { capacityKg, practice } from '../skills';
 import type { Survivor, World } from '../types';
 
 /** Avanzan y terminan las actividades: comer, dormir, crisis, registrar, descargar, pelear y consolar. */
@@ -89,7 +89,7 @@ function finishSearch(w: World, s: Survivor, containerId: number): void {
   const c = w.containers.find((x) => x.id === containerId);
   if (!c) return;
   const wasEmpty = isEmpty(c.items);
-  const taken = takeUpTo(c.items, s.carrying);
+  const taken = takeUpTo(c.items, s.carrying, capacityKg(s));
   c.searched = true;
   c.reservedBy = null;
   if (wasEmpty) logEvent(w, { kind: 'emptyContainer', survivorId: s.id, houseId: c.houseId });

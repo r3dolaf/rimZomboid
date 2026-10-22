@@ -8,10 +8,12 @@ import {
   SURVIVOR_RUN_SPEED,
   WEAPON_STATS,
 } from './balance';
+import { weightOf } from './items';
 import { logEvent } from './log';
 import { makeNoise } from './noise';
 import { findPath } from './path/astar';
 import { nextFloat } from './rng';
+import { practice } from './skills';
 import { walkStep } from './systems/movement';
 import type { Survivor, World, Zombie } from './types';
 import { tileOf } from './world';
@@ -60,7 +62,8 @@ export function combatSystem(w: World): void {
       }
       s.path = path;
     }
-    if (walkStep(s, w.grid, SURVIVOR_RUN_SPEED) === 'walking' && w.tick % RUN_NOISE_TICKS === 0)
-      makeNoise(w, s.pos, NOISE.run);
+    const step = walkStep(s, w.grid, SURVIVOR_RUN_SPEED);
+    if (step === 'walking' && weightOf(s.carrying) > 0) practice(w, s, 'haul', 1);
+    if (step === 'walking' && w.tick % RUN_NOISE_TICKS === 0) makeNoise(w, s.pos, NOISE.run);
   }
 }

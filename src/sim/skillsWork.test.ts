@@ -4,7 +4,7 @@ import { BUILD, BUILD_NOISE_TICKS, CHOP_TICKS, SEARCH_TICKS } from './balance';
 import { checkInvariants } from './invariants';
 import { workOnBlueprint } from './jobs/build';
 import { haulJob } from './jobs/haul';
-import { buildFailChance } from './skills';
+import { buildFailChance, capacityKg, loadFactor } from './skills';
 import { damageTile } from './structures';
 import { newZombie } from './zombies/spawn';
 import { startChopActivity } from './jobs/chop';
@@ -215,4 +215,89 @@ test('invariante: el avance de un plano, entre 0 y lo que dura', () => {
   expect(checkInvariants(w)).toEqual([]);
   b.progress = BUILD.bed.ticks + 0.5;
   expect(checkInvariants(w).join()).toMatch(/avance no válido/);
+});
+
+test('Transportar: capacidad 6 kg con 0, 8 con 5 (como antes) y 10 con 10', () => {
+  const s = emptyWorld(2, 2).survivors[0]!;
+  for (const [level, kg] of [
+    [0, 6],
+    [5, 8],
+    [10, 10],
+  ] as const) {
+    s.skills.haul.level = level;
+    expect(capacityKg(s)).toBeCloseTo(kg, 9);
+  }
+});
+
+test('al registrar, cada uno coge lo que le cabe según su capacidad', () => {
+  for (const [level, food] of [
+    [0, 12],
+    [10, 20],
+  ] as const) {
+    const w = world();
+    const s = w.survivors[0]!;
+    s.skills.haul.level = level;
+    w.containers = [
+      {
+        id: 1,
+        houseId: 0,
+        pos: { x: 3, y: 3 },
+        kind: 'fridge',
+        items: { food: 40, bandage: 0, knife: 0, bat: 0, axe: 0, wood: 0 },
+        searched: false,
+        designated: true,
+        reservedBy: s.id,
+      },
+    ];
+    s.action = { type: 'search', containerId: 1, ticksLeft: 1 };
+    activitiesSystem(w);
+    expect(s.carrying.food).toBe(food); // 0,5 kg cada lata
+  }
+});
+
+test('invariante: nadie lleva más de lo que puede', () => {
+  const w = world();
+  const s = w.survivors[0]!;
+  s.skills.haul.level = 0;
+  s.carrying.food = 12; // 6 kg
+  expect(checkInvariants(w)).toEqual([]);
+  s.carrying.food = 14;
+  expect(checkInvariants(w).join()).toMatch(/carga 7 kg > 6/);
+});
+
+test('ir cargado frena: a plena carga ×0,6 con 0, ×0,75 con 5 y ×0,9 con 10; vacío, nada', () => {
+  const s = emptyWorld(2, 2).survivors[0]!;
+  expect(loadFactor(s)).toBe(1);
+  for (const [level, full] of [
+    [0, 0.6],
+    [5, 0.75],
+    [10, 0.9],
+  ] as const) {
+    s.skills.haul.level = level;
+    s.carrying = { ...s.carrying, wood: 0 };
+    s.carrying.wood = Math.floor(capacityKg(s));
+    expect(loadFactor(s)).toBeCloseTo(1 - (1 - full) * (s.carrying.wood / capacityKg(s)), 9);
+  }
+  s.skills.haul.level = 5;
+  s.carrying.wood = 4; // media carga
+  expect(loadFactor(s)).toBeCloseTo(0.875, 9);
+});
+
+test('andando y huyendo, quien va cargado avanza menos por tick; y practica Transportar', () => {
+  const w = world();
+  const s = w.survivors[0]!;
+  const walk = (run: boolean) => {
+    s.pos = { x: 0.5, y: 0.5 };
+    s.path = [{ x: 7, y: 0 }];
+    s.action = { type: 'moveTo', target: { x: 7, y: 0 }, run };
+    movementSystem(w);
+    return s.pos.x - 0.5;
+  };
+  const emptyWalk = walk(false);
+  const emptyRun = walk(true);
+  expect(s.skills.haul.xp).toBe(0); // sin carga no practica
+  s.carrying.wood = 8; // plena carga con nivel 5
+  expect(walk(false)).toBeCloseTo(emptyWalk * 0.75, 9);
+  expect(walk(true)).toBeCloseTo(emptyRun * 0.75, 9);
+  expect(s.skills.haul.xp).toBe(2);
 });

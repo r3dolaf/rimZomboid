@@ -17,7 +17,8 @@ import { startHaulActivity } from '../jobs/haul';
 import { startSwapWeapon } from '../jobs/weapons';
 import { logEvent } from '../log';
 import { makeNoise } from '../noise';
-import { skillSpeed } from '../skills';
+import { loadFactor, practice, skillSpeed } from '../skills';
+import { weightOf } from '../items';
 import { isWalkable } from '../map/grid';
 import { findPath } from '../path/astar';
 import { nextInt } from '../rng';
@@ -30,6 +31,7 @@ export function movementSystem(w: World): void {
     if (s.action.type !== 'moveTo') continue;
     const run = s.action.run === true;
     const step = walkStep(s, w.grid, run ? SURVIVOR_RUN_SPEED : SURVIVOR_WALK_SPEED);
+    if (step === 'walking' && weightOf(s.carrying) > 0) practice(w, s, 'haul', 1);
     // Quien corre hace ruido (spec H4b §3).
     if (run && step === 'walking' && w.tick % RUN_NOISE_TICKS === 0) makeNoise(w, s.pos, NOISE.run);
     if (step === 'walking') continue;
@@ -71,6 +73,7 @@ export function walkStep(
   const dx = tx - s.pos.x;
   const dy = ty - s.pos.y;
   const dist = Math.sqrt(dx * dx + dy * dy); // sqrt es exacto en todos los navegadores; hypot no
+  speed *= loadFactor(s); // ir cargado frena (spec H4c §3.3)
   if (dist <= speed) {
     s.pos = { x: tx, y: ty };
     s.path.shift();

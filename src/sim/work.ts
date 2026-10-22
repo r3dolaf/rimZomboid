@@ -1,6 +1,7 @@
 // Trabajos (spec H4a §3): cuál toca por orden de criticidad, si sigue teniendo sentido, y el
 // saqueo (elegir contenedor, reservar, descargar en el almacén).
-import { CARRY_CAPACITY_KG, HUNGRY_LOOT_DAYS, ITEM_WEIGHT_KG } from './balance';
+import { HUNGRY_LOOT_DAYS, ITEM_WEIGHT_KG } from './balance';
+import { capacityKg } from './skills';
 import { foodDays } from './colony';
 import { buildJob, buildStillWorth } from './jobs/build';
 import { chopJob, chopStillWorth, returnAxeJob } from './jobs/chop';
@@ -36,7 +37,7 @@ const LIGHTEST_KG = Math.min(...ITEM_KINDS.map((k) => ITEM_WEIGHT_KG[k]));
  * va casi lleno volvería una y otra vez a un contenedor del que no puede coger nada.
  */
 function canTakeSomething(c: Container, s: Survivor): boolean {
-  const room = CARRY_CAPACITY_KG - weightOf(s.carrying) + 1e-9;
+  const room = capacityKg(s) - weightOf(s.carrying) + 1e-9;
   if (!c.searched) return room >= LIGHTEST_KG;
   return ITEM_KINDS.some((k) => c.items[k] > 0 && ITEM_WEIGHT_KG[k] <= room);
 }

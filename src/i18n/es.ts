@@ -158,7 +158,7 @@ export const es = {
   speedLabel: (n: number) => `Velocidad x${n}`,
   close: 'Cerrar',
   logTitle: 'Sucesos',
-  carrying: (what: string, kg: string, max: number) => `Lleva: ${what} (${kg} / ${max} kg)`,
+  carrying: (what: string, kg: string, max: string) => `Lleva: ${what} (${kg} / ${max} kg)`,
   house: (id: number) => `Casa ${id}`,
   houseMarked: 'Marcada para saquear',
   houseUnmarked: 'Sin marcar',

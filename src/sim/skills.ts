@@ -1,9 +1,13 @@
 // Habilidades (spec H4c): cómo empiezan, lo que cuesta subir y lo que cambian.
 import {
   BUILD_FAIL_BASE,
+  CARRY_BASE_KG,
+  CARRY_PER_LEVEL_KG,
   BUILD_FAIL_PER_LEVEL,
   CLUMSY_FAIL,
   LEARN_MULT,
+  LOAD_BRAKE_BASE,
+  LOAD_BRAKE_PER_LEVEL,
   SKILL_MAX,
   SKILL_SPEED_MIN,
   SKILL_SPEED_PER_LEVEL,
@@ -13,6 +17,7 @@ import {
   TICKS_PER_HOUR,
   TRAIT_SKILL_MODS,
 } from './balance';
+import { weightOf } from './items';
 import { logEvent } from './log';
 import { createRng, nextInt, pick, type RngState } from './rng';
 import type { Skill, SkillId, Survivor, TraitId, World } from './types';
@@ -50,6 +55,17 @@ export function xpToNext(level: number): number {
 /** Probabilidad de fallar al terminar un plano: 30 % con 0, 10 % con 5, 0 desde 8; Torpe +10 %. */
 export function buildFailChance(level: number, clumsy: boolean): number {
   return Math.max(0, BUILD_FAIL_BASE - BUILD_FAIL_PER_LEVEL * level) + (clumsy ? CLUMSY_FAIL : 0);
+}
+
+/** Lo que puede llevar encima: 6 kg con Transportar 0, 8 con 5 y 10 con 10. */
+export function capacityKg(s: Survivor): number {
+  return CARRY_BASE_KG + CARRY_PER_LEVEL_KG * s.skills.haul.level;
+}
+
+/** Cuánto le frena lo que lleva (1 = nada): a plena carga, ×0,6 con 0, ×0,75 con 5, ×0,9 con 10. */
+export function loadFactor(s: Survivor): number {
+  const brake = LOAD_BRAKE_BASE - LOAD_BRAKE_PER_LEVEL * s.skills.haul.level;
+  return 1 - brake * Math.min(1, weightOf(s.carrying) / capacityKg(s));
 }
 
 /** Rapidez con ese nivel: ×0,5 con 0, ×1 con 5 (como antes de H4c) y ×1,5 con 10. */

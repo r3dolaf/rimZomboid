@@ -97,7 +97,6 @@ export const ITEM_WEIGHT_KG = {
   axe: 2,
   wood: 1,
 } as const;
-export const CARRY_CAPACITY_KG = 8;
 export const LOOT_FOOD_TOTAL = 80; // + START_FOOD ≈ 25 días para 3 supervivientes
 export const LOOT_BANDAGE_TOTAL = 15;
 export const CONTAINERS_MIN = 2;
@@ -292,6 +291,10 @@ export const SKILL_SPEED_PER_LEVEL = 0.1; // …y lo que sube por nivel (con 5, 
 export const BUILD_FAIL_BASE = 0.3; // probabilidad de fallar al terminar con nivel 0…
 export const BUILD_FAIL_PER_LEVEL = 0.04; // …lo que baja por nivel (10 % con 5, 0 desde 8)
 export const CLUMSY_FAIL = 0.1; // Torpe: lo que suma
+export const CARRY_BASE_KG = 6; // capacidad con Transportar 0…
+export const CARRY_PER_LEVEL_KG = 0.4; // …y lo que sube por nivel (con 5, los 8 kg de antes)
+export const LOAD_BRAKE_BASE = 0.4; // a plena carga, cuánto frena con Transportar 0…
+export const LOAD_BRAKE_PER_LEVEL = 0.03; // …y lo que baja por nivel (25 % con 5, 10 % con 10)
 /** Aprende rápido / despacio: cuánto cuenta la práctica. */
 export const LEARN_MULT = { fastLearner: 1.5, slowLearner: 0.5 } as const;
 /** Lo que suma o resta cada rasgo a las habilidades al empezar. */

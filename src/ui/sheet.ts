@@ -1,8 +1,8 @@
 import { es } from '../i18n/es';
-import { CARRY_CAPACITY_KG } from '../sim/balance';
 import { weightOf } from '../sim/items';
 import { moodModifiers, moodTarget } from '../sim/mood';
 import { issue } from '../sim/orders';
+import { capacityKg } from '../sim/skills';
 import { opinionOf, relationLabel } from '../sim/social';
 import type { Survivor, World } from '../sim/types';
 import { activityText, formatItems, formatModifier, signed } from './describe';
@@ -138,7 +138,7 @@ export function mountSheet(
       const carryText = es.carrying(
         formatItems(s.carrying),
         weightOf(s.carrying).toFixed(1).replace('.', ','),
-        CARRY_CAPACITY_KG,
+        kg(capacityKg(s)),
       );
       if (carrying.textContent !== carryText) carrying.textContent = carryText;
       const stance = effectiveStance(world, s);
@@ -158,6 +158,12 @@ export function mountSheet(
 }
 
 /** "Bea: +45 · Amistad" por cada colono, de quien mejor le cae a quien peor. */
+/** Kilos con una cifra decimal, salvo si son justos: "8", "7,2". */
+const kg = (n: number) =>
+  Number.isInteger(Math.round(n * 10) / 10)
+    ? String(Math.round(n))
+    : n.toFixed(1).replace('.', ',');
+
 function relations(s: Survivor, w: World): string[] {
   return w.survivors
     .filter((o) => o !== s)

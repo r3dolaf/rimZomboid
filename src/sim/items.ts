@@ -1,4 +1,4 @@
-import { CARRY_CAPACITY_KG, ITEM_WEIGHT_KG } from './balance';
+import { ITEM_WEIGHT_KG } from './balance';
 
 export type ItemKind = 'food' | 'bandage' | 'knife' | 'bat' | 'axe' | 'wood';
 
@@ -29,11 +29,7 @@ export function addInto(to: Inventory, from: Inventory): void {
 }
 
 /** Mueve de `from` a `to` lo que quepa sin pasar de `capacityKg`. Devuelve lo cogido. */
-export function takeUpTo(
-  from: Inventory,
-  to: Inventory,
-  capacityKg = CARRY_CAPACITY_KG,
-): Inventory {
+export function takeUpTo(from: Inventory, to: Inventory, capacityKg: number): Inventory {
   const taken = emptyInventory();
   let load = weightOf(to);
   for (const k of ITEM_KINDS) {

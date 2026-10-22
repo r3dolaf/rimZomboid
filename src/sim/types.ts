@@ -182,7 +182,7 @@ export interface Survivor {
   memories: Memory[];
   /** Su cama, o `null` si no hay sitio (duerme en el suelo de la base). */
   bedId: number | null;
-  /** Lo que lleva encima (como máximo CARRY_CAPACITY_KG). */
+  /** Lo que lleva encima (como mucho su capacidad, según Transportar: `capacityKg`). */
   carrying: Inventory;
   /** Trabajos permitidos (casillas del panel de Trabajos). */
   work: Record<WorkType, boolean>;

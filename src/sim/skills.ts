@@ -1,5 +1,8 @@
 // Habilidades (spec H4c): cómo empiezan, lo que cuesta subir y lo que cambian.
 import {
+  BUILD_FAIL_BASE,
+  BUILD_FAIL_PER_LEVEL,
+  CLUMSY_FAIL,
   LEARN_MULT,
   SKILL_MAX,
   SKILL_SPEED_MIN,
@@ -42,6 +45,11 @@ export function rollSkills(rng: RngState, traits: readonly TraitId[]): Record<Sk
 /** Práctica para pasar del nivel `level` al siguiente: (nivel + 1) horas. */
 export function xpToNext(level: number): number {
   return (level + 1) * TICKS_PER_HOUR;
+}
+
+/** Probabilidad de fallar al terminar un plano: 30 % con 0, 10 % con 5, 0 desde 8; Torpe +10 %. */
+export function buildFailChance(level: number, clumsy: boolean): number {
+  return Math.max(0, BUILD_FAIL_BASE - BUILD_FAIL_PER_LEVEL * level) + (clumsy ? CLUMSY_FAIL : 0);
 }
 
 /** Rapidez con ese nivel: ×0,5 con 0, ×1 con 5 (como antes de H4c) y ×1,5 con 10. */

@@ -6,6 +6,8 @@ import { logEvent } from '../log';
 import { makeNoise } from '../noise';
 import { isWalkable, setTile } from '../map/grid';
 import { dropPile, pileAt } from '../piles';
+import { nextFloat } from '../rng';
+import { buildFailChance, practice, skillSpeed } from '../skills';
 import { repairTile } from '../structures';
 import {
   Tile,
@@ -70,15 +72,33 @@ export function workOnBlueprint(w: World, s: Survivor, blueprintId: number): boo
   if (!b || !ready(b) || !s.work.build) return true;
   const ticks = BUILD[b.kind].ticks;
   if (b.progress < ticks) {
-    b.progress++;
-    // Cada martillazo se oye (spec H4b §3).
-    if (b.progress % BUILD_NOISE_TICKS === 0) makeNoise(w, s.pos, NOISE.build);
+    // Avanza según la habilidad (spec H4c §3.1); se aprende aunque luego falle.
+    const before = b.progress;
+    b.progress = Math.min(ticks, b.progress + skillSpeed(s.skills.build.level));
+    practice(w, s, 'build', 1);
+    // Cada martillazo se oye (spec H4b §3): cada BUILD_NOISE_TICKS de avance.
+    if (Math.floor(b.progress / BUILD_NOISE_TICKS) > Math.floor(before / BUILD_NOISE_TICKS))
+      makeNoise(w, s.pos, NOISE.build);
   }
   if (b.progress < ticks) return false;
   // Un muro, una puerta o unas tablas no se terminan con alguien (o un zombi) encima: espera.
   if (WALL_KINDS.has(b.kind) && someoneOn(w, b.pos)) return false;
-  finishBuild(w, b, s);
+  const chance = buildFailChance(s.skills.build.level, s.traits.includes('clumsy'));
+  if (BUILD[b.kind].wood > 0 && nextFloat(w.rng) < chance) failBuild(w, b, s);
+  else finishBuild(w, b, s);
   return true;
+}
+
+/**
+ * Le sale mal: pierde la mitad de la madera (hacia arriba) y el plano vuelve a empezar; Transportar
+ * traerá lo que falta (spec H4c §3.1).
+ */
+function failBuild(w: World, b: Blueprint, builder: Survivor): void {
+  const lost = Math.ceil(BUILD[b.kind].wood / 2);
+  b.wood -= lost;
+  b.progress = 0;
+  w.woodLog.wasted += lost;
+  logEvent(w, { kind: 'buildFailed', survivorId: builder.id, what: b.kind, wood: lost });
 }
 
 /** ¿Hay alguien (colono, desconocido o zombi) en esa casilla o a punto de pisarla? */

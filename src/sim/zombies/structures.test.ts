@@ -16,6 +16,7 @@ import { newZombie } from './spawn';
 function world(w = 9, h = 9): World {
   const out = emptyWorld(w, h);
   out.seen.fill(1);
+  out.survivors[0]!.skills.build.level = 8; // nunca falla (los fallos, en skillsWork.test)
   return out;
 }
 

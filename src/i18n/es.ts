@@ -230,6 +230,8 @@ export const es = {
     gotUp: (who: string) => `${who} se ha levantado`,
     zombieKilled: (who: string) => `${who} ha matado un zombi`,
     fled: (who: string) => `${who} huye a la base`,
+    buildFailed: (who: string, what: BuildKind, wood: number) =>
+      `${who} ha fallado al ${es.buildFail[what]} (−${wood} de madera)`,
     skillUp: (who: string, skill: string, level: number) =>
       `${who} ha mejorado en ${skill} (nivel ${level})`,
     zombiesInBase: 'Hay zombis dentro de la base',
@@ -390,6 +392,18 @@ export const es = {
     unboard: 'Se han quitado las tablas de una ventana',
     repair: 'Se ha hecho una reparación',
     fixDoor: 'Se ha arreglado una puerta',
+  } satisfies Record<BuildKind, string>,
+  /** Lo que intentaba quien falla al construir: "ha fallado al levantar el muro". */
+  buildFail: {
+    bed: 'construir la cama',
+    table: 'construir la mesa',
+    campfire: 'hacer la hoguera',
+    woodWall: 'levantar el muro',
+    woodDoor: 'poner la puerta',
+    board: 'tapiar la ventana',
+    unboard: 'quitar las tablas',
+    repair: 'hacer la reparación',
+    fixDoor: 'arreglar la puerta',
   } satisfies Record<BuildKind, string>,
   /** Lo que hace quien trabaja en cada plano. */
   building: {

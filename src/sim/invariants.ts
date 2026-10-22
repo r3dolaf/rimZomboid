@@ -126,7 +126,7 @@ export function checkInvariants(w: World): string[] {
     const cost = BUILD[b.kind].wood;
     if (!Number.isInteger(b.wood) || b.wood < 0 || b.wood > cost)
       problems.push(`plano ${b.id} (${b.kind}): madera ${b.wood} fuera de 0–${cost}`);
-    if (!Number.isFinite(b.progress) || b.progress < 0)
+    if (!Number.isFinite(b.progress) || b.progress < 0 || b.progress > BUILD[b.kind].ticks)
       problems.push(`plano ${b.id}: avance no válido (${b.progress})`);
   }
   for (const i of w.chopMarks)

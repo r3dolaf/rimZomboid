@@ -167,6 +167,10 @@ export const es = {
   draftButton: '⚔️ Combate',
   draftHint: 'Modo combate (R): solo obedece; clic derecho para ir, atacar a un zombi o rescatar',
   groupTitle: (n: number) => `${n} elegidos`,
+  // Cuenta atrás del asedio (H4e)
+  siegeIn: (days: number, hours: number) =>
+    days > 0 ? `Horda en ${days} d ${hours} h` : `Horda en ${hours} h`,
+  siegeLeft: (hours: number) => `Asedio: quedan ${hours} h`,
   lockWeapon: 'Fijar',
   lockWeaponHint: 'No cambia ni devuelve lo que lleva en la mano',
   logToggle: { hide: 'Minimizar el registro', show: 'Abrir el registro' },
@@ -194,6 +198,12 @@ export const es = {
     zombieSighted: 'Zombis cerca',
     broken: 'Destrozos',
     fled: 'Huida',
+    siegeAnnounced: 'Se acerca una horda',
+    siegeArrived: '¡Asedio!',
+    siegeRepelled: 'Asedio resistido',
+    siegeEnded: 'Fin del asedio',
+    wanderersSighted: 'Horda errante',
+    strangersFled: 'Huyen',
   },
   decisions: {
     theft: {
@@ -460,6 +470,9 @@ export const es = {
   strangerCarrying: (what: string) => `Lleva: ${what}`,
 
   activities: {
+    // Modo combate (H4e)
+    draftedIdle: 'En modo combate: esperando órdenes',
+    draftedMoving: 'En modo combate: yendo',
     // Sanar (H4e)
     goRescue: (who: string) => `Va a rescatar a ${who}`,
     carry: (who: string) => `Lleva a ${who} en brazos`,

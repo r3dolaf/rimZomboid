@@ -26,7 +26,15 @@ export function mountHud(
     toggleWork?: () => void;
     toggleCraft?: () => void;
   },
-): { update(t: GameTime, stock: Inventory, storm?: boolean, zombies?: number): void } {
+): {
+  update(
+    t: GameTime,
+    stock: Inventory,
+    storm?: boolean,
+    zombies?: number,
+    siege?: string | null,
+  ): void;
+} {
   const bar = document.createElement('div');
   bar.className = 'hud-bar';
 
@@ -111,6 +119,12 @@ export function mountHud(
   zombies.className = 'hud-zombies';
   zombies.dataset.testid = 'hud-zombies';
 
+  // Cuenta atrás del asedio (H4e), en rojo.
+  const siege = document.createElement('span');
+  siege.className = 'hud-siege alert';
+  siege.dataset.testid = 'hud-siege';
+  siege.hidden = true;
+
   const narrator = document.createElement('span');
   narrator.className = 'hud-narrator';
   narrator.dataset.testid = 'hud-narrator';
@@ -126,6 +140,7 @@ export function mountHud(
     work,
     craft,
     zombies,
+    siege,
     weather,
     narrator,
     seed,
@@ -141,7 +156,9 @@ export function mountHud(
   refreshSpeed();
 
   return {
-    update(t, stock, storm = false, inSight = 0) {
+    update(t, stock, storm = false, inSight = 0, siegeText = null) {
+      if (siege.hidden !== (siegeText === null)) siege.hidden = siegeText === null;
+      if (siegeText !== null && siege.textContent !== siegeText) siege.textContent = siegeText;
       const zombiesText = es.zombiesInSight(inSight);
       if (zombies.textContent !== zombiesText) zombies.textContent = zombiesText;
       zombies.classList.toggle('alert', inSight > 0);

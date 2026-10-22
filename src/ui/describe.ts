@@ -16,6 +16,9 @@ export function activityText(s: Survivor, w?: World): string {
   };
   const a = s.action;
   const t = es.activities;
+  // Modo combate (H4e): quieto o yendo adonde le han mandado.
+  if (s.drafted && a.type === 'idle') return t.draftedIdle;
+  if (s.drafted && a.type === 'moveTo' && !a.then) return t.draftedMoving;
   switch (a.type) {
     case 'eat':
       return t.eat;
@@ -85,6 +88,20 @@ export function activityText(s: Survivor, w?: World): string {
       if (a.wait === 'noPath' && a.ticksLeft > 0) return t.noPath;
       return t.wander;
   }
+}
+
+/**
+ * La cuenta atrás del asedio para la barra de arriba (H4e §2.2): cuánto falta para que llegue o,
+ * mientras dura, cuánto le queda; `null` si no hay ninguno.
+ */
+export function siegeText(w: World): string | null {
+  const hours = (ticks: number) => Math.max(0, Math.ceil(ticks / TICKS_PER_HOUR));
+  if (w.siege) {
+    const h = hours(w.siege.at - w.tick);
+    return es.siegeIn(Math.floor(h / 24), h % 24);
+  }
+  const active = w.hordes.find((h) => h.kind === 'siege' && !h.done);
+  return active ? es.siegeLeft(hours(active.until! - w.tick)) : null;
 }
 
 /** El icono más importante para la tarjeta, o `null` si no hay nada que destacar. */
@@ -452,6 +469,24 @@ export function noticeFor(e: LogEntry): NoticeInfo | null {
       return { tone: 'mixed', title: t.fled, focusId: e.survivorId };
     case 'skillUp':
       return { tone: 'good', title: t.skillUp, focusId: e.survivorId };
+    // Hordas y desconocidos (H4e)
+    case 'siegeAnnounced':
+      return { tone: 'bad', title: t.siegeAnnounced, focusId: null };
+    case 'siegeArrived':
+      return { tone: 'bad', title: t.siegeArrived, focusId: null, focusAt: { x: e.x, y: e.y } };
+    case 'siegeRepelled':
+      return { tone: 'good', title: t.siegeRepelled, focusId: null };
+    case 'siegeEnded':
+      return { tone: 'mixed', title: t.siegeEnded, focusId: null };
+    case 'wanderersSighted':
+      return {
+        tone: 'mixed',
+        title: t.wanderersSighted,
+        focusId: null,
+        focusAt: { x: e.x, y: e.y },
+      };
+    case 'strangersFled':
+      return { tone: 'mixed', title: t.strangersFled, focusId: null };
     default:
       return null;
   }

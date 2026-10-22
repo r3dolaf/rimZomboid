@@ -12,6 +12,7 @@ import { createWorld } from './sim/world';
 import { mountBuildMenu } from './ui/buildMenu';
 import { mountCards } from './ui/cards';
 import { mountCraftPanel } from './ui/craftPanel';
+import { siegeText } from './ui/describe';
 import { mountGroupPanel } from './ui/groupPanel';
 import { bindEscape } from './ui/escape';
 import { mountHousePanel } from './ui/housePanel';
@@ -130,6 +131,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
         world.storage.items,
         world.tick < world.stormUntil,
         zombiesInSight(world).length,
+        siegeText(world),
       );
       cards.update();
       sheet.update();

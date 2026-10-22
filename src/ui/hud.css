@@ -75,3 +75,8 @@ body.tool-chop canvas,
 body.tool-build canvas {
   cursor: crosshair;
 }
+/* Cuenta atrás del asedio (H4e). */
+.hud-siege.alert {
+  color: #ff6b5e;
+  font-weight: bold;
+}

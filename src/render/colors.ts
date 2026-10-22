@@ -1,4 +1,4 @@
-import { Tile } from '../sim/types';
+import { Tile, type BuildingKind } from '../sim/types';
 
 /** Colores provisionales: primero que sea divertido, luego bonito. */
 export const TILE_COLORS: Record<Tile, number> = {
@@ -77,3 +77,37 @@ export const CURTAIN_FOLD = 0x4e3446;
 export const LOCK_BAR = 0x2a1a0c;
 export const CORPSE_OUTLINE = 0x161b14;
 export const CORPSE_STAIN = 0x4a2a24;
+
+// H4f: suelo según el tipo de edificio, surtidores y letreros.
+export type FloorStyle = 'tiles' | 'concrete' | 'planks';
+export const FLOOR_COLORS: Record<FloorStyle, number> = {
+  tiles: 0xc9c4b6, // baldosa clara
+  concrete: 0x8c8b86,
+  planks: 0x9a7346,
+};
+export const FLOOR_SEAM = 0x6e5232; // juntas de las tablas y de las baldosas
+/** El suelo de cada tipo de edificio; `null`: el de siempre. */
+export function floorOf(kind: BuildingKind): FloorStyle | null {
+  switch (kind) {
+    case 'supermarket':
+    case 'pharmacy':
+    case 'hardware':
+    case 'clothes':
+    case 'gas':
+      return 'tiles';
+    case 'police':
+    case 'warehouse':
+      return 'concrete';
+    case 'farm':
+      return 'planks';
+    default:
+      return null;
+  }
+}
+export const PUMP_BODY = 0xb8b8b0;
+export const PUMP_TOP = 0xc0392b;
+export const LABEL_COLOR = '#f2ead8';
+export const LABEL_SHADOW = '#1a1a1a';
+export const CRATE_CROSS = 0x5e4422;
+export const LOCKER_LINE = 0x3e4650;
+export const MEDICINE_CROSS = 0xc0392b;

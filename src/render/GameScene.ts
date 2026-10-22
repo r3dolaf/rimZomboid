@@ -19,7 +19,16 @@ import { darkness } from '../sim/clock';
 import { CATALOG } from '../sim/events/catalog';
 import { isEmpty } from '../sim/items';
 import { effectiveDesignated, houseMarked } from '../sim/orders';
-import { Tile, type BuildKind, type Point, type Survivor, type World } from '../sim/types';
+import { doorSide } from '../sim/map/recipes';
+import {
+  Tile,
+  type BuildKind,
+  type ContainerKind,
+  type Point,
+  type Survivor,
+  type World,
+} from '../sim/types';
+import { buildingTitle } from '../ui/describe';
 import { visibleTiles } from '../sim/vision';
 import type { Selection } from '../ui/selection';
 import type { Tool, ToolMode } from '../ui/tool';
@@ -65,6 +74,17 @@ import {
   ZOMBIE_COLOR,
   ZOMBIE_HURT,
   ZOMBIE_OUTLINE,
+  CRATE_CROSS,
+  FLOOR_COLORS,
+  FLOOR_SEAM,
+  floorOf,
+  type FloorStyle,
+  LABEL_COLOR,
+  LABEL_SHADOW,
+  LOCKER_LINE,
+  MEDICINE_CROSS,
+  PUMP_BODY,
+  PUMP_TOP,
 } from './colors';
 import { bubbleIcon } from './bubbles';
 import { skyAlpha } from './daylight';
@@ -120,6 +140,10 @@ export class GameScene extends Phaser.Scene {
   private mapTiles: number[] = [];
   private mapVersion = -1;
   private mapCurtains = -1;
+  /** Suelo de cada casilla según el edificio en que está (H4f), o `null`. */
+  private floors: (FloorStyle | null)[] = [];
+  /** Letreros de los edificios (H4f): se ven en cuanto se ha visto su puerta. */
+  private labels: { door: number; text: Phaser.GameObjects.Text }[] = [];
   private storageTiles = new Set<number>();
   /** Arrastre con Talar o Construir, de casilla a casilla. */
   private drag: { mode: ToolMode; from: Point; to: Point } | null = null;
@@ -177,6 +201,7 @@ export class GameScene extends Phaser.Scene {
       .setOrigin(0, 0)
       .setAlpha(0);
     this.glow = this.add.graphics().setBlendMode(Phaser.BlendModes.ADD);
+    this.makeLabels();
     this.setupCamera();
     this.setupSelection();
     this.keys = this.input.keyboard!.addKeys(
@@ -193,7 +218,10 @@ export class GameScene extends Phaser.Scene {
     this.drawBuilding();
     this.drawActors();
     this.drawBubbles();
-    if (++this.frame % FOG_EVERY_FRAMES === 0) this.drawFog();
+    if (++this.frame % FOG_EVERY_FRAMES === 0) {
+      this.drawFog();
+      for (const l of this.labels) l.text.setVisible(this.world.seen[l.door] === 1);
+    }
     this.night.setAlpha(skyAlpha(this.world.tick, this.world.tick < this.world.stormUntil));
     this.drawGlow();
     this.onFrame?.();
@@ -206,7 +234,42 @@ export class GameScene extends Phaser.Scene {
     this.add.image(0, 0, 'map').setOrigin(0, 0);
     this.storageTiles = new Set(storage.tiles.map((t) => t.y * grid.width + t.x));
     this.mapTiles = new Array<number>(grid.tiles.length).fill(-1);
+    this.floors = new Array<FloorStyle | null>(grid.tiles.length).fill(null);
+    for (const h of this.world.houses) {
+      const style = floorOf(h.kind);
+      if (!style) continue;
+      for (let y = h.rect.y; y < h.rect.y + h.rect.h; y++)
+        for (let x = h.rect.x; x < h.rect.x + h.rect.w; x++)
+          this.floors[y * grid.width + x] = style;
+    }
     this.refreshMap();
+  }
+
+  /** Un letrero con el nombre de cada edificio, fuera, delante de su puerta (H4f). */
+  private makeLabels(): void {
+    const w = this.world;
+    this.labels = w.houses.map((h) => {
+      const side = doorSide(h);
+      const [dx, dy] =
+        side === 'top' ? [0, -1] : side === 'bottom' ? [0, 1] : side === 'left' ? [-1, 0] : [1, 0];
+      const text = this.add
+        .text(
+          (h.door.x + 0.5 + dx * 0.9) * TILE_PX,
+          (h.door.y + 0.5 + dy * 0.9) * TILE_PX,
+          buildingTitle(w, h.id),
+          {
+            fontFamily: 'system-ui, sans-serif',
+            fontSize: '7px',
+            color: LABEL_COLOR,
+            stroke: LABEL_SHADOW,
+            strokeThickness: 2,
+            resolution: 4,
+          },
+        )
+        .setOrigin(0.5)
+        .setVisible(w.seen[h.door.y * w.grid.width + h.door.x] === 1);
+      return { door: h.door.y * w.grid.width + h.door.x, text };
+    });
   }
 
   /**
@@ -227,7 +290,7 @@ export class GameScene extends Phaser.Scene {
       if (this.mapTiles[i] === look) continue;
       this.mapTiles[i] = look;
       const [x, y] = [(i % grid.width) * TILE_PX, Math.floor(i / grid.width) * TILE_PX];
-      paintTile(ctx, x, y, t, hung.has(i));
+      paintTile(ctx, x, y, t, hung.has(i), this.floors[i] ?? null);
       if (this.storageTiles.has(i)) {
         ctx.fillStyle = css(STORAGE_EDGE);
         ctx.fillRect(x + 1, y + 1, TILE_PX - 2, TILE_PX - 2);
@@ -430,17 +493,13 @@ export class GameScene extends Phaser.Scene {
       const [x, y] = [c.pos.x * TILE_PX, c.pos.y * TILE_PX];
       const alpha = c.searched && isEmpty(c.items) ? 0.35 : 1;
       if (c.kind === 'corpse') this.drawCorpse(x, y, alpha);
-      else {
-        g.fillStyle(CONTAINER_EDGE);
-        g.fillRect(x + 2, y + 2, TILE_PX - 4, TILE_PX - 4);
-        g.fillStyle(CONTAINER_COLORS[c.kind], alpha);
-        g.fillRect(x + 3, y + 3, TILE_PX - 6, TILE_PX - 6);
-      }
+      else this.drawContainer(c.kind, x, y, alpha);
       if (effectiveDesignated(w, c)) {
         m.lineStyle(2, DESIGNATION, 1);
         m.strokeRect(x + 1, y + 1, TILE_PX - 2, TILE_PX - 2);
       }
     }
+    this.drawPumps();
     const seen = (p: Point) => w.seen[p.y * w.grid.width + p.x] === 1;
     for (const f of w.furniture) {
       if (!seen(f.pos)) continue;
@@ -483,6 +542,76 @@ export class GameScene extends Phaser.Scene {
       if (!marked && !selected) continue;
       m.lineStyle(selected ? 2 : 3, selected ? HOUSE_SELECTED : DESIGNATION, 0.9);
       m.strokeRect(h.rect.x * TILE_PX, h.rect.y * TILE_PX, h.rect.w * TILE_PX, h.rect.h * TILE_PX);
+    }
+  }
+
+  /** Un mueble de saqueo: caja de color, con la forma de los nuevos (H4f). */
+  private drawContainer(
+    kind: Exclude<ContainerKind, 'corpse'>,
+    x: number,
+    y: number,
+    alpha: number,
+  ) {
+    const g = this.furniture;
+    const color = CONTAINER_COLORS[kind];
+    g.fillStyle(CONTAINER_EDGE, alpha);
+    switch (kind) {
+      case 'counter': // mostrador: largo y bajo
+        g.fillRect(x + 1, y + 5, TILE_PX - 2, 7);
+        g.fillStyle(color, alpha);
+        g.fillRect(x + 2, y + 6, TILE_PX - 4, 5);
+        return;
+      case 'locker': // taquilla: alta y estrecha, con dos puertas
+        g.fillRect(x + 4, y + 1, 8, TILE_PX - 2);
+        g.fillStyle(color, alpha);
+        g.fillRect(x + 5, y + 2, 6, TILE_PX - 4);
+        g.fillStyle(LOCKER_LINE, alpha);
+        g.fillRect(x + 7.5, y + 2, 1, TILE_PX - 4);
+        return;
+      case 'crate': // caja: con su aspa
+        g.fillRect(x + 2, y + 2, TILE_PX - 4, TILE_PX - 4);
+        g.fillStyle(color, alpha);
+        g.fillRect(x + 3, y + 3, TILE_PX - 6, TILE_PX - 6);
+        g.lineStyle(1, CRATE_CROSS, alpha);
+        g.lineBetween(x + 3, y + 3, x + TILE_PX - 3, y + TILE_PX - 3);
+        g.lineBetween(x + TILE_PX - 3, y + 3, x + 3, y + TILE_PX - 3);
+        return;
+      case 'medicine': // botiquín: blanco con la cruz
+        g.fillRect(x + 3, y + 3, TILE_PX - 6, TILE_PX - 6);
+        g.fillStyle(color, alpha);
+        g.fillRect(x + 4, y + 4, TILE_PX - 8, TILE_PX - 8);
+        g.fillStyle(MEDICINE_CROSS, alpha);
+        g.fillRect(x + 7, y + 5, 2, 6);
+        g.fillRect(x + 5, y + 7, 6, 2);
+        return;
+      default:
+        g.fillRect(x + 2, y + 2, TILE_PX - 4, TILE_PX - 4);
+        g.fillStyle(color, alpha);
+        g.fillRect(x + 3, y + 3, TILE_PX - 6, TILE_PX - 6);
+    }
+  }
+
+  /** Surtidores de la gasolinera, en la explanada delante de la puerta (de adorno). */
+  private drawPumps(): void {
+    const g = this.furniture;
+    const w = this.world;
+    for (const h of w.houses) {
+      if (h.kind !== 'gas' || w.seen[h.door.y * w.grid.width + h.door.x] !== 1) continue;
+      const side = doorSide(h);
+      const [dx, dy] =
+        side === 'top' ? [0, -1] : side === 'bottom' ? [0, 1] : side === 'left' ? [-1, 0] : [1, 0];
+      for (const off of [-2, 2]) {
+        // Dos casillas delante de la puerta, a un lado y a otro.
+        const px = h.door.x + dx * 2 + (dy !== 0 ? off : 0);
+        const py = h.door.y + dy * 2 + (dx !== 0 ? off : 0);
+        const [x, y] = [px * TILE_PX, py * TILE_PX];
+        g.fillStyle(CONTAINER_EDGE);
+        g.fillRect(x + 4, y + 2, 8, 12);
+        g.fillStyle(PUMP_BODY);
+        g.fillRect(x + 5, y + 3, 6, 10);
+        g.fillStyle(PUMP_TOP);
+        g.fillRect(x + 5, y + 3, 6, 3);
+      }
     }
   }
 
@@ -675,6 +804,7 @@ export class GameScene extends Phaser.Scene {
       tileToScreen,
       forceEvent,
       canPlace: (kind: BuildKind, x: number, y: number) => canPlace(this.world, kind, { x, y }),
+      centerOnTile: (x: number, y: number) => this.centerOnTile({ x, y }),
     };
   }
 
@@ -715,10 +845,23 @@ function paintTile(
   y: number,
   t: Tile,
   curtains: boolean,
+  floor: FloorStyle | null,
 ): void {
   ctx.fillStyle = css(TILE_COLORS[t === Tile.BoardedWindow ? Tile.Window : t]);
   ctx.fillRect(x, y, TILE_PX, TILE_PX);
-  if (t === Tile.WoodWall) {
+  if (t === Tile.Floor && floor) {
+    // Suelo según el edificio (H4f): baldosas con juntas, cemento liso o tablas.
+    ctx.fillStyle = css(FLOOR_COLORS[floor]);
+    ctx.fillRect(x, y, TILE_PX, TILE_PX);
+    ctx.fillStyle = css(FLOOR_SEAM);
+    if (floor === 'planks') for (const dy of [3, 7, 11, 15]) ctx.fillRect(x, y + dy, TILE_PX, 1);
+    if (floor === 'tiles') {
+      ctx.globalAlpha = 0.25;
+      ctx.fillRect(x, y + TILE_PX - 1, TILE_PX, 1);
+      ctx.fillRect(x + TILE_PX - 1, y, 1, TILE_PX);
+      ctx.globalAlpha = 1;
+    }
+  } else if (t === Tile.WoodWall) {
     ctx.fillStyle = css(PLANK_SEAM);
     for (const dy of [5, 10]) ctx.fillRect(x, y + dy, TILE_PX, 1);
   } else if (t === Tile.BrokenWindow) {

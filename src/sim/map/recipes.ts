@@ -196,15 +196,37 @@ function spotsOf(grid: Grid, b: Building): Spots {
       if (!byWall && d >= 3 && d <= f.depth - 3 && l >= 2 && l <= f.width - 3 && d % 3 === 0)
         out.rows.push(p);
     }
+  // Las filas se llenan a la vez y desde el centro: así, con pocos muebles, salen varios pasillos
+  // iguales en vez de una fila larga.
+  const byRow = new Map<number, Point[]>();
+  for (const p of out.rows) {
+    const d = f.local(p).d;
+    byRow.set(d, [...(byRow.get(d) ?? []), p]);
+  }
+  const rows = [...byRow.values()].map((r) =>
+    r.sort((a, b) => Math.abs(f.local(a).l - mid) - Math.abs(f.local(b).l - mid)),
+  );
+  out.rows = [];
+  for (let k = 0; rows.some((r) => k < r.length); k++)
+    for (const r of rows) if (k < r.length) out.rows.push(r[k]!);
   return out;
 }
 
-/** Saca `n` casillas al azar de `from` (sin repetir y sin las ya usadas). */
-function take(rng: RngState, from: Point[], n: number, used: Set<string>): Point[] {
+/**
+ * Saca `n` casillas de `from` (sin repetir y sin las ya usadas): al azar o, en las filas, seguidas
+ * (para que las estanterías, percheros y cajas formen filas con sus pasillos).
+ */
+function take(
+  rng: RngState,
+  from: Point[],
+  n: number,
+  used: Set<string>,
+  inOrder = false,
+): Point[] {
   const pool = from.filter((p) => !used.has(`${p.x},${p.y}`));
   const out: Point[] = [];
   while (out.length < n && pool.length > 0) {
-    const [p] = pool.splice(nextInt(rng, 0, pool.length - 1), 1);
+    const [p] = pool.splice(inOrder ? 0 : nextInt(rng, 0, pool.length - 1), 1);
     used.add(`${p!.x},${p!.y}`);
     out.push(p!);
   }
@@ -221,7 +243,8 @@ export function furnish(grid: Grid, rng: RngState, b: Building): Furnishing[] {
   const used = new Set<string>();
   const out: Furnishing[] = [];
   const put = (from: Point[], n: number, k: ContainerKind | readonly ContainerKind[]) => {
-    for (const pos of take(rng, from, Math.min(n, total - out.length), used))
+    const inOrder = from === s.rows;
+    for (const pos of take(rng, from, Math.min(n, total - out.length), used, inOrder))
       out.push({ pos, kind: typeof k === 'string' ? k : k[nextInt(rng, 0, k.length - 1)]! });
   };
   const fill = (from: Point[], k: ContainerKind | readonly ContainerKind[]) =>

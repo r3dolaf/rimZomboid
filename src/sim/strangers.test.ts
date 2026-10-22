@@ -18,6 +18,7 @@ function world(seed = 2): World {
   const w = createWorld(seed);
   w.tick = 3 * TICKS_PER_DAY;
   w.narrator.nextEventAt = 1e9;
+  w.narrator.phaseEndsAt = 1e9; // si no, el cambio de fase adelanta el siguiente suceso
   return w;
 }
 

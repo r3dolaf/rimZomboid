@@ -1,5 +1,6 @@
 import { NO_PATH_RETRY_TICKS } from '../balance';
 import { brains } from '../brain';
+import { draftDecision } from '../draft';
 import { logEvent } from '../log';
 import { isWalkable } from '../map/grid';
 import { findPath } from '../path/astar';
@@ -12,6 +13,7 @@ export function decisionsSystem(w: World): void {
   for (const s of w.survivors) {
     if (s.action.type === 'downed') continue; // en el suelo no decide nada
     if (s.needs.sleep <= 0 && s.action.type !== 'sleep') {
+      s.drafted = false; // H4e: quien se desploma sale del modo combate
       s.action = { type: 'sleep', inBed: false };
       s.path = [];
       logEvent(w, { kind: 'collapsed', survivorId: s.id });
@@ -23,7 +25,9 @@ export function decisionsSystem(w: World): void {
       if (s.action.wait === 'noPath') continue;
     }
 
-    const action = brains[s.brain].decide(s, w);
+    // En modo combate (H4e) manda el jugador; si no (o si acaba de salir), el cerebro.
+    const drafted = draftDecision(s, w);
+    const action = drafted !== undefined ? drafted : brains[s.brain].decide(s, w);
     if (action === null) continue;
     if (action.type === 'moveTo') {
       // Si está en una casilla que ya no se pisa, sale por la transitable más cercana.

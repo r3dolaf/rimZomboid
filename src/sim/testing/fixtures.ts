@@ -58,6 +58,7 @@ export function emptyWorld(width: number, height: number): World {
         bubble: null,
         sick: null,
         celebrated: false,
+        drafted: false,
       },
     ],
     beds: [{ id: 1, pos: { x: width - 1, y: 0 }, ownerId: 1 }],
@@ -120,6 +121,7 @@ export function addSurvivor(w: World, t: Point, name = 'Bea'): Survivor {
     bubble: null,
     sick: null,
     celebrated: false,
+    drafted: false,
   };
   w.survivors.push(s);
   return s;

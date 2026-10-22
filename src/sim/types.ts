@@ -193,7 +193,8 @@ export type Action =
   | { type: 'build'; blueprintId: number }
   // Zombis (H4b): en el suelo hasta `until`; peleando con un zombi.
   | { type: 'downed'; until: number }
-  | { type: 'melee'; zombieId: number; cooldown: number }
+  /** `hold` (modo combate, H4e): golpea sin moverse; si el zombi se aleja, no lo persigue. */
+  | { type: 'melee'; zombieId: number; cooldown: number; hold?: boolean }
   // Forzando una puerta atrancada (H4d).
   | { type: 'pry'; door: number; ticksLeft: number }
   // Fabricando en una mesa (H4d): `recipe` por si el pedido se quita a medias.
@@ -239,6 +240,8 @@ export interface Survivor {
   sick: { until: number; plan: 'undecided' | 'rest' | 'work' } | null;
   /** Ya ha tenido su cumpleaños. */
   celebrated: boolean;
+  /** En modo combate (H4e): solo obedece al jugador. */
+  drafted: boolean;
 }
 
 /** Uno o dos desconocidos que esperan a la puerta a que el jugador decida (su decisión caduca). */

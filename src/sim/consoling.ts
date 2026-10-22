@@ -30,6 +30,7 @@ export function consolingTargetId(s: Survivor): number | null {
 
 /** En crisis o al límite, despierto, sin pelear, no en el suelo y sin un "Consolado" vigente. */
 export function needsConsoling(t: Survivor, w: World): boolean {
+  if (t.drafted) return false; // en modo combate (H4e) no se le interrumpe
   const a = t.action.type;
   if (a === 'sleep' || a === 'fight' || a === 'console') return false;
   if (a === 'downed' || a === 'melee') return false;

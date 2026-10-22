@@ -25,6 +25,7 @@ export type RelationLabel = 'partner' | 'friend' | 'rival';
  * consolado y no en el suelo.
  */
 export function isAvailable(s: Survivor): boolean {
+  if (s.drafted) return false; // en modo combate (H4e), ni charlas ni peleas
   const a = s.action;
   if (a.type === 'sleep' || a.type === 'crisis' || a.type === 'fight') return false;
   if (a.type === 'downed' || a.type === 'melee') return false;

@@ -53,6 +53,12 @@ export function combatSystem(w: World): void {
       if (!w.zombies.includes(z)) s.action = { type: 'idle', ticksLeft: 0 };
       continue;
     }
+    // En modo combate, quieto (H4e): si se aleja, no lo persigue.
+    if (a.hold) {
+      s.action = { type: 'idle', ticksLeft: 0 };
+      s.path = [];
+      continue;
+    }
     // Hacia el zombi, rehaciendo el camino cuando cambia de casilla.
     const zt = tileOf(z.pos);
     const end = s.path.at(-1);

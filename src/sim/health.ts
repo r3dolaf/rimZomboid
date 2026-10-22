@@ -18,6 +18,7 @@ export function hurtSurvivor(w: World, s: Survivor, amount: number): void {
   if (s.health > 0 || s.action.type === 'downed') return;
   s.action = { type: 'downed', until: w.tick + DOWNED_TICKS };
   s.path = [];
+  s.drafted = false; // H4e: el derribado sale del modo combate
   logEvent(w, { kind: 'downed', survivorId: s.id });
 }
 

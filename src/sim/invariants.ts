@@ -43,6 +43,10 @@ export function checkInvariants(w: World): string[] {
       problems.push(`${who}: Salud fuera de 0–100 (${s.health})`);
     if (s.action.type === 'downed' && s.health !== 0)
       problems.push(`${who}: derribado con Salud ${s.health}`);
+    if (s.drafted && (s.action.type === 'downed' || s.action.type === 'sleep'))
+      problems.push(
+        `${who}: en modo combate y ${s.action.type === 'sleep' ? 'durmiendo' : 'derribado'}`,
+      );
     checkInventory(problems, `${who}: carga`, s.carrying);
     if (weightOf(s.carrying) > capacityKg(s) + 1e-9)
       problems.push(`${who}: carga ${weightOf(s.carrying)} kg > ${capacityKg(s)}`);

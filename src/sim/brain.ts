@@ -55,14 +55,7 @@ const AiBrain: Brain = {
 
     const r = rest(s, w);
     if (r) return r;
-    // Tras desahogarse (o ser consolado) el ánimo tarda en subir: sin esta guarda, encadenaría
-    // otra crisis al momento.
-    const calmed = s.memories.some(
-      (m) =>
-        (m.id === 'vented' || m.id === 'consoled' || m.id === 'consoledByPartner') &&
-        m.expiresAt > w.tick,
-    );
-    if (s.needs.mood < MOOD_CRISIS && !calmed)
+    if (crisisDue(s, w))
       return { type: 'moveTo', target: pick(w.rng, baseFloor(w)), then: { type: 'crisis' } };
     if (a.type === 'moveTo' && a.then?.type === 'console')
       return stillConsoling(s, w, a.then.otherId) ? null : { type: 'idle', ticksLeft: 0 };
@@ -93,6 +86,19 @@ const AiBrain: Brain = {
     return null;
   },
 };
+
+/**
+ * ¿Le toca una crisis? Con el ánimo bajo el umbral, salvo que se haya calmado hace poco: tras
+ * desahogarse (o ser consolado) el ánimo tarda en subir, y sin esta guarda encadenaría otra.
+ */
+export function crisisDue(s: Survivor, w: World): boolean {
+  const calmed = s.memories.some(
+    (m) =>
+      (m.id === 'vented' || m.id === 'consoled' || m.id === 'consoledByPartner') &&
+      m.expiresAt > w.tick,
+  );
+  return s.needs.mood < MOOD_CRISIS && !calmed;
+}
 
 /** Comer si tiene hambre (y hay qué) o, si no, dormir si tiene sueño. */
 function rest(s: Survivor, w: World): Action | null {

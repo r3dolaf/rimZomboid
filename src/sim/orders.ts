@@ -2,6 +2,7 @@ import { isEmpty } from './items';
 import { resolveDecision } from './events/resolve';
 import { cancelBlueprint, markTree, placeBlueprint } from './build';
 import { BILL_DEFAULT_TARGET } from './balance';
+import { applyDraftOrder } from './draft';
 import type { Bill, BuildKind, Container, RecipeId, Stance, WorkType, World } from './types';
 
 /** Lo que pide el jugador. La interfaz solo cambia el mundo mediante órdenes. */
@@ -25,7 +26,11 @@ export type Order =
   | { type: 'removeBill'; billId: number }
   | { type: 'setBill'; billId: number; mode?: 'count' | 'until'; target?: number }
   /** Sube (-1) o baja (+1) un puesto en la lista. */
-  | { type: 'moveBill'; billId: number; dir: -1 | 1 };
+  | { type: 'moveBill'; billId: number; dir: -1 | 1 }
+  // Modo combate (H4e §3.1)
+  | { type: 'draft'; survivorIds: number[]; on: boolean }
+  | { type: 'draftMove'; survivorIds: number[]; x: number; y: number }
+  | { type: 'draftAttack'; survivorIds: number[]; zombieId: number };
 
 /** Encola una orden; se aplica al principio del siguiente tick. */
 export function issue(w: World, order: Order): void {
@@ -150,6 +155,11 @@ export function ordersSystem(w: World): void {
         if (s) s.weaponLocked = o.locked;
         break;
       }
+      case 'draft':
+      case 'draftMove':
+      case 'draftAttack':
+        applyDraftOrder(w, o);
+        break;
     }
   }
   w.orders = [];

@@ -117,6 +117,7 @@ export function newStranger(w: World, start: Point): Survivor {
     bubble: null,
     sick: null,
     celebrated: false,
+    drafted: false,
   };
   s.needs.mood = moodTarget(s, w.tick, w.base.rect);
   s.stance = defaultStance(s.traits);

@@ -8,6 +8,8 @@ export type Order =
   | { type: 'designateHouse'; houseId: number; on: boolean }
   | { type: 'designateContainer'; containerId: number; on: boolean }
   | { type: 'setWork'; survivorId: number; work: WorkType; enabled: boolean }
+  /** Prioridad de un trabajo, de 1 (lo primero) a 4 (H4d). */
+  | { type: 'setPriority'; survivorId: number; work: WorkType; priority: number }
   /** Respuesta a una decisión (spec H3c §4): 0 es la primera opción. */
   | { type: 'decide'; decisionId: number; option: 0 | 1 }
   // Talar y construir (H4a)
@@ -61,6 +63,12 @@ export function ordersSystem(w: World): void {
       case 'setWork': {
         const s = w.survivors.find((x) => x.id === o.survivorId);
         if (s) s.work[o.work] = o.enabled;
+        break;
+      }
+      case 'setPriority': {
+        const s = w.survivors.find((x) => x.id === o.survivorId);
+        if (s && Number.isInteger(o.priority) && o.priority >= 1 && o.priority <= 4)
+          s.priorities[o.work] = o.priority;
         break;
       }
       case 'decide':

@@ -96,19 +96,25 @@ export function findWork(s: Survivor, w: World): Action | null {
   if (back) return back;
   const arm = weaponJob(s, w);
   if (arm) return arm;
-  const hungry = foodDays(w) < HUNGRY_LOOT_DAYS;
-  const order: (() => Action | null)[] = [
-    () => (hungry && loot ? (pryJob(s, w) ?? lootJob(s, w)) : null),
-    () => (may(s, 'build') ? buildJob(s, w) : null),
-    () => (may(s, 'haul') ? haulJob(s, w) : null),
-    () => (may(s, 'chop') ? chopJob(s, w) : null),
-    // Saquear: antes, forzar las puertas atrancadas de las casas marcadas (H4d).
-    () => (loot ? (pryJob(s, w) ?? lootJob(s, w)) : null),
-  ];
-  for (const job of order) {
-    const a = job();
+  // Con poca comida, saquear va delante de todo, tenga la prioridad que tenga.
+  if (loot && foodDays(w) < HUNGRY_LOOT_DAYS) {
+    const a = pryJob(s, w) ?? lootJob(s, w);
     if (a) return a;
   }
+  // Por prioridad (1 primero, H4d) y, a igual prioridad, por criticidad.
+  const jobs: [WorkType, () => Action | null][] = [
+    ['build', () => buildJob(s, w)],
+    ['haul', () => haulJob(s, w)],
+    ['chop', () => chopJob(s, w)],
+    // Saquear: antes, forzar las puertas atrancadas de las casas marcadas (H4d).
+    ['loot', () => pryJob(s, w) ?? lootJob(s, w)],
+  ];
+  for (let p = 1; p <= 4; p++)
+    for (const [work, job] of jobs) {
+      if (s.priorities[work] !== p || !may(s, work)) continue;
+      const a = job();
+      if (a) return a;
+    }
   return null;
 }
 

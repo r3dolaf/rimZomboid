@@ -50,6 +50,11 @@ Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al p
 
 **Pedido por el usuario (después de H4b):** habilidades en cada trabajo → H4c. Al diseñarlas, el usuario pidió también cortinas (como en Zomboid: no ves fuera, pero los zombis no te ven), tela que se saquea y se convierte en vendas o cortinas, y cuerpos de zombi que se registran (ropa y, a veces, armas o equipo) → H4d.
 
+**Para H6 (pulido), de H4d:**
+
+- Armas y vendas (Equilibrado/normal, saqueando todas las casas, sin construir). Sin registrar cuerpos (4 semillas), el mapa queda saqueado antes del día 7: unas 8–19 armas en la colonia (con los cuchillos del principio) y 10–16 vendas, y así se queda hasta el día 30. Marcando cada mañana todos los cuerpos vistos (6 semillas, con una mesa y "vendas hasta tener 10"): el día 7, 15–25 armas, 19–33 vendas y 80–150 telas; el día 30, 45–70 armas, 48–69 vendas y unas 670 telas (se registran unos 15 cuerpos al día). Con tantas vendas de los cuerpos, el pedido de vendas casi no hace falta (1–4 fabricadas en 30 días). Los cuerpos dan mucho: revisar sus probabilidades (10 % arma, 15 % venda o lata) y quizá menos tela.
+- Registrar cuerpos manda a los colonos a donde han muerto los zombis, a cualquier hora: en 1 de 4 semillas (sin mesa) cayeron todos el día 3 y no se levantaron más (los zombis se juntan en la base hasta 50). Es el mismo problema de H4b (sin muerte hasta H5, quien se levanta vuelve a caer); con mando (H4e) el jugador podrá evitarlo, pero quizá registrar cuerpos no debería hacerse con zombis a la vista.
+
 **Para H6 (pulido), de H4c:**
 
 - Primera semana con habilidades (12 semillas, Equilibrado/normal, saqueando todo y sin construir): los colonos pasan en el suelo un 9 % del tiempo (antes de H4c, un 5 %), y el día 3 llevan registrados el 86 % de los muebles (antes, el 96 %). La causa principal era Pelear bajo al empezar: por eso el acierto es 60 % con 0 (no 50 %).

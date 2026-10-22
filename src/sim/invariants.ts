@@ -170,10 +170,12 @@ export function checkInvariants(w: World): string[] {
     if (t !== Tile.Window && t !== Tile.CurtainedWindow && t !== Tile.BoardedWindow)
       problems.push(`cortinas en una casilla que no es ventana: ${i} (casilla ${t})`);
   }
-  w.grid.tiles.forEach((t, i) => {
-    if (t === Tile.CurtainedWindow && !withCurtains.has(i))
-      problems.push(`cortinas corridas sin cortinas en la lista: ${i}`);
-  });
+  // Se buscan con indexOf (nativo): recorrer el mapa casilla a casilla en cada tick sale caro.
+  const tiles = w.grid.tiles;
+  for (let i = tiles.indexOf(Tile.CurtainedWindow); i !== -1;) {
+    if (!withCurtains.has(i)) problems.push(`cortinas corridas sin cortinas en la lista: ${i}`);
+    i = tiles.indexOf(Tile.CurtainedWindow, i + 1);
+  }
   for (const b of w.bills)
     if (
       !(b.recipe in RECIPES) ||

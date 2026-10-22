@@ -8,6 +8,7 @@ import { isEmpty } from '../src/sim/items';
 import { issue } from '../src/sim/orders';
 import { createRng, nextInt } from '../src/sim/rng';
 import { canPlace } from '../src/sim/build';
+import { contains } from '../src/sim/geom';
 import { WEAPONS } from '../src/sim/jobs/weapons';
 import {
   Tile,
@@ -57,7 +58,7 @@ test.each([1, 2, 3])(
 );
 
 test.each([1, 2, 3])(
-  `semilla %i: ${DAYS} días con todas las casas marcadas — el mapa se vacía sin romper nada`,
+  `semilla %i: ${DAYS} días con todas las casas marcadas — el mapa se vacía (salvo lo atrancado sin palanca) sin romper nada`,
   (seed) => {
     const w = withoutZombies(createWorld(seed));
     // Sin narrador: un alijo de última hora dejaría comida en un mueble sin marcar.
@@ -72,7 +73,13 @@ test.each([1, 2, 3])(
       if (new Set(targets).size !== targets.length)
         expect(targets, `tick ${w.tick}`).toEqual('únicos');
     }
-    for (const c of w.containers) expect(isEmpty(c.items), `contenedor ${c.id}`).toBe(true);
+    // H4d: una casa con la puerta aún atrancada no se puede saquear (nadie ha tenido palanca).
+    const locked = (h: (typeof w.houses)[number]) =>
+      w.grid.tiles[h.door.y * w.grid.width + h.door.x] === Tile.LockedDoor;
+    const shut = new Set(w.houses.filter(locked).map((h) => h.id));
+    if (shut.size > 0) expect(allCrowbars(w), 'atrancadas habiendo palanca').toBe(0);
+    for (const c of w.containers)
+      if (!shut.has(c.houseId)) expect(isEmpty(c.items), `contenedor ${c.id}`).toBe(true);
     for (const s of w.survivors) expect(isEmpty(s.carrying), s.name).toBe(true);
   },
   120_000,
@@ -106,6 +113,15 @@ test.each([1, 2, 3])(
   },
   240_000,
 );
+
+/** Palancas que tiene la colonia (almacén, carga o mano) o hay en el suelo. */
+function allCrowbars(w: World): number {
+  return (
+    w.storage.items.crowbar +
+    w.piles.reduce((n, p) => n + p.items.crowbar, 0) +
+    w.survivors.reduce((n, s) => n + s.carrying.crowbar + (s.equipped === 'crowbar' ? 1 : 0), 0)
+  );
+}
 
 const STYLES: NarratorStyle[] = ['calm', 'balanced', 'chaotic'];
 const eventsBy: Record<NarratorStyle, number> = { calm: 0, balanced: 0, chaotic: 0 };
@@ -335,12 +351,46 @@ const ZOMBIE_GAMES: [NarratorStyle, ZombieLevel][] = [
   ['balanced', 'normal'],
   ['chaotic', 'many'],
 ];
-const zombieTotals = { kills: 0, downs: 0, broken: 0 };
+const zombieTotals = { kills: 0, downs: 0, broken: 0, crafted: 0, corpses: 0 };
+
+/**
+ * H4d, desde el primer día: una mesa (con su madera), pedidos de vendas (hasta 10), unas cortinas
+ * y deshacer otras, y las cortinas de la base corridas.
+ */
+function clothSetup(w: World): void {
+  w.storage.items.wood += 4;
+  w.woodLog.start += 4;
+  const r = w.base.rect;
+  const spot = [];
+  for (let y = r.y + 1; y < r.y + r.h - 1; y++)
+    for (let x = r.x + 1; x < r.x + r.w - 1; x++) spot.push({ x, y });
+  const table = spot.find((p) => canPlace(w, 'table', p));
+  if (table) issue(w, { type: 'placeBlueprint', kind: 'table', ...table });
+  const id = w.nextBillId;
+  for (const recipe of ['bandages', 'curtains', 'unpick'] as const)
+    issue(w, { type: 'addBill', recipe });
+  issue(w, { type: 'setBill', billId: id, target: 10 });
+  issue(w, { type: 'setBill', billId: id + 1, mode: 'count', target: 2 });
+  issue(w, { type: 'setBill', billId: id + 2, mode: 'count', target: 1 });
+  for (const i of w.curtains) {
+    const p = { x: i % w.grid.width, y: Math.floor(i / w.grid.width) };
+    if (contains(r, p) && canPlace(w, 'curtains', p))
+      issue(w, { type: 'placeBlueprint', kind: 'curtains', ...p });
+  }
+}
+
+/** Cada mañana, marcar los cuerpos que se ven (H4d). */
+function markCorpses(w: World): void {
+  for (const c of w.containers)
+    if (c.kind === 'corpse' && w.seen[c.pos.y * w.grid.width + c.pos.x] === 1 && !c.designated)
+      issue(w, { type: 'designateContainer', containerId: c.id, on: true });
+}
 
 describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
-  test(`${DAYS} días saqueando con zombis — sin romper nada, sin bloqueos, las armas cuadran y cada tick va rápido`, () => {
+  test(`${DAYS} días saqueando con zombis, fabricando, con cortinas y cuerpos — sin romper nada, sin bloqueos, las armas cuadran y cada tick va rápido`, () => {
     const w = createWorld(1, style, level);
     for (const h of w.houses) issue(w, { type: 'designateHouse', houseId: h.id, on: true });
+    clothSetup(w);
     const r = createRng(17);
     const weapons = allWeapons(w);
     const levelsAtStart = levels(w);
@@ -349,6 +399,7 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
       const present = new Set(w.survivors.map((s) => s.id));
       const moved = new Set<number>();
       const down = new Map<number, number>();
+      markCorpses(w);
       for (let i = 0; i < TICKS_PER_DAY; i++) {
         const d = w.decisions[0];
         if (d && !w.orders.some((o) => o.type === 'decide'))
@@ -364,6 +415,8 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
           if (e.kind === 'zombieKilled') zombieTotals.kills++;
           if (e.kind === 'downed') zombieTotals.downs++;
           if (e.kind === 'broken') zombieTotals.broken++;
+          if (e.kind === 'crafted') zombieTotals.crafted++;
+          if (e.kind === 'corpseSearched') zombieTotals.corpses++;
         }
         for (const s of w.survivors) {
           const b = before.get(s.id);
@@ -394,9 +447,11 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
   }, 600_000);
 });
 
-test('con zombis se pelea, alguien cae y algo se rompe', () => {
+test('con zombis se pelea, alguien cae, algo se rompe, se fabrica y se registran cuerpos', () => {
   if (DAYS < 10) return;
   expect(zombieTotals.kills).toBeGreaterThan(0);
   expect(zombieTotals.downs).toBeGreaterThan(0);
   expect(zombieTotals.broken).toBeGreaterThan(0);
+  expect(zombieTotals.crafted, 'fabricado').toBeGreaterThan(0);
+  expect(zombieTotals.corpses, 'cuerpos registrados').toBeGreaterThan(0);
 });

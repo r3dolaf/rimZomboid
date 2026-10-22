@@ -73,7 +73,7 @@ test('cada tipo de edificio tiene lo suyo: rangos y "a veces"', () => {
   }
 });
 
-test('cada cosa va a su mueble: comida a la nevera, vendas al botiquín, tela al armario…', () => {
+test('cada cosa va a su mueble (comida a la nevera, vendas al botiquín, tela al armario…) o a una estantería o un mostrador', () => {
   const home: Record<LootItem, readonly ContainerKind[]> = {
     food: ['fridge'],
     bandage: ['medicine'],
@@ -92,8 +92,13 @@ test('cada cosa va a su mueble: comida a la nevera, vendas al botiquín, tela al
     fillBuilding(kind, cs, createRng(7));
     for (const c of cs)
       for (const item of ITEMS)
-        if (c.items[item] > 0)
-          expect(home[item], `${kind}: ${item} en ${c.kind}`).toContain(c.kind);
+        // En su mueble o en una estantería o un mostrador; si no, es la unidad que se le dio a un
+        // mueble que se iba a quedar vacío.
+        if (c.items[item] > 0 && !['shelf', 'counter', ...home[item]].includes(c.kind))
+          expect(
+            ITEMS.reduce((n, k) => n + (c.items[k] > 0 ? 1 : 0), 0),
+            `${kind}: ${item} en ${c.kind}`,
+          ).toBe(1);
   }
 });
 
@@ -163,4 +168,26 @@ test('los contenedores empiezan sin registrar, sin marcar y sin reserva; misma s
     expect(c.reservedBy).toBeNull();
   }
   expect(createWorld(9).containers).toEqual(createWorld(9).containers);
+});
+
+test('pocos muebles vacíos: las estanterías y los mostradores tienen un poco de todo (revisión de H4f)', () => {
+  let empty = 0;
+  let all = 0;
+  let shopEmpty = 0;
+  let shopAll = 0;
+  for (let seed = 1; seed <= 20; seed++) {
+    const w = createWorld(seed);
+    const shop = w.houses.find((h) => h.kind === 'supermarket')!.id;
+    for (const c of w.containers) {
+      const none = ITEMS.every((k) => c.items[k] === 0);
+      all++;
+      if (none) empty++;
+      if (c.houseId === shop) {
+        shopAll++;
+        if (none) shopEmpty++;
+      }
+    }
+  }
+  expect(empty / all).toBeLessThan(0.1);
+  expect(shopEmpty / shopAll).toBeLessThan(0.15);
 });

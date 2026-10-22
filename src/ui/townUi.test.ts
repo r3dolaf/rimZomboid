@@ -100,3 +100,17 @@ test('la ficha del edificio se titula con su nombre', () => {
   panel.update();
   expect(root.querySelector('[data-testid="house-panel"] h2')!.textContent).toBe('Granja 1');
 });
+
+test('"Se va a saquear" vale para cualquier edificio (no "Marcada" en el supermercado)', () => {
+  const root = document.createElement('div');
+  const w = town();
+  w.containers.find((c) => c.houseId === 2)!.designated = true;
+  const sel = createSelection();
+  const panel = mountHousePanel(root, { world: w, selection: sel });
+  sel.set(2);
+  panel.update();
+  const text = root.querySelector('[data-testid="house-panel"]')!.textContent!;
+  expect(text).toContain('Supermercado');
+  expect(text).toContain('Se va a saquear');
+  expect(text).not.toMatch(/Marcada/);
+});

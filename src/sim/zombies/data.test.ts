@@ -70,13 +70,15 @@ test('al empezar: ninguno a menos de 12 de la base, todos donde pueden pisar; 7 
   expect(ZOMBIE_SAFE_RADIUS).toBe(12);
   let inTown = 0;
   let outside = 0;
-  for (let seed = 1; seed <= 12; seed++) {
+  for (let seed = 1; seed <= 40; seed++) {
     const w = createWorld(seed);
     const r = w.base.rect;
-    const [cx, cy] = [r.x + r.w / 2, r.y + r.h / 2];
     for (const z of w.zombies) {
-      expect(Math.sqrt((z.pos.x - cx) ** 2 + (z.pos.y - cy) ** 2)).toBeGreaterThanOrEqual(12);
       const t = { x: Math.floor(z.pos.x), y: Math.floor(z.pos.y) };
+      // A 12 casillas de la base: de sus paredes, no de su centro (revisión de H4f).
+      const dx = Math.max(r.x - t.x, 0, t.x - (r.x + r.w - 1));
+      const dy = Math.max(r.y - t.y, 0, t.y - (r.y + r.h - 1));
+      expect(Math.max(dx, dy), `semilla ${seed}`).toBeGreaterThanOrEqual(12);
       expect(isZombieWalkable(w.grid, t.x, t.y)).toBe(true);
       expect(z.health).toBe(60);
       expect(z.state).toBe('wander');

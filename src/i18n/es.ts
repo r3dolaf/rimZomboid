@@ -234,7 +234,7 @@ export const es = {
     warehouse: { name: 'Nave', the: 'la nave' },
   } satisfies Record<BuildingKind, { name: string; the: string }>,
   numbered: (name: string, n: number) => `${name} ${n}`,
-  houseMarked: 'Marcada para saquear',
+  houseMarked: 'Se va a saquear', // H4f: vale para cualquier edificio (no "Marcada" en el supermercado)
   houseUnmarked: 'Sin marcar',
   houseSearched: (n: number, total: number) => `Registrados: ${n} de ${total} vistos`,
   houseUnexplored: 'Sin explorar por dentro',

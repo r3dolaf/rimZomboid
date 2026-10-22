@@ -282,6 +282,7 @@ test('los que llegan por un borde van hacia el pueblo (H4f; no hacia la base)', 
   const w = world(40, 40);
   hide(w, w.survivors[0]!);
   w.town = { x: 4, y: 4, w: 8, h: 8 };
+  w.base = { ...w.base, rect: { x: 30, y: 30, w: 4, h: 4 } }; // lejos del pueblo (la de prueba es todo el mapa)
   for (let i = 0; i < 10; i++) {
     w.nextZombieAt = w.tick;
     run(w, 1);

@@ -97,3 +97,40 @@ test('los que llegan por los bordes van al pueblo', () => {
     expect(contains(w.town, z.goal!)).toBe(true);
   }
 });
+
+test('van a la calle: nunca a una casilla de dentro de un edificio, ni de la base ni cerca de ella', () => {
+  for (const seed of [5, 7, 8, 19]) {
+    const w = quiet(seed);
+    w.zombies = [];
+    const r = w.base.rect;
+    for (let k = 0; k < 60; k++) {
+      w.nextZombieAt = 0;
+      arrivalsSystem(w);
+    }
+    for (const z of w.zombies) {
+      const g = z.goal!;
+      expect(contains(r, g), `semilla ${seed}`).toBe(false);
+      for (const h of w.houses) expect(contains(h.rect, g), `semilla ${seed}`).toBe(false);
+      const d = Math.max(
+        Math.max(r.x - g.x, 0, g.x - (r.x + r.w - 1)),
+        Math.max(r.y - g.y, 0, g.y - (r.y + r.h - 1)),
+      );
+      expect(d, `semilla ${seed}`).toBeGreaterThanOrEqual(12);
+    }
+  }
+});
+
+test('con los que llegan por los bordes y sin nadie, los encerrados siguen dentro y no se rompe nada en dos días', () => {
+  const w = quiet(7); // la base, en el pueblo
+  w.nextZombieAt = 0;
+  const trapped = w.houses.flatMap((h) => inside(w, h).map((z) => [z.id, h] as const));
+  expect(trapped.length).toBeGreaterThan(0);
+  const windows = w.grid.tiles.filter((t) => t === Tile.Window).length;
+  for (let i = 0; i < 2 * TICKS_PER_DAY; i++) step(w);
+  for (const [id, h] of trapped)
+    expect(
+      inside(w, h).some((z) => z.id === id),
+      `zombi ${id} en ${h.kind}`,
+    ).toBe(true);
+  expect(w.grid.tiles.filter((t) => t === Tile.Window).length).toBe(windows);
+});

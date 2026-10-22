@@ -34,7 +34,7 @@ const HOME: Record<LootItem, readonly ContainerKind[]> = {
   wood: ['crate'],
 };
 
-/** Si el edificio no tiene el mueble de algo, va aquí (y si tampoco, a cualquiera). */
+/** Muebles que admiten de todo (además del suyo, cada cosa puede ir aquí). */
 const ANYTHING: readonly ContainerKind[] = ['shelf', 'counter'];
 
 /** Los muebles del mapa como contenedores (sin registrar ni marcar), con su botín. */
@@ -76,8 +76,34 @@ export function fillBuilding(kind: LootKind, cs: Container[], rng: RngState): vo
     const pool = placesFor(cs, item);
     for (let k = 0; k < n; k++) {
       const c = pool[nextInt(rng, 0, pool.length - 1)]!;
-      c.items[item] += item === 'thread' ? THREAD_PER_SPOOL : 1;
+      c.items[item] += unit(item);
     }
+  }
+  fillEmpty(cs);
+}
+
+/** Lo que es una unidad de cada cosa en el inventario (el hilo, un carrete de usos). */
+const unit = (item: LootItem) => (item === 'thread' ? THREAD_PER_SPOOL : 1);
+
+/** Cuántas unidades de botín tiene un mueble. */
+const units = (c: Container) => ITEMS.reduce((n, k) => n + c.items[k] / unit(k), 0);
+
+/**
+ * Que ningún mueble se quede vacío si se puede (revisión de H4f): coge una unidad del que más tenga
+ * (si tiene más de una), mejor algo que le corresponda. Sin esto, uno de cada cuatro muebles
+ * empezaba vacío (armarios de casas sin tela, taquillas de comisaría sin bastantes armas…).
+ */
+function fillEmpty(cs: Container[]): void {
+  for (const empty of cs) {
+    if (units(empty) > 0) continue;
+    const from = cs.reduce((a, b) => (units(b) > units(a) ? b : a));
+    if (units(from) <= 1) return;
+    const have = ITEMS.filter((k) => from.items[k] > 0);
+    const item =
+      have.find((k) => HOME[k].includes(empty.kind) || ANYTHING.includes(empty.kind)) ??
+      have.reduce((a, b) => (from.items[b] / unit(b) > from.items[a] / unit(a) ? b : a));
+    from.items[item] -= unit(item);
+    empty.items[item] += unit(item);
   }
 }
 
@@ -87,9 +113,12 @@ function roll(rng: RngState, a: LootAmount | undefined): number {
   return nextFloat(rng) < a.chance ? 1 : 0;
 }
 
+/**
+ * Dónde puede ir algo: en su mueble o en una estantería o un mostrador, que tienen un poco de todo
+ * (si no, en el supermercado toda la comida iría a las neveras y las estanterías, vacías); si el
+ * edificio no tiene ninguno de esos, en cualquiera.
+ */
 function placesFor(cs: Container[], item: LootItem): Container[] {
-  const home = cs.filter((c) => HOME[item].includes(c.kind));
-  if (home.length > 0) return home;
-  const any = cs.filter((c) => ANYTHING.includes(c.kind));
-  return any.length > 0 ? any : cs;
+  const fit = cs.filter((c) => HOME[item].includes(c.kind) || ANYTHING.includes(c.kind));
+  return fit.length > 0 ? fit : cs;
 }

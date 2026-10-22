@@ -37,7 +37,7 @@ test('muestra la casa seleccionada con sus contenedores y se cierra con la ✕',
   panel.update();
   expect(el().hidden).toBe(false);
   expect(el().textContent).toContain(buildingTitle(w, h.id));
-  expect(el().textContent).toContain('Marcada para saquear');
+  expect(el().textContent).toContain('Se va a saquear');
   expect(el().textContent).toContain(`Registrados: 1 de ${cs.length} vistos`);
   expect(el().textContent).toContain('Vacíos: 1');
   (root.querySelector('[data-testid="house-close"]') as HTMLElement).click();

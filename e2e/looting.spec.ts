@@ -68,7 +68,7 @@ test('niebla al empezar, herramienta Saquear y marcar un edificio', async ({ pag
   await expect(panel.locator('h2')).toHaveText(
     /^(Casa \d+|Supermercado|Farmacia|Ferretería|Comisaría|Tienda de ropa|Gasolinera|Granja \d+|Nave)$/,
   );
-  await expect(panel).toContainText('Marcada para saquear'); // en pausa, contando la orden pendiente
+  await expect(panel).toContainText('Se va a saquear'); // en pausa, contando la orden pendiente
   await page.keyboard.press('Escape');
   await expect(panel).toBeHidden();
   expect(errores).toEqual([]);

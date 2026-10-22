@@ -50,16 +50,25 @@ export function newZombie(w: World, t: Point): Zombie {
   };
 }
 
-function baseCenter(w: World): Point {
+/** Casillas (en línea recta o en diagonal) entre `p` y la base: 0 si está dentro. */
+function fromBase(w: World, x: number, y: number): number {
   const r = w.base.rect;
-  return { x: r.x + r.w / 2, y: r.y + r.h / 2 };
+  const dx = Math.max(r.x - x, 0, x - (r.x + r.w - 1));
+  const dy = Math.max(r.y - y, 0, y - (r.y + r.h - 1));
+  return Math.max(dx, dy);
 }
 
-/** ¿Puede aparecer un zombi en esa casilla? (la pisa y está lejos de la base) */
+/** ¿Está dentro de un edificio (o de la base)? */
+function indoors(w: World, x: number, y: number): boolean {
+  return w.houses.some((h) => contains(h.rect, { x, y })) || contains(w.base.rect, { x, y });
+}
+
+/**
+ * ¿Puede aparecer un zombi en esa casilla? La pisa y está lejos de la base: a ZOMBIE_SAFE_RADIUS de
+ * sus paredes (H4f; medido desde el centro, con la base de 12×10 quedaban a 4 casillas).
+ */
 function spawnable(w: World, x: number, y: number): boolean {
-  if (!isZombieWalkable(w.grid, x, y)) return false;
-  const c = baseCenter(w);
-  return (x + 0.5 - c.x) ** 2 + (y + 0.5 - c.y) ** 2 >= ZOMBIE_SAFE_RADIUS ** 2;
+  return isZombieWalkable(w.grid, x, y) && fromBase(w, x, y) >= ZOMBIE_SAFE_RADIUS;
 }
 
 /**
@@ -71,8 +80,6 @@ function spawnable(w: World, x: number, y: number): boolean {
 export function placeStartZombies(w: World): void {
   const rng = w.zombieRng;
   const n = zombieStartCount(w.narrator.style, w.zombieLevel);
-  const inBuilding = (x: number, y: number) =>
-    w.houses.some((h) => contains(h.rect, { x, y })) || contains(w.base.rect, { x, y });
   // Encerrados: en el suelo de su edificio, si queda lejos de la base.
   let trapped = 0;
   for (const h of w.houses) {
@@ -101,7 +108,7 @@ export function placeStartZombies(w: World): void {
   const loose = w.houses.filter((h) => !intersects(h.rect, w.town));
   const { width, height } = w.grid;
   for (let i = 0; i < rest; i++) {
-    const outside = (x: number, y: number) => spawnable(w, x, y) && !inBuilding(x, y);
+    const outside = (x: number, y: number) => spawnable(w, x, y) && !indoors(w, x, y);
     let spot: Point | null = null;
     if (i < town)
       spot = tryFind(50, () => {
@@ -158,11 +165,12 @@ export function arrivalsSystem(w: World): void {
     const y = side === 0 ? 0 : side === 1 ? height - 1 : along;
     if (!isZombieWalkable(w.grid, x, y)) continue;
     const z = newZombie(w, { x, y });
-    // Van hacia una casilla del pueblo (H4f; antes, hacia una casa al azar).
-    for (let k = 0; k < 20; k++) {
+    // Van hacia una casilla de la calle del pueblo (H4f): ni de dentro de un edificio (romperían
+    // una ventana sin ver a nadie y soltarían a los encerrados) ni cerca de la base.
+    for (let k = 0; k < 40; k++) {
       const gx = nextInt(rng, w.town.x, w.town.x + w.town.w - 1);
       const gy = nextInt(rng, w.town.y, w.town.y + w.town.h - 1);
-      if (!isZombieWalkable(w.grid, gx, gy)) continue;
+      if (!spawnable(w, gx, gy) || indoors(w, gx, gy)) continue;
       z.state = 'alert';
       z.goal = { x: gx, y: gy };
       break;

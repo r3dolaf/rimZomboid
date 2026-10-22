@@ -5,6 +5,7 @@ import type { ItemKind } from '../sim/items';
 import type { RelationLabel } from '../sim/social';
 import type {
   BubbleKind,
+  BuildingKind,
   BuildKind,
   Decision,
   MemoryId,
@@ -219,7 +220,20 @@ export const es = {
   close: 'Cerrar',
   logTitle: 'Sucesos',
   carrying: (what: string, kg: string, max: string) => `Lleva: ${what} (${kg} / ${max} kg)`,
-  house: (id: number) => `Casa ${id}`,
+  /** Edificios (H4f): el nombre y con artículo; si hay varios del mismo tipo, con su número. */
+  buildings: {
+    base: { name: 'Base', the: 'la base' },
+    house: { name: 'Casa', the: 'la casa' },
+    supermarket: { name: 'Supermercado', the: 'el supermercado' },
+    pharmacy: { name: 'Farmacia', the: 'la farmacia' },
+    hardware: { name: 'Ferretería', the: 'la ferretería' },
+    police: { name: 'Comisaría', the: 'la comisaría' },
+    clothes: { name: 'Tienda de ropa', the: 'la tienda de ropa' },
+    gas: { name: 'Gasolinera', the: 'la gasolinera' },
+    farm: { name: 'Granja', the: 'la granja' },
+    warehouse: { name: 'Nave', the: 'la nave' },
+  } satisfies Record<BuildingKind, { name: string; the: string }>,
+  numbered: (name: string, n: number) => `${name} ${n}`,
   houseMarked: 'Marcada para saquear',
   houseUnmarked: 'Sin marcar',
   houseSearched: (n: number, total: number) => `Registrados: ${n} de ${total} vistos`,
@@ -243,10 +257,9 @@ export const es = {
     machete: ['machete', 'machetes'],
   } satisfies Record<ItemKind, [string, string]>,
   log: {
-    found: (who: string, what: string, house: number) =>
-      `${who} ha encontrado ${what} en la casa ${house}`,
-    emptyContainer: (who: string, house: number) => `${who} no encuentra nada en la casa ${house}`,
-    houseEmptied: (house: number) => `Casa ${house} vaciada`,
+    found: (who: string, what: string, where: string) => `${who} ha encontrado ${what} en ${where}`,
+    emptyContainer: (who: string, where: string) => `${who} no encuentra nada en ${where}`,
+    houseEmptied: (where: string) => `Se ha vaciado ${where}`,
     refused: (who: string) => `${who} se niega a trabajar`,
     crisis: (who: string) => `${who} entra en crisis`,
     vented: (who: string) => `${who} se ha desahogado`,
@@ -290,8 +303,8 @@ export const es = {
     birthdayParty: (who: string) => `Celebráis el cumpleaños de ${who}`,
     birthdayRuined: (who: string, rival: string) => `${rival} le amarga el cumpleaños a ${who}`,
     birthdaySkipped: (who: string) => `Nadie celebra el cumpleaños de ${who}`,
-    cache: (who: string, house: number, cans: number) =>
-      `${who} recuerda una despensa en la casa ${house}: ${cans} latas`,
+    cache: (who: string, where: string, cans: number) =>
+      `${who} recuerda una despensa en ${where}: ${cans} latas`,
     built: (what: BuildKind) => es.built[what],
     downed: (who: string) => `${who} ha caído`,
     gotUp: (who: string) => `${who} se ha levantado`,
@@ -301,7 +314,7 @@ export const es = {
       `${who} ha fallado al ${es.buildFail[what]} (−${wood} de madera)`,
     consoleFailed: (who: string, other: string) =>
       `${who} ha intentado consolar a ${other}, sin éxito`,
-    forced: (who: string, house: number) => `${who} ha forzado la puerta de la casa ${house}`,
+    forced: (who: string, where: string) => `${who} ha forzado la puerta de ${where}`,
     crafted: (who: string, what: string) => `${who} ${what}`,
     corpseSearched: (who: string, what: string) => `${who} ha registrado un cuerpo: ${what}`,
     craftFailed: (who: string, what: string, lost: string) =>
@@ -432,7 +445,7 @@ export const es = {
     sleepInBed: 'Durmiendo en su cama',
     sleepOnFloor: 'Durmiendo en el suelo',
     crisis: 'En crisis: encerrado en la base',
-    goLoot: (house: number) => `Va a saquear la casa ${house}`,
+    goLoot: (where: string) => `Va a saquear ${where}`,
     goCorpse: 'Va a registrar un cuerpo',
     search: (what: string) => `Registrando ${what}`,
     goUnload: 'Llevando cosas al almacén',

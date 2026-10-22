@@ -2,6 +2,7 @@
 import { expect, test } from 'vitest';
 import { Tile } from '../sim/types';
 import { createWorld } from '../sim/world';
+import { buildingTitle } from './describe';
 import { mountHousePanel } from './housePanel';
 import { createSelection } from './selection';
 
@@ -35,7 +36,7 @@ test('muestra la casa seleccionada con sus contenedores y se cierra con la ✕',
   sel.set(h.id);
   panel.update();
   expect(el().hidden).toBe(false);
-  expect(el().textContent).toContain(`Casa ${h.id}`);
+  expect(el().textContent).toContain(buildingTitle(w, h.id));
   expect(el().textContent).toContain('Marcada para saquear');
   expect(el().textContent).toContain(`Registrados: 1 de ${cs.length} vistos`);
   expect(el().textContent).toContain('Vacíos: 1');

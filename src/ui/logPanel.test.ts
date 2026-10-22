@@ -2,7 +2,7 @@
 import { expect, test } from 'vitest';
 import { logEvent } from '../sim/log';
 import { createWorld } from '../sim/world';
-import { formatItems, formatLogEntry } from './describe';
+import { buildingThe, formatItems, formatLogEntry } from './describe';
 import { mountLog } from './logPanel';
 
 test('formatItems: plurales y lista legible', () => {
@@ -80,10 +80,12 @@ test('cada suceso se convierte en una frase con día y hora', () => {
     },
   });
   expect(formatLogEntry(w.log.at(-1)!, w)).toBe(
-    `Día 1, 10:14 · ${s.name} ha encontrado 4 latas y 1 venda en la casa 3`,
+    `Día 1, 10:14 · ${s.name} ha encontrado 4 latas y 1 venda en ${buildingThe(w, 3)}`,
   );
   logEvent(w, { kind: 'houseEmptied', houseId: 3 });
-  expect(formatLogEntry(w.log.at(-1)!, w)).toBe('Día 1, 10:14 · Casa 3 vaciada');
+  expect(formatLogEntry(w.log.at(-1)!, w)).toBe(
+    `Día 1, 10:14 · Se ha vaciado ${buildingThe(w, 3)}`,
+  );
   logEvent(w, { kind: 'refused', survivorId: s.id });
   expect(formatLogEntry(w.log.at(-1)!, w)).toContain(`${s.name} se niega a trabajar`);
   logEvent(w, { kind: 'outOfFood' });
@@ -113,7 +115,7 @@ test('el panel muestra los sucesos, el más reciente abajo', () => {
   panel.update();
   const items = [...root.querySelectorAll('[data-testid="log"] li')].map((li) => li.textContent);
   expect(items).toHaveLength(2);
-  expect(items[1]).toContain('Casa 2 vaciada');
+  expect(items[1]).toContain(`Se ha vaciado ${buildingThe(w, 2)}`);
 });
 
 test('textos de los sucesos sociales del narrador', () => {

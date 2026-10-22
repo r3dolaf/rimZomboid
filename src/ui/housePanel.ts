@@ -2,10 +2,11 @@ import { es } from '../i18n/es';
 import { isEmpty } from '../sim/items';
 import { houseMarked } from '../sim/orders';
 import { Tile, type World } from '../sim/types';
+import { buildingTitle } from './describe';
 import type { Selection } from './selection';
 import './panels.css';
 
-/** Ficha de la casa seleccionada: si está marcada, si está atrancada y cómo va el saqueo. */
+/** Ficha del edificio seleccionado: su nombre, si está marcado o atrancado y cómo va el saqueo. */
 export function mountHousePanel(
   root: HTMLElement,
   opts: { world: World; selection: Selection },
@@ -57,7 +58,7 @@ export function mountHousePanel(
       const key = `${house.id}|${lines.join('|')}`;
       if (key === shown) return;
       shown = key;
-      title.textContent = es.house(house.id);
+      title.textContent = buildingTitle(w, house.id);
       body.replaceChildren(
         ...lines.map((t) => {
           const li = document.createElement('li');

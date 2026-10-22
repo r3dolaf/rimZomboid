@@ -5,7 +5,7 @@ import { gameTime } from '../sim/clock';
 import { ITEM_KINDS, type Inventory } from '../sim/items';
 import type { LogEntry } from '../sim/log';
 import type { MoodModifier } from '../sim/mood';
-import type { MemoryId, Survivor, Tone, World } from '../sim/types';
+import type { Building, MemoryId, Survivor, Tone, World } from '../sim/types';
 
 export function activityText(s: Survivor, w?: World): string {
   const container = (id: number) => w?.containers.find((c) => c.id === id);
@@ -52,7 +52,8 @@ export function activityText(s: Survivor, w?: World): string {
     case 'moveTo':
       if (a.then?.type === 'search') {
         const c = container(a.then.containerId);
-        return c?.kind === 'corpse' ? t.goCorpse : t.goLoot(c?.houseId ?? 0);
+        if (c?.kind === 'corpse') return t.goCorpse;
+        return t.goLoot(w && c ? buildingThe(w, c.houseId) : es.buildings.house.the);
       }
       if (a.then?.type === 'unload') return t.goUnload;
       if (a.then?.type === 'eat') return t.goEat;
@@ -154,6 +155,30 @@ export function formatLost(inv: Inventory): string {
     .join(', ');
 }
 
+/** Número del edificio entre los de su tipo (por orden), o `null` si es el único (H4f). */
+function ordinal(w: World, b: Building): number | null {
+  const same = w.houses.filter((h) => h.kind === b.kind);
+  return same.length > 1 ? same.indexOf(b) + 1 : null;
+}
+
+/** "Supermercado", "Casa 4", "Granja 2" (H4f). */
+export function buildingTitle(w: World, id: number): string {
+  const b = w.houses.find((h) => h.id === id);
+  if (!b) return es.buildings.house.name;
+  const n = ordinal(w, b);
+  const { name } = es.buildings[b.kind];
+  return n === null ? name : es.numbered(name, n);
+}
+
+/** "el supermercado", "la casa 4", "la granja 2" (H4f). */
+export function buildingThe(w: World, id: number): string {
+  const b = w.houses.find((h) => h.id === id);
+  if (!b) return es.buildings.house.the;
+  const n = ordinal(w, b);
+  const { the } = es.buildings[b.kind];
+  return n === null ? the : es.numbered(the, n);
+}
+
 /** "Día 2, 10:14 · Ana ha encontrado 4 latas en la casa 3". */
 export function formatLogEntry(e: LogEntry, w: World): string {
   const t = gameTime(e.tick);
@@ -167,13 +192,13 @@ export function logText(e: LogEntry, w: World): string {
   let text: string;
   switch (e.kind) {
     case 'found':
-      text = l.found(name(e.survivorId), formatItems(e.items), e.houseId);
+      text = l.found(name(e.survivorId), formatItems(e.items), buildingThe(w, e.houseId));
       break;
     case 'emptyContainer':
-      text = l.emptyContainer(name(e.survivorId), e.houseId);
+      text = l.emptyContainer(name(e.survivorId), buildingThe(w, e.houseId));
       break;
     case 'houseEmptied':
-      text = l.houseEmptied(e.houseId);
+      text = l.houseEmptied(buildingThe(w, e.houseId));
       break;
     case 'refused':
       text = l.refused(name(e.survivorId));
@@ -262,7 +287,7 @@ export function logText(e: LogEntry, w: World): string {
       text = l.birthdaySkipped(name(e.survivorId));
       break;
     case 'cache':
-      text = l.cache(name(e.survivorId), e.houseId, e.cans);
+      text = l.cache(name(e.survivorId), buildingThe(w, e.houseId), e.cans);
       break;
     case 'storm':
       text = l.storm;
@@ -313,7 +338,7 @@ export function logText(e: LogEntry, w: World): string {
       text = l.skillUp(name(e.survivorId), es.skills[e.skill], e.level);
       break;
     case 'forced':
-      text = l.forced(name(e.survivorId), e.houseId);
+      text = l.forced(name(e.survivorId), buildingThe(w, e.houseId));
       break;
     case 'corpseSearched':
       text = l.corpseSearched(name(e.survivorId), formatItems(e.items));

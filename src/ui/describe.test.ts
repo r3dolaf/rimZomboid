@@ -2,7 +2,7 @@ import { expect, test } from 'vitest';
 import { emptyWorld } from '../sim/testing/fixtures';
 import type { Action } from '../sim/types';
 import { createWorld } from '../sim/world';
-import { activityText, barLevel, formatModifier, statusIcon } from './describe';
+import { activityText, barLevel, buildingThe, formatModifier, statusIcon } from './describe';
 
 const s = () => emptyWorld(3, 3).survivors[0]!;
 
@@ -63,9 +63,11 @@ test('textos del saqueo', () => {
   const x = w.survivors[0]!;
   const c = w.containers.find((k) => k.kind === 'fridge') ?? w.containers[0]!;
   x.action = { type: 'moveTo', target: c.pos, then: { type: 'search', containerId: c.id } };
-  expect(activityText(x, w)).toBe(`Va a saquear la casa ${c.houseId}`);
+  expect(activityText(x, w)).toBe(`Va a saquear ${buildingThe(w, c.houseId)}`);
   x.action = { type: 'search', containerId: c.id, ticksLeft: 3 };
-  expect(activityText(x, w)).toMatch(/^Registrando (una nevera|un armario|una estantería)$/);
+  expect(activityText(x, w)).toMatch(
+    /^Registrando (una nevera|un armario|una estantería|un mostrador|una taquilla|una caja|un botiquín)$/,
+  );
   x.action = { type: 'moveTo', target: c.pos, then: { type: 'unload' } };
   expect(activityText(x, w)).toBe('Llevando cosas al almacén');
   x.action = { type: 'idle', ticksLeft: 50, wait: 'refused' };

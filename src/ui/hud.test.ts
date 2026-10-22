@@ -156,3 +156,14 @@ test('muestra el narrador y la tormenta mientras dura', () => {
   expect(weather.hidden).toBe(false);
   expect(weather.textContent).toBe('🌧 Tormenta');
 });
+
+test('el botón Fabricar abre el panel de pedidos (H4d)', () => {
+  const root = document.createElement('div');
+  const toggleCraft = vi.fn();
+  mountHud(root, { seed: 1, time: createTimeController(), toggleCraft });
+  const b = root.querySelector('[data-testid="hud-craft"]') as HTMLButtonElement;
+  expect(b.textContent).toBe('Fabricar');
+  expect(b.hidden).toBe(false);
+  b.click();
+  expect(toggleCraft).toHaveBeenCalledTimes(1);
+});

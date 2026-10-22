@@ -62,16 +62,19 @@ test('panel de Trabajos, herramienta Talar y herramienta Construir', async ({ pa
   await expect(page.locator('canvas')).toBeVisible();
   await page.locator('[data-speed="0"]').click();
 
-  // Panel de Trabajos (J): quitar Transportar al primero se ve al momento, aunque esté en pausa.
+  // Panel de Trabajos (J): cambiar la prioridad de Transportar al primero (3 → 4 → —) se ve al
+  // momento, aunque esté en pausa (H4d).
   const panel = page.getByTestId('work-panel');
   await expect(panel).toBeHidden();
   await page.keyboard.press('j');
   await expect(panel).toBeVisible();
   const id = (await world(page)).survivors[0]!.id;
-  const box = page.getByTestId(`work-${id}-haul`);
-  await expect(box).toBeChecked();
-  await box.click();
-  await expect(box).not.toBeChecked();
+  const cell = page.getByTestId(`work-${id}-haul`);
+  await expect(cell).toHaveText('3');
+  await cell.click();
+  await expect(cell).toHaveText('4');
+  await cell.click();
+  await expect(cell).toHaveText('—');
   await page.keyboard.press('Escape');
   await expect(panel).toBeHidden();
 

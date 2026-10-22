@@ -8,7 +8,15 @@ import { opinionOf, relationLabel } from '../sim/social';
 import type { Survivor, World } from '../sim/types';
 import { activityText, formatItems, formatModifier, signed } from './describe';
 import type { Selection } from './selection';
-import { effectiveLock, effectiveStance, effectiveWork, STANCES, WORKS } from './workPanel';
+import {
+  cyclePriority,
+  effectiveLock,
+  effectiveStance,
+  effectiveWork,
+  showPriority,
+  STANCES,
+  WORKS,
+} from './workPanel';
 import './panels.css';
 
 /**
@@ -41,24 +49,25 @@ export function mountSheet(
   x.addEventListener('click', close);
   head.append(title, x);
 
-  // Las casillas de trabajo también son fijas, por lo mismo que la ✕.
+  // Las prioridades de trabajo (H4d) también son fijas, por lo mismo que la ✕.
   const work = document.createElement('div');
   work.className = 'work';
-  const boxes = WORKS.map((k) => {
-    const label = document.createElement('label');
-    const box = document.createElement('input');
-    box.type = 'checkbox';
-    box.dataset.testid = `sheet-work-${k}`;
-    box.addEventListener('change', () => {
-      const id = opts.selection.id;
-      if (id !== null)
-        issue(opts.world, { type: 'setWork', survivorId: id, work: k, enabled: box.checked });
+  const cells = WORKS.map((k) => {
+    const cell = document.createElement('button');
+    cell.type = 'button';
+    cell.dataset.testid = `sheet-work-${k}`;
+    const prio = document.createElement('span');
+    prio.className = 'prio';
+    cell.append(prio, document.createTextNode(es.works[k]));
+    cell.addEventListener('click', () => {
+      const s = opts.world.survivors.find((x) => x.id === opts.selection.id);
+      if (s) cyclePriority(opts.world, s, k);
+      cell.blur();
     });
-    label.append(box, document.createTextNode(es.works[k]));
-    work.append(label);
-    return box;
+    work.append(cell);
+    return { cell, prio };
   });
-  // Postura (H4b): tres botones, fijos como las casillas.
+  // Postura (H4b): tres botones, fijos como las prioridades.
   const stanceRow = document.createElement('div');
   stanceRow.className = 'stance';
   stanceRow.append(document.createTextNode(`${es.stanceTitle}: `));
@@ -185,8 +194,12 @@ export function mountSheet(
         partner: s.partnerId === null ? null : nameOf(s.partnerId),
         relations: relations(s, world),
       };
-      // Las casillas reflejan los permisos con las órdenes pendientes ya aplicadas.
-      boxes.forEach((box, i) => (box.checked = effectiveWork(world, s, WORKS[i]!)));
+      // Las prioridades, con las órdenes pendientes ya aplicadas.
+      cells.forEach(({ cell, prio }, i) => {
+        showPriority(prio, world, s, WORKS[i]!);
+        cell.classList.toggle('off', !effectiveWork(world, s, WORKS[i]!));
+        if (cell.title !== prio.title) cell.title = prio.title;
+      });
       const carryText = es.carrying(
         formatItems(s.carrying),
         weightOf(s.carrying).toFixed(1).replace('.', ','),

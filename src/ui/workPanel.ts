@@ -12,8 +12,8 @@ export const WORKS: readonly WorkType[] = ['social', 'build', 'craft', 'haul', '
 
 /**
  * Panel de Trabajos (spec H4a §5) como matriz (spec H4c §5): una fila por colono y una columna por
- * habilidad, con la casilla del trabajo y su nivel (el mejor de cada columna, en negrita); en
- * Pelear, el nivel y la postura (spec H4b §8).
+ * habilidad, con la prioridad del trabajo (spec H4d §5) y su nivel (el mejor de cada columna, en
+ * negrita); en Pelear, el nivel y la postura (spec H4b §8).
  */
 export function mountWorkPanel(
   root: HTMLElement,
@@ -54,7 +54,7 @@ export function mountWorkPanel(
     number,
     {
       tr: HTMLTableRowElement;
-      boxes: HTMLInputElement[];
+      cells: HTMLButtonElement[];
       stance: HTMLSelectElement;
       levels: Record<SkillId, HTMLSpanElement>;
     }
@@ -72,19 +72,21 @@ export function mountWorkPanel(
     name.textContent = s.name;
     tr.append(name);
     const levels = {} as Record<SkillId, HTMLSpanElement>;
-    const boxes = WORKS.map((work) => {
+    // Prioridad de cada trabajo (H4d): un botón que pasa por — → 1 → 2 → 3 → 4 → —.
+    const cells = WORKS.map((work) => {
       const td = document.createElement('td');
-      const box = document.createElement('input');
-      box.type = 'checkbox';
-      box.dataset.testid = `work-${s.id}-${work}`;
-      box.title = `${s.name}: ${es.works[work]}`;
-      box.addEventListener('change', () =>
-        issue(opts.world, { type: 'setWork', survivorId: s.id, work, enabled: box.checked }),
-      );
+      const cell = document.createElement('button');
+      cell.type = 'button';
+      cell.className = 'prio';
+      cell.dataset.testid = `work-${s.id}-${work}`;
+      cell.addEventListener('click', () => {
+        cyclePriority(opts.world, s, work);
+        cell.blur();
+      });
       levels[work] = levelSpan(s, work);
-      td.append(box, levels[work]);
+      td.append(cell, levels[work]);
       tr.append(td);
-      return box;
+      return cell;
     });
     // Postura (H4b): Pelear, Huir o Decidir.
     const td = document.createElement('td');
@@ -109,7 +111,7 @@ export function mountWorkPanel(
     td.append(levels.fight, stance);
     tr.append(td);
     tbody.append(tr);
-    rows.set(s.id, { tr, boxes, stance, levels });
+    rows.set(s.id, { tr, cells, stance, levels });
   };
 
   return {
@@ -135,9 +137,7 @@ export function mountWorkPanel(
           if (span.textContent !== text) span.textContent = text;
           span.classList.toggle('best', s.skills[k].level === best[k]);
         }
-        r.boxes.forEach((box, i) => {
-          box.checked = effectiveWork(world, s, WORKS[i]!);
-        });
+        r.cells.forEach((cell, i) => showPriority(cell, world, s, WORKS[i]!));
         const st = effectiveStance(world, s);
         if (r.stance.value !== st) r.stance.value = st;
       }
@@ -151,6 +151,39 @@ export function effectiveWork(w: World, s: Survivor, work: WorkType): boolean {
   for (const o of w.orders)
     if (o.type === 'setWork' && o.survivorId === s.id && o.work === work) on = o.enabled;
   return on;
+}
+
+/** La prioridad (1–4) con las órdenes pendientes ya aplicadas. */
+export function effectivePriority(w: World, s: Survivor, work: WorkType): number {
+  let p = s.priorities[work];
+  for (const o of w.orders)
+    if (o.type === 'setPriority' && o.survivorId === s.id && o.work === work) {
+      if (Number.isInteger(o.priority) && o.priority >= 1 && o.priority <= 4) p = o.priority;
+    }
+  return p;
+}
+
+/** Un clic en la prioridad (spec H4d §5): — → 1 → 2 → 3 → 4 → —. */
+export function cyclePriority(w: World, s: Survivor, work: WorkType): void {
+  if (!effectiveWork(w, s, work)) {
+    issue(w, { type: 'setWork', survivorId: s.id, work, enabled: true });
+    issue(w, { type: 'setPriority', survivorId: s.id, work, priority: 1 });
+    return;
+  }
+  const p = effectivePriority(w, s, work);
+  if (p < 4) issue(w, { type: 'setPriority', survivorId: s.id, work, priority: p + 1 });
+  else issue(w, { type: 'setWork', survivorId: s.id, work, enabled: false });
+}
+
+/** Pinta la prioridad en `el`: "—" (apagada) o el número, con su ayuda. */
+export function showPriority(el: HTMLElement, w: World, s: Survivor, work: WorkType): void {
+  const on = effectiveWork(w, s, work);
+  const p = on ? effectivePriority(w, s, work) : null;
+  const text = p === null ? es.priorityOff : String(p);
+  if (el.textContent !== text) el.textContent = text;
+  el.classList.toggle('off', p === null);
+  const title = `${es.priorityHint(s.name, es.works[work], p)}\n${es.priorityHelp}`;
+  if (el.title !== title) el.title = title;
 }
 
 /** La postura con las órdenes pendientes ya aplicadas. */

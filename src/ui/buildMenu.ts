@@ -13,7 +13,13 @@ const KINDS: readonly BuildKind[] = [
   'board',
   'unboard',
   'repair', // elige el plano según la casilla (spec H4b §4.2)
+  // H4d: "Cortinas" también elige: correrlas o abrirlas, o colgar unas si no hay.
+  'curtains',
+  'takeDownCurtains',
+  'smashWindow',
 ];
+
+const NAME_ONLY: ReadonlySet<BuildKind> = new Set(['curtains', 'takeDownCurtains', 'smashWindow']);
 
 /** Menú de la herramienta Construir (spec H4a §5): qué se coloca al hacer clic en el mapa. */
 export function mountBuildMenu(root: HTMLElement, opts: { tool: Tool }): { update(): void } {
@@ -27,7 +33,10 @@ export function mountBuildMenu(root: HTMLElement, opts: { tool: Tool }): { updat
     b.type = 'button';
     b.dataset.testid = `build-${kind}`;
     const wood = kind === 'repair' ? es.repairWood : BUILD[kind].wood;
-    b.textContent = es.buildOption(es.buildMenu[kind], wood);
+    // Las cortinas y romper ventana no gastan madera (H4d): solo el nombre.
+    b.textContent = NAME_ONLY.has(kind)
+      ? es.buildMenu[kind]
+      : es.buildOption(es.buildMenu[kind], wood);
     b.addEventListener('click', () => {
       opts.tool.setBuildKind(kind);
       b.blur();

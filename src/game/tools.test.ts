@@ -99,3 +99,24 @@ test('arrastrar muros pone uno por casilla válida y se salta las ocupadas', () 
   buildLine(w, 'woodWall', { x: 0, y: 5 }, { x: 2, y: 5 }); // las que ya tienen plano no se cancelan
   expect(pendingPlacements(w).map((p) => p.pos.x)).toEqual([0]);
 });
+
+test('Cortinas: en una ventana con cortinas las corre (o abre); en una sin cortinas, las cuelga (H4d)', () => {
+  const w = world();
+  setTile(w.grid, 2, 2, Tile.Window);
+  setTile(w.grid, 5, 2, Tile.Window);
+  setTile(w.grid, 7, 2, Tile.CurtainedWindow);
+  w.curtains = [2 * 10 + 2, 2 * 10 + 7];
+  buildAt(w, 'curtains', 2, 2);
+  buildAt(w, 'curtains', 5, 2);
+  buildAt(w, 'curtains', 7, 2);
+  expect(w.orders).toEqual([
+    { type: 'placeBlueprint', kind: 'curtains', x: 2, y: 2 },
+    { type: 'placeBlueprint', kind: 'hangCurtains', x: 5, y: 2 },
+    { type: 'placeBlueprint', kind: 'curtains', x: 7, y: 2 },
+  ]);
+  w.orders = [];
+  buildAt(w, 'curtains', 4, 4); // hierba: nada
+  buildAt(w, 'takeDownCurtains', 5, 2); // sin cortinas: nada que descolgar
+  buildAt(w, 'smashWindow', 7, 2);
+  expect(w.orders).toEqual([{ type: 'placeBlueprint', kind: 'smashWindow', x: 7, y: 2 }]);
+});

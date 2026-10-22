@@ -73,6 +73,30 @@ export const es = {
     Record<ItemKind, string>
   >,
   lostItem: (n: number, what: string) => `−${n} de ${what}`,
+  craftPanel: 'Fabricar',
+  craftPanelHint: 'Pedidos en la mesa (F)',
+  craftStock: (parts: string[]) => `En el almacén: ${parts.join(' · ')}`,
+  craftNoTable: 'Hace falta una mesa',
+  craftEmpty: 'Sin pedidos: añade uno abajo',
+  craftAdd: (name: string) => `+ ${name}`,
+  /** Lo que gasta y lo que hace falta, para la ayuda del botón de añadir. */
+  craftNeeds: {
+    bandages: '1 tela',
+    curtains: '3 telas, 2 usos de hilo y una aguja',
+    unpick: '1 juego de cortinas y un cuchillo',
+  } satisfies Record<RecipeId, string>,
+  billModes: { until: 'hasta tener', count: 'veces' },
+  billDone: (n: number, total: number) => `hechos ${n}/${total}`,
+  billLess: 'Uno menos',
+  billMore: 'Uno más',
+  billUp: 'Subir (se hace antes)',
+  billDown: 'Bajar (se hace después)',
+  billRemove: 'Quitar el pedido',
+  /** Prioridades de trabajo (H4d): "—" sin permiso; un clic pasa por — → 1 → 2 → 3 → 4 → —. */
+  priorityOff: '—',
+  priorityHint: (who: string, work: string, p: number | null) =>
+    p === null ? `${who}: ${work}, no lo hace` : `${who}: ${work}, prioridad ${p}`,
+  priorityHelp: 'Clic: — (no lo hace) → 1 (lo primero) → 2 → 3 → 4 → —',
   skillMax: 'máx.',
   /** Habilidades (H4c): las de los trabajos y Pelear. */
   skills: {
@@ -187,7 +211,7 @@ export const es = {
     Decision['kind'],
     { title: string; text: (who: string) => string; options: [string, string] }
   >,
-  lootToolHint: 'Marcar casas o contenedores para saquear (L)',
+  lootToolHint: 'Marcar casas, muebles o cuerpos para saquear; arrastrar marca los cuerpos (L)',
   pause: 'Pausa',
   pauseIcon: '⏸',
   speed: (n: number) => `x${n}`,

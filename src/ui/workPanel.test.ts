@@ -12,7 +12,7 @@ function setup() {
   const panel = mountWorkPanel(root, { world, open });
   const el = root.querySelector('[data-testid="work-panel"]') as HTMLElement;
   const cell = (id: number, k: string) =>
-    root.querySelector(`[data-testid="work-${id}-${k}"]`) as HTMLInputElement;
+    root.querySelector(`[data-testid="work-${id}-${k}"]`) as HTMLButtonElement;
   return { root, world, open, panel, el, cell };
 }
 
@@ -33,24 +33,45 @@ test('oculto hasta que se abre; una fila por colono y una columna por trabajo, e
     'Saquear',
     'Pelear', // H4c: la columna de la postura es la de Pelear
   ]);
-  for (const s of world.survivors) expect(cell(s.id, 'loot').checked).toBe(s.work.loot);
+  // Cada celda, la prioridad (H4d): "—" sin permiso o el número.
+  for (const s of world.survivors)
+    expect(cell(s.id, 'loot').textContent).toBe(s.work.loot ? String(s.priorities.loot) : '—');
 });
 
-test('cada casilla da su orden y se ve marcada al momento, aunque esté en pausa', () => {
+test('cada celda pasa por — → 1 → 2 → 3 → 4 → — con sus órdenes, y se ve al momento aunque esté en pausa', () => {
   const { world, open, panel, cell } = setup();
+  const s = world.survivors[0]!;
+  s.work.haul = false;
   open.set(true);
   panel.update();
-  const s = world.survivors[0]!;
-  const was = s.work.haul;
-  cell(s.id, 'haul').click();
+  const c = cell(s.id, 'haul');
+  expect(c.textContent).toBe('—');
+  expect(c.classList.contains('off')).toBe(true);
+  c.click();
+  expect(world.orders).toEqual([
+    { type: 'setWork', survivorId: s.id, work: 'haul', enabled: true },
+    { type: 'setPriority', survivorId: s.id, work: 'haul', priority: 1 },
+  ]);
+  panel.update();
+  expect(c.textContent).toBe('1');
+  expect(c.classList.contains('off')).toBe(false);
+  const seen = ['1'];
+  for (let i = 0; i < 5; i++) {
+    c.click();
+    panel.update();
+    seen.push(c.textContent!);
+  }
+  expect(seen).toEqual(['1', '2', '3', '4', '—', '1']);
   expect(world.orders).toContainEqual({
     type: 'setWork',
     survivorId: s.id,
     work: 'haul',
-    enabled: !was,
+    enabled: false,
   });
-  panel.update();
-  expect(cell(s.id, 'haul').checked).toBe(!was);
+  expect(c.title.split('\n')).toEqual([
+    `${s.name}: Transportar, prioridad 1`,
+    'Clic: — (no lo hace) → 1 (lo primero) → 2 → 3 → 4 → —',
+  ]);
 });
 
 test('las filas siguen a quien está en la colonia; la ✕ lo cierra', () => {

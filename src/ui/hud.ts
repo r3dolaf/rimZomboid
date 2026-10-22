@@ -14,7 +14,7 @@ const SPEEDS: readonly Speed[] = [0, 1, 2, 3];
 
 /**
  * Barra superior: hora, velocidad, comida, vendas y madera del almacén, herramientas (Saquear,
- * Talar, Construir), panel de Trabajos, zombis a la vista, tormenta, narrador y semilla.
+ * Talar, Construir), paneles de Trabajos y Fabricar, zombis a la vista, tormenta, narrador y semilla.
  */
 export function mountHud(
   root: HTMLElement,
@@ -24,6 +24,7 @@ export function mountHud(
     tool?: Tool;
     narrator?: NarratorStyle;
     toggleWork?: () => void;
+    toggleCraft?: () => void;
   },
 ): { update(t: GameTime, stock: Inventory, storm?: boolean, zombies?: number): void } {
   const bar = document.createElement('div');
@@ -92,6 +93,8 @@ export function mountHud(
   opts.tool?.onChange(refreshTool);
   const work = button('hud-work', es.workPanel, es.workPanelHint, () => opts.toggleWork?.());
   work.hidden = !opts.toggleWork;
+  const craft = button('hud-craft', es.craftPanel, es.craftPanelHint, () => opts.toggleCraft?.());
+  craft.hidden = !opts.toggleCraft;
 
   const seed = document.createElement('span');
   seed.className = 'hud-seed';
@@ -121,6 +124,7 @@ export function mountHud(
     wood,
     ...tools.map((t) => t.b),
     work,
+    craft,
     zombies,
     weather,
     narrator,

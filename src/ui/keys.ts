@@ -3,13 +3,13 @@ import type { Tool } from './tool';
 
 /**
  * Atajos: Espacio pausa/reanuda; 1, 2 y 3 cambian la velocidad; L, T y B, las herramientas
- * Saquear, Talar y Construir; J, el panel de Trabajos.
+ * Saquear, Talar y Construir; J, el panel de Trabajos; F, el de Fabricar.
  */
 export function bindTimeKeys(
   target: EventTarget,
   time: TimeController,
   tool?: Tool,
-  extra: { toggleWork?: () => void } = {},
+  extra: { toggleWork?: () => void; toggleCraft?: () => void } = {},
 ): void {
   target.addEventListener('keydown', (ev) => {
     const e = ev as KeyboardEvent;
@@ -26,6 +26,8 @@ export function bindTimeKeys(
       tool?.toggle('build');
     } else if (e.code === 'KeyJ') {
       extra.toggleWork?.();
+    } else if (e.code === 'KeyF') {
+      extra.toggleCraft?.();
     } else if (e.key === '1' || e.key === '2' || e.key === '3') {
       time.setSpeed(Number(e.key) as Speed);
     }

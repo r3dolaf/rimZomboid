@@ -65,3 +65,11 @@ test('J abre y cierra el panel de Trabajos', () => {
   press(window, { code: 'KeyJ', key: 'j' });
   expect(toggleWork).toHaveBeenCalledTimes(1);
 });
+
+test('F abre y cierra el panel Fabricar (H4d)', () => {
+  const time = createTimeController();
+  const toggleCraft = vi.fn();
+  bindTimeKeys(window, time, undefined, { toggleCraft });
+  press(window, { code: 'KeyF', key: 'f' });
+  expect(toggleCraft).toHaveBeenCalledTimes(1);
+});

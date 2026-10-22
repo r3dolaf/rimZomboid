@@ -28,3 +28,11 @@ test('containerAt devuelve el contenedor de esa casilla', () => {
   expect(containerAt(w, c.pos.x, c.pos.y)?.id).toBe(c.id);
   expect(containerAt(w, 0, 0)).toBeNull();
 });
+
+test('containerAt: si un cuerpo cayó en la casilla de un mueble, el cuerpo va encima (H4d)', () => {
+  const w = createWorld(2);
+  const c = w.containers[2]!;
+  const corpse = { ...structuredClone(c), id: 999, houseId: -1, kind: 'corpse' as const };
+  w.containers.push(corpse);
+  expect(containerAt(w, c.pos.x, c.pos.y)?.id).toBe(999);
+});

@@ -240,8 +240,48 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 10px;
+  gap: 4px 6px;
   margin: 6px 0 0;
+}
+/* Prioridades (H4d): el número en una cajita; "—" atenuado cuando no lo hace. */
+.sheet .work button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px 2px 3px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #2a2d31;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.sheet .work button.off {
+  opacity: 0.55;
+}
+.sheet .work .prio,
+.work-panel button.prio {
+  display: inline-block;
+  min-width: 1.5em;
+  border-radius: 3px;
+  background: #3b4046;
+  text-align: center;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.work-panel button.prio {
+  padding: 1px 4px;
+  border: 1px solid #555;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.sheet .work .prio.off,
+.work-panel button.prio.off {
+  background: none;
+  font-weight: 400;
+  opacity: 0.6;
 }
 .sheet .stance,
 .sheet .weapon {
@@ -473,4 +513,79 @@
 }
 .work-panel tbody tr:nth-child(odd) {
   background: rgba(255, 255, 255, 0.04);
+}
+/* Panel Fabricar (H4d): mismo marco que el de Trabajos. */
+.craft-panel {
+  min-width: 340px;
+}
+.craft-panel p {
+  margin: 6px 0;
+}
+.craft-panel .craft-stock {
+  opacity: 0.85;
+}
+.craft-panel .craft-warning {
+  color: #f2a869;
+  font-weight: 600;
+}
+.craft-panel .craft-warning[hidden],
+.craft-panel .craft-empty[hidden],
+.craft-panel .done[hidden] {
+  display: none;
+}
+.craft-panel .craft-empty {
+  opacity: 0.7;
+  font-style: italic;
+}
+.craft-panel .craft-bills {
+  margin: 6px 0;
+  padding: 0;
+  list-style: none;
+}
+.craft-panel .craft-bills li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 4px;
+}
+.craft-panel .craft-bills li:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.04);
+}
+.craft-panel .name {
+  flex: 1;
+  min-width: 8em;
+}
+.craft-panel .target {
+  min-width: 1.6em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.craft-panel .done {
+  font-size: 12px;
+  opacity: 0.75;
+}
+.craft-panel button {
+  min-width: 1.8em;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #2a2d31;
+  color: inherit;
+  cursor: pointer;
+}
+.craft-panel button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.craft-panel .close {
+  border: none;
+  background: none;
+}
+.craft-panel .craft-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.craft-panel .craft-add button {
+  padding: 3px 8px;
 }

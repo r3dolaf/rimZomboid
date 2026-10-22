@@ -1,10 +1,11 @@
 import Phaser from 'phaser';
-import { toggleContainer, toggleHouse } from '../game/designate';
+import { markCorpsesIn, toggleContainer, toggleHouse } from '../game/designate';
 import { containerAt, houseAt, survivorAt } from '../game/pick';
 import { runTicks } from '../game/runTicks';
 import type { TimeController } from '../game/timeController';
 import {
   buildAt,
+  buildKindAt,
   buildLine,
   liveBlueprints,
   markTreesIn,
@@ -13,7 +14,7 @@ import {
   wallLine,
 } from '../game/tools';
 import { BUILD, CAMPFIRE_RANGE, RESISTANCE, ZOMBIE_HEALTH } from '../sim/balance';
-import { canPlace, markedTrees, repairKindAt } from '../sim/build';
+import { canPlace, markedTrees } from '../sim/build';
 import { darkness } from '../sim/clock';
 import { CATALOG } from '../sim/events/catalog';
 import { isEmpty } from '../sim/items';
@@ -343,18 +344,8 @@ export class GameScene extends Phaser.Scene {
       const { x: tx, y: ty } = this.tileAt(p);
       const seen = w.seen[ty * w.grid.width + tx] === 1;
       const mode = this.tool.mode;
-      if (mode === 'chop' || mode === 'build') {
+      if (mode === 'chop' || mode === 'build' || mode === 'loot') {
         this.drag = { mode, from: { x: tx, y: ty }, to: { x: tx, y: ty } };
-        return;
-      }
-      if (mode === 'loot') {
-        const c = seen ? containerAt(w, tx, ty) : null;
-        if (c) {
-          toggleContainer(w, c.id);
-          return;
-        }
-        const h = houseAt(w, tx, ty);
-        if (h) toggleHouse(w, h.id);
         return;
       }
       const s = survivorAt(w, p.worldX / TILE_PX, p.worldY / TILE_PX, PICK_RADIUS);
@@ -369,8 +360,10 @@ export class GameScene extends Phaser.Scene {
   }
 
   /**
-   * Al soltar. Talar: un clic marca o desmarca el árbol; arrastrar marca los del rectángulo.
-   * Construir: un clic pone el plano elegido (o cancela el que hay); arrastrar muros, una línea.
+   * Al soltar. Saquear: un clic marca o desmarca el mueble (o el cuerpo) o la casa; arrastrar
+   * marca los cuerpos del rectángulo (H4d). Talar: un clic marca o desmarca el árbol; arrastrar
+   * marca los del rectángulo. Construir: un clic pone el plano elegido (o cancela el que hay);
+   * arrastrar muros, una línea.
    */
   private finishDrag(): void {
     const d = this.drag;
@@ -378,6 +371,15 @@ export class GameScene extends Phaser.Scene {
     if (!d || this.tool.mode !== d.mode) return;
     const w = this.world;
     const click = d.from.x === d.to.x && d.from.y === d.to.y;
+    if (d.mode === 'loot') {
+      if (!click) return markCorpsesIn(w, d.from, d.to);
+      const { x, y } = d.from;
+      const c = w.seen[y * w.grid.width + x] === 1 ? containerAt(w, x, y) : null;
+      if (c) return toggleContainer(w, c.id);
+      const h = houseAt(w, x, y);
+      if (h) toggleHouse(w, h.id);
+      return;
+    }
     if (d.mode === 'chop') {
       if (click) toggleTree(w, d.from.x, d.from.y);
       else markTreesIn(w, d.from, d.to);
@@ -490,7 +492,8 @@ export class GameScene extends Phaser.Scene {
     }
 
     const d = this.drag;
-    if (d?.mode === 'chop' && (d.from.x !== d.to.x || d.from.y !== d.to.y)) {
+    const area = d?.mode === 'chop' || d?.mode === 'loot';
+    if (d && area && (d.from.x !== d.to.x || d.from.y !== d.to.y)) {
       const [x, y] = [Math.min(d.from.x, d.to.x) * TILE_PX, Math.min(d.from.y, d.to.y) * TILE_PX];
       const rw = (Math.abs(d.from.x - d.to.x) + 1) * TILE_PX;
       const rh = (Math.abs(d.from.y - d.to.y) + 1) * TILE_PX;
@@ -507,8 +510,8 @@ export class GameScene extends Phaser.Scene {
     if (!d && this.hover) at.push(this.hover);
     for (const p of at) {
       if (w.blueprints.some((b) => b.pos.x === p.x && b.pos.y === p.y)) continue; // el clic lo cancela
-      // Reparar: el plano lo decide la casilla (spec H4b §4.2).
-      const kind = chosen === 'repair' ? (repairKindAt(w, p) ?? 'repair') : chosen;
+      // Reparar y Cortinas: el plano lo decide la casilla (spec H4b §4.2, H4d §3).
+      const kind = buildKindAt(w, chosen, p) ?? chosen;
       const ok = canPlace(w, kind, p);
       this.drawBlueprint(kind, p, ok ? BLUEPRINT : BLUEPRINT_BAD, PENDING_ALPHA);
     }

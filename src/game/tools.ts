@@ -1,6 +1,6 @@
 // Herramientas Talar y Construir: qué órdenes da cada clic o arrastre, teniendo en cuenta las aún
 // pendientes (con el juego en pausa, la orden no se aplica hasta el siguiente tick).
-import { canPlace, markedTrees, repairKindAt, treeMarked } from '../sim/build';
+import { canPlace, hasCurtains, markedTrees, repairKindAt, treeMarked } from '../sim/build';
 import { getTile } from '../sim/map/grid';
 import { issue } from '../sim/orders';
 import { Tile, type Blueprint, type BuildKind, type Point, type World } from '../sim/types';
@@ -46,9 +46,18 @@ export function pendingPlacements(w: World): { kind: BuildKind; pos: Point }[] {
 const pendingAt = (w: World, x: number, y: number) =>
   pendingPlacements(w).some((p) => p.pos.x === x && p.pos.y === y);
 
+/** Qué plano pone una opción del menú en esa casilla: Reparar y Cortinas dependen de ella. */
+export function buildKindAt(w: World, kind: BuildKind, p: Point): BuildKind | null {
+  if (kind === 'repair') return repairKindAt(w, p); // spec H4b §4.2
+  // Cortinas (spec H4d §3): con cortinas, correrlas o abrirlas; sin ellas, colgar unas.
+  if (kind === 'curtains' && getTile(w.grid, p.x, p.y) === Tile.Window && !hasCurtains(w, p))
+    return 'hangCurtains';
+  return kind;
+}
+
 /**
  * Clic con Construir: en un plano, lo cancela; si no, pone ahí el plano elegido (si se puede).
- * Con Reparar, el plano lo elige la casilla (spec H4b §4.2).
+ * Con Reparar y Cortinas, el plano lo elige la casilla.
  */
 export function buildAt(w: World, kind: BuildKind, x: number, y: number): void {
   const b = w.blueprints.find((p) => p.pos.x === x && p.pos.y === y);
@@ -56,7 +65,7 @@ export function buildAt(w: World, kind: BuildKind, x: number, y: number): void {
     if (!cancelling(w).has(b.id)) issue(w, { type: 'cancelBlueprint', id: b.id });
     return;
   }
-  const actual = kind === 'repair' ? repairKindAt(w, { x, y }) : kind;
+  const actual = buildKindAt(w, kind, { x, y });
   if (actual && !pendingAt(w, x, y) && canPlace(w, actual, { x, y }))
     issue(w, { type: 'placeBlueprint', kind: actual, x, y });
 }

@@ -9,6 +9,7 @@ import type { NarratorStyle, ZombieLevel } from './sim/types';
 import { createWorld } from './sim/world';
 import { mountBuildMenu } from './ui/buildMenu';
 import { mountCards } from './ui/cards';
+import { mountCraftPanel } from './ui/craftPanel';
 import { bindEscape } from './ui/escape';
 import { mountHousePanel } from './ui/housePanel';
 import { mountHud } from './ui/hud';
@@ -51,12 +52,18 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
   const houseSelection = createSelection();
   const tool = createTool();
   const workOpen = createFlag();
-  const hud = mountHud(ui, { seed, time, tool, narrator: style, toggleWork: workOpen.toggle });
+  const craftOpen = createFlag();
+  // Los dos paneles salen en el mismo sitio: abrir uno cierra el otro.
+  workOpen.onChange((on) => on && craftOpen.set(false));
+  craftOpen.onChange((on) => on && workOpen.set(false));
+  const toggles = { toggleWork: workOpen.toggle, toggleCraft: craftOpen.toggle };
+  const hud = mountHud(ui, { seed, time, tool, narrator: style, ...toggles });
   const cards = mountCards(ui, { world, selection });
   const sheet = mountSheet(ui, { world, selection });
   const housePanel = mountHousePanel(ui, { world, selection: houseSelection });
   const log = mountLog(ui, { world });
   const workPanel = mountWorkPanel(ui, { world, open: workOpen });
+  const craftPanel = mountCraftPanel(ui, { world, open: craftOpen });
   const buildMenu = mountBuildMenu(ui, { tool });
   const notices = mountNotices(ui, {
     world,
@@ -75,11 +82,12 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
   // Solo una ficha abierta a la vez: superviviente o casa.
   selection.onChange((id) => id !== null && houseSelection.set(null));
   houseSelection.onChange((id) => id !== null && selection.set(null));
-  // Esc cierra por capas: primero la herramienta, luego el panel de Trabajos, la ficha de la casa
-  // y la del superviviente.
+  // Esc cierra por capas: primero la herramienta, luego el panel de Trabajos o el de Fabricar, la
+  // ficha de la casa y la del superviviente.
   bindEscape(window, [
     () => tool.active && (tool.set(null), true),
     () => workOpen.value && (workOpen.set(false), true),
+    () => craftOpen.value && (craftOpen.set(false), true),
     () => houseSelection.id !== null && (houseSelection.set(null), true),
     () => selection.id !== null && (selection.set(null), true),
   ]);
@@ -89,7 +97,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
       document.body.classList.toggle(`tool-${m}`, mode === m);
   });
 
-  bindTimeKeys(window, time, tool, { toggleWork: workOpen.toggle });
+  bindTimeKeys(window, time, tool, toggles);
 
   const game = new Phaser.Game({
     type: Phaser.AUTO,
@@ -119,6 +127,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
       log.update();
       notices.update();
       workPanel.update();
+      craftPanel.update();
       buildMenu.update();
     },
   };

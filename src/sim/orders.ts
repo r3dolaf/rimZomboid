@@ -2,7 +2,7 @@ import { isEmpty } from './items';
 import { resolveDecision } from './events/resolve';
 import { cancelBlueprint, markTree, placeBlueprint } from './build';
 import { BILL_DEFAULT_TARGET } from './balance';
-import type { BuildKind, Container, RecipeId, Stance, WorkType, World } from './types';
+import type { Bill, BuildKind, Container, RecipeId, Stance, WorkType, World } from './types';
 
 /** Lo que pide el jugador. La interfaz solo cambia el mundo mediante órdenes. */
 export type Order =
@@ -33,7 +33,7 @@ export function issue(w: World, order: Order): void {
 }
 
 /** Si un contenedor puede marcarse (no está registrado y vacío). */
-function markable(c: Container): boolean {
+export function markable(c: Container): boolean {
   return !(c.searched && isEmpty(c.items));
 }
 
@@ -55,6 +55,50 @@ export function houseMarked(w: World, houseId: number): boolean {
   return w.containers.some((c) => c.houseId === houseId && effectiveDesignated(w, c));
 }
 
+type BillOrder = Extract<Order, { type: 'addBill' | 'removeBill' | 'setBill' | 'moveBill' }>;
+
+const isBillOrder = (o: Order): o is BillOrder =>
+  o.type === 'addBill' || o.type === 'removeBill' || o.type === 'setBill' || o.type === 'moveBill';
+
+/** Aplica una orden de pedidos a la lista (la del mundo o una copia). */
+function applyBillOrder(w: { bills: Bill[]; nextBillId: number }, o: BillOrder): void {
+  switch (o.type) {
+    case 'addBill':
+      w.bills.push({
+        id: w.nextBillId++,
+        recipe: o.recipe,
+        mode: 'until',
+        target: BILL_DEFAULT_TARGET,
+        done: 0,
+      });
+      break;
+    case 'removeBill':
+      w.bills = w.bills.filter((b) => b.id !== o.billId);
+      break;
+    case 'setBill': {
+      const b = w.bills.find((x) => x.id === o.billId);
+      if (!b) break;
+      if (o.mode) b.mode = o.mode;
+      if (o.target !== undefined && Number.isInteger(o.target)) b.target = Math.max(1, o.target);
+      break;
+    }
+    case 'moveBill': {
+      const i = w.bills.findIndex((x) => x.id === o.billId);
+      const j = i + o.dir;
+      if (i < 0 || j < 0 || j >= w.bills.length) break;
+      [w.bills[i], w.bills[j]] = [w.bills[j]!, w.bills[i]!];
+      break;
+    }
+  }
+}
+
+/** Los pedidos con las órdenes pendientes ya aplicadas (copia: el mundo no cambia). */
+export function effectiveBills(w: World): Bill[] {
+  const copy = { bills: w.bills.map((b) => ({ ...b })), nextBillId: w.nextBillId };
+  for (const o of w.orders) if (isBillOrder(o)) applyBillOrder(copy, o);
+  return copy.bills;
+}
+
 export function ordersSystem(w: World): void {
   for (const o of w.orders) {
     switch (o.type) {
@@ -73,31 +117,11 @@ export function ordersSystem(w: World): void {
         break;
       }
       case 'addBill':
-        w.bills.push({
-          id: w.nextBillId++,
-          recipe: o.recipe,
-          mode: 'until',
-          target: BILL_DEFAULT_TARGET,
-          done: 0,
-        });
-        break;
       case 'removeBill':
-        w.bills = w.bills.filter((b) => b.id !== o.billId);
+      case 'setBill':
+      case 'moveBill':
+        applyBillOrder(w, o);
         break;
-      case 'setBill': {
-        const b = w.bills.find((x) => x.id === o.billId);
-        if (!b) break;
-        if (o.mode) b.mode = o.mode;
-        if (o.target !== undefined && Number.isInteger(o.target)) b.target = Math.max(1, o.target);
-        break;
-      }
-      case 'moveBill': {
-        const i = w.bills.findIndex((x) => x.id === o.billId);
-        const j = i + o.dir;
-        if (i < 0 || j < 0 || j >= w.bills.length) break;
-        [w.bills[i], w.bills[j]] = [w.bills[j]!, w.bills[i]!];
-        break;
-      }
       case 'setPriority': {
         const s = w.survivors.find((x) => x.id === o.survivorId);
         if (s && Number.isInteger(o.priority) && o.priority >= 1 && o.priority <= 4)

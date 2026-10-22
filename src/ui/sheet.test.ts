@@ -110,42 +110,47 @@ test('muestra lo que lleva encima y su peso', () => {
   root.remove();
 });
 
-test('una casilla por trabajo y "En la mano: hacha"', () => {
+test('una prioridad por trabajo ("—" sin permiso) y "En la mano: hacha"', () => {
   const { root, world, selection, sheet } = setup();
   const s = world.survivors[0]!;
   s.work = { social: true, build: false, craft: false, haul: true, chop: false, loot: true };
+  s.priorities = { social: 3, build: 3, craft: 3, haul: 1, chop: 3, loot: 4 };
   s.equipped = 'axe';
   selection.set(s.id);
   sheet.update();
-  const box = (k: string) =>
-    root.querySelector(`[data-testid="sheet-work-${k}"]`) as HTMLInputElement;
-  expect(['social', 'build', 'haul', 'chop', 'loot'].map((k) => box(k).checked)).toEqual([
-    true,
-    false,
-    true,
-    false,
-    true,
+  const cell = (k: string) =>
+    root.querySelector(`[data-testid="sheet-work-${k}"]`) as HTMLButtonElement;
+  const prio = (k: string) => cell(k).querySelector('.prio')!.textContent;
+  expect(['social', 'build', 'craft', 'haul', 'chop', 'loot'].map(prio)).toEqual([
+    '3',
+    '—',
+    '—',
+    '1',
+    '—',
+    '4',
   ]);
-  box('build').click();
-  expect(world.orders).toContainEqual({
-    type: 'setWork',
-    survivorId: s.id,
-    work: 'build',
-    enabled: true,
-  });
+  expect(cell('haul').textContent).toContain('Transportar');
+  cell('build').click();
+  expect(world.orders).toEqual([
+    { type: 'setWork', survivorId: s.id, work: 'build', enabled: true },
+    { type: 'setPriority', survivorId: s.id, work: 'build', priority: 1 },
+  ]);
+  sheet.update();
+  expect(prio('build')).toBe('1');
   expect(sheetEl(root).textContent).toContain('En la mano: hacha');
   root.remove();
 });
 
-test('la casilla Saquear da la orden y no se reconstruye', () => {
+test('la prioridad de Saquear da su orden y no se reconstruye', () => {
   const { root, world, selection, sheet } = setup();
   const s = world.survivors[0]!;
   s.work.loot = true;
+  s.priorities.loot = 4;
   selection.set(s.id);
   sheet.update();
-  const box = root.querySelector('[data-testid="sheet-work-loot"]') as HTMLInputElement;
-  expect(box.checked).toBe(true);
-  box.click();
+  const cell = root.querySelector('[data-testid="sheet-work-loot"]') as HTMLButtonElement;
+  expect(cell.querySelector('.prio')!.textContent).toBe('4');
+  cell.click();
   expect(world.orders).toContainEqual({
     type: 'setWork',
     survivorId: s.id,
@@ -154,7 +159,8 @@ test('la casilla Saquear da la orden y no se reconstruye', () => {
   });
   s.needs.hunger = 2;
   sheet.update();
-  expect(root.querySelector('[data-testid="sheet-work-loot"]')).toBe(box);
+  expect(root.querySelector('[data-testid="sheet-work-loot"]')).toBe(cell);
+  expect(cell.querySelector('.prio')!.textContent).toBe('—');
   root.remove();
 });
 

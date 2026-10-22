@@ -22,5 +22,7 @@ export function houseAt(w: World, x: number, y: number): Building | null {
 
 /** El contenedor de esa casilla, o `null`. */
 export function containerAt(w: World, x: number, y: number): Container | null {
-  return w.containers.find((c) => c.pos.x === x && c.pos.y === y) ?? null;
+  const here = w.containers.filter((c) => c.pos.x === x && c.pos.y === y);
+  // Un cuerpo (H4d) va encima del mueble en el que haya caído.
+  return here.find((c) => c.kind === 'corpse') ?? here[0] ?? null;
 }

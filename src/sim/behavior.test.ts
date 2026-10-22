@@ -201,7 +201,7 @@ test('en partidas reales las crisis llegan a terminar con "Se desahogó"', () =>
     }
   }
   expect(vented).toBeGreaterThan(0);
-}, 30_000);
+}, 60_000); // tres partidas de 20 días en el mapa del pueblo (H4f)
 
 test('escenario: a las 23:00 del día 1 los tres duermen en su cama', () => {
   for (let seed = 1; seed <= 5; seed++) {

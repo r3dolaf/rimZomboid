@@ -1,7 +1,6 @@
 // Puertas atrancadas (spec H4d §6): coger la palanca y forzar la puerta de una casa marcada.
 import { PRY_TICKS } from '../balance';
 import { getTile } from '../map/grid';
-import { effectiveDesignated } from '../orders';
 import { pick } from '../rng';
 import { skillSpeed } from '../skills';
 import { Tile, type Action, type Point, type Survivor, type World } from '../types';
@@ -22,13 +21,19 @@ const goingForCrowbar = (s: Survivor) =>
 /** ¿Lleva una palanca, en la mano o en la carga? */
 export const hasCrowbar = (s: Survivor) => s.equipped === 'crowbar' || s.carrying.crowbar > 0;
 
-/** Puertas atrancadas de casas con algo marcado para saquear (índices de casilla). */
+/**
+ * Puertas atrancadas de casas con algo marcado para saquear (índices de casilla). Mira la marca de
+ * los muebles tal cual: dentro de un tick las órdenes ya se han aplicado. Una sola pasada por los
+ * muebles: con el pueblo (H4f) hay cientos y se llama en cada tick.
+ */
 export function doorsToPry(w: World): number[] {
+  const marked = new Set<number>();
+  for (const c of w.containers) if (c.designated) marked.add(c.houseId);
   const out: number[] = [];
+  if (marked.size === 0) return out;
   for (const h of w.houses) {
-    if (getTile(w.grid, h.door.x, h.door.y) !== Tile.LockedDoor) continue;
-    if (w.containers.some((c) => c.houseId === h.id && effectiveDesignated(w, c)))
-      out.push(h.door.y * w.grid.width + h.door.x);
+    if (!marked.has(h.id) || getTile(w.grid, h.door.x, h.door.y) !== Tile.LockedDoor) continue;
+    out.push(h.door.y * w.grid.width + h.door.x);
   }
   return out;
 }

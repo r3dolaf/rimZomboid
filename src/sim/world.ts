@@ -8,6 +8,8 @@ import {
   NEED_START_MAX,
   NEED_START_MIN,
   CRAFT_LOOT_SALT,
+  LOCKED_DOOR_CHANCE,
+  LOCKED_DOOR_SALT,
   START_FOOD,
   START_WEAPON,
   START_OPINION_MAX,
@@ -19,10 +21,10 @@ import { emptyInventory } from './items';
 import { distributeCraftLoot, distributeWoodAndAxes, placeContainers } from './loot';
 import { revealFromSurvivors } from './vision';
 import { generateMap } from './map/generate';
-import { getTile } from './map/grid';
+import { getTile, setTile } from './map/grid';
 import { moodTarget } from './mood';
 import { NAMES } from './names';
-import { createRng, nextInt, type RngState } from './rng';
+import { createRng, nextFloat, nextInt, type RngState } from './rng';
 import { firstEdgeArrival, placeStartZombies } from './zombies/spawn';
 import { rollSkills, skillRng } from './skills';
 import { rollTraits } from './traits';
@@ -132,6 +134,10 @@ export function createWorld(
   distributeWoodAndAxes(base, houses, containers, rng);
   // Tela, hilo, agujas, palancas y machetes (H4d), con su propio azar: no cambian nada de lo anterior.
   distributeCraftLoot(base, houses, containers, createRng((seed ^ CRAFT_LOOT_SALT) >>> 0));
+  // Puertas atrancadas (H4d), también con su propio azar.
+  const lockRng = createRng((seed ^ LOCKED_DOOR_SALT) >>> 0);
+  for (const h of houses)
+    if (nextFloat(lockRng) < LOCKED_DOOR_CHANCE) setTile(grid, h.door.x, h.door.y, Tile.LockedDoor);
 
   const world: World = {
     seed,

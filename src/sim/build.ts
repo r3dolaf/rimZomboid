@@ -74,6 +74,8 @@ export function tileFits(w: World, kind: BuildKind, p: Point): boolean {
       return (t === Tile.Window || t === Tile.CurtainedWindow) && hasCurtains(w, p);
     case 'hangCurtains':
       return t === Tile.Window && !hasCurtains(w, p);
+    case 'smashWindow':
+      return t === Tile.Window || t === Tile.CurtainedWindow;
     case 'unboard':
       return t === Tile.BoardedWindow;
     case 'repair':

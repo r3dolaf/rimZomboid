@@ -71,6 +71,7 @@ export const es = {
     curtains: 'Cortinas',
     takeDownCurtains: 'Descolgar cortinas',
     hangCurtains: 'Colgar cortinas',
+    smashWindow: 'Romper ventana',
   } satisfies Record<BuildKind, string>,
   buildOption: (name: string, wood: number | string) => `${name} · ${wood}`,
   repairWood: '1–3',
@@ -248,6 +249,7 @@ export const es = {
       `${who} ha fallado al ${es.buildFail[what]} (−${wood} de madera)`,
     consoleFailed: (who: string, other: string) =>
       `${who} ha intentado consolar a ${other}, sin éxito`,
+    forced: (who: string, house: number) => `${who} ha forzado la puerta de la casa ${house}`,
     skillUp: (who: string, skill: string, level: number) =>
       `${who} ha mejorado en ${skill} (nivel ${level})`,
     zombiesInBase: 'Hay zombis dentro de la base',
@@ -397,6 +399,9 @@ export const es = {
     melee: 'Peleando con un zombi',
     flee: 'Huyendo a la base',
     swapWeapon: 'Va a por un arma',
+    takeCrowbar: 'Va a por la palanca',
+    goPry: 'Va a forzar una puerta',
+    pry: 'Forzando una puerta',
   },
   containers: { fridge: 'una nevera', wardrobe: 'un armario', shelf: 'una estantería' },
   built: {
@@ -412,6 +417,7 @@ export const es = {
     curtains: 'Se han corrido (o abierto) unas cortinas',
     takeDownCurtains: 'Se han descolgado unas cortinas',
     hangCurtains: 'Se han colgado unas cortinas',
+    smashWindow: 'Se ha roto una ventana para entrar',
   } satisfies Record<BuildKind, string>,
   /** Lo que intentaba quien falla al construir: "ha fallado al levantar el muro". */
   buildFail: {
@@ -427,6 +433,7 @@ export const es = {
     curtains: 'correr las cortinas',
     takeDownCurtains: 'descolgar las cortinas',
     hangCurtains: 'colgar las cortinas',
+    smashWindow: 'romper la ventana',
   } satisfies Record<BuildKind, string>,
   /** Lo que hace quien trabaja en cada plano. */
   building: {
@@ -442,6 +449,7 @@ export const es = {
     curtains: 'Corriendo unas cortinas',
     takeDownCurtains: 'Descolgando unas cortinas',
     hangCurtains: 'Colgando unas cortinas',
+    smashWindow: 'Rompiendo una ventana',
   } satisfies Record<BuildKind, string>,
   /** Cada plano, para las frases ("Llevando madera a una cama"). */
   builds: {
@@ -457,6 +465,7 @@ export const es = {
     curtains: 'unas cortinas',
     takeDownCurtains: 'unas cortinas',
     hangCurtains: 'una ventana sin cortinas',
+    smashWindow: 'una ventana',
   } satisfies Record<BuildKind, string>,
 
   /** Iconos sobre la cabeza en el mapa. */

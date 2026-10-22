@@ -5,6 +5,7 @@ import { capacityKg } from './skills';
 import { foodDays } from './colony';
 import { buildJob, buildStillWorth } from './jobs/build';
 import { chopJob, chopStillWorth, returnAxeJob } from './jobs/chop';
+import { pryJob, pryStillWorth } from './jobs/pry';
 import { deliverJob, haulJob, haulStillWorth } from './jobs/haul';
 import { swapWeaponStillWorth, weaponJob } from './jobs/weapons';
 import { isEmpty, ITEM_KINDS, weightOf } from './items';
@@ -89,7 +90,7 @@ export function findWork(s: Survivor, w: World): Action | null {
     // La madera que lleva, a un plano que la necesite.
     const deliver = may(s, 'haul') ? deliverJob(s, w) : null;
     if (deliver) return deliver;
-    return (loot ? lootJob(s, w) : null) ?? goUnload(w);
+    return (loot ? (pryJob(s, w) ?? lootJob(s, w)) : null) ?? goUnload(w);
   }
   const back = returnAxeJob(s, w);
   if (back) return back;
@@ -97,11 +98,12 @@ export function findWork(s: Survivor, w: World): Action | null {
   if (arm) return arm;
   const hungry = foodDays(w) < HUNGRY_LOOT_DAYS;
   const order: (() => Action | null)[] = [
-    () => (hungry && loot ? lootJob(s, w) : null),
+    () => (hungry && loot ? (pryJob(s, w) ?? lootJob(s, w)) : null),
     () => (may(s, 'build') ? buildJob(s, w) : null),
     () => (may(s, 'haul') ? haulJob(s, w) : null),
     () => (may(s, 'chop') ? chopJob(s, w) : null),
-    () => (loot ? lootJob(s, w) : null),
+    // Saquear: antes, forzar las puertas atrancadas de las casas marcadas (H4d).
+    () => (loot ? (pryJob(s, w) ?? lootJob(s, w)) : null),
   ];
   for (const job of order) {
     const a = job();
@@ -122,6 +124,8 @@ const WORK_ACTIONS: ReadonlySet<string> = new Set([
   'deliver',
   'build',
   'swapWeapon',
+  'takeCrowbar',
+  'pry',
 ]);
 
 /** ¿Está trabajando (o yendo a trabajar)? */
@@ -141,6 +145,7 @@ export function stillWorthIt(s: Survivor, w: World): boolean {
   if (what === 'pickUp' || what === 'fetchWood' || what === 'deliver') return haulStillWorth(s, w);
   if (what === 'build') return buildStillWorth(s, w);
   if (what === 'swapWeapon') return swapWeaponStillWorth(s, w);
+  if (what === 'takeCrowbar' || what === 'pry') return pryStillWorth(s, w);
   const id = targetContainerId(s);
   if (id === null || s.action.type === 'search') return true;
   const c = w.containers.find((x) => x.id === id);

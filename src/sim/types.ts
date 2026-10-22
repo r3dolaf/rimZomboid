@@ -147,7 +147,10 @@ export type Activity =
   // Construir (H4a): trabajar en un plano con toda su madera.
   | { type: 'build'; blueprintId: number }
   // Armas (H4b): en el almacén, cambiar lo que lleva en la mano por lo mejor que haya.
-  | { type: 'swapWeapon' };
+  | { type: 'swapWeapon' }
+  // Puertas atrancadas (H4d): coger la palanca del almacén y forzar la puerta de la casilla `door`.
+  | { type: 'takeCrowbar' }
+  | { type: 'pry'; door: number };
 
 export type Action =
   /** `wait`: esperando tras no encontrar camino (no se consulta al cerebro) o tras negarse a trabajar. */
@@ -170,7 +173,9 @@ export type Action =
   | { type: 'build'; blueprintId: number }
   // Zombis (H4b): en el suelo hasta `until`; peleando con un zombi.
   | { type: 'downed'; until: number }
-  | { type: 'melee'; zombieId: number; cooldown: number };
+  | { type: 'melee'; zombieId: number; cooldown: number }
+  // Forzando una puerta atrancada (H4d).
+  | { type: 'pry'; door: number; ticksLeft: number };
 
 export interface Survivor {
   id: number;
@@ -289,7 +294,9 @@ export type BuildKind =
   // Cortinas (H4d): correrlas o abrirlas, descolgarlas y colgar unas.
   | 'curtains'
   | 'takeDownCurtains'
-  | 'hangCurtains';
+  | 'hangCurtains'
+  // Romper una ventana a propósito (H4d).
+  | 'smashWindow';
 
 /** Algo por construir: madera (y cortinas, H4d) entregadas y ticks trabajados. */
 export interface Blueprint {

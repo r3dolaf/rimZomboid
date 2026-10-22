@@ -277,6 +277,12 @@ export const NEEDLE_TOTAL = 3;
 export const CROWBAR_CHANCE = 0.06; // × (0,5 + distancia normalizada), por mueble (no en neveras)
 export const MACHETE_CHANCE = 0.04;
 export const CRAFT_LOOT_SALT = 0x5eed7e1a; // el azar de este botín: semilla ^ esto
+
+// Puertas atrancadas (H4d): se fuerzan con la palanca.
+export const LOCKED_DOOR_CHANCE = 0.25; // por casa (la base, nunca)
+export const LOCKED_DOOR_SALT = 0x10cd00e5; // su azar: semilla ^ esto
+export const PRY_TICKS = 0.5 * TICKS_PER_HOUR; // con Saquear 5
+export const PRY_NOISE_TICKS = 30; // cada cuánto se oye un golpe
 export const CHOP_TICKS = TICKS_PER_HOUR;
 export const CHOP_WOOD_MIN = 4;
 export const CHOP_WOOD_MAX = 6;
@@ -301,6 +307,8 @@ export const BUILD = {
   curtains: { wood: 0, ticks: 5 * (TICKS_PER_HOUR / 60) },
   takeDownCurtains: { wood: 0, ticks: 10 * (TICKS_PER_HOUR / 60) },
   hangCurtains: { wood: 0, ticks: 15 * (TICKS_PER_HOUR / 60) },
+  // Romper una ventana a propósito (H4d), para entrar en una casa cerrada.
+  smashWindow: { wood: 0, ticks: 2 * (TICKS_PER_HOUR / 60) },
 } as const;
 /** Cortinas que necesita cada plano (H4d). */
 export const CURTAINS_COST: Partial<Record<BuildKind, number>> = { hangCurtains: 1 };
@@ -372,7 +380,15 @@ export const ZOMBIE_VISION = 8; // casillas, de día y de noche
 export const CAMPFIRE_SIGHT = 15; // de noche, un zombi ve una hoguera hasta esta distancia
 export const SURVIVOR_RUN_SPEED = 0.25; // casillas por tick, al huir o ir a por un zombi
 /** Radio de cada ruido, en casillas (spec H4b §3). */
-export const NOISE = { fightHit: 10, broken: 12, zombieHit: 8, chop: 8, build: 6, run: 5 } as const;
+export const NOISE = {
+  fightHit: 10,
+  broken: 12,
+  zombieHit: 8,
+  chop: 8,
+  build: 6,
+  run: 5,
+  pry: 8, // H4d: forzar una puerta con la palanca
+} as const;
 export const CHOP_NOISE_TICKS = 30; // cada cuánto suena un hachazo
 export const BUILD_NOISE_TICKS = 30; // cada cuánto suena un martillazo
 export const RUN_NOISE_TICKS = 10; // cada cuánto se oyen los pasos de quien corre

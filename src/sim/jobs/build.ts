@@ -170,6 +170,15 @@ export function finishBuild(w: World, b: Blueprint, builder: Survivor): void {
     case 'hangCurtains':
       w.curtains.push(y * w.grid.width + x);
       break;
+    case 'smashWindow': {
+      // Rota a propósito (H4d): se pasa por ella, se ve, se oye lejos y las cortinas se pierden.
+      setTile(w.grid, x, y, Tile.BrokenWindow);
+      const i = y * w.grid.width + x;
+      delete w.damage[String(i)];
+      w.curtains = w.curtains.filter((c) => c !== i);
+      makeNoise(w, { x: x + 0.5, y: y + 0.5 }, NOISE.broken);
+      break;
+    }
   }
   // Si quedó un montón donde ya no se puede pisar (un muro, unas tablas), se aparta al lado.
   const pile = pileAt(w, x, y);

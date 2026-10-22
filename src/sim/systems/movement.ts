@@ -14,6 +14,7 @@ import { tryStartConsoling } from '../consoling';
 import { startBuildActivity } from '../jobs/build';
 import { startChopActivity } from '../jobs/chop';
 import { startHaulActivity } from '../jobs/haul';
+import { startPryActivity } from '../jobs/pry';
 import { startSwapWeapon } from '../jobs/weapons';
 import { logEvent } from '../log';
 import { makeNoise } from '../noise';
@@ -115,6 +116,9 @@ function startActivity(s: Survivor, activity: Activity, w: World): Action {
       return startBuildActivity(s, w, activity.blueprintId);
     case 'swapWeapon':
       return startSwapWeapon(s, w);
+    case 'takeCrowbar':
+    case 'pry':
+      return startPryActivity(s, w, activity);
     case 'console':
       // Si se ha movido o está ocupado, vuelve a decidir (y a acercarse) en el siguiente tick.
       return tryStartConsoling(w, s, activity.otherId) ? s.action : { type: 'idle', ticksLeft: 0 };

@@ -45,6 +45,8 @@ export function activityText(s: Survivor, w?: World): string {
       return t.downed;
     case 'melee':
       return t.melee;
+    case 'pry':
+      return t.pry;
     case 'moveTo':
       if (a.then?.type === 'search') return t.goLoot(container(a.then.containerId)?.houseId ?? 0);
       if (a.then?.type === 'unload') return t.goUnload;
@@ -60,6 +62,8 @@ export function activityText(s: Survivor, w?: World): string {
       if (a.then?.type === 'deliver') return t.deliver(buildName(a.then.blueprintId));
       if (a.then?.type === 'build') return t.goBuild;
       if (a.then?.type === 'swapWeapon') return t.swapWeapon;
+      if (a.then?.type === 'takeCrowbar') return t.takeCrowbar;
+      if (a.then?.type === 'pry') return t.goPry;
       if (a.run) return t.flee;
       return t.wander;
     case 'idle':
@@ -293,6 +297,9 @@ export function logText(e: LogEntry, w: World): string {
       break;
     case 'skillUp':
       text = l.skillUp(name(e.survivorId), es.skills[e.skill], e.level);
+      break;
+    case 'forced':
+      text = l.forced(name(e.survivorId), e.houseId);
       break;
   }
   return text;

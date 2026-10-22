@@ -55,6 +55,8 @@ export type LogEvent =
   | { kind: 'skillUp'; survivorId: number; skill: SkillId; level: number }
   | { kind: 'buildFailed'; survivorId: number; what: BuildKind; wood: number }
   | { kind: 'consoleFailed'; survivorId: number; otherId: number }
+  // H4d
+  | { kind: 'forced'; survivorId: number; houseId: number }
   /** El primer zombi que entra en la base (x, y: por dónde). */
   | { kind: 'zombiesInBase'; x: number; y: number }
   /** El primer zombi que se ve cerca de la base ese día. */

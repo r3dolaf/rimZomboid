@@ -1,4 +1,5 @@
-import { CHOP_NOISE_TICKS, EAT_RESTORE, NOISE } from '../balance';
+import { CHOP_NOISE_TICKS, EAT_RESTORE, NOISE, PRY_NOISE_TICKS } from '../balance';
+import { setTile } from '../map/grid';
 import { isNight } from '../clock';
 import { finishConsoling } from '../consoling';
 import { nearTable } from '../furniture';
@@ -9,7 +10,7 @@ import { makeNoise } from '../noise';
 import { addMemory } from '../mood';
 import { addInto, isEmpty, takeUpTo } from '../items';
 import { capacityKg, practice } from '../skills';
-import type { Survivor, World } from '../types';
+import { Tile, type Survivor, type World } from '../types';
 
 /** Avanzan y terminan las actividades: comer, dormir, crisis, registrar, descargar, pelear y consolar. */
 export function activitiesSystem(w: World): void {
@@ -75,6 +76,13 @@ export function activitiesSystem(w: World): void {
       if (a.ticksLeft > 0) continue;
       finishChop(w, a.tree);
       s.action = { type: 'idle', ticksLeft: 0 };
+    } else if (a.type === 'pry') {
+      // Forzar una puerta atrancada (H4d): se aprende y cada golpe se oye.
+      practice(w, s, 'loot', 1);
+      if (--a.ticksLeft % PRY_NOISE_TICKS === 0) makeNoise(w, s.pos, NOISE.pry);
+      if (a.ticksLeft > 0) continue;
+      finishPry(w, s, a.door);
+      s.action = { type: 'idle', ticksLeft: 0 };
     } else if (a.type === 'crisis') {
       if (--a.ticksLeft > 0) continue;
       addMemory(s, 'vented', w.tick);
@@ -82,6 +90,17 @@ export function activitiesSystem(w: World): void {
       s.action = { type: 'idle', ticksLeft: 0 };
     }
   }
+}
+
+/** La puerta atrancada queda abierta (si sigue atrancada: los zombis pueden haberla roto). */
+function finishPry(w: World, s: Survivor, door: number): void {
+  if (w.grid.tiles[door] !== Tile.LockedDoor) return;
+  const x = door % w.grid.width;
+  const y = Math.floor(door / w.grid.width);
+  setTile(w.grid, x, y, Tile.Door);
+  delete w.damage[String(door)];
+  const house = w.houses.find((h) => h.door.x === x && h.door.y === y);
+  logEvent(w, { kind: 'forced', survivorId: s.id, houseId: house?.id ?? 0 });
 }
 
 /** Registra el contenedor: coge lo que quepa y, si lo vacía, lo desmarca. */

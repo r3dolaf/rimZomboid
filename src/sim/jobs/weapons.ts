@@ -3,6 +3,7 @@ import { ITEM_WEIGHT_KG } from '../balance';
 import { weightOf } from '../items';
 import { pick } from '../rng';
 import { capacityKg } from '../skills';
+import { doorsToPry } from './pry';
 import type { Action, Survivor, Weapon, World } from '../types';
 
 const RANK: Record<Weapon, number> = { knife: 1, bat: 2, axe: 3, crowbar: 4, machete: 5 };
@@ -25,8 +26,12 @@ export function bestInStorage(s: Survivor, w: World): Weapon | null {
   return null;
 }
 
+/** Con la palanca en la mano no la cambia mientras haya puertas que forzar (H4d), como el hacha. */
+const keepsCrowbar = (s: Survivor, w: World) =>
+  s.equipped === 'crowbar' && s.work.loot && doorsToPry(w).length > 0;
+
 const better = (s: Survivor, w: World) =>
-  !s.weaponLocked && rank(bestInStorage(s, w)) > rank(s.equipped);
+  !s.weaponLocked && !keepsCrowbar(s, w) && rank(bestInStorage(s, w)) > rank(s.equipped);
 
 /** Si en el almacén hay algo mejor que lo que lleva, va a cambiarlo. */
 export function weaponJob(s: Survivor, w: World): Action | null {

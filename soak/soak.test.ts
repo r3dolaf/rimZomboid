@@ -240,6 +240,7 @@ test.each([1, 2, 3])(
     const cy = w.base.rect.y + Math.floor(w.base.rect.h / 2);
     const axesAtStart = axes(w);
     const levelsAtStart = levels(w);
+    let choppedHalf = 0;
     for (let day = 1; day <= DAYS; day++) {
       // Cada mañana: marcar algunos árboles vistos y poner unos planos cerca de la base.
       for (let k = 0; k < 40; k++) {
@@ -268,7 +269,11 @@ test.each([1, 2, 3])(
       }
       playDay(w, r, day);
       expect(axes(w), `día ${day}: hachas`).toBe(axesAtStart);
+      if (day === Math.floor(DAYS / 2)) choppedHalf = w.woodLog.chopped;
     }
+    // H4d: se sigue talando (antes, el machete y la palanca le quitaban el hacha a quien tala).
+    if (DAYS >= 10)
+      expect(w.woodLog.chopped, 'se tala también en la segunda mitad').toBeGreaterThan(choppedHalf);
     if (DAYS >= 10) {
       expect(w.woodLog.chopped, 'se ha talado').toBeGreaterThan(0);
       expect(w.woodLog.spent, 'se ha construido').toBeGreaterThan(0);

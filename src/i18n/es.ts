@@ -433,6 +433,7 @@ export const es = {
     sleepOnFloor: 'Durmiendo en el suelo',
     crisis: 'En crisis: encerrado en la base',
     goLoot: (house: number) => `Va a saquear la casa ${house}`,
+    goCorpse: 'Va a registrar un cuerpo',
     search: (what: string) => `Registrando ${what}`,
     goUnload: 'Llevando cosas al almacén',
     unload: 'Dejando cosas en el almacén',

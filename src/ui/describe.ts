@@ -50,7 +50,10 @@ export function activityText(s: Survivor, w?: World): string {
     case 'craft':
       return es.recipes[a.recipe].doing;
     case 'moveTo':
-      if (a.then?.type === 'search') return t.goLoot(container(a.then.containerId)?.houseId ?? 0);
+      if (a.then?.type === 'search') {
+        const c = container(a.then.containerId);
+        return c?.kind === 'corpse' ? t.goCorpse : t.goLoot(c?.houseId ?? 0);
+      }
       if (a.then?.type === 'unload') return t.goUnload;
       if (a.then?.type === 'eat') return t.goEat;
       if (a.then?.type === 'sleep') return t.goSleep;

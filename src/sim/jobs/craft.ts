@@ -1,6 +1,6 @@
 // Fabricar (spec H4d §4): pedidos en la mesa — coger los materiales, trabajarlos y llevar lo hecho.
 import { ITEM_WEIGHT_KG, RECIPES, type Recipe } from '../balance';
-import { emptyInventory, weightOf, type ItemKind } from '../items';
+import { emptyInventory, isEmpty, weightOf, type ItemKind } from '../items';
 import { logEvent } from '../log';
 import { findPath } from '../path/astar';
 import { nextFloat, pick } from '../rng';
@@ -129,6 +129,19 @@ export function startCraftActivity(
     return idle;
   const ticksLeft = Math.round(r.ticks / skillSpeed(s.skills.craft.level));
   return { type: 'craft', billId: b.id, tableId: table.id, recipe: b.recipe, ticksLeft };
+}
+
+/**
+ * Después de fabricar (bien o mal), a descargar en el almacén lo que lleva (spec H4d §4, paso 4):
+ * si no, con la carga a cuestas seguiría saqueando, fuera cual fuera la prioridad.
+ */
+export function unloadAfterCraft(s: Survivor, w: World): Action {
+  if (isEmpty(s.carrying)) return { type: 'idle', ticksLeft: 0 };
+  const target = pick(w.rng, w.storage.tiles);
+  const path = findPath(w.grid, tileOf(s.pos), target);
+  if (!path) return { type: 'idle', ticksLeft: 0 };
+  s.path = path;
+  return { type: 'moveTo', target, then: { type: 'unload' } };
 }
 
 /**

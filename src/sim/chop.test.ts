@@ -9,6 +9,7 @@ import { issue } from './orders';
 import { step } from './step';
 import { Tile, type Survivor, type World } from './types';
 import { createWorld, tileOf } from './world';
+import { equipFromPack } from './jobs/weapons';
 
 const BASE = withoutZombies(createWorld(3)); // H4a: talar y acarrear, sin zombis
 
@@ -129,4 +130,33 @@ test('si desmarcan el árbol mientras va, lo deja', () => {
   step(w);
   expect(a.action.type === 'moveTo' && a.action.then?.type === 'chop').toBe(false);
   expect(a.action.type).not.toBe('chop');
+});
+
+test('con un machete y una palanca de sobra en el almacén, quien tala se queda el hacha y tala (H4d)', () => {
+  const { w, a, tree } = scene();
+  for (const s of w.survivors) s.weaponLocked = s !== a; // los demás no cogen nada
+  w.storage.items.axe = 1;
+  w.storage.items.machete = 1;
+  w.storage.items.crowbar = 1;
+  issue(w, { type: 'markTree', ...tree, on: true });
+  let swaps = 0;
+  const chopped = runUntil(
+    w,
+    () => {
+      if (a.action.type === 'moveTo' && a.action.then?.type === 'swapWeapon') swaps++;
+      return getTile(w.grid, tree.x, tree.y) !== Tile.Tree;
+    },
+    6 * TICKS_PER_HOUR,
+  );
+  expect(chopped, `cambios de arma: ${swaps}`).toBe(true);
+});
+
+test('con árboles marcados, quien tala no cambia el hacha por el machete que encuentra (H4d)', () => {
+  const { a } = scene();
+  a.equipped = 'axe';
+  a.carrying.machete = 1;
+  equipFromPack(a, true);
+  expect(a.equipped).toBe('axe');
+  equipFromPack(a, false); // sin árboles marcados, sí
+  expect(a.equipped).toBe('machete');
 });

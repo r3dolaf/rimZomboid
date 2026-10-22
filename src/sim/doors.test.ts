@@ -7,7 +7,7 @@ import { workOnBlueprint } from './jobs/build';
 import { setTile } from './map/grid';
 import { regionOf } from './path/astar';
 import { step } from './step';
-import { emptyWorld, withoutZombies } from './testing/fixtures';
+import { addSurvivor, emptyWorld, withoutZombies } from './testing/fixtures';
 import { Tile, type World } from './types';
 import { findWork } from './work';
 import { createWorld } from './world';
@@ -163,5 +163,24 @@ test('romper ventana: plano en ventanas (no tapiadas); deja una ventana rota, mu
   expect(w.curtains).toEqual([2 * 14 + 7]);
   expect(z.state).toBe('alert');
   expect(NOISE.broken).toBe(12);
+  expect(checkInvariants(w)).toEqual([]);
+});
+
+test('quien no saquea no se queda la única palanca si hay puertas que forzar: la devuelve y Ana fuerza la puerta (H4d)', () => {
+  const w = withoutZombies(scene());
+  const ana = w.survivors[0]!;
+  ana.equipped = 'machete';
+  const bea = addSurvivor(w, { x: 2, y: 4 });
+  bea.work = { social: false, build: false, craft: false, haul: false, chop: false, loot: false };
+  bea.equipped = 'knife';
+  w.storage.items.crowbar = 1;
+  w.containers[0]!.designated = false; // aún nada marcado: la palanca es una buena arma
+  for (let i = 0; i < TICKS_PER_HOUR; i++) step(w);
+  expect(bea.equipped).toBe('crowbar');
+  w.containers[0]!.designated = true;
+  for (let i = 0; i < 6 * TICKS_PER_HOUR && w.grid.tiles[4 * 14 + 6] === Tile.LockedDoor; i++)
+    step(w);
+  expect(w.grid.tiles[4 * 14 + 6]).toBe(Tile.Door);
+  expect(bea.equipped).not.toBe('crowbar');
   expect(checkInvariants(w)).toEqual([]);
 });

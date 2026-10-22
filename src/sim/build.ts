@@ -22,13 +22,16 @@ export function wallPlanAt(w: World, x: number, y: number): boolean {
   return w.blueprints.some((b) => b.pos.x === x && b.pos.y === y && WALL_KINDS.has(b.kind));
 }
 
-/** ¿Hay algo en esa casilla que impida construir? (mueble, cama, contenedor, almacén, montón, plano) */
+/**
+ * ¿Hay algo en esa casilla que impida construir? (mueble, cama, contenedor, almacén, montón, plano)
+ * Un cuerpo de zombi no (H4d): suelen caer en los boquetes, y al terminar el muro se aparta.
+ */
 function occupied(w: World, x: number, y: number): boolean {
   const at = (p: Point) => p.x === x && p.y === y;
   return (
     w.furniture.some((f) => at(f.pos)) ||
     w.beds.some((b) => at(b.pos)) ||
-    w.containers.some((c) => at(c.pos)) ||
+    w.containers.some((c) => c.kind !== 'corpse' && at(c.pos)) ||
     w.storage.tiles.some(at) ||
     pileAt(w, x, y) !== undefined ||
     w.blueprints.some((b) => at(b.pos))

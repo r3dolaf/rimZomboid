@@ -81,3 +81,14 @@ test('pelea: actividad con el nombre del otro e icono 🥊', () => {
   expect(activityText(x!, w)).toBe(`Peleándose con ${y!.name}`);
   expect(statusIcon(x!)?.icon).toBe('🥊');
 });
+
+test('ir a un cuerpo dice "Va a registrar un cuerpo", no la casa -1 (H4d)', () => {
+  const w = createWorld(2);
+  const x = w.survivors[0]!;
+  const c = { ...structuredClone(w.containers[0]!), id: 999, houseId: -1, kind: 'corpse' as const };
+  w.containers.push(c);
+  x.action = { type: 'moveTo', target: c.pos, then: { type: 'search', containerId: c.id } };
+  expect(activityText(x, w)).toBe('Va a registrar un cuerpo');
+  x.action = { type: 'search', containerId: c.id, ticksLeft: 5 };
+  expect(activityText(x, w)).toBe('Registrando un cuerpo');
+});

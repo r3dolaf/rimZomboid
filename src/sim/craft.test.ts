@@ -177,3 +177,33 @@ test('al fallar: pierde la mitad de cada material (hacia arriba), lo demás vuel
   }
   expect(failed).toBe(true);
 });
+
+test('al terminar lleva lo hecho al almacén antes de nada, aunque tenga Saquear (H4d)', () => {
+  const w = world();
+  const s = w.survivors[0]!;
+  s.work.loot = true;
+  s.priorities = { social: 3, build: 3, craft: 1, haul: 3, chop: 3, loot: 3 };
+  w.containers.push({
+    id: 90,
+    houseId: -1,
+    kind: 'shelf',
+    pos: { x: 9, y: 9 },
+    items: { ...w.storage.items, food: 0, cloth: 0, bandage: 0, knife: 1 },
+    searched: false,
+    designated: true,
+    reservedBy: null,
+  });
+  const b = bill(w, 'bandages');
+  issue(w, { type: 'setBill', billId: b.id, mode: 'count', target: 1 });
+  ordersSystem(w);
+  const after: string[] = [];
+  for (let i = 0; i < 4 * TICKS_PER_HOUR && after.length < 2; i++) {
+    const before = s.action.type;
+    step(w);
+    const now = s.action.type === 'moveTo' ? (s.action.then?.type ?? 'walk') : s.action.type;
+    if (b.done === 1 && before !== s.action.type && (now === 'unload' || now === 'search'))
+      if (after.at(-1) !== now) after.push(now);
+  }
+  expect(after[0]).toBe('unload');
+  expect(w.storage.items.bandage).toBe(2);
+});

@@ -5,7 +5,7 @@ import { finishConsoling } from '../consoling';
 import { nearTable } from '../furniture';
 import { workOnBlueprint } from '../jobs/build';
 import { finishChop } from '../jobs/chop';
-import { finishCraft } from '../jobs/craft';
+import { finishCraft, unloadAfterCraft } from '../jobs/craft';
 import { logEvent } from '../log';
 import { makeNoise } from '../noise';
 import { addMemory } from '../mood';
@@ -82,7 +82,7 @@ export function activitiesSystem(w: World): void {
       practice(w, s, 'craft', 1);
       if (--a.ticksLeft > 0) continue;
       finishCraft(w, s, a);
-      s.action = { type: 'idle', ticksLeft: 0 };
+      s.action = unloadAfterCraft(s, w);
     } else if (a.type === 'pry') {
       // Forzar una puerta atrancada (H4d): se aprende y cada golpe se oye.
       practice(w, s, 'loot', 1);

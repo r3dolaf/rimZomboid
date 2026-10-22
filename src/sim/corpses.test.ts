@@ -7,6 +7,7 @@ import {
   CORPSE_WEAPON_CHANCE,
   TICKS_PER_DAY,
 } from './balance';
+import { canPlace } from './build';
 import { colonistHit } from './combat';
 import { corpsesSystem } from './corpses';
 import { checkInvariants } from './invariants';
@@ -152,4 +153,14 @@ test('si se tapia la ventana rota en la que cayó un zombi, su cuerpo se aparta 
   expect(c.pos).not.toEqual({ x: 5, y: 5 });
   expect(Math.max(Math.abs(c.pos.x - 5), Math.abs(c.pos.y - 5))).toBeLessThanOrEqual(1);
   expect(checkInvariants(w)).toEqual([]);
+});
+
+test('un cuerpo no impide construir encima: tapar el boquete donde cayó (al terminar, se aparta) (H4d)', () => {
+  const w = world();
+  w.grid.tiles[4 * 12 + 4] = Tile.Rubble;
+  expect(canPlace(w, 'woodWall', { x: 4, y: 4 })).toBe(true);
+  kill(w, 4, 4);
+  expect(canPlace(w, 'woodWall', { x: 4, y: 4 })).toBe(true);
+  kill(w, 7, 7);
+  expect(canPlace(w, 'campfire', { x: 7, y: 7 })).toBe(true);
 });

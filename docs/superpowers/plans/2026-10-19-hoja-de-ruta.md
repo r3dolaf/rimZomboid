@@ -58,6 +58,8 @@ Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al p
 - Sanar: 0–2 rescates y 2–11 vendajes por partida.
 - Rendimiento con hordas: 0,06–0,11 ms por tick de media; el peor tick, 9–37 ms. La partida larga tarda unos 19 minutos.
 - A 1280 px de ancho, la semilla ya no cabe en la barra de arriba (el botón Avisos ocupa su sitio).
+- Tras la revisión final, con un asedio sin defender cada colono cae 1–3 veces y pasa unas 4–19 h en el suelo (antes, 4–7 veces y hasta 43 h): el derribado no se levanta con un zombi encima, la horda se cansa a las 2 h sin nadie en pie y al terminar se va por donde vino.
+- Pequeños de la revisión, aplazados: poner en modo combate a quien consuelan en plena crisis se la reinicia; dos derribados pueden acabar en la misma cama libre; con poca comida, saquear va antes que Sanar; clic derecho en un derribado que no se puede rescatar no hace nada; faltan tests de soltar al llevado en algunos casos (desplomarse, crisis, modo combate, comer o dormir, levantarse en brazos) y de caducar la decisión con un desconocido en el suelo.
 
 **Para H6 (pulido), de H4f:**
 

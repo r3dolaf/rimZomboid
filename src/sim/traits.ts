@@ -8,12 +8,26 @@ export const TRAITS: readonly TraitId[] = [
   'sleepyhead',
   'optimist',
   'pessimist',
+  // Habilidades (H4c)
+  'handy',
+  'clumsy',
+  'strong',
+  'weak',
+  'fastLearner',
+  'slowLearner',
+  'pleasant',
+  'unpleasant',
+  'keenEye',
 ];
 
 /** Parejas que no pueden darse juntas. */
 export const INCOMPATIBLE: readonly (readonly [TraitId, TraitId])[] = [
   ['brave', 'coward'],
   ['optimist', 'pessimist'],
+  ['handy', 'clumsy'],
+  ['strong', 'weak'],
+  ['fastLearner', 'slowLearner'],
+  ['pleasant', 'unpleasant'],
 ];
 
 function compatible(a: TraitId, b: TraitId): boolean {

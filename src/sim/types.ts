@@ -52,7 +52,23 @@ export interface Building {
 /** Qué cerebro decide por un superviviente. En la fase 2 se añadirá 'player'. */
 export type BrainId = 'ai';
 
-export type TraitId = 'brave' | 'coward' | 'glutton' | 'sleepyhead' | 'optimist' | 'pessimist';
+export type TraitId =
+  | 'brave'
+  | 'coward'
+  | 'glutton'
+  | 'sleepyhead'
+  | 'optimist'
+  | 'pessimist'
+  // Habilidades (H4c)
+  | 'handy'
+  | 'clumsy'
+  | 'strong'
+  | 'weak'
+  | 'fastLearner'
+  | 'slowLearner'
+  | 'pleasant'
+  | 'unpleasant'
+  | 'keenEye';
 
 /** Necesidades de 0 a 100 (100 = bien). */
 export interface Needs {
@@ -161,6 +177,8 @@ export interface Survivor {
   path: Point[];
   needs: Needs;
   traits: TraitId[];
+  /** Habilidades (H4c). */
+  skills: Record<SkillId, Skill>;
   memories: Memory[];
   /** Su cama, o `null` si no hay sitio (duerme en el suelo de la base). */
   bedId: number | null;
@@ -225,6 +243,15 @@ export interface Zombie {
 
 /** Trabajos, en orden de criticidad (spec H4a §3.1). */
 export type WorkType = 'social' | 'build' | 'haul' | 'chop' | 'loot';
+
+/** Habilidades (H4c): una por trabajo y Pelear. */
+export type SkillId = WorkType | 'fight';
+
+/** Nivel de 0 a 10 y la práctica acumulada hacia el siguiente. */
+export interface Skill {
+  level: number;
+  xp: number;
+}
 
 export interface Bed {
   id: number;
@@ -356,7 +383,8 @@ export interface World {
   /** Árboles marcados para talar, por índice y·ancho + x. */
   chopMarks: number[];
   /** Cuentas de la madera, para comprobar que nunca aparece ni desaparece. */
-  woodLog: { start: number; chopped: number; recovered: number; spent: number };
+  /** `wasted`: la que se pierde al fallar al construir (H4c). */
+  woodLog: { start: number; chopped: number; recovered: number; spent: number; wasted: number };
   // Zombis (H4b)
   zombies: Zombie[];
   /** Su propio azar: añadir zombis no cambia lo que hacen los colonos con la misma semilla. */

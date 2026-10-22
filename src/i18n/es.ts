@@ -247,12 +247,24 @@ export const es = {
   hoursLeft: (h: number) => `quedan ${h} h`,
 
   traits: {
-    brave: { name: 'Valiente', desc: 'Aguanta más cerca de los zombis antes de huir.' },
-    coward: { name: 'Cobarde', desc: 'Huye antes y no le gusta saquear.' },
+    brave: {
+      name: 'Valiente',
+      desc: 'Aguanta más cerca de los zombis antes de huir. +2 en Pelear.',
+    },
+    coward: { name: 'Cobarde', desc: 'Huye antes y no le gusta saquear. −2 en Pelear.' },
     glutton: { name: 'Glotón', desc: 'Le entra hambre más rápido.' },
     sleepyhead: { name: 'Dormilón', desc: 'Se cansa más rápido.' },
     optimist: { name: 'Optimista', desc: 'Ve el lado bueno: +10 de ánimo.' },
     pessimist: { name: 'Pesimista', desc: 'Todo le pesa más: −10 de ánimo.' },
+    handy: { name: 'Manitas', desc: '+2 en Construir.' },
+    clumsy: { name: 'Torpe', desc: '−2 en Construir, y falla más al construir.' },
+    strong: { name: 'Fuerte', desc: '+2 en Transportar y en Talar.' },
+    weak: { name: 'Débil', desc: '−2 en Transportar y en Talar.' },
+    fastLearner: { name: 'Aprende rápido', desc: 'La práctica le cunde un 50 % más.' },
+    slowLearner: { name: 'Aprende despacio', desc: 'La práctica le cunde la mitad.' },
+    pleasant: { name: 'Agradable', desc: '+2 en Social.' },
+    unpleasant: { name: 'Desagradable', desc: '−2 en Social.' },
+    keenEye: { name: 'Buen ojo', desc: '+2 en Saquear.' },
   } satisfies Record<TraitId, { name: string; desc: string }>,
 
   modifiers: {

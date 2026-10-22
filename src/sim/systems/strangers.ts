@@ -18,6 +18,7 @@ import { moodTarget } from '../mood';
 import { NAMES } from '../names';
 import { findPath, regionOf } from '../path/astar';
 import { nextFloat, nextInt, pick } from '../rng';
+import { rollSkills, skillRng } from '../skills';
 import { rollTraits } from '../traits';
 import { Tile, type Point, type Survivor, type World } from '../types';
 import { defaultStance, defaultWork, tileOf } from '../world';
@@ -96,6 +97,7 @@ export function newStranger(w: World, start: Point): Survivor {
       social: nextInt(w.rng, STRANGER_NEED_MIN, STRANGER_NEED_MAX),
     },
     traits: rollTraits(w.rng),
+    skills: rollSkills(skillRng(w.seed, 0), []), // se sortea abajo con su id y sus rasgos
     memories: [],
     bedId: null,
     carrying: {
@@ -117,6 +119,7 @@ export function newStranger(w: World, start: Point): Survivor {
   };
   s.needs.mood = moodTarget(s, w.tick, w.base.rect);
   s.stance = defaultStance(s.traits);
+  s.skills = rollSkills(skillRng(w.seed, s.id), s.traits);
   return s;
 }
 

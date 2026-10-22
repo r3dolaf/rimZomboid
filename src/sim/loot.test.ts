@@ -75,10 +75,11 @@ test('determinista: misma semilla, mismos contenedores', () => {
 
 test('añadir contenedores no cambia a los supervivientes de partidas anteriores (semilla 5)', () => {
   const w = createWorld(5);
+  // (Con los 15 rasgos de H4c salen otros rasgos; los nombres, los de siempre.)
   expect(w.survivors.map((s) => `${s.name}:${s.traits.join('+')}`)).toEqual([
-    'Óscar:glutton+optimist',
-    'Nuria:pessimist',
-    'Raúl:pessimist',
+    'Óscar:handy+slowLearner',
+    'Nuria:unpleasant',
+    'Raúl:keenEye',
   ]);
 });
 

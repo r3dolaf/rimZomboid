@@ -1,6 +1,14 @@
-import { BUILD, CARRY_CAPACITY_KG, OPINION_LIMIT, RESISTANCE, ZOMBIE_HEALTH } from './balance';
+import {
+  BUILD,
+  CARRY_CAPACITY_KG,
+  OPINION_LIMIT,
+  RESISTANCE,
+  SKILL_MAX,
+  ZOMBIE_HEALTH,
+} from './balance';
 import { ITEM_KINDS, weightOf, type Inventory } from './items';
 import { inBounds, isWalkable, isZombieWalkable } from './map/grid';
+import { SKILLS, xpToNext } from './skills';
 import { targetContainerId } from './work';
 import { Tile, type World } from './types';
 import { tileOf } from './world';
@@ -33,6 +41,17 @@ export function checkInvariants(w: World): string[] {
     checkInventory(problems, `${who}: carga`, s.carrying);
     if (weightOf(s.carrying) > CARRY_CAPACITY_KG + 1e-9)
       problems.push(`${who}: carga ${weightOf(s.carrying)} kg > ${CARRY_CAPACITY_KG}`);
+    for (const k of SKILLS) {
+      const { level, xp } = s.skills[k];
+      if (!Number.isInteger(level) || level < 0 || level > SKILL_MAX)
+        problems.push(`${who}: ${k}: nivel ${level} fuera de 0–${SKILL_MAX}`);
+      else if (
+        !Number.isFinite(xp) ||
+        xp < 0 ||
+        (level === SKILL_MAX ? xp !== 0 : xp >= xpToNext(level))
+      )
+        problems.push(`${who}: ${k}: práctica ${xp} no válida para el nivel ${level}`);
+    }
     if (s.bedId !== null && !w.beds.some((b) => b.id === s.bedId && b.ownerId === s.id))
       problems.push(`${who}: su cama ${s.bedId} no existe o no es suya`);
     for (const [id, v] of Object.entries(s.opinions))
@@ -134,7 +153,8 @@ export function checkInvariants(w: World): string[] {
     else if (!Number.isInteger(hp) || hp < 1 || hp > full - 1)
       problems.push(`daño en ${key}: resistencia ${hp} fuera de 1–${full - 1}`);
   }
-  // La madera nunca aparece ni desaparece: lo que hay más lo gastado es lo repartido, talado y recuperado.
+  // La madera nunca aparece ni desaparece: lo que hay más lo gastado (y lo perdido al fallar) es lo
+  // repartido, talado y recuperado.
   const wood =
     w.storage.items.wood +
     w.containers.reduce((acc, c) => acc + c.items.wood, 0) +
@@ -143,9 +163,9 @@ export function checkInvariants(w: World): string[] {
     (w.stranger?.survivors.reduce((acc, s) => acc + s.carrying.wood, 0) ?? 0) +
     w.blueprints.reduce((acc, b) => acc + b.wood, 0);
   const log = w.woodLog;
-  if (wood + log.spent !== log.start + log.chopped + log.recovered)
+  if (wood + log.spent + log.wasted !== log.start + log.chopped + log.recovered)
     problems.push(
-      `la madera no cuadra: hay ${wood}, gastada ${log.spent}; repartida ${log.start}, talada ${log.chopped}, recuperada ${log.recovered}`,
+      `la madera no cuadra: hay ${wood}, gastada ${log.spent}, perdida ${log.wasted}; repartida ${log.start}, talada ${log.chopped}, recuperada ${log.recovered}`,
     );
   return problems;
 }

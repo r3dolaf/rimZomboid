@@ -282,6 +282,24 @@ export const BUILD = {
   fixDoor: { wood: 2, ticks: TICKS_PER_HOUR },
 } as const;
 
+// Habilidades (H4c)
+export const SKILL_MAX = 10;
+export const SKILL_START_MAX = 3; // al empezar, cada una entre 0 y esto…
+export const SPECIALTY_MIN = 5; // …salvo la especialidad, entre esto…
+export const SPECIALTY_MAX = 7; // …y esto
+/** Lo que suma o resta cada rasgo a las habilidades al empezar. */
+export const TRAIT_SKILL_MODS = {
+  brave: { fight: 2 },
+  coward: { fight: -2 },
+  handy: { build: 2 },
+  clumsy: { build: -2 },
+  strong: { haul: 2, chop: 2 },
+  weak: { haul: -2, chop: -2 },
+  pleasant: { social: 2 },
+  unpleasant: { social: -2 },
+  keenEye: { loot: 2 },
+} as const;
+
 // Zombis (H4b)
 /** Zombis al empezar, máximo y cada cuántas horas llega uno por los bordes, según el narrador. */
 // Caótico era 35/70/1 h y Muchos ×1,5: sin defensas, en Caótico/muchos caían el 80 % del tiempo.

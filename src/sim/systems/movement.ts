@@ -17,6 +17,7 @@ import { startHaulActivity } from '../jobs/haul';
 import { startSwapWeapon } from '../jobs/weapons';
 import { logEvent } from '../log';
 import { makeNoise } from '../noise';
+import { skillSpeed } from '../skills';
 import { isWalkable } from '../map/grid';
 import { findPath } from '../path/astar';
 import { nextInt } from '../rng';
@@ -91,7 +92,12 @@ function startActivity(s: Survivor, activity: Activity, w: World): Action {
       logEvent(w, { kind: 'crisis', survivorId: s.id });
       return { type: 'crisis', ticksLeft: CRISIS_TICKS };
     case 'search':
-      return { type: 'search', containerId: activity.containerId, ticksLeft: SEARCH_TICKS };
+      // Con más habilidad, antes (spec H4c §3.4).
+      return {
+        type: 'search',
+        containerId: activity.containerId,
+        ticksLeft: Math.round(SEARCH_TICKS / skillSpeed(s.skills.loot.level)),
+      };
     case 'unload':
       return { type: 'unload', ticksLeft: UNLOAD_TICKS };
     case 'takeAxe':

@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { createWorld } from '../sim/world';
-import { containerAt, houseAt, survivorAt } from './pick';
+import { containerAt, houseAt, survivorAt, tableAt } from './pick';
 
 test('encuentra al superviviente más cercano dentro del radio', () => {
   const w = createWorld(2);
@@ -35,4 +35,17 @@ test('containerAt: si un cuerpo cayó en la casilla de un mueble, el cuerpo va e
   const corpse = { ...structuredClone(c), id: 999, houseId: -1, kind: 'corpse' as const };
   w.containers.push(corpse);
   expect(containerAt(w, c.pos.x, c.pos.y)?.id).toBe(999);
+});
+
+test('tableAt: la mesa vista de esa casilla, para abrir Fabricar con un clic (H4d)', () => {
+  const w = createWorld(2);
+  const p = { x: w.base.rect.x + 2, y: w.base.rect.y + 2 };
+  w.furniture.push({ id: 700, kind: 'table', pos: p });
+  w.furniture.push({ id: 701, kind: 'campfire', pos: { x: p.x + 1, y: p.y } });
+  w.seen[p.y * w.grid.width + p.x] = 1;
+  w.seen[p.y * w.grid.width + p.x + 1] = 1;
+  expect(tableAt(w, p.x, p.y)?.id).toBe(700);
+  expect(tableAt(w, p.x + 1, p.y)).toBeNull(); // una hoguera no
+  w.seen[p.y * w.grid.width + p.x] = 0;
+  expect(tableAt(w, p.x, p.y)).toBeNull();
 });

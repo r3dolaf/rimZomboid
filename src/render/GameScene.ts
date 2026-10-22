@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { markCorpsesIn, toggleContainer, toggleHouse } from '../game/designate';
-import { containerAt, houseAt, survivorAt } from '../game/pick';
+import { containerAt, houseAt, survivorAt, tableAt } from '../game/pick';
 import { runTicks } from '../game/runTicks';
 import type { TimeController } from '../game/timeController';
 import {
@@ -35,6 +35,11 @@ import {
   CAMPFIRE_FLAME,
   CAMPFIRE_STONE,
   CONTAINER_COLORS,
+  CORPSE_OUTLINE,
+  CORPSE_STAIN,
+  CURTAIN_DRAPE,
+  CURTAIN_FOLD,
+  LOCK_BAR,
   CONTAINER_EDGE,
   css,
   DAMAGE_BAR,
@@ -89,6 +94,8 @@ export interface GameSceneData {
   /** Con `?debug=1`: expone `window.rimzomboid` para los tests de navegador. */
   debug?: boolean;
   onFrame?: () => void;
+  /** Clic en una mesa (H4d): abre el panel Fabricar. */
+  openCraft?: () => void;
 }
 
 /** Dibuja el mundo. Solo lee el estado de la simulación; nunca decide nada del juego. */
@@ -99,6 +106,7 @@ export class GameScene extends Phaser.Scene {
   private houseSelection!: Selection;
   private tool!: Tool;
   private onFrame?: () => void;
+  private openCraft?: () => void;
   private actors!: Phaser.GameObjects.Graphics;
   /** Globos sobre la cabeza, uno por superviviente que lo lleva (se reutilizan). */
   private bubbleLayer!: Phaser.GameObjects.Container;
@@ -111,6 +119,7 @@ export class GameScene extends Phaser.Scene {
   private map!: Phaser.Textures.CanvasTexture;
   private mapTiles: number[] = [];
   private mapVersion = -1;
+  private mapCurtains = -1;
   private storageTiles = new Set<number>();
   /** Arrastre con Talar o Construir, de casilla a casilla. */
   private drag: { mode: ToolMode; from: Point; to: Point } | null = null;
@@ -145,6 +154,7 @@ export class GameScene extends Phaser.Scene {
     this.houseSelection = data.houseSelection;
     this.tool = data.tool;
     this.onFrame = data.onFrame;
+    this.openCraft = data.openCraft;
     if (data.debug) this.exposeDebug();
   }
 
@@ -199,18 +209,25 @@ export class GameScene extends Phaser.Scene {
     this.refreshMap();
   }
 
-  /** Repinta solo las casillas que han cambiado desde la última vez (talar, muros, tablas…). */
+  /**
+   * Repinta solo las casillas que han cambiado desde la última vez (talar, muros, tablas…). Las
+   * cortinas (H4d) no siempre cambian la casilla: colgarlas, solo la lista.
+   */
   private refreshMap(): void {
-    const { grid } = this.world;
-    if (grid.version === this.mapVersion) return;
+    const { grid, curtains } = this.world;
+    const sig = curtains.reduce((a, i) => a + i + 1, 0) * 31 + curtains.length;
+    if (grid.version === this.mapVersion && sig === this.mapCurtains) return;
     this.mapVersion = grid.version;
+    this.mapCurtains = sig;
+    const hung = new Set(curtains);
     const ctx = this.map.context;
     for (let i = 0; i < grid.tiles.length; i++) {
       const t = grid.tiles[i]!;
-      if (this.mapTiles[i] === t) continue;
-      this.mapTiles[i] = t;
+      const look = t * 2 + (hung.has(i) ? 1 : 0);
+      if (this.mapTiles[i] === look) continue;
+      this.mapTiles[i] = look;
       const [x, y] = [(i % grid.width) * TILE_PX, Math.floor(i / grid.width) * TILE_PX];
-      paintTile(ctx, x, y, t);
+      paintTile(ctx, x, y, t, hung.has(i));
       if (this.storageTiles.has(i)) {
         ctx.fillStyle = css(STORAGE_EDGE);
         ctx.fillRect(x + 1, y + 1, TILE_PX - 2, TILE_PX - 2);
@@ -353,6 +370,10 @@ export class GameScene extends Phaser.Scene {
         this.selection.set(s.id);
         return;
       }
+      if (tableAt(w, tx, ty)) {
+        this.openCraft?.();
+        return;
+      }
       const h = seen ? houseAt(w, tx, ty) : null;
       this.selection.set(null);
       this.houseSelection.set(h?.id ?? null);
@@ -407,10 +428,14 @@ export class GameScene extends Phaser.Scene {
     for (const c of w.containers) {
       if (w.seen[c.pos.y * w.grid.width + c.pos.x] !== 1) continue;
       const [x, y] = [c.pos.x * TILE_PX, c.pos.y * TILE_PX];
-      g.fillStyle(CONTAINER_EDGE);
-      g.fillRect(x + 2, y + 2, TILE_PX - 4, TILE_PX - 4);
-      g.fillStyle(CONTAINER_COLORS[c.kind], c.searched && isEmpty(c.items) ? 0.35 : 1);
-      g.fillRect(x + 3, y + 3, TILE_PX - 6, TILE_PX - 6);
+      const alpha = c.searched && isEmpty(c.items) ? 0.35 : 1;
+      if (c.kind === 'corpse') this.drawCorpse(x, y, alpha);
+      else {
+        g.fillStyle(CONTAINER_EDGE);
+        g.fillRect(x + 2, y + 2, TILE_PX - 4, TILE_PX - 4);
+        g.fillStyle(CONTAINER_COLORS[c.kind], alpha);
+        g.fillRect(x + 3, y + 3, TILE_PX - 6, TILE_PX - 6);
+      }
       if (effectiveDesignated(w, c)) {
         m.lineStyle(2, DESIGNATION, 1);
         m.strokeRect(x + 1, y + 1, TILE_PX - 2, TILE_PX - 2);
@@ -459,6 +484,19 @@ export class GameScene extends Phaser.Scene {
       m.lineStyle(selected ? 2 : 3, selected ? HOUSE_SELECTED : DESIGNATION, 0.9);
       m.strokeRect(h.rect.x * TILE_PX, h.rect.y * TILE_PX, h.rect.w * TILE_PX, h.rect.h * TILE_PX);
     }
+  }
+
+  /** Cuerpo de zombi (H4d): una silueta oscura tumbada, con una mancha; desvaída si está vacío. */
+  private drawCorpse(x: number, y: number, alpha: number): void {
+    const g = this.furniture;
+    g.fillStyle(CORPSE_STAIN, 0.6 * alpha);
+    g.fillEllipse(x + 9, y + 10, 12, 6);
+    g.fillStyle(CORPSE_OUTLINE, alpha);
+    g.fillEllipse(x + 8, y + 8, 11, 6);
+    g.fillCircle(x + 13, y + 7, 3);
+    g.fillStyle(CONTAINER_COLORS.corpse, alpha);
+    g.fillEllipse(x + 8, y + 8, 9, 4);
+    g.fillCircle(x + 13, y + 7, 2);
   }
 
   /** Encima de la niebla: marcas de talar, planos (también los pendientes) y lo que se va a hacer
@@ -556,6 +594,24 @@ export class GameScene extends Phaser.Scene {
         m.strokeRect(x + 0.5, y + 3.5, TILE_PX - 1, 3);
         m.strokeRect(x + 0.5, y + 9.5, TILE_PX - 1, 3);
         break;
+      // Cortinas (H4d): dos caídas de tela; al descolgarlas, solo el contorno.
+      case 'curtains':
+      case 'hangCurtains':
+        m.fillRect(x + 1, y + 1, 4, TILE_PX - 2);
+        m.fillRect(x + TILE_PX - 5, y + 1, 4, TILE_PX - 2);
+        break;
+      case 'takeDownCurtains':
+        m.strokeRect(x + 1.5, y + 1.5, 3, TILE_PX - 3);
+        m.strokeRect(x + TILE_PX - 4.5, y + 1.5, 3, TILE_PX - 3);
+        break;
+      case 'smashWindow': // grietas desde el centro
+        m.lineStyle(2, color, Math.min(1, alpha * 2.5));
+        m.lineBetween(x + 8, y + 8, x + 2, y + 3);
+        m.lineBetween(x + 8, y + 8, x + 14, y + 4);
+        m.lineBetween(x + 8, y + 8, x + 5, y + 14);
+        m.lineBetween(x + 8, y + 8, x + 13, y + 13);
+        m.lineStyle(1, color, Math.min(1, alpha * 2));
+        break;
     }
     m.strokeRect(x + 0.5, y + 0.5, TILE_PX - 1, TILE_PX - 1);
   }
@@ -651,9 +707,15 @@ export class GameScene extends Phaser.Scene {
   }
 }
 
-/** Pinta una casilla del mapa en el lienzo (con juntas en los muros de madera y tablas en las
- * ventanas tapiadas). */
-function paintTile(ctx: CanvasRenderingContext2D, x: number, y: number, t: Tile): void {
+/** Pinta una casilla del mapa en el lienzo (con juntas en los muros de madera, tablas en las
+ * ventanas tapiadas, cortinas y la barra de las puertas atrancadas). */
+function paintTile(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  t: Tile,
+  curtains: boolean,
+): void {
   ctx.fillStyle = css(TILE_COLORS[t === Tile.BoardedWindow ? Tile.Window : t]);
   ctx.fillRect(x, y, TILE_PX, TILE_PX);
   if (t === Tile.WoodWall) {
@@ -680,6 +742,25 @@ function paintTile(ctx: CanvasRenderingContext2D, x: number, y: number, t: Tile)
       [9, 13],
     ])
       ctx.fillRect(x + dx!, y + dy!, 3, 2);
+  } else if (t === Tile.Window && curtains) {
+    // Cortinas abiertas (H4d): recogidas a los lados. Sin cortinas, el marco vacío.
+    ctx.fillStyle = css(CURTAIN_DRAPE);
+    ctx.fillRect(x, y, 3, TILE_PX);
+    ctx.fillRect(x + TILE_PX - 3, y, 3, TILE_PX);
+  } else if (t === Tile.CurtainedWindow) {
+    // Cortinas corridas: tela oscura con sus pliegues.
+    ctx.fillStyle = css(CURTAIN_FOLD);
+    for (const dx of [4, 8, 12]) ctx.fillRect(x + dx, y, 1, TILE_PX);
+  } else if (t === Tile.LockedDoor) {
+    // Puerta atrancada: dos tablones cruzados.
+    ctx.strokeStyle = css(LOCK_BAR);
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x + 2, y + 2);
+    ctx.lineTo(x + TILE_PX - 2, y + TILE_PX - 2);
+    ctx.moveTo(x + TILE_PX - 2, y + 2);
+    ctx.lineTo(x + 2, y + TILE_PX - 2);
+    ctx.stroke();
   } else if (t === Tile.BoardedWindow) {
     for (const dy of [3, 9]) {
       ctx.fillStyle = css(PLANK_SEAM);

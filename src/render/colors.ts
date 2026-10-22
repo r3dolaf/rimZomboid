@@ -65,3 +65,10 @@ export const DOWNED_RING = 0xd9534f;
 export const DAMAGE_BAR = 0xe0a030;
 export const RUBBLE_BITS = 0x8f8a82;
 export const BROKEN_GLASS = 0x1c2a30;
+
+// H4d: cortinas, puertas atrancadas y cuerpos.
+export const CURTAIN_DRAPE = 0x8a5a78;
+export const CURTAIN_FOLD = 0x4e3446;
+export const LOCK_BAR = 0x2a1a0c;
+export const CORPSE_OUTLINE = 0x161b14;
+export const CORPSE_STAIN = 0x4a2a24;

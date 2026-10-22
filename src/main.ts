@@ -114,6 +114,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
     houseSelection,
     tool,
     debug: new URLSearchParams(location.search).get('debug') === '1',
+    openCraft: () => craftOpen.set(true),
     onFrame: () => {
       hud.update(
         gameTime(world.tick),

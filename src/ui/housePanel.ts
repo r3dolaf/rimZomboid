@@ -1,11 +1,11 @@
 import { es } from '../i18n/es';
 import { isEmpty } from '../sim/items';
 import { houseMarked } from '../sim/orders';
-import type { World } from '../sim/types';
+import { Tile, type World } from '../sim/types';
 import type { Selection } from './selection';
 import './panels.css';
 
-/** Ficha de la casa seleccionada: si está marcada y cómo va el saqueo. */
+/** Ficha de la casa seleccionada: si está marcada, si está atrancada y cómo va el saqueo. */
 export function mountHousePanel(
   root: HTMLElement,
   opts: { world: World; selection: Selection },
@@ -44,6 +44,9 @@ export function mountHousePanel(
         (c) => c.houseId === house.id && w.seen[c.pos.y * w.grid.width + c.pos.x] === 1,
       );
       const lines = [houseMarked(w, house.id) ? es.houseMarked : es.houseUnmarked];
+      // Puerta atrancada (H4d), si se ha visto.
+      const door = house.door.y * w.grid.width + house.door.x;
+      if (w.seen[door] === 1 && w.grid.tiles[door] === Tile.LockedDoor) lines.push(es.houseLocked);
       if (cs.length === 0) lines.push(es.houseUnexplored);
       else
         lines.push(

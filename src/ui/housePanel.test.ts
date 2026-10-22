@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { expect, test } from 'vitest';
+import { Tile } from '../sim/types';
 import { createWorld } from '../sim/world';
 import { mountHousePanel } from './housePanel';
 import { createSelection } from './selection';
@@ -55,4 +56,25 @@ test('sin ningún contenedor visto, dice que está sin explorar y no cuenta nada
   const text = root.querySelector('[data-testid="house-panel"]')!.textContent!;
   expect(text).toContain('Sin explorar por dentro');
   expect(text).not.toContain('Registrados');
+});
+
+test('con la puerta atrancada (y vista), lo dice: hace falta una palanca (H4d)', () => {
+  const root = document.createElement('div');
+  const w = createWorld(2);
+  const sel = createSelection();
+  const panel = mountHousePanel(root, { world: w, selection: sel });
+  const h = w.houses[0]!;
+  const door = h.door.y * w.grid.width + h.door.x;
+  const text = () => root.querySelector('[data-testid="house-panel"]')!.textContent!;
+  w.grid.tiles[door] = Tile.Door;
+  w.seen[door] = 1;
+  sel.set(h.id);
+  panel.update();
+  expect(text()).not.toContain('atrancada');
+  w.grid.tiles[door] = Tile.LockedDoor;
+  panel.update();
+  expect(text()).toContain('Puerta atrancada: hace falta una palanca');
+  w.seen[door] = 0; // sin verla, no se sabe
+  panel.update();
+  expect(text()).not.toContain('atrancada');
 });

@@ -224,6 +224,7 @@ export const es = {
   houseUnmarked: 'Sin marcar',
   houseSearched: (n: number, total: number) => `Registrados: ${n} de ${total} vistos`,
   houseUnexplored: 'Sin explorar por dentro',
+  houseLocked: 'Puerta atrancada: hace falta una palanca',
   houseEmpty: (n: number) => `Vacíos: ${n}`,
   nothing: 'nada',
   and: 'y',

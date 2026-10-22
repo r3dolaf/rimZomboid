@@ -31,12 +31,10 @@ test('la cuadrícula lleva la cuenta de sus cambios (para redibujar el mapa)', (
   expect(g.version).toBe(v + 1);
 });
 
-test('40 maderas, solo en armarios y estanterías, y siempre al menos un hacha', () => {
+test('siempre hay madera y al menos un hacha por el mapa (H4f: según el tipo de edificio)', () => {
   for (let seed = 1; seed <= 15; seed++) {
     const w = createWorld(seed);
-    const wood = w.containers.reduce((acc, c) => acc + c.items.wood, 0);
-    expect(wood).toBe(40);
-    for (const c of w.containers) if (c.kind === 'fridge') expect(c.items.wood).toBe(0);
+    expect(w.containers.reduce((acc, c) => acc + c.items.wood, 0)).toBeGreaterThan(40);
     expect(w.containers.reduce((acc, c) => acc + c.items.axe, 0)).toBeGreaterThanOrEqual(1);
   }
 });

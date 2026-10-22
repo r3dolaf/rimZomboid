@@ -2,11 +2,8 @@
 import { expect, test } from 'vitest';
 import {
   ITEM_WEIGHT_KG,
-  LOOT_CLOTH_TOTAL,
-  NEEDLE_TOTAL,
   RESISTANCE,
   THREAD_PER_SPOOL,
-  THREAD_SPOOLS,
   TRAIT_SKILL_MODS,
   WEAPON_STATS,
 } from './balance';
@@ -73,26 +70,9 @@ test('equipar de la carga no le pasa de su capacidad (un machete pesa menos que 
   expect(s.carrying.axe).toBe(1);
 });
 
-test('botín: 30 telas, 6 carretes de hilo (10 usos cada uno) y 3 agujas por mapa; algunas palancas y machetes', () => {
+test('el hilo va en carretes de 10 usos (H4f: cuántos, según el edificio)', () => {
   expect(THREAD_PER_SPOOL).toBe(10);
-  let crowbars = 0;
-  let machetes = 0;
-  for (let seed = 1; seed <= 20; seed++) {
-    const w = createWorld(seed);
-    const sum = (k: 'cloth' | 'thread' | 'needle' | 'crowbar' | 'machete') =>
-      w.containers.reduce((n, c) => n + c.items[k], 0);
-    expect(sum('cloth')).toBe(LOOT_CLOTH_TOTAL);
-    expect(sum('thread')).toBe(THREAD_SPOOLS * THREAD_PER_SPOOL);
-    expect(sum('needle')).toBe(NEEDLE_TOTAL);
-    for (const c of w.containers) expect(c.items.thread % THREAD_PER_SPOOL).toBe(0);
-    // La tela, en armarios y estanterías (no en neveras).
-    for (const c of w.containers) if (c.kind === 'fridge') expect(c.items.cloth).toBe(0);
-    crowbars += sum('crowbar');
-    machetes += sum('machete');
-  }
-  expect(crowbars / 20).toBeGreaterThan(1);
-  expect(machetes / 20).toBeGreaterThan(0.5);
-  expect(machetes).toBeLessThan(crowbars);
+  for (const c of createWorld(4).containers) expect(c.items.thread % THREAD_PER_SPOOL).toBe(0);
 });
 
 test('casillas nuevas: ventana con cortinas corridas (60) y puerta atrancada (150); ni se pisan ni dejan ver', () => {

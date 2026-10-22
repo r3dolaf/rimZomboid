@@ -6,8 +6,7 @@ import {
   INITIAL_REVEAL,
   NEED_START_MAX,
   NEED_START_MIN,
-  CRAFT_LOOT_SALT,
-  LOCKED_DOOR_CHANCE,
+  BUILDINGS,
   LOCKED_DOOR_SALT,
   START_FOOD,
   START_WEAPON,
@@ -18,7 +17,7 @@ import {
 } from './balance';
 import { baseLayout } from './base';
 import { emptyInventory } from './items';
-import { distributeCraftLoot, distributeWoodAndAxes, placeContainers } from './loot';
+import { placeContainers } from './loot';
 import { revealFromSurvivors } from './vision';
 import { generateMap } from './map/generate';
 import { getTile, setTile } from './map/grid';
@@ -116,7 +115,7 @@ export function createWorld(
   };
 
   // Después de los supervivientes, para no cambiar partidas anteriores con la misma semilla.
-  const containers = placeContainers(base, houses, furniture, rng);
+  const containers = placeContainers(houses, furniture, rng);
 
   // Relaciones (H3b), también después para no cambiar partidas anteriores.
   for (const s of survivors) {
@@ -128,14 +127,11 @@ export function createWorld(
   for (const s of survivors) s.needs.mood = moodTarget(s, 0, base.rect);
   // Narrador (H3c), lo último: el estilo no cambia nada de lo anterior.
   const calmEndsAt = nextInt(rng, CALM_DAYS_MIN * TICKS_PER_DAY, CALM_DAYS_MAX * TICKS_PER_DAY);
-  // Madera y hachas (H4a), lo último de todo.
-  distributeWoodAndAxes(base, houses, containers, rng);
-  // Tela, hilo, agujas, palancas y machetes (H4d), con su propio azar: no cambian nada de lo anterior.
-  distributeCraftLoot(base, houses, containers, createRng((seed ^ CRAFT_LOOT_SALT) >>> 0));
-  // Puertas atrancadas (H4d), también con su propio azar.
+  // Puertas atrancadas (H4d), con su propio azar, según el tipo de edificio (H4f).
   const lockRng = createRng((seed ^ LOCKED_DOOR_SALT) >>> 0);
   for (const h of houses)
-    if (nextFloat(lockRng) < LOCKED_DOOR_CHANCE) setTile(grid, h.door.x, h.door.y, Tile.LockedDoor);
+    if (h.kind !== 'base' && nextFloat(lockRng) < BUILDINGS[h.kind].locked)
+      setTile(grid, h.door.x, h.door.y, Tile.LockedDoor);
 
   const world: World = {
     seed,

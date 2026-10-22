@@ -10,9 +10,6 @@ export const START_HOUR = 8;
 
 // Mundo
 export const MAP_SIZE = 150; // H4f (antes, 100)
-export const HOUSE_COUNT_MIN = 6;
-export const HOUSE_COUNT_MAX = 10;
-export const TREE_DENSITY = 0.03;
 /** H4f: árboles en la hierba, del 2 % junto a las carreteras y en el pueblo al 8 % lejos (bosque). */
 export const TREE_DENSITY_NEAR = 0.02;
 export const TREE_DENSITY_FAR = 0.08;
@@ -111,12 +108,6 @@ export const ITEM_WEIGHT_KG = {
   crowbar: 2,
   machete: 1,
 } as const;
-export const LOOT_FOOD_TOTAL = 80; // + START_FOOD ≈ 25 días para 3 supervivientes
-export const LOOT_BANDAGE_TOTAL = 15;
-export const CONTAINERS_MIN = 2;
-export const CONTAINERS_MAX = 5;
-export const KNIFE_CHANCE = 0.14; // × (0,5 + distancia normalizada); H4b: más armas
-export const BAT_CHANCE = 0.1;
 export const START_WEAPON = 'knife' as const; // H4b: sin arma, caían enseguida
 
 // Visión (H3)
@@ -276,18 +267,9 @@ export const FLU_MOOD = -10;
 export const WORKING_SICK_MOOD = -5;
 
 // Defensa y trabajos (H4a)
-export const LOOT_WOOD_TOTAL = 40; // en armarios y estanterías
-export const AXE_CHANCE = 0.08; // × (0,5 + distancia normalizada), por mueble
 
 // Tela, hilo, agujas, palancas y machetes (H4d): aparte, con su propio azar.
-export const LOOT_CLOTH_TOTAL = 30; // 70 % en armarios, 30 % en estanterías
-export const CLOTH_WARDROBE_SHARE = 0.7;
-export const THREAD_SPOOLS = 6;
 export const THREAD_PER_SPOOL = 10; // usos de hilo por carrete
-export const NEEDLE_TOTAL = 3;
-export const CROWBAR_CHANCE = 0.06; // × (0,5 + distancia normalizada), por mueble (no en neveras)
-export const MACHETE_CHANCE = 0.04;
-export const CRAFT_LOOT_SALT = 0x5eed7e1a; // el azar de este botín: semilla ^ esto
 
 // Fabricar (H4d): recetas de la mesa y pedidos.
 export interface Recipe {
@@ -331,7 +313,6 @@ export const CORPSE_ROT_TICKS = 3 * TICKS_PER_DAY; // sin registrar, se pudre (c
 export const CORPSE_EMPTY_TICKS = TICKS_PER_DAY; // registrado y vacío, desaparece
 
 // Puertas atrancadas (H4d): se fuerzan con la palanca.
-export const LOCKED_DOOR_CHANCE = 0.25; // por casa (la base, nunca)
 export const LOCKED_DOOR_SALT = 0x10cd00e5; // su azar: semilla ^ esto
 export const PRY_TICKS = 0.5 * TICKS_PER_HOUR; // con Saquear 5
 export const PRY_NOISE_TICKS = 30; // cada cuánto se oye un golpe

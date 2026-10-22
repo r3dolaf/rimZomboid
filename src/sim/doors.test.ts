@@ -1,6 +1,6 @@
 // H4d §6: puertas atrancadas (forzarlas con palanca) y romper ventanas.
 import { expect, test } from 'vitest';
-import { BUILD, LOCKED_DOOR_CHANCE, NOISE, PRY_TICKS, TICKS_PER_HOUR } from './balance';
+import { BUILD, BUILDINGS, NOISE, PRY_TICKS, TICKS_PER_HOUR } from './balance';
 import { canPlace } from './build';
 import { checkInvariants } from './invariants';
 import { workOnBlueprint } from './jobs/build';
@@ -13,13 +13,14 @@ import { findWork } from './work';
 import { createWorld } from './world';
 import { newZombie } from './zombies/spawn';
 
-test('al crear el mapa, una de cada cuatro puertas de casa está atrancada (la de la base, nunca)', () => {
+test('al crear el mapa, una de cada cuatro puertas de casa está atrancada (la de la base, nunca; las demás, según el tipo)', () => {
   let locked = 0;
   let houses = 0;
   for (let seed = 1; seed <= 30; seed++) {
     const w = createWorld(seed);
     expect(w.grid.tiles[w.base.door.y * w.grid.width + w.base.door.x]).toBe(Tile.Door);
     for (const h of w.houses) {
+      if (h.kind !== 'house') continue;
       houses++;
       const t = w.grid.tiles[h.door.y * w.grid.width + h.door.x];
       expect([Tile.Door, Tile.LockedDoor]).toContain(t);
@@ -27,7 +28,7 @@ test('al crear el mapa, una de cada cuatro puertas de casa está atrancada (la d
     }
     expect(checkInvariants(w)).toEqual([]);
   }
-  expect(LOCKED_DOOR_CHANCE).toBe(0.25);
+  expect(BUILDINGS.house.locked).toBe(0.25);
   expect(locked / houses).toBeGreaterThan(0.12);
   expect(locked / houses).toBeLessThan(0.4);
 });

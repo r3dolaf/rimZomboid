@@ -132,14 +132,14 @@ test('invariantes: zombis dentro de lo que no pisan, salud rara, de más; Salud 
   expect(p).toMatch(/daño en .*: no se puede romper/);
 });
 
-test('hay armas para defenderse: unas 10 por mapa de media (cuchillos, bates y hachas)', () => {
+test('hay armas para defenderse: cuchillos, bates y hachas, unos 17 por mapa de media (H4f)', () => {
   let total = 0;
   for (let seed = 1; seed <= 20; seed++) {
     const w = createWorld(seed);
     total += w.containers.reduce((n, c) => n + c.items.knife + c.items.bat + c.items.axe, 0);
   }
-  expect(total / 20).toBeGreaterThanOrEqual(8);
-  expect(total / 20).toBeLessThanOrEqual(14);
+  expect(total / 20).toBeGreaterThanOrEqual(12);
+  expect(total / 20).toBeLessThanOrEqual(22);
 });
 
 test('las ventanas aguantan algo (60) y tapiadas mucho más (180), menos que un muro de madera', () => {

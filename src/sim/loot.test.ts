@@ -1,58 +1,166 @@
+// H4f §4: el botín depende del tipo de edificio, y cada cosa va a su mueble.
 import { expect, test } from 'vitest';
-import { LOOT_BANDAGE_TOTAL, LOOT_FOOD_TOTAL } from './balance';
+import { BUILDINGS, LOOT, THREAD_PER_SPOOL, type LootItem } from './balance';
 import { emptyInventory } from './items';
-import { distributeLoot } from './loot';
+import { fillBuilding } from './loot';
 import { createRng } from './rng';
-import type { World } from './types';
+import { Tile, type Container, type ContainerKind, type LootKind } from './types';
 import { createWorld } from './world';
 
-const SEEDS = Array.from({ length: 20 }, (_, i) => i + 1);
-const dist = (w: World, houseId: number) => {
-  const h = w.houses.find((x) => x.id === houseId)!;
-  return Math.hypot(h.door.x - w.base.door.x, h.door.y - w.base.door.y);
-};
+const KINDS: readonly ContainerKind[] = [
+  'fridge',
+  'wardrobe',
+  'shelf',
+  'counter',
+  'locker',
+  'crate',
+  'medicine',
+];
+const ITEMS: readonly LootItem[] = [
+  'food',
+  'bandage',
+  'wood',
+  'cloth',
+  'thread',
+  'needle',
+  'knife',
+  'bat',
+  'axe',
+  'crowbar',
+  'machete',
+];
 
-test.each(SEEDS)('semilla %i: 80 latas y 15 vendas repartidas por las casas', (seed) => {
-  const w = createWorld(seed);
-  const sum = (k: 'food' | 'bandage') => w.containers.reduce((n, c) => n + c.items[k], 0);
-  expect(sum('food')).toBe(LOOT_FOOD_TOTAL);
-  expect(sum('bandage')).toBe(LOOT_BANDAGE_TOTAL);
-});
+/** Unos muebles de las clases dadas, vacíos. */
+function furniture(kinds: readonly ContainerKind[]): Container[] {
+  return kinds.map((kind, i) => ({
+    id: i + 1,
+    houseId: 1,
+    pos: { x: i, y: 0 },
+    kind,
+    items: emptyInventory(),
+    searched: false,
+    designated: false,
+    reservedBy: null,
+  }));
+}
 
-test('las casas lejanas tienen más comida que las cercanas', () => {
-  let far = 0;
-  let near = 0;
-  for (const seed of SEEDS) {
-    const w = createWorld(seed);
-    const byDist = [...w.houses].sort((a, b) => dist(w, a.id) - dist(w, b.id));
-    const food = (id: number) =>
-      w.containers.filter((c) => c.houseId === id).reduce((n, c) => n + c.items.food, 0);
-    near += food(byDist[0]!.id);
-    far += food(byDist.at(-1)!.id);
+/** Cuánto hay de `item` (el hilo, en carretes). */
+const amount = (cs: Container[], item: LootItem) =>
+  cs.reduce((n, c) => n + c.items[item], 0) / (item === 'thread' ? THREAD_PER_SPOOL : 1);
+
+test('cada tipo de edificio tiene lo suyo: rangos y "a veces"', () => {
+  for (const kind of Object.keys(LOOT) as LootKind[]) {
+    const spec = LOOT[kind];
+    const seen: Record<string, number[]> = {};
+    for (let seed = 1; seed <= 300; seed++) {
+      const cs = furniture(KINDS);
+      fillBuilding(kind, cs, createRng(seed));
+      for (const item of ITEMS) (seen[item] ??= []).push(amount(cs, item));
+    }
+    for (const item of ITEMS) {
+      const a = spec[item];
+      const xs = seen[item]!;
+      if (!a) expect(Math.max(...xs), `${kind}: ${item}`).toBe(0);
+      else if (Array.isArray(a)) {
+        expect(Math.min(...xs), `${kind}: ${item}`).toBe(a[0]);
+        expect(Math.max(...xs), `${kind}: ${item}`).toBe(a[1]);
+      } else {
+        const mean = xs.reduce((s, x) => s + x, 0) / xs.length;
+        expect(Math.max(...xs)).toBe(1);
+        expect(Math.abs(mean - a.chance), `${kind}: ${item}`).toBeLessThan(0.07);
+      }
+    }
   }
-  expect(far).toBeGreaterThan(near * 1.5);
 });
 
-test('los contenedores empiezan sin registrar, sin marcar y sin reserva', () => {
-  for (const c of createWorld(3).containers) {
+test('cada cosa va a su mueble: comida a la nevera, vendas al botiquín, tela al armario…', () => {
+  const home: Record<LootItem, readonly ContainerKind[]> = {
+    food: ['fridge'],
+    bandage: ['medicine'],
+    cloth: ['wardrobe'],
+    thread: ['wardrobe'],
+    needle: ['wardrobe'],
+    knife: ['locker'],
+    bat: ['locker'],
+    machete: ['locker'],
+    axe: ['crate'],
+    crowbar: ['crate'],
+    wood: ['crate'],
+  };
+  for (const kind of Object.keys(LOOT) as LootKind[]) {
+    const cs = furniture(KINDS);
+    fillBuilding(kind, cs, createRng(7));
+    for (const c of cs)
+      for (const item of ITEMS)
+        if (c.items[item] > 0)
+          expect(home[item], `${kind}: ${item} en ${c.kind}`).toContain(c.kind);
+  }
+});
+
+test('si falta el mueble de algo, va a una estantería o un mostrador, y si no, a cualquiera: nada se pierde', () => {
+  for (const kind of Object.keys(LOOT) as LootKind[]) {
+    const all = furniture(KINDS);
+    const shops = furniture(['shelf', 'counter']);
+    const fridges = furniture(['fridge', 'fridge']);
+    for (const cs of [all, shops, fridges]) fillBuilding(kind, cs, createRng(11));
+    for (const item of ITEMS) {
+      expect(amount(shops, item), `${kind}: ${item}`).toBe(amount(all, item));
+      expect(amount(fridges, item), `${kind}: ${item}`).toBe(amount(all, item));
+    }
+    for (const c of shops) expect(['shelf', 'counter']).toContain(c.kind);
+  }
+});
+
+test('en todo el mapa, de media: ~155 latas, ~33 vendas, ~78 tablas, ~53 telas, ~11 carretes, ~6 agujas y ~25 armas', () => {
+  const n = 12;
+  const total = Object.fromEntries(ITEMS.map((k) => [k, 0])) as Record<LootItem, number>;
+  for (let seed = 1; seed <= n; seed++) {
+    const w = createWorld(seed);
+    for (const item of ITEMS) total[item] += amount(w.containers, item);
+    expect(w.woodLog.start).toBe(w.containers.reduce((s, c) => s + c.items.wood, 0));
+  }
+  const avg = (k: LootItem) => total[k] / n;
+  const within = (k: LootItem, lo: number, hi: number) => {
+    expect(avg(k), k).toBeGreaterThanOrEqual(lo);
+    expect(avg(k), k).toBeLessThanOrEqual(hi);
+  };
+  within('food', 135, 180);
+  within('bandage', 25, 40);
+  within('wood', 65, 95);
+  within('cloth', 45, 65);
+  within('thread', 9, 14);
+  within('needle', 4, 8);
+  const weapons = (['knife', 'bat', 'axe', 'crowbar', 'machete'] as const).reduce(
+    (s, k) => s + avg(k),
+    0,
+  );
+  expect(weapons).toBeGreaterThanOrEqual(18);
+  expect(weapons).toBeLessThanOrEqual(30);
+});
+
+test('puertas atrancadas según el tipo (comisaría y nave, la mitad; granjas, pocas); la base, nunca', () => {
+  const locked: Record<string, [number, number]> = {};
+  for (let seed = 1; seed <= 60; seed++) {
+    const w = createWorld(seed);
+    expect(w.grid.tiles[w.base.door.y * w.grid.width + w.base.door.x]).toBe(Tile.Door);
+    for (const h of w.houses) {
+      const r = (locked[h.kind] ??= [0, 0]);
+      r[1]++;
+      if (w.grid.tiles[h.door.y * w.grid.width + h.door.x] === Tile.LockedDoor) r[0]++;
+    }
+  }
+  const rate = (k: LootKind) => locked[k]![0] / locked[k]![1];
+  expect(Math.abs(rate('house') - BUILDINGS.house.locked)).toBeLessThan(0.07);
+  expect(rate('police') + rate('warehouse')).toBeGreaterThan(0.7);
+  expect(rate('farm')).toBeLessThan(0.3);
+});
+
+test('los contenedores empiezan sin registrar, sin marcar y sin reserva; misma semilla, mismos', () => {
+  const w = createWorld(3);
+  for (const c of w.containers) {
     expect(c.searched).toBe(false);
     expect(c.designated).toBe(false);
     expect(c.reservedBy).toBeNull();
-    expect(c.kind).not.toBe('corpse');
   }
-});
-
-test('determinista: misma semilla, mismos contenedores', () => {
   expect(createWorld(9).containers).toEqual(createWorld(9).containers);
-});
-
-test('si una casa no tuviera contenedores, su botín va a las demás (no se pierde)', () => {
-  const w = createWorld(4);
-  const [h1, h2] = w.houses;
-  const containers = w.containers.filter((c) => c.houseId === h2!.id);
-  for (const c of containers) c.items = emptyInventory();
-  const rng = createRng(1);
-  distributeLoot(w.base, [h1!, h2!], containers.length ? containers : [], rng);
-  const sum = containers.reduce((n, c) => n + c.items.food, 0);
-  expect(sum).toBe(LOOT_FOOD_TOTAL); // h1 no tiene contenedores en la lista: todo va a h2
 });

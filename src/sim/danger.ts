@@ -54,11 +54,11 @@ export function zombieInSight(w: World, s: Survivor, range: number): boolean {
   );
 }
 
-/** ¿Pelea o huye? (spec H4b §7) */
-function willFight(w: World, s: Survivor, threats: Zombie[]): boolean {
+/** ¿Pelea o huye? (spec H4b §7) Los desconocidos (H4e), siempre como con Decidir. */
+export function willFight(w: World, s: Survivor, threats: Zombie[], stance = s.stance): boolean {
   if (s.health < FLEE_HEALTH) return false;
-  if (s.stance === 'fight') return true;
-  if (s.stance === 'flee') return false;
+  if (stance === 'fight') return true;
+  if (stance === 'flee') return false;
   const allies = w.survivors.filter(
     (o) => o !== s && o.action.type === 'melee' && d2(o.pos, s.pos) <= ALLY_RANGE * ALLY_RANGE,
   ).length;

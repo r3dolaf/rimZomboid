@@ -10,12 +10,13 @@ import { issue } from './orders';
 import { opinionOf } from './social';
 import { step } from './step';
 import { doorOutside } from './systems/strangers';
+import { withoutZombies } from './testing/fixtures';
 import { Tile, type World } from './types';
 import { createWorld, tileOf } from './world';
 
-/** Mundo a partir del día 3, sin sucesos del narrador. */
+/** Mundo a partir del día 3, sin sucesos del narrador (ni zombis: desde H4e van a por ellos). */
 function world(seed = 2): World {
-  const w = createWorld(seed);
+  const w = withoutZombies(createWorld(seed));
   w.tick = 3 * TICKS_PER_DAY;
   w.narrator.nextEventAt = 1e9;
   w.narrator.phaseEndsAt = 1e9; // si no, el cambio de fase adelanta el siguiente suceso

@@ -251,6 +251,12 @@ export function logText(e: LogEntry, w: World): string {
     case 'strangerLeft':
       text = l.strangerLeft(e.names);
       break;
+    case 'strangersFled':
+      text = l.strangersFled(e.names);
+      break;
+    case 'strangerDowned':
+      text = l.strangerDowned(e.names);
+      break;
     case 'theft':
       text = l.theft(name(e.suspectId), e.cans);
       break;

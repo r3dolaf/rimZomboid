@@ -23,6 +23,9 @@ export type LogEvent =
   | { kind: 'strangerAccepted'; names: string[] }
   | { kind: 'strangerRejected'; names: string[] }
   | { kind: 'strangerLeft'; names: string[] }
+  // H4e: huyen de los zombis; uno ha caído.
+  | { kind: 'strangersFled'; names: string[] }
+  | { kind: 'strangerDowned'; names: string[] }
   // Sucesos del narrador (H3c)
   | { kind: 'theft'; suspectId: number; cans: number }
   | { kind: 'theftPunished'; suspectId: number; guilty: boolean }

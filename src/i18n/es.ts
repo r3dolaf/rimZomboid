@@ -285,6 +285,9 @@ export const es = {
       `No dejáis entrar a ${list(names)}, que ${names.length === 1 ? 'se marcha' : 'se marchan'}`,
     strangerLeft: (names: string[]) =>
       `${list(names)} ${names.length === 1 ? 'se cansa' : 'se cansan'} de esperar y ${names.length === 1 ? 'se marcha' : 'se marchan'}`,
+    strangersFled: (names: string[]) =>
+      `${list(names)} ${names.length === 1 ? 'huye' : 'huyen'} de los zombis y ${names.length === 1 ? 'se marcha' : 'se marchan'}`,
+    strangerDowned: (names: string[]) => `Ha caído ${list(names)}, que esperaba a la puerta`,
     theft: (suspect: string, cans: number) =>
       `Faltan ${cans} ${cans === 1 ? 'lata' : 'latas'} del almacén y todos miran a ${suspect}`,
     theftPunished: (suspect: string, guilty: boolean) =>

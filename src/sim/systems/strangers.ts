@@ -2,6 +2,8 @@
 // Cuándo llegan lo decide el narrador (events/strangers.ts).
 import {
   CHAT_EVERY_MAX,
+  SURVIVOR_RUN_SPEED,
+  SURVIVOR_WALK_SPEED,
   COLONY_MAX,
   STRANGER_BANDAGE_CHANCE,
   STRANGER_FOOD_MAX,
@@ -11,6 +13,7 @@ import {
 import { baseLayout } from '../base';
 import { freeFloor } from '../build';
 import { contains } from '../geom';
+import { threatsOf, willFight } from '../danger';
 import { emptyInventory } from '../items';
 import { logEvent } from '../log';
 import { getTile, isWalkable } from '../map/grid';
@@ -24,18 +27,82 @@ import { Tile, type Point, type Survivor, type World } from '../types';
 import { defaultPriorities, defaultStance, defaultWork, tileOf } from '../world';
 import { walkStep } from './movement';
 
-/** La caminata hasta la puerta, la espera y la marcha. */
+/**
+ * La caminata hasta la puerta, la espera y la marcha; con zombis a la vista (H4e), pelean o huyen.
+ * El que está en el suelo o peleando no se ha ido aún.
+ */
 export function strangerSystem(w: World): void {
   const st = w.stranger;
   if (st === null) return;
+  if (!st.leaving) strangerDanger(w);
   let arrived = true;
   for (const s of st.survivors) {
-    if (s.action.type !== 'moveTo') continue;
+    const a = s.action;
+    if (a.type === 'downed' || a.type === 'melee') {
+      arrived = false;
+      continue;
+    }
+    if (a.type !== 'moveTo') {
+      // Tras levantarse o pelear: a la salida si se van; si no, otra vez a la puerta.
+      const target = st.leaving ? exitFor(w, s) : doorOutside(w);
+      const here = tileOf(s.pos);
+      if (here.x === target.x && here.y === target.y) continue;
+      s.action = { type: 'moveTo', target };
+      s.path = findPath(w.grid, here, target) ?? [];
+      arrived = false;
+      continue;
+    }
     // Al llegar (o si un muro le corta el paso), espera ahí (o ya se ha ido).
-    if (walkStep(s, w.grid) === 'walking') arrived = false;
+    const speed = a.run ? SURVIVOR_RUN_SPEED : SURVIVOR_WALK_SPEED;
+    if (walkStep(s, w.grid, speed) === 'walking') arrived = false;
     else s.action = { type: 'idle', ticksLeft: 0 };
   }
   if (st.leaving && arrived) w.stranger = null;
+}
+
+/**
+ * Los que ven zombis deciden como un colono con Decidir: pelean con el más cercano si pueden con
+ * ellos; si alguno no puede, huyen todos juntos (su decisión se quita).
+ */
+function strangerDanger(w: World): void {
+  const st = w.stranger!;
+  let flee = false;
+  for (const s of st.survivors) {
+    if (s.action.type === 'downed') continue;
+    const threats = threatsOf(w, s);
+    if (threats.length === 0) {
+      if (s.action.type === 'melee') s.action = { type: 'idle', ticksLeft: 0 };
+      continue;
+    }
+    if (!willFight(w, s, threats, 'decide')) {
+      flee = true;
+      break;
+    }
+    const z = threats[0]!;
+    if (s.action.type !== 'melee' || s.action.zombieId !== z.id) {
+      s.action = { type: 'melee', zombieId: z.id, cooldown: 0 };
+      s.path = [];
+    }
+  }
+  if (!flee) return;
+  w.decisions = w.decisions.filter((d) => d.kind !== 'stranger');
+  logEvent(w, { kind: 'strangersFled', names: st.survivors.map((s) => s.name) });
+  leaveStrangers(w, true);
+}
+
+/** El extremo de carretera más cercano (o donde está, si no hay). */
+function exitFor(w: World, s: Survivor): Point {
+  const here = tileOf(s.pos);
+  let exit = here;
+  let best = Infinity;
+  for (const e of roadEnds(w)) {
+    const d = (e.x - here.x) ** 2 + (e.y - here.y) ** 2;
+    if (d < best) {
+      best = d;
+      exit = e;
+    }
+  }
+  return exit;
 }
 
 /** La casilla de fuera, junto a la puerta de la base. */
@@ -135,25 +202,19 @@ export function newStranger(w: World, start: Point): Survivor {
   return s;
 }
 
-/** Se van hacia el extremo de carretera más cercano. */
-export function leaveStrangers(w: World): void {
+/**
+ * Se van hacia el extremo de carretera más cercano (`run`: huyendo de los zombis, H4e). El que
+ * está en el suelo se irá al levantarse.
+ */
+export function leaveStrangers(w: World, run = false): void {
   const st = w.stranger;
   if (st === null) return;
   st.leaving = true;
-  const ends = roadEnds(w);
   for (const s of st.survivors) {
-    const here = tileOf(s.pos);
-    let exit = here;
-    let best = Infinity;
-    for (const e of ends) {
-      const d = (e.x - here.x) ** 2 + (e.y - here.y) ** 2;
-      if (d < best) {
-        best = d;
-        exit = e;
-      }
-    }
-    s.action = { type: 'moveTo', target: exit };
-    s.path = findPath(w.grid, here, exit) ?? [];
+    if (s.action.type === 'downed') continue;
+    const exit = exitFor(w, s);
+    s.action = run ? { type: 'moveTo', target: exit, run } : { type: 'moveTo', target: exit };
+    s.path = findPath(w.grid, tileOf(s.pos), exit) ?? [];
   }
 }
 
@@ -167,7 +228,8 @@ export function acceptStrangers(w: World): void {
     return;
   }
   for (const s of st.survivors) {
-    s.action = { type: 'idle', ticksLeft: 0 };
+    // El que está en el suelo entra derribado (H4e): ya lo rescatarán.
+    if (s.action.type !== 'downed') s.action = { type: 'idle', ticksLeft: 0 };
     s.path = [];
     s.work = defaultWork(s.traits);
     s.nextChatAt = w.tick + nextInt(w.rng, 0, CHAT_EVERY_MAX);

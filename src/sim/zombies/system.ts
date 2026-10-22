@@ -13,7 +13,7 @@ import { isZombieWalkable } from '../map/grid';
 import { makeNoise } from '../noise';
 import { damageTile, resistanceOf } from '../structures';
 import type { World, Zombie } from '../types';
-import { thinkZombie, visibleToZombies, zombieAttack } from './brain';
+import { personById, thinkZombie, visibleToZombies, zombieAttack } from './brain';
 import { tileOf } from '../world';
 import { hordeSystem } from './hordes';
 import { arrivalsSystem } from './spawn';
@@ -36,7 +36,7 @@ export function zombieSystem(w: World): void {
 /** Golpea a su presa si la tiene al lado; si no, anda o rompe lo que tiene delante. */
 function act(w: World, z: Zombie): void {
   if (z.state === 'chase') {
-    const prey = w.survivors.find((s) => s.id === z.targetId);
+    const prey = personById(w, z.targetId);
     if (prey && visibleToZombies(prey)) {
       const d2 = (prey.pos.x - z.pos.x) ** 2 + (prey.pos.y - z.pos.y) ** 2;
       if (d2 <= ZOMBIE_REACH * ZOMBIE_REACH) {

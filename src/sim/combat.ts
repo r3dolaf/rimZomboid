@@ -21,20 +21,24 @@ import { tileOf } from './world';
 /** Un golpe a un zombi: puede fallar; 1 de cada 6 aciertos, a la cabeza (doble). Se oye siempre. */
 export function colonistHit(w: World, s: Survivor, z: Zombie): void {
   makeNoise(w, s.pos, NOISE.fightHit);
-  // Se aprende con cada golpe, acierte o no (spec H4c §4); acierta según Pelear (§3.6).
-  practice(w, s, 'fight', WEAPON_STATS[s.equipped ?? 'none'].ticks);
+  // Se aprende con cada golpe, acierte o no (spec H4c §4); acierta según Pelear (§3.6). Lo de los
+  // desconocidos (H4e) no se apunta.
+  const colonist = w.survivors.includes(s);
+  if (colonist) practice(w, s, 'fight', WEAPON_STATS[s.equipped ?? 'none'].ticks);
   if (nextFloat(w.rng) >= hitChance(s.skills.fight.level)) return;
   const head = nextFloat(w.rng) < HEAD_HIT_CHANCE;
   z.health -= WEAPON_STATS[s.equipped ?? 'none'].damage * (head ? 2 : 1);
   if (z.health > 0) return;
   w.zombies = w.zombies.filter((x) => x !== z);
   leaveCorpse(w, z); // H4d
-  logEvent(w, { kind: 'zombieKilled', survivorId: s.id });
+  if (colonist) logEvent(w, { kind: 'zombieKilled', survivorId: s.id });
 }
 
 /** Quien pelea con un zombi: si lo tiene al lado, le golpea; si no, va corriendo hacia él. */
 export function combatSystem(w: World): void {
-  for (const s of w.survivors) {
+  // También los desconocidos (H4e), que se defienden.
+  const fighters = w.stranger ? [...w.survivors, ...w.stranger.survivors] : w.survivors;
+  for (const s of fighters) {
     const a = s.action;
     if (a.type !== 'melee') continue;
     const z = w.zombies.find((x) => x.id === a.zombieId);

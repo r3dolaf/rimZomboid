@@ -41,11 +41,22 @@ export function zombieSees(w: World, z: Zombie, p: Point): boolean {
 /** ¿Lo puede ver un zombi? Los derribados, no (spec H4b §5). */
 export const visibleToZombies = (s: Survivor) => s.action.type !== 'downed';
 
-/** El colono más cercano que ve, o `null`. */
+/** Colonos y desconocidos (H4e: también van a por ellos). */
+function people(w: World): Survivor[] {
+  return w.stranger ? [...w.survivors, ...w.stranger.survivors] : w.survivors;
+}
+
+/** El colono o desconocido con ese id, si sigue en el mapa. */
+export function personById(w: World, id: number | null): Survivor | undefined {
+  if (id === null) return undefined;
+  return w.survivors.find((s) => s.id === id) ?? w.stranger?.survivors.find((s) => s.id === id);
+}
+
+/** La persona más cercana que ve, o `null`. */
 function preyInSight(w: World, z: Zombie): Survivor | null {
   let best: Survivor | null = null;
   let bestD = Infinity;
-  for (const s of w.survivors) {
+  for (const s of people(w)) {
     if (!visibleToZombies(s)) continue;
     const d = (s.pos.x - z.pos.x) ** 2 + (s.pos.y - z.pos.y) ** 2;
     if (d < bestD && zombieSees(w, z, s.pos)) {
@@ -119,7 +130,7 @@ export function thinkZombie(w: World, z: Zombie): void {
     return;
   }
   if (z.state === 'chase') {
-    const target = w.survivors.find((s) => s.id === z.targetId);
+    const target = personById(w, z.targetId);
     // Al derribado lo deja; a quien deja de ver, lo busca donde lo vio un rato.
     if (!target || !visibleToZombies(target)) return startWandering(w, z);
     if (w.tick - z.lastSeenAt < LOSE_TRACK_TICKS) {

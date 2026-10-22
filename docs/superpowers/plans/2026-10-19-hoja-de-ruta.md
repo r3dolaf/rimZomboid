@@ -48,6 +48,10 @@ Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al p
 
 **Pedido por el usuario (después de H4b):** habilidades en cada trabajo → H4c. Al diseñarlas, el usuario pidió también cortinas (como en Zomboid: no ves fuera, pero los zombis no te ven), tela que se saquea y se convierte en vendas o cortinas, y cuerpos de zombi que se registran (ropa y, a veces, armas o equipo) → H4d.
 
+**Para H6 (pulido), de H4c:**
+
+- Primera semana con habilidades (12 semillas, Equilibrado/normal, saqueando todo y sin construir): los colonos pasan en el suelo un 9 % del tiempo (antes de H4c, un 5 %), y el día 3 llevan registrados el 86 % de los muebles (antes, el 96 %). La causa principal era Pelear bajo al empezar: por eso el acierto es 60 % con 0 (no 50 %).
+
 **Para H6 (pulido), de H4b:**
 
 - Equilibrio de zombis: ya se empieza con un cuchillo cada uno, hay unas 10 armas por mapa y las ventanas aguantan 60 (tapiadas, 180). Así, en Equilibrado/normal y sin construir nada, los colonos pasan en el suelo cerca de un 9 % del tiempo los 3 primeros días (12 semillas; antes, un 31 %). Lo que queda: en algunas semillas un grupo de unos 12 zombis entra en una base sin muros, y quien se levanta con 15 de Salud vuelve a caer en cuanto vuelven. Caótico y Muchos se suavizaron (Caótico 30/60/1 cada 1,5 h; Muchos ×1,25): sin defensas, el tiempo en el suelo es un 44 % en Caótico/muchos (antes 81 %), 28 % en Caótico/normal y 18 % en Equilibrado/muchos.

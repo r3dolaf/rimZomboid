@@ -92,7 +92,8 @@ Nueve rasgos, en parejas incompatibles como Valiente/Cobarde. Nombres que valen 
 
 ### 3.6 Pelear
 
-- Acierto de los golpes a un zombi: `0,5 + 0,04 · nivel` (50 % con 0, 70 % con 5 como antes, 90 % con 10). El daño sigue siendo el del arma.
+- Acierto de los golpes a un zombi: `0,6 + 0,03 · nivel` (60 % con 0, 75 % con 5, 90 % con 10). El daño sigue siendo el del arma.
+- Se empezó con `0,5 + 0,04 · nivel` (50 % con 0, como antes con 5). Pero casi todos empiezan entre 0 y 3, y en la primera semana los colonos pasaban en el suelo el 21 % del tiempo (12 semillas, Equilibrado/normal; antes de H4c, un 5 %). Con la curva de ahora, un 9 %.
 
 **Quién hace cada trabajo no cambia:** quien esté libre y lo tenga marcado.
 
@@ -135,7 +136,7 @@ Nueve rasgos, en parejas incompatibles como Valiente/Cobarde. Nombres que valen 
 ## 7. Pruebas
 
 - **Reglas:** cómo empiezan (rango, especialidad, rasgos, azar propio: el resto del mundo no cambia); rapidez de construir, talar y saquear con 0, 5 y 10; fallos al construir (probabilidad, madera perdida, el plano vuelve a empezar, se trae lo que falta, Torpe); capacidad y freno con carga (andando y huyendo); acierto al pelear; consolar sin éxito y la hora sin reintentar; práctica (cada fuente, coste de cada nivel, Aprende rápido/despacio, tope en 10, registro); rasgos incompatibles.
-- **Con nivel 5:** rapidez, capacidad y acierto iguales que antes de H4c. Lo nuevo con nivel 5 son los fallos al construir (10 %), el freno con carga y el consuelo que falla (25 %).
+- **Con nivel 5:** rapidez y capacidad iguales que antes de H4c; el acierto, algo mejor (75 % en vez de 70 %, §3.6). Lo nuevo con nivel 5 son los fallos al construir (10 %), el freno con carga y el consuelo que falla (25 %).
 - **Pantalla:** pestañas de la ficha (y que recuerda la última), matriz del panel con la negrita, textos del registro y aviso verde; e2e: abrir la ficha, pestaña Habilidades, y el panel.
 - **Partidas largas de 30 días:** nada se rompe; al final ha subido alguna habilidad; los fallos al construir no se disparan; nadie se queda sin llegar por ir cargado.
 - **Equilibrio:** se mide cómo cambia la primera semana (niveles bajos al empezar) y se apunta en la hoja de ruta.

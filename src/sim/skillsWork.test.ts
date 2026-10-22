@@ -314,9 +314,10 @@ test('andando y huyendo, quien va cargado avanza menos por tick; y practica Tran
   expect(s.skills.haul.xp).toBe(2);
 });
 
-test('Pelear: acierta un 50 % con 0, un 70 % con 5 (como antes) y un 90 % con 10', () => {
-  expect(hitChance(0)).toBeCloseTo(0.5, 9);
-  expect(hitChance(5)).toBeCloseTo(0.7, 9);
+test('Pelear: acierta un 60 % con 0, un 75 % con 5 y un 90 % con 10', () => {
+  // (Con 50 % a nivel 0, como empiezan casi todos entre 0 y 3, caían 4 veces más la 1.ª semana.)
+  expect(hitChance(0)).toBeCloseTo(0.6, 9);
+  expect(hitChance(5)).toBeCloseTo(0.75, 9);
   expect(hitChance(10)).toBeCloseTo(0.9, 9);
   for (const level of [0, 10]) {
     const w = world();

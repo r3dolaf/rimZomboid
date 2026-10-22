@@ -72,7 +72,7 @@ export function loadFactor(s: Survivor): number {
   return 1 - brake * Math.min(1, weightOf(s.carrying) / capacityKg(s));
 }
 
-/** Acierto de un golpe a un zombi: 50 % con Pelear 0, 70 % con 5, 90 % con 10. */
+/** Acierto de un golpe a un zombi: 60 % con Pelear 0, 75 % con 5, 90 % con 10. */
 export function hitChance(level: number): number {
   return FIGHT_HIT_BASE + FIGHT_HIT_PER_LEVEL * level;
 }

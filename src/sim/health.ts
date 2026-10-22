@@ -44,6 +44,8 @@ export function healthSystem(w: World): void {
           ? HEALTH_PER_HOUR.bed
           : HEALTH_PER_HOUR.floor
         : HEALTH_PER_HOUR.awake;
-    s.health = Math.min(100, s.health + perHour / TICKS_PER_HOUR);
+    // Vendado (H4e), el doble.
+    const bandaged = s.bandagedUntil > w.tick ? 2 : 1;
+    s.health = Math.min(100, s.health + (bandaged * perHour) / TICKS_PER_HOUR);
   }
 }

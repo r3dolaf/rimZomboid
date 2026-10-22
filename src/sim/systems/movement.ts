@@ -130,6 +130,7 @@ function startActivity(s: Survivor, activity: Activity, w: World): Action {
       return startCraftActivity(s, w, activity);
     case 'rescue':
     case 'dropOff':
+    case 'bandage':
       return startHealActivity(s, w, activity);
     case 'console':
       // Si se ha movido o está ocupado, vuelve a decidir (y a acercarse) en el siguiente tick.

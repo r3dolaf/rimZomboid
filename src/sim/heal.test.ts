@@ -1,11 +1,17 @@
 // H4e §4: el trabajo Sanar — rescatar derribados (y llevarlos a una cama) y vendar.
 import { expect, test } from 'vitest';
 import {
+  BANDAGE_BELOW,
+  BANDAGE_HEAL,
+  BANDAGE_HOURS,
+  BANDAGE_PER_LEVEL,
+  BANDAGE_TICKS,
   CARRY_SPEED,
   GET_UP_HEALTH_BED,
   RESCUE_SAFE_RANGE,
   SURVIVOR_WALK_SPEED,
   TICKS_PER_DAY,
+  TICKS_PER_HOUR,
 } from './balance';
 import { contains } from './geom';
 import { healthSystem, hurtSurvivor } from './health';
@@ -185,4 +191,107 @@ test('invariantes: el llevado está derribado, con quien lo lleva y en su sitio'
   ana.pos = { ...bea.pos };
   if (ana.action.type === 'downed') delete ana.action.carriedBy;
   expect(checkInvariants(w).join()).toMatch(/lleva a Ana/);
+});
+
+// --- Tarea 5: vendar ---
+
+/** Ana herida (30 de Salud) y Bea, las dos en la base; 2 vendas en el almacén. */
+function hurt(): { w: World; ana: Survivor; bea: Survivor } {
+  const w = withoutZombies(addBase(emptyWorld(40, 40), { x: 2, y: 2, w: 10, h: 8 }));
+  w.seen.fill(1);
+  w.tick = TICKS_PER_DAY / 2;
+  const ana = w.survivors[0]!;
+  const bea = addSurvivor(w, { x: 8, y: 6 });
+  ana.pos = { x: 5.5, y: 6.5 };
+  ana.health = 30;
+  w.storage.items.bandage = 2;
+  return { w, ana, bea };
+}
+
+test('vendar: a quien está en la base con menos de 50 de Salud', () => {
+  expect(BANDAGE_BELOW).toBe(50);
+  const { w, ana, bea } = hurt();
+  expect(healJob(bea, w)).toEqual({
+    type: 'moveTo',
+    target: tileOf(ana.pos),
+    then: { type: 'bandage', patientId: ana.id },
+  });
+});
+
+test('vendar: no con 50 o más, fuera de la base, derribado, con venda reciente o sin vendas', () => {
+  const cases: ((x: ReturnType<typeof hurt>) => void)[] = [
+    ({ ana }) => (ana.health = 50),
+    ({ ana }) => (ana.pos = { x: 25.5, y: 20.5 }),
+    ({ w, ana }) => (ana.bandagedUntil = w.tick + 1),
+    ({ w }) => (w.storage.items.bandage = 0),
+    ({ w, ana }) => {
+      ana.health = 0;
+      ana.action = { type: 'downed', until: w.tick + 100, inBed: true };
+    },
+    ({ w, ana }) => {
+      const cris = addSurvivor(w, { x: 4, y: 4 }, 'Cris');
+      cris.health = 100;
+      cris.action = {
+        type: 'moveTo',
+        target: tileOf(ana.pos),
+        then: { type: 'bandage', patientId: ana.id },
+      };
+    },
+  ];
+  for (const change of cases) {
+    const x = hurt();
+    change(x);
+    expect(healJob(x.bea, x.w)).toBeNull();
+  }
+});
+
+test('vendar: también a sí mismo', () => {
+  const { w, ana, bea } = hurt();
+  ana.health = 100;
+  bea.health = 20;
+  expect(healJob(bea, w)).toMatchObject({ type: 'bandage', patientId: bea.id });
+});
+
+test('vendar: media hora; +15 de Salud y 1 más por nivel; gasta una venda y dura 12 h', () => {
+  expect([BANDAGE_HEAL, BANDAGE_PER_LEVEL, BANDAGE_HOURS]).toEqual([15, 1, 12]);
+  const { w, ana, bea } = hurt();
+  bea.skills.heal = { level: 4, xp: 0 };
+  ana.action = { type: 'idle', ticksLeft: 1e9 }; // quieta
+  ana.work.heal = false; // que no se vende ella
+  let ticks = 0;
+  const start = ana.health;
+  for (; ticks < 400 && w.storage.items.bandage === 2; ticks++) step(w);
+  expect(w.storage.items.bandage).toBe(1);
+  // + 19 por la venda y lo poco que se cura sola mientras tanto (1 por hora despierta).
+  expect(ana.health - start).toBeGreaterThanOrEqual(19);
+  expect(ana.health - start).toBeLessThan(21);
+  expect(ana.bandagedUntil).toBe(w.tick - 1 + BANDAGE_HOURS * TICKS_PER_HOUR);
+  expect(
+    w.log.some((e) => e.kind === 'bandaged' && e.survivorId === bea.id && e.otherId === ana.id),
+  ).toBe(true);
+  expect(ticks).toBeGreaterThanOrEqual(BANDAGE_TICKS);
+  expect(checkInvariants(w)).toEqual([]);
+});
+
+test('vendado, la Salud sube el doble de rápido durante 12 h', () => {
+  const { w, ana } = hurt();
+  ana.action = { type: 'idle', ticksLeft: 1e9 };
+  const perHour = () => {
+    const h = ana.health;
+    for (let i = 0; i < TICKS_PER_HOUR; i++) healthSystem(w);
+    return ana.health - h;
+  };
+  const plain = perHour();
+  ana.bandagedUntil = w.tick + 1e6;
+  expect(perHour()).toBeCloseTo(2 * plain, 6);
+});
+
+test('si se acaban las vendas mientras venda, no hay vendaje', () => {
+  const { w, ana, bea } = hurt();
+  bea.action = { type: 'bandage', patientId: ana.id, ticksLeft: 1 };
+  w.storage.items.bandage = 0;
+  const h = ana.health;
+  step(w);
+  expect(ana.health).toBeLessThan(h + 1);
+  expect(ana.bandagedUntil).toBe(0);
 });

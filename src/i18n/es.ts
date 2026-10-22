@@ -336,6 +336,8 @@ export const es = {
     siegeEnded: 'La horda se dispersa',
     wanderersSighted: 'Una horda errante cruza el mapa',
     rescued: (who: string, other: string) => `${who} ha rescatado a ${other}`,
+    bandaged: (who: string, other: string) =>
+      who === other ? `${who} se ha vendado` : `${who} ha vendado a ${other}`,
     broken: (what: 'door' | 'window' | 'wall', inBase: boolean) =>
       `Los zombis han ${
         what === 'door'
@@ -451,6 +453,12 @@ export const es = {
   strangerCarrying: (what: string) => `Lleva: ${what}`,
 
   activities: {
+    // Sanar (H4e)
+    goRescue: (who: string) => `Va a rescatar a ${who}`,
+    carry: (who: string) => `Lleva a ${who} en brazos`,
+    goBandage: (who: string) => `Va a vendar a ${who}`,
+    bandage: (who: string) => `Vendando a ${who}`,
+    bandageSelf: 'Vendándose',
     wander: 'Paseando',
     goEat: 'Va a comer',
     eat: 'Comiendo',

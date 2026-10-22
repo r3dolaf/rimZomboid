@@ -49,7 +49,13 @@ export function activityText(s: Survivor, w?: World): string {
       return t.pry;
     case 'craft':
       return es.recipes[a.recipe].doing;
+    case 'bandage':
+      return a.patientId === s.id ? t.bandageSelf : t.bandage(name(a.patientId));
     case 'moveTo':
+      // Sanar (H4e)
+      if (a.then?.type === 'rescue') return t.goRescue(name(a.then.downedId));
+      if (a.then?.type === 'dropOff') return t.carry(name(a.then.downedId));
+      if (a.then?.type === 'bandage') return t.goBandage(name(a.then.patientId));
       if (a.then?.type === 'search') {
         const c = container(a.then.containerId);
         if (c?.kind === 'corpse') return t.goCorpse;
@@ -366,6 +372,9 @@ export function logText(e: LogEntry, w: World): string {
       break;
     case 'rescued':
       text = l.rescued(name(e.survivorId), name(e.otherId));
+      break;
+    case 'bandaged':
+      text = l.bandaged(name(e.survivorId), name(e.otherId));
       break;
   }
   return text;

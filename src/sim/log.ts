@@ -74,7 +74,8 @@ export type LogEvent =
   /** Un colono ve por primera vez a uno de los errantes (dónde). */
   | { kind: 'wanderersSighted'; x: number; y: number }
   // Sanar (H4e)
-  | { kind: 'rescued'; survivorId: number; otherId: number };
+  | { kind: 'rescued'; survivorId: number; otherId: number }
+  | { kind: 'bandaged'; survivorId: number; otherId: number };
 
 export type LogEntry = LogEvent & { tick: number };
 

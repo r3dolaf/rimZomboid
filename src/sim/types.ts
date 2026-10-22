@@ -173,7 +173,8 @@ export type Activity =
   | { type: 'craft'; billId: number; tableId: number }
   // Sanar (H4e): coger al derribado y dejarlo en su sitio.
   | { type: 'rescue'; downedId: number }
-  | { type: 'dropOff'; downedId: number };
+  | { type: 'dropOff'; downedId: number }
+  | { type: 'bandage'; patientId: number };
 
 export type Action =
   /** `wait`: esperando tras no encontrar camino (no se consulta al cerebro) o tras negarse a trabajar. */
@@ -202,7 +203,9 @@ export type Action =
   // Forzando una puerta atrancada (H4d).
   | { type: 'pry'; door: number; ticksLeft: number }
   // Fabricando en una mesa (H4d): `recipe` por si el pedido se quita a medias.
-  | { type: 'craft'; billId: number; tableId: number; recipe: RecipeId; ticksLeft: number };
+  | { type: 'craft'; billId: number; tableId: number; recipe: RecipeId; ticksLeft: number }
+  // Vendando a `patientId` (Sanar, H4e).
+  | { type: 'bandage'; patientId: number; ticksLeft: number };
 
 export interface Survivor {
   id: number;
@@ -248,6 +251,8 @@ export interface Survivor {
   drafted: boolean;
   /** El derribado que lleva en brazos (Sanar, H4e), o `null`. */
   carryingId: number | null;
+  /** Vendado hasta este tick (H4e): se cura el doble y no se le vuelve a vendar. */
+  bandagedUntil: number;
 }
 
 /** Uno o dos desconocidos que esperan a la puerta a que el jugador decida (su decisión caduca). */

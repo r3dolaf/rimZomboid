@@ -5,6 +5,7 @@ import { finishConsoling } from '../consoling';
 import { nearTable } from '../furniture';
 import { workOnBlueprint } from '../jobs/build';
 import { finishChop } from '../jobs/chop';
+import { bandageStep } from '../jobs/heal';
 import { finishCraft, unloadAfterCraft } from '../jobs/craft';
 import { logEvent } from '../log';
 import { makeNoise } from '../noise';
@@ -45,6 +46,8 @@ export function activitiesSystem(w: World): void {
       if (--a.ticksLeft > 0) continue;
       finishSearch(w, s, a.containerId);
       s.action = { type: 'idle', ticksLeft: 0 };
+    } else if (a.type === 'bandage') {
+      bandageStep(w, s); // Sanar (H4e)
     } else if (a.type === 'unload') {
       if (--a.ticksLeft > 0) continue;
       addInto(w.storage.items, s.carrying);

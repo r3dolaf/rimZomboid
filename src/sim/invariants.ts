@@ -43,6 +43,8 @@ export function checkInvariants(w: World): string[] {
       problems.push(`${who}: Salud fuera de 0–100 (${s.health})`);
     if (s.action.type === 'downed' && s.health !== 0)
       problems.push(`${who}: derribado con Salud ${s.health}`);
+    if (!Number.isFinite(s.bandagedUntil))
+      problems.push(`${who}: vendado hasta ${s.bandagedUntil}`);
     if (s.drafted && (s.action.type === 'downed' || s.action.type === 'sleep'))
       problems.push(
         `${who}: en modo combate y ${s.action.type === 'sleep' ? 'durmiendo' : 'derribado'}`,

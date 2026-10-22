@@ -96,6 +96,7 @@ export function createWorld(
     celebrated: false,
     drafted: false,
     carryingId: null,
+    bandagedUntil: 0,
   }));
   for (const s of survivors) {
     s.work = defaultWork(s.traits);

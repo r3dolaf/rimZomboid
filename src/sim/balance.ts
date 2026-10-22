@@ -493,6 +493,13 @@ export const GET_UP_HEALTH_BED = 40; // H4e: si lo han dejado en una cama
 export const RESCUE_SAFE_RANGE = 8;
 /** Con alguien en brazos se anda a esta parte de la velocidad. */
 export const CARRY_SPEED = 0.6;
+/** Vendar (H4e §4.3): a quién, cuánto tarda y cuánto cura (más por nivel de Sanar) y dura. */
+export const BANDAGE_BELOW = 50;
+export const BANDAGE_TICKS = 0.5 * TICKS_PER_HOUR;
+export const BANDAGE_HEAL = 15;
+export const BANDAGE_PER_LEVEL = 1;
+export const BANDAGE_HOURS = 12; // mientras, la Salud sube el doble
+export const BANDAGE_RANGE = 1.5; // casillas: más lejos, el herido se ha ido
 export const HURT_BELOW = 50; // "Herido" por debajo de esto
 export const HURT_MOOD = -10;
 /** Golpes de los colonos según lo que llevan en la mano (spec H4b §6.1). */

@@ -140,6 +140,7 @@ const WORK_ACTIONS: ReadonlySet<string> = new Set([
   'craft',
   'rescue',
   'dropOff',
+  'bandage',
 ]);
 
 /** ¿Está trabajando (o yendo a trabajar)? */
@@ -155,7 +156,7 @@ export function stillWorthIt(s: Survivor, w: World): boolean {
   // Si le mandan descansar, deja lo que esté haciendo (descargar o cambiar de arma, no).
   const finishing = what === 'unload' || what === 'storeAxe' || what === 'swapWeapon';
   if (s.sick?.plan === 'rest' && !finishing && what !== 'dropOff') return false;
-  if (what === 'rescue' || what === 'dropOff') return healStillWorth(s, w);
+  if (what === 'rescue' || what === 'dropOff' || what === 'bandage') return healStillWorth(s, w);
   if (what === 'chop' || what === 'takeAxe' || what === 'storeAxe') return chopStillWorth(s, w);
   if (what === 'pickUp' || what === 'fetchWood' || what === 'deliver') return haulStillWorth(s, w);
   if (what === 'build') return buildStillWorth(s, w);

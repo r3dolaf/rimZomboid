@@ -287,6 +287,10 @@ export const SKILL_MAX = 10;
 export const SKILL_START_MAX = 3; // al empezar, cada una entre 0 y esto…
 export const SPECIALTY_MIN = 5; // …salvo la especialidad, entre esto…
 export const SPECIALTY_MAX = 7; // …y esto
+export const SKILL_SPEED_MIN = 0.5; // rapidez con nivel 0…
+export const SKILL_SPEED_PER_LEVEL = 0.1; // …y lo que sube por nivel (con 5, ×1, como antes)
+/** Aprende rápido / despacio: cuánto cuenta la práctica. */
+export const LEARN_MULT = { fastLearner: 1.5, slowLearner: 0.5 } as const;
 /** Lo que suma o resta cada rasgo a las habilidades al empezar. */
 export const TRAIT_SKILL_MODS = {
   brave: { fight: 2 },

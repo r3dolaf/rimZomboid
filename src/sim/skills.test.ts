@@ -1,9 +1,9 @@
 // H4c §2: habilidades al empezar, rasgos nuevos e invariantes.
 import { expect, test } from 'vitest';
-import { SKILL_MAX, TICKS_PER_HOUR, TRAIT_SKILL_MODS } from './balance';
+import { LEARN_MULT, SKILL_MAX, TICKS_PER_HOUR, TRAIT_SKILL_MODS } from './balance';
 import { checkInvariants } from './invariants';
 import { createRng } from './rng';
-import { rollSkills, SKILLS, skillRng, xpToNext } from './skills';
+import { practice, rollSkills, SKILLS, skillRng, skillSpeed, xpToNext } from './skills';
 import { newStranger } from './systems/strangers';
 import { emptyWorld } from './testing/fixtures';
 import { INCOMPATIBLE, TRAITS } from './traits';
@@ -124,4 +124,56 @@ test('la madera que se pierde al fallar cuenta para que cuadre', () => {
   expect(checkInvariants(w)).toEqual([]);
   w.woodLog.wasted = 0;
   expect(checkInvariants(w).join()).toMatch(/la madera no cuadra/);
+});
+
+test('rapidez: la mitad con 0, como antes con 5 y un 50 % más con 10', () => {
+  expect(skillSpeed(0)).toBe(0.5);
+  expect(skillSpeed(5)).toBe(1);
+  expect(skillSpeed(10)).toBe(1.5);
+});
+
+test('practicar suma práctica y, al llegar, sube de nivel (lo que sobra pasa al siguiente) y se registra', () => {
+  const w = emptyWorld(4, 4);
+  const s = w.survivors[0]!;
+  s.skills.build = { level: 2, xp: 0 };
+  practice(w, s, 'build', xpToNext(2) - 1);
+  expect(s.skills.build).toEqual({ level: 2, xp: xpToNext(2) - 1 });
+  expect(w.log).toEqual([]);
+  practice(w, s, 'build', 11);
+  expect(s.skills.build).toEqual({ level: 3, xp: 10 });
+  expect(w.log.at(-1)).toMatchObject({
+    kind: 'skillUp',
+    survivorId: s.id,
+    skill: 'build',
+    level: 3,
+  });
+  // De golpe, varios niveles.
+  practice(w, s, 'build', xpToNext(3) + xpToNext(4));
+  expect(s.skills.build).toEqual({ level: 5, xp: 10 });
+  expect(w.log.filter((e) => e.kind === 'skillUp')).toHaveLength(3);
+  expect(checkInvariants(w)).toEqual([]);
+});
+
+test('a nivel 10 ya no se gana práctica', () => {
+  const w = emptyWorld(4, 4);
+  const s = w.survivors[0]!;
+  s.skills.chop = { level: 9, xp: 0 };
+  practice(w, s, 'chop', xpToNext(9) + 500);
+  expect(s.skills.chop).toEqual({ level: 10, xp: 0 });
+  practice(w, s, 'chop', 100);
+  expect(s.skills.chop).toEqual({ level: 10, xp: 0 });
+  expect(checkInvariants(w)).toEqual([]);
+});
+
+test('Aprende rápido: ×1,5; Aprende despacio: ×0,5', () => {
+  const w = emptyWorld(4, 4);
+  const s = w.survivors[0]!;
+  s.skills.loot = { level: 5, xp: 0 };
+  s.traits = ['fastLearner'];
+  practice(w, s, 'loot', 100);
+  expect(s.skills.loot.xp).toBe(150);
+  s.traits = ['slowLearner'];
+  practice(w, s, 'loot', 100);
+  expect(s.skills.loot.xp).toBe(200);
+  expect(LEARN_MULT).toEqual({ fastLearner: 1.5, slowLearner: 0.5 });
 });

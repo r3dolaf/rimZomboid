@@ -11,6 +11,7 @@ import type {
   NarratorStyle,
   Stance,
   TraitId,
+  SkillId,
   WorkType,
   ZombieLevel,
 } from '../sim/types';
@@ -43,6 +44,15 @@ export const es = {
     chop: 'Talar',
     loot: 'Saquear',
   } satisfies Record<WorkType, string>,
+  /** Habilidades (H4c): las de los trabajos y Pelear. */
+  skills: {
+    social: 'Social',
+    build: 'Construir',
+    haul: 'Transportar',
+    chop: 'Talar',
+    loot: 'Saquear',
+    fight: 'Pelear',
+  } satisfies Record<SkillId, string>,
   /** Lo que se puede construir, para el menú. */
   buildMenu: {
     bed: 'Cama',
@@ -220,6 +230,8 @@ export const es = {
     gotUp: (who: string) => `${who} se ha levantado`,
     zombieKilled: (who: string) => `${who} ha matado un zombi`,
     fled: (who: string) => `${who} huye a la base`,
+    skillUp: (who: string, skill: string, level: number) =>
+      `${who} ha mejorado en ${skill} (nivel ${level})`,
     zombiesInBase: 'Hay zombis dentro de la base',
     zombieSighted: 'Se ven zombis cerca de la base',
     broken: (what: 'door' | 'window' | 'wall', inBase: boolean) =>

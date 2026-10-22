@@ -285,6 +285,9 @@ export function logText(e: LogEntry, w: World): string {
     case 'zombieSighted':
       text = l.zombieSighted;
       break;
+    case 'skillUp':
+      text = l.skillUp(name(e.survivorId), es.skills[e.skill], e.level);
+      break;
   }
   return text;
 }

@@ -1,14 +1,18 @@
 // Habilidades (spec H4c): cómo empiezan, lo que cuesta subir y lo que cambian.
 import {
+  LEARN_MULT,
   SKILL_MAX,
+  SKILL_SPEED_MIN,
+  SKILL_SPEED_PER_LEVEL,
   SKILL_START_MAX,
   SPECIALTY_MAX,
   SPECIALTY_MIN,
   TICKS_PER_HOUR,
   TRAIT_SKILL_MODS,
 } from './balance';
+import { logEvent } from './log';
 import { createRng, nextInt, pick, type RngState } from './rng';
-import type { Skill, SkillId, TraitId } from './types';
+import type { Skill, SkillId, Survivor, TraitId, World } from './types';
 
 /** En el orden de los trabajos del panel (H4a §3.1) y Pelear al final. */
 export const SKILLS: readonly SkillId[] = ['social', 'build', 'haul', 'chop', 'loot', 'fight'];
@@ -38,4 +42,27 @@ export function rollSkills(rng: RngState, traits: readonly TraitId[]): Record<Sk
 /** Práctica para pasar del nivel `level` al siguiente: (nivel + 1) horas. */
 export function xpToNext(level: number): number {
   return (level + 1) * TICKS_PER_HOUR;
+}
+
+/** Rapidez con ese nivel: ×0,5 con 0, ×1 con 5 (como antes de H4c) y ×1,5 con 10. */
+export function skillSpeed(level: number): number {
+  return SKILL_SPEED_MIN + SKILL_SPEED_PER_LEVEL * level;
+}
+
+/**
+ * Suma práctica (Aprende rápido ×1,5, Aprende despacio ×0,5). Al llegar a lo que cuesta, sube de
+ * nivel y lo registra; lo que sobra pasa al siguiente. A nivel 10 ya no suma.
+ */
+export function practice(w: World, s: Survivor, skill: SkillId, amount: number): void {
+  const k = s.skills[skill];
+  if (k.level >= SKILL_MAX) return;
+  let mult = 1;
+  for (const t of s.traits) if (t in LEARN_MULT) mult *= LEARN_MULT[t as keyof typeof LEARN_MULT];
+  k.xp += amount * mult;
+  while (k.level < SKILL_MAX && k.xp >= xpToNext(k.level)) {
+    k.xp -= xpToNext(k.level);
+    k.level++;
+    logEvent(w, { kind: 'skillUp', survivorId: s.id, skill, level: k.level });
+  }
+  if (k.level >= SKILL_MAX) k.xp = 0;
 }

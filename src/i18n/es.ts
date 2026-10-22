@@ -330,6 +330,9 @@ export const es = {
         hours >= 48 ? `unos ${Math.round(hours / 24)} días` : `unas ${hours} horas`
       }, por el ${es.sides[side]}`,
     siegeArrived: '¡La horda ha llegado!',
+    siegeRepelled: 'Habéis resistido el asedio',
+    siegeEnded: 'La horda se dispersa',
+    wanderersSighted: 'Una horda errante cruza el mapa',
     broken: (what: 'door' | 'window' | 'wall', inBase: boolean) =>
       `Los zombis han ${
         what === 'door'

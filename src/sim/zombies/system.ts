@@ -15,11 +15,13 @@ import { damageTile, resistanceOf } from '../structures';
 import type { World, Zombie } from '../types';
 import { thinkZombie, visibleToZombies, zombieAttack } from './brain';
 import { tileOf } from '../world';
+import { hordeSystem } from './hordes';
 import { arrivalsSystem } from './spawn';
 
 export function zombieSystem(w: World): void {
   const inBase = (z: Zombie) => contains(w.base.rect, tileOf(z.pos));
   const already = w.zombies.some(inBase);
+  hordeSystem(w); // H4e: antes de las llegadas por los bordes
   arrivalsSystem(w);
   for (const z of w.zombies) {
     if (z.cooldown > 0) z.cooldown--;

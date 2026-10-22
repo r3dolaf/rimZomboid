@@ -407,7 +407,8 @@ export type EventId =
   | 'storm'
   | 'flu'
   // Hordas (H4e)
-  | 'siege';
+  | 'siege'
+  | 'wanderers';
 
 /** El narrador (spec H3c §2): cuándo y de qué tono pasan cosas. */
 export interface Narrator {

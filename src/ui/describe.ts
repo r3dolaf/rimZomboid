@@ -355,6 +355,15 @@ export function logText(e: LogEntry, w: World): string {
     case 'siegeArrived':
       text = l.siegeArrived;
       break;
+    case 'siegeRepelled':
+      text = l.siegeRepelled;
+      break;
+    case 'siegeEnded':
+      text = l.siegeEnded;
+      break;
+    case 'wanderersSighted':
+      text = l.wanderersSighted;
+      break;
   }
   return text;
 }

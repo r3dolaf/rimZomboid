@@ -29,6 +29,7 @@ import { nextFloat, nextInt } from '../rng';
 import type { Point, Survivor, World, Zombie } from '../types';
 import { lineOfSight } from '../vision';
 import { tileOf } from '../world';
+import { activeHorde, legToward, siegeTarget } from './hordes';
 import { zombiePath, zombieStepCost } from './path';
 
 /** ¿Ve el zombi esa posición? (a ZOMBIE_VISION casillas o menos, en línea recta) */
@@ -57,9 +58,14 @@ function preyInSight(w: World, z: Zombie): Survivor | null {
 
 const same = (a: Point | null, b: Point) => a !== null && a.x === b.x && a.y === b.y;
 
-/** Camino hacia `goal` (rompiendo lo que haga falta); si no hay, un paso en línea recta. */
+/**
+ * Camino hacia `goal` (rompiendo lo que haga falta); si no hay, un paso en línea recta. Los de una
+ * horda (H4e), por tramos: así las búsquedas de camino son cortas aunque vengan de lejos.
+ */
 function planTo(w: World, z: Zombie, goal: Point): void {
-  z.path = zombiePath(w, tileOf(z.pos), goal) ?? stepToward(w, z, goal);
+  const at = tileOf(z.pos);
+  const target = activeHorde(w, z) ? legToward(w, at, goal) : goal;
+  z.path = zombiePath(w, at, target) ?? stepToward(w, z, target);
 }
 
 /** La casilla de al lado que más le acerca a `goal`, si alguna le acerca. */
@@ -133,13 +139,23 @@ export function thinkZombie(w: World, z: Zombie): void {
     const fire = visibleCampfire(w, z);
     if (fire) alertTo(w, z, fire);
   }
+  const horde = activeHorde(w, z);
   if (z.state === 'alert') {
     const at = tileOf(z.pos);
-    if (!z.goal || same(z.goal, at)) return startWandering(w, z);
+    if (!z.goal || same(z.goal, at)) {
+      // El del asedio, al llegar a su casilla de la base, va a otra (H4e §2.2).
+      if (horde?.kind === 'siege') return alertTo(w, z, siegeTarget(w));
+      return startWandering(w, z);
+    }
     if (z.path.length === 0) {
       planTo(w, z, z.goal);
       if (z.path.length === 0) startWandering(w, z); // no puede acercarse más
     }
+    return;
+  }
+  // Los de una horda no vagan ni se aburren: tras una pausa, siguen hacia la base o su destino.
+  if (horde) {
+    if (w.tick >= z.waitUntil) alertTo(w, z, horde.kind === 'siege' ? siegeTarget(w) : horde.goal);
     return;
   }
   wander(w, z);

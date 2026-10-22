@@ -11,6 +11,7 @@ import { siegeEvent } from './siege';
 import { stormEvent } from './storm';
 import { strangersEvent } from './strangers';
 import { theftEvent } from './theft';
+import { wanderersEvent } from './wanderers';
 import type { GameEvent } from './types';
 
 /** Todos los sucesos que puede sacar el narrador. */
@@ -28,4 +29,5 @@ export const CATALOG: readonly GameEvent[] = [
   stormEvent,
   fluEvent,
   siegeEvent,
+  wanderersEvent,
 ];

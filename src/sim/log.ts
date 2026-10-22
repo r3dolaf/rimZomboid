@@ -66,7 +66,13 @@ export type LogEvent =
   | { kind: 'zombieSighted'; x: number; y: number }
   // Hordas (H4e): el asedio anunciado (por qué lado y en cuántas horas) y su llegada (por dónde).
   | { kind: 'siegeAnnounced'; side: MapSide; hours: number }
-  | { kind: 'siegeArrived'; x: number; y: number };
+  | { kind: 'siegeArrived'; x: number; y: number }
+  /** Se han matado todos los del asedio antes de que termine. */
+  | { kind: 'siegeRepelled' }
+  /** Ha pasado su día: los que quedan se dispersan. */
+  | { kind: 'siegeEnded' }
+  /** Un colono ve por primera vez a uno de los errantes (dónde). */
+  | { kind: 'wanderersSighted'; x: number; y: number };
 
 export type LogEntry = LogEvent & { tick: number };
 

@@ -8,7 +8,14 @@ import { SKILL_MAX } from '../sim/balance';
 import { capacityKg, SKILLS, xpToNext } from '../sim/skills';
 import { opinionOf, relationLabel } from '../sim/social';
 import type { Survivor, World } from '../sim/types';
-import { activityText, formatItems, formatModifier, signed } from './describe';
+import {
+  activityText,
+  formatItems,
+  formatModifier,
+  healthView,
+  personName,
+  signed,
+} from './describe';
 import type { Selection } from './selection';
 import {
   cyclePriority,
@@ -150,11 +157,34 @@ export function mountSheet(
     skillsPane.append(row);
     return { k, level, fill, note };
   });
+  // Salud (H5 §10): el cuerpo, la Sangre, lo que sufre y Dar analgésico.
+  const healthPane = document.createElement('div');
+  healthPane.className = 'health';
+  healthPane.dataset.testid = 'sheet-pane-health';
+  const healthBody = document.createElement('div');
+  const painkiller = document.createElement('button');
+  painkiller.type = 'button';
+  painkiller.className = 'painkiller';
+  painkiller.dataset.testid = 'sheet-painkiller';
+  painkiller.textContent = es.healthUi.givePainkiller;
+  painkiller.title = es.healthUi.givePainkillerHint;
+  painkiller.addEventListener('click', () => {
+    const id = opts.selection.id;
+    if (id !== null) issue(opts.world, { type: 'givePainkiller', survivorId: id });
+    painkiller.blur();
+  });
+  healthPane.append(healthBody, painkiller);
+  let healthShown = '';
+
   const tabs = document.createElement('nav');
   tabs.className = 'tabs';
-  const panes: Record<SheetTab, HTMLElement> = { general, skills: skillsPane };
+  const panes: Record<SheetTab, HTMLElement> = {
+    general,
+    skills: skillsPane,
+    health: healthPane,
+  };
   let tab = loadTab();
-  const tabButtons = (['general', 'skills'] as const).map((k) => {
+  const tabButtons = SHEET_TABS.map((k) => {
     const b = document.createElement('button');
     b.type = 'button';
     b.textContent = es.sheetTabs[k];
@@ -170,10 +200,10 @@ export function mountSheet(
   });
   const showTab = () => {
     for (const { k, b } of tabButtons) b.classList.toggle('selected', k === tab);
-    for (const k of ['general', 'skills'] as const) panes[k].hidden = k !== tab;
+    for (const k of SHEET_TABS) panes[k].hidden = k !== tab;
   };
   showTab();
-  panel.append(head, tabs, general, skillsPane);
+  panel.append(head, tabs, general, skillsPane, healthPane);
 
   let shown = ''; // firma de lo pintado, para no rehacer el DOM en cada fotograma
 
@@ -186,7 +216,7 @@ export function mountSheet(
         shown = '';
         return;
       }
-      const nameOf = (id: number) => world.survivors.find((x) => x.id === id)?.name ?? '?';
+      const nameOf = (id: number) => personName(world, id);
       const mods = moodModifiers(s, world.tick, world.base.rect).map((m) =>
         formatModifier(m, world.tick, nameOf),
       );
@@ -239,6 +269,19 @@ export function mountSheet(
         if (r.note.textContent !== note) r.note.textContent = note;
       }
 
+      // Dar analgésico: apagado si no quedan, si ya lo tiene o si ya se lo van a dar.
+      const asked =
+        s.painkillerWanted ||
+        world.orders.some((o) => o.type === 'givePainkiller' && o.survivorId === s.id);
+      painkiller.disabled =
+        world.storage.items.painkillers === 0 || asked || s.painkillerUntil > world.tick;
+      const health = healthView(s, world);
+      const healthKey = JSON.stringify(health);
+      if (healthKey !== healthShown) {
+        healthShown = healthKey;
+        healthBody.replaceChildren(renderHealth(health));
+      }
+
       const key = JSON.stringify(view);
       panel.hidden = false;
       if (key === shown) return;
@@ -255,16 +298,53 @@ const kg = (n: number) =>
     ? String(Math.round(n))
     : n.toFixed(1).replace('.', ',');
 
-type SheetTab = 'general' | 'skills';
+const SHEET_TABS = ['general', 'skills', 'health'] as const;
+type SheetTab = (typeof SHEET_TABS)[number];
 const TAB_KEY = 'rimzomboid.sheetTab';
 
 /** La última pestaña que abrió; si el navegador no deja guardarlo, General. */
 function loadTab(): SheetTab {
   try {
-    return localStorage.getItem(TAB_KEY) === 'skills' ? 'skills' : 'general';
+    const saved = localStorage.getItem(TAB_KEY);
+    return SHEET_TABS.find((t) => t === saved) ?? 'general';
   } catch {
     return 'general';
   }
+}
+
+/** La pestaña Salud: cada parte con su barra y sus heridas, la Sangre y lo que sufre. */
+function renderHealth(v: ReturnType<typeof healthView>): DocumentFragment {
+  const f = document.createDocumentFragment();
+  const el = <K extends keyof HTMLElementTagNameMap>(tag: K, text?: string, cls?: string) => {
+    const e = document.createElement(tag);
+    if (text !== undefined) e.textContent = text;
+    if (cls) e.className = cls;
+    return e;
+  };
+  const t = es.healthUi;
+  f.append(el('h3', t.bodyTitle));
+  for (const p of v.parts) {
+    const row = el('div', undefined, 'part');
+    row.append(el('span', `${p.name}: ${p.hp} / ${p.max}`));
+    const bar = el('div', undefined, 'bar');
+    const fill = el('div', undefined, 'fill');
+    fill.style.width = `${Math.round((100 * p.hp) / p.max)}%`;
+    bar.append(fill);
+    row.append(bar);
+    if (p.wounds.length > 0) {
+      const ul = el('ul', undefined, 'wounds');
+      for (const wd of p.wounds) ul.append(el('li', wd));
+      row.append(ul);
+    }
+    f.append(row);
+  }
+  f.append(el('p', t.bloodValue(v.blood), 'blood'));
+  f.append(el('h3', t.sufferingTitle));
+  const ul = el('ul');
+  if (v.symptoms.length === 0) ul.append(el('li', t.nothing, 'muted'));
+  for (const x of v.symptoms) ul.append(el('li', x));
+  f.append(ul);
+  return f;
 }
 
 function saveTab(tab: SheetTab): void {

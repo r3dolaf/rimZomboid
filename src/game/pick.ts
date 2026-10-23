@@ -1,5 +1,5 @@
 import { contains } from '../sim/geom';
-import type { Building, Container, Furniture, Survivor, World } from '../sim/types';
+import type { Bed, Building, Container, Furniture, Survivor, World } from '../sim/types';
 
 /** El superviviente más cercano a (x, y), en casillas, dentro de `radius`; o `null`. */
 export function survivorAt(w: World, x: number, y: number, radius: number): Survivor | null {
@@ -31,4 +31,9 @@ export function containerAt(w: World, x: number, y: number): Container | null {
 export function tableAt(w: World, x: number, y: number): Furniture | null {
   if (w.seen[y * w.grid.width + x] !== 1) return null;
   return w.furniture.find((f) => f.kind === 'table' && f.pos.x === x && f.pos.y === y) ?? null;
+}
+
+/** La cama de esa casilla, o `null` (un clic en ella abre su ficha, H5 §6). */
+export function bedAt(w: World, x: number, y: number): Bed | null {
+  return w.beds.find((b) => b.pos.x === x && b.pos.y === y) ?? null;
 }

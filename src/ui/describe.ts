@@ -1,15 +1,102 @@
 // Traducciones del estado de la simulación a textos e indicadores para la interfaz.
 import { es } from '../i18n/es';
-import { LONELY_BELOW, MOOD_CRISIS, MOOD_EDGE, TICKS_PER_HOUR } from '../sim/balance';
+import {
+  BODY_HP,
+  CLEAN_BANDAGE_HEAL,
+  LONELY_BELOW,
+  MOOD_CRISIS,
+  MOOD_EDGE,
+  TICKS_PER_HOUR,
+  WOUNDS,
+} from '../sim/balance';
+import { BODY_PARTS, painOf, partHp } from '../sim/body';
 import { gameTime } from '../sim/clock';
 import { ITEM_KINDS, type Inventory, type ItemKind } from '../sim/items';
 import type { LogEntry } from '../sim/log';
 import type { MoodModifier } from '../sim/mood';
-import type { Building, MemoryId, Survivor, Tone, World } from '../sim/types';
+import type { Building, MemoryId, Survivor, Tone, World, Wound, Zombie } from '../sim/types';
+
+/**
+ * El nombre de alguien por su id: de la colonia, a la puerta, de los que se fueron o de los muertos
+ * (H5); si no, "?".
+ */
+export function personName(w: World, id: number): string {
+  const all = [
+    ...w.survivors,
+    ...(w.stranger?.survivors ?? []),
+    ...w.leaving,
+    ...w.returning.flatMap((r) => (r.kind === 'stranger' ? [r.survivor] : [])),
+  ];
+  return (
+    all.find((s) => s.id === id)?.name ??
+    w.returning.flatMap((r) => (r.kind === 'zombie' && r.survivorId === id ? [r.name] : []))[0] ??
+    w.dead.find((d) => d.id === id)?.name ??
+    '?'
+  );
+}
+
+/** "Ana (zombi)" si el zombi fue alguien (H5); si no, `null`. */
+export function zombieLabel(z: Pick<Zombie, 'name'>): string | null {
+  return z.name === undefined ? null : es.healthUi.zombie(z.name);
+}
+
+/** Los iconos de salud de la tarjeta (H5 §10). La infección no se ve: solo la fiebre. */
+export function healthIcons(s: Survivor, tick: number): { icon: string; label: string }[] {
+  const i = es.healthUi.icons;
+  const out: { icon: string; label: string }[] = [];
+  if (s.wounds.some((wd) => wd.bleeding)) out.push(i.bleeding);
+  if (s.fever) out.push(i.fever);
+  if (s.fever && s.fever.stage !== 'fever') out.push(i.nausea);
+  if (s.painkillerUntil > tick) out.push(i.painkiller);
+  if (partHp(s, 'leftLeg') <= 0 || partHp(s, 'rightLeg') <= 0) out.push(i.leg);
+  if (partHp(s, 'leftArm') <= 0 || partHp(s, 'rightArm') <= 0) out.push(i.arm);
+  return out;
+}
+
+/** "Corte, vendado (se cura en 2 días)", "Arañazo, sangra", "Mordisco, venda sucia (…)". */
+function woundText(wd: Wound, tick: number): string {
+  const t = es.healthUi;
+  const clean = wd.cleanUntil > tick;
+  const state = wd.bleeding ? t.bleeding : clean ? t.bandaged : wd.cleanUntil > 0 ? t.dirty : null;
+  const name = state ? `${es.wounds[wd.kind]}, ${state}` : es.wounds[wd.kind];
+  if (wd.bleeding) return name;
+  const perDay = (wd.size * (clean ? CLEAN_BANDAGE_HEAL : 1)) / WOUNDS[wd.kind].healDays;
+  return `${name} (${t.heals(Math.max(1, Math.ceil(wd.damage / perDay - 1e-9)))})`;
+}
+
+/** La pestaña Salud (H5 §10): cada parte, la Sangre y lo que sufre. Nunca la infección. */
+export function healthView(
+  s: Survivor,
+  w: World,
+): {
+  parts: { name: string; hp: number; max: number; wounds: string[] }[];
+  blood: number;
+  symptoms: string[];
+} {
+  const t = es.healthUi;
+  const symptoms: string[] = [];
+  const pain = Math.round(painOf(s, w.tick));
+  if (pain > 0) symptoms.push(t.pain(pain));
+  if (s.fever) symptoms.push(t.fever);
+  if (s.fever && s.fever.stage !== 'fever') symptoms.push(t.nausea);
+  if (s.fever?.stage === 'grave') symptoms.push(t.grave);
+  if (s.painkillerUntil > w.tick)
+    symptoms.push(t.painkiller(Math.ceil((s.painkillerUntil - w.tick) / TICKS_PER_HOUR)));
+  return {
+    parts: BODY_PARTS.map((p) => ({
+      name: es.bodyParts[p].name,
+      hp: Math.round(partHp(s, p)),
+      max: BODY_HP[p],
+      wounds: s.wounds.filter((wd) => wd.part === p).map((wd) => woundText(wd, w.tick)),
+    })),
+    blood: Math.round(s.blood),
+    symptoms,
+  };
+}
 
 export function activityText(s: Survivor, w?: World): string {
   const container = (id: number) => w?.containers.find((c) => c.id === id);
-  const name = (id: number) => w?.survivors.find((o) => o.id === id)?.name ?? '?';
+  const name = (id: number) => (w ? personName(w, id) : '?');
   const buildName = (id: number) => {
     const b = w?.blueprints.find((x) => x.id === id);
     return b ? es.builds[b.kind] : '?';
@@ -223,7 +310,7 @@ export function formatLogEntry(e: LogEntry, w: World): string {
 
 /** La frase de un suceso, sin la fecha. */
 export function logText(e: LogEntry, w: World): string {
-  const name = (id: number) => w.survivors.find((s) => s.id === id)?.name ?? '?';
+  const name = (id: number) => personName(w, id);
   const l = es.log;
   let text: string;
   switch (e.kind) {
@@ -511,6 +598,25 @@ export function noticeFor(e: LogEntry): NoticeInfo | null {
       return { tone: 'mixed', title: t.fled, focusId: e.survivorId };
     case 'skillUp':
       return { tone: 'good', title: t.skillUp, focusId: e.survivorId };
+    // Heridas y muerte (H5 §10)
+    case 'died':
+      return { tone: 'bad', title: t.died, focusId: null };
+    case 'rose':
+      return { tone: 'bad', title: t.rose, focusId: null };
+    case 'wounded':
+      return e.wound === 'bite' ? { tone: 'bad', title: t.wounded, focusId: e.survivorId } : null;
+    case 'sawTurned':
+      return { tone: 'bad', title: t.sawTurned, focusId: null };
+    case 'killedForNothing':
+      return { tone: 'bad', title: t.killedForNothing, focusId: null };
+    case 'banished':
+      return { tone: 'mixed', title: t.banished, focusId: null };
+    case 'returned':
+      return { tone: 'mixed', title: t.returned, focusId: null };
+    case 'strangerDied':
+      return { tone: 'mixed', title: t.strangerDied, focusId: null };
+    case 'feverGone':
+      return { tone: 'good', title: t.feverGone, focusId: e.survivorId };
     // Hordas y desconocidos (H4e)
     case 'siegeAnnounced':
       return { tone: 'bad', title: t.siegeAnnounced, focusId: null };

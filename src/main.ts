@@ -17,6 +17,7 @@ import { siegeText } from './ui/describe';
 import { mountGroupPanel } from './ui/groupPanel';
 import { bindEscape } from './ui/escape';
 import { mountHousePanel } from './ui/housePanel';
+import { mountBedPanel } from './ui/bedPanel';
 import { mountHud } from './ui/hud';
 import { bindTimeKeys } from './ui/keys';
 import { mountLog } from './ui/logPanel';
@@ -57,6 +58,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
   const time = createTimeController();
   const selection = createSelection();
   const houseSelection = createSelection();
+  const bedSelection = createSelection(); // H5: la ficha de una cama
   const tool = createTool();
   const workOpen = createFlag();
   const craftOpen = createFlag();
@@ -83,6 +85,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
   const sheet = mountSheet(ui, { world, selection });
   const group = mountGroupPanel(ui, { world, selection });
   const housePanel = mountHousePanel(ui, { world, selection: houseSelection });
+  const bedPanel = mountBedPanel(ui, { world, selection: bedSelection });
   const log = mountLog(ui, { world });
   const workPanel = mountWorkPanel(ui, { world, open: workOpen });
   const craftPanel = mountCraftPanel(ui, { world, open: craftOpen });
@@ -111,7 +114,11 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
   });
 
   // Solo una ficha abierta a la vez: superviviente o casa.
-  selection.onChange(() => selection.ids.length > 0 && houseSelection.set(null));
+  selection.onChange(() => {
+    if (selection.ids.length === 0) return;
+    houseSelection.set(null);
+    bedSelection.set(null);
+  });
   houseSelection.onChange((id) => id !== null && selection.set(null));
   // Esc cierra por capas: primero la herramienta, luego el panel de Trabajos o el de Fabricar, la
   // ficha de la casa y la del superviviente.
@@ -121,6 +128,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
     () => craftOpen.value && (craftOpen.set(false), true),
     () => noticesOpen.value && (noticesOpen.set(false), true),
     () => houseSelection.id !== null && (houseSelection.set(null), true),
+    () => bedSelection.id !== null && (bedSelection.set(null), true),
     () => selection.ids.length > 0 && (selection.set(null), true),
   ]);
   // El cursor indica qué herramienta está activa.
@@ -144,6 +152,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
     time,
     selection,
     houseSelection,
+    bedSelection,
     tool,
     debug: new URLSearchParams(location.search).get('debug') === '1',
     openCraft: () => craftOpen.set(true),
@@ -159,6 +168,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
       sheet.update();
       group.update();
       housePanel.update();
+      bedPanel.update();
       log.update();
       notices.update();
       noticeMenu.update();

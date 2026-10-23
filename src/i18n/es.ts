@@ -32,6 +32,7 @@ export const es = {
   seed: (s: number) => `Semilla: ${s}`,
   food: (n: number) => `Comida: ${n}`,
   bandages: (n: number) => `Vendas: ${n}`,
+  painkillers: (n: number) => `Analgésicos: ${n}`,
   lootTool: 'Saquear',
   chopTool: 'Talar',
   chopToolHint: 'Marcar árboles para talar: clic o arrastrar (T)',
@@ -51,7 +52,7 @@ export const es = {
     chop: 'Talar',
     loot: 'Saquear',
   } satisfies Record<WorkType, string>,
-  sheetTabs: { general: 'General', skills: 'Habilidades' },
+  sheetTabs: { general: 'General', skills: 'Habilidades', health: 'Salud' },
   /** Recetas de Fabricar (H4d): nombre, lo que hace quien la trabaja, cómo queda en el registro. */
   recipes: {
     bandages: {
@@ -202,6 +203,43 @@ export const es = {
     cut: 'le ha hecho un corte',
     bite: 'ha mordido',
   } satisfies Record<WoundKind, string>,
+  /** La salud en pantalla (H5 §10). */
+  healthUi: {
+    blood: 'Sangre',
+    bloodValue: (n: number) => `Sangre: ${n}`,
+    bodyTitle: 'Cuerpo',
+    sufferingTitle: 'Lo que sufre',
+    nothing: 'Nada',
+    noWounds: 'Sin heridas',
+    bleeding: 'sangra',
+    bandaged: 'vendado',
+    dirty: 'venda sucia',
+    heals: (days: number) => `se cura en ${days} ${days === 1 ? 'día' : 'días'}`,
+    pain: (n: number) => `Dolor: ${n}`,
+    fever: 'Fiebre',
+    nausea: 'Náuseas',
+    grave: 'Muy grave',
+    painkiller: (hours: number) => `Analgésico (${hours} h)`,
+    givePainkiller: 'Dar analgésico',
+    givePainkillerHint:
+      'Si puede andar, va al almacén a tomárselo; si no, se lo lleva uno con Sanar',
+    icons: {
+      bleeding: { icon: '🩸', label: 'Sangrando' },
+      fever: { icon: '🤒', label: 'Fiebre' },
+      nausea: { icon: '🤢', label: 'Náuseas' },
+      painkiller: { icon: '💊', label: 'Con analgésico' },
+      leg: { icon: '🦿', label: 'Pierna inutilizada' },
+      arm: { icon: '💪', label: 'Brazo inutilizado' },
+    },
+    zombie: (who: string) => `${who} (zombi)`,
+  },
+  /** La ficha de una cama (H5 §6). */
+  bed: {
+    of: (who: string) => `Cama de ${who}`,
+    noOwner: 'Cama sin dueño',
+    hospital: 'Cama de hospital',
+    hospitalHint: 'Para heridos y enfermos: no es de nadie y allí se curan antes',
+  },
   /** Pantalla final (H5 §9). */
   end: {
     fell: 'La colonia ha caído',
@@ -233,6 +271,16 @@ export const es = {
   sides: ['norte', 'sur', 'oeste', 'este'],
   notices: {
     skillUp: 'Mejora',
+    // H5
+    died: 'Muerte',
+    rose: 'Se ha levantado',
+    wounded: 'Mordisco',
+    sawTurned: 'Uno de los nuestros',
+    killedForNothing: 'Por nada',
+    banished: 'Se ha ido',
+    returned: 'Ha vuelto',
+    strangerDied: 'Muerte a la puerta',
+    feverGone: 'Sin fiebre',
     jealousy: 'Celos',
     clash: 'Choque de caracteres',
     grief: 'Malos recuerdos',

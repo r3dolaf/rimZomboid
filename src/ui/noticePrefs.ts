@@ -115,7 +115,22 @@ export const NOTICE_GROUPS: readonly {
       'strangersFled',
     ],
   },
-  { id: 'colonists', kinds: ['skillUp'] },
+  {
+    id: 'colonists',
+    kinds: [
+      'skillUp',
+      // H5
+      'wounded',
+      'died',
+      'rose',
+      'sawTurned',
+      'killedForNothing',
+      'banished',
+      'returned',
+      'strangerDied',
+      'feverGone',
+    ],
+  },
 ];
 
 /** Los que pueden salir rojos (por defecto pausan): para marcar la casilla Pausa del menú. */
@@ -132,4 +147,10 @@ export const CAN_BE_RED: ReadonlySet<string> = new Set([
   'zombiesInBase',
   'siegeAnnounced',
   'siegeArrived',
+  // H5
+  'wounded',
+  'died',
+  'rose',
+  'sawTurned',
+  'killedForNothing',
 ]);

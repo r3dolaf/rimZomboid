@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { createWorld } from '../sim/world';
-import { containerAt, houseAt, survivorAt, tableAt } from './pick';
+import { bedAt, containerAt, houseAt, survivorAt, tableAt } from './pick';
 
 test('encuentra al superviviente más cercano dentro del radio', () => {
   const w = createWorld(2);
@@ -48,4 +48,11 @@ test('tableAt: la mesa vista de esa casilla, para abrir Fabricar con un clic (H4
   expect(tableAt(w, p.x + 1, p.y)).toBeNull(); // una hoguera no
   w.seen[p.y * w.grid.width + p.x] = 0;
   expect(tableAt(w, p.x, p.y)).toBeNull();
+});
+
+test('bedAt: la cama de esa casilla (H5: se pulsa para abrir su ficha)', () => {
+  const w = createWorld(2);
+  const b = w.beds[0]!;
+  expect(bedAt(w, b.pos.x, b.pos.y)?.id).toBe(b.id);
+  expect(bedAt(w, 0, 0)).toBeNull();
 });

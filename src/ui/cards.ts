@@ -1,7 +1,7 @@
 import { es } from '../i18n/es';
 import type { Needs, Survivor, World } from '../sim/types';
 import { effectiveDrafted } from '../game/command';
-import { barLevel, statusIcon } from './describe';
+import { barLevel, healthIcons, statusIcon } from './describe';
 import type { Selection } from './selection';
 import './panels.css';
 
@@ -11,8 +11,11 @@ interface Card {
   card: HTMLButtonElement;
   love: HTMLElement;
   status: HTMLElement;
+  /** Iconos de salud (H5): sangrando, fiebre, náuseas… */
+  icons: HTMLElement;
   fills: HTMLElement[];
   health: HTMLElement;
+  blood: HTMLElement;
 }
 
 /**
@@ -52,9 +55,14 @@ export function mountCards(
     love.hidden = true;
     const status = document.createElement('span');
     status.className = 'status';
+    const icons = document.createElement('span');
+    icons.className = 'health-icons';
+    icons.dataset.testid = 'card-health';
     const who = document.createElement('span');
     who.append(name, love);
-    head.append(who, status);
+    const right = document.createElement('span');
+    right.append(icons, status);
+    head.append(who, right);
     card.append(head);
 
     const barRow = (key: string, title: string) => {
@@ -69,10 +77,11 @@ export function mountCards(
       return fill;
     };
     const health = barRow('health', es.health); // Salud (H4b), la primera
+    const blood = barRow('blood', es.healthUi.blood); // Sangre (H5), justo debajo
     const fills = NEEDS.map((k) => barRow(k, es.needs[k]));
 
     bar.append(card);
-    return { card, love, status, fills, health };
+    return { card, love, status, icons, fills, health, blood };
   };
 
   return {
@@ -102,6 +111,14 @@ export function mountCards(
         const hpWidth = `${hp}%`;
         if (card.health.style.width !== hpWidth) card.health.style.width = hpWidth;
         card.health.className = `fill ${barLevel(hp, 'need')}`;
+        const blood = `${Math.round(s.blood)}%`;
+        if (card.blood.style.width !== blood) card.blood.style.width = blood;
+        const icons = healthIcons(s, opts.world.tick);
+        const iconText = icons.map((i) => i.icon).join('');
+        if (card.icons.textContent !== iconText) {
+          card.icons.textContent = iconText;
+          card.icons.title = icons.map((i) => i.label).join(', ');
+        }
         const icon = statusIcon(s);
         const text = icon?.icon ?? '';
         if (c.status.textContent !== text) {

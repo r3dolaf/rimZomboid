@@ -69,6 +69,10 @@ export function mountHud(
   bandages.className = 'hud-bandages';
   bandages.dataset.testid = 'hud-bandages';
 
+  const painkillers = document.createElement('span');
+  painkillers.className = 'hud-painkillers';
+  painkillers.dataset.testid = 'hud-painkillers';
+
   const wood = document.createElement('span');
   wood.className = 'hud-wood';
   wood.dataset.testid = 'hud-wood';
@@ -141,6 +145,7 @@ export function mountHud(
     speeds,
     food,
     bandages,
+    painkillers,
     wood,
     ...tools.map((t) => t.b),
     work,
@@ -176,6 +181,8 @@ export function mountHud(
       if (food.textContent !== foodText) food.textContent = foodText;
       const bandagesText = es.bandages(stock.bandage);
       if (bandages.textContent !== bandagesText) bandages.textContent = bandagesText;
+      const painkillersText = es.painkillers(stock.painkillers);
+      if (painkillers.textContent !== painkillersText) painkillers.textContent = painkillersText;
       const woodText = es.wood(stock.wood);
       if (wood.textContent !== woodText) wood.textContent = woodText;
       refreshSpeed(); // la velocidad también puede cambiar con el teclado

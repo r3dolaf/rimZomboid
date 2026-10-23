@@ -69,6 +69,18 @@
 .bar[data-need='social'] .fill {
   background: #b07cd8;
 }
+/* Sangre (H5): roja oscura, más fina, bajo la Salud. */
+.bar[data-need='blood'] {
+  height: 3px;
+  margin-top: 1px;
+}
+.bar[data-need='blood'] .fill {
+  background: #8b1a1a;
+}
+.card .health-icons {
+  margin-right: 2px;
+  letter-spacing: -2px;
+}
 /* Después de los colores de cada barra: con la misma especificidad, gana la última regla. */
 .bar .fill.warn {
   background: #e0a030;
@@ -648,4 +660,52 @@
 }
 .notice-menu .reset {
   margin-top: 10px;
+}
+
+/* Pestaña Salud (H5 §10). */
+.sheet .health .part {
+  margin: 4px 0;
+}
+.sheet .health .part .bar {
+  height: 5px;
+}
+.sheet .health .part .bar .fill {
+  background: #e06666;
+}
+.sheet .health .wounds {
+  margin: 2px 0 0 10px;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  opacity: 0.85;
+}
+.sheet .health button.painkiller {
+  margin-top: 8px;
+}
+
+/* Ficha de la cama (H5 §6). */
+.bed-panel {
+  position: absolute;
+  right: 12px;
+  top: 56px;
+  width: 240px;
+  padding: 10px 12px;
+  background: rgba(20, 22, 26, 0.94);
+  border: 1px solid #3a3d42;
+  border-radius: 6px;
+  color: #e8e6e3;
+  pointer-events: auto;
+}
+.bed-panel header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.bed-panel h2 {
+  margin: 0;
+  font-size: 15px;
+}
+.bed-panel label {
+  display: block;
+  margin-top: 8px;
 }

@@ -27,6 +27,9 @@ export const SELECTION_RING = 0xffffff;
 export const DRAFT_MARK = 0xd9534f;
 export const BED_COLOR = 0x4f6f96;
 export const PILLOW_COLOR = 0xe8e6e3;
+/** Cama de hospital (H5): blanca con una cruz roja. */
+export const MEDICAL_BED_COLOR = 0xd8dde3;
+export const MEDICAL_CROSS = 0xd9534f;
 export const STORAGE_COLOR = 0x8a6a3a;
 export const STORAGE_EDGE = 0x5a4424;
 export const NIGHT_COLOR = 0x0a1030;

@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { markCorpsesIn, toggleContainer, toggleHouse } from '../game/designate';
-import { containerAt, houseAt, survivorAt, tableAt } from '../game/pick';
+import { bedAt, containerAt, houseAt, survivorAt, tableAt } from '../game/pick';
 import { commandAt, effectiveDrafted } from '../game/command';
 import { runTicks } from '../game/runTicks';
 import type { TimeController } from '../game/timeController';
@@ -30,7 +30,7 @@ import {
   type World,
   type Zombie,
 } from '../sim/types';
-import { buildingTitle } from '../ui/describe';
+import { buildingTitle, zombieLabel } from '../ui/describe';
 import { visibleTiles } from '../sim/vision';
 import type { Selection } from '../ui/selection';
 import type { Tool, ToolMode } from '../ui/tool';
@@ -39,6 +39,8 @@ import {
   BAR_PROGRESS,
   BAR_WOOD,
   BED_COLOR,
+  MEDICAL_BED_COLOR,
+  MEDICAL_CROSS,
   BLUEPRINT,
   BLUEPRINT_BAD,
   BROKEN_GLASS,
@@ -114,6 +116,8 @@ export interface GameSceneData {
   time: TimeController;
   selection: Selection;
   houseSelection: Selection;
+  /** La cama elegida (H5 §6). */
+  bedSelection: Selection;
   tool: Tool;
   /** Con `?debug=1`: expone `window.rimzomboid` para los tests de navegador. */
   debug?: boolean;
@@ -128,6 +132,7 @@ export class GameScene extends Phaser.Scene {
   private clock!: TimeController;
   private selection!: Selection;
   private houseSelection!: Selection;
+  private bedSelection!: Selection;
   private tool!: Tool;
   private onFrame?: () => void;
   private openCraft?: () => void;
@@ -135,6 +140,8 @@ export class GameScene extends Phaser.Scene {
   /** Globos sobre la cabeza, uno por superviviente que lo lleva (se reutilizan). */
   private bubbleLayer!: Phaser.GameObjects.Container;
   private bubbles = new Map<number, Phaser.GameObjects.Text>();
+  /** Nombres de los zombis que fueron alguien (H5), por id. */
+  private zombieNames = new Map<number, Phaser.GameObjects.Text>();
   private furniture!: Phaser.GameObjects.Graphics;
   private marks!: Phaser.GameObjects.Graphics;
   /** Resplandor de las hogueras, encima de la capa de noche. */
@@ -184,6 +191,7 @@ export class GameScene extends Phaser.Scene {
     this.clock = data.time;
     this.selection = data.selection;
     this.houseSelection = data.houseSelection;
+    this.bedSelection = data.bedSelection;
     this.tool = data.tool;
     this.onFrame = data.onFrame;
     this.openCraft = data.openCraft;
@@ -226,6 +234,7 @@ export class GameScene extends Phaser.Scene {
     this.drawBuilding();
     this.drawActors();
     this.drawBubbles();
+    this.drawZombieNames();
     if (++this.frame % FOG_EVERY_FRAMES === 0) {
       this.drawFog();
       for (const l of this.labels) l.text.setVisible(this.world.seen[l.door] === 1);
@@ -338,8 +347,9 @@ export class GameScene extends Phaser.Scene {
       g.lineStyle(1, SELECTION_RING, 0.9);
       g.strokeRect(x0, y0, bw, bh);
     }
-    // El desconocido, en gris, hasta que lo aceptan.
+    // El desconocido, en gris, hasta que lo aceptan; también el que se va (H5).
     for (const s of this.world.stranger?.survivors ?? []) this.drawPerson(g, s, STRANGER_COLOR);
+    for (const s of this.world.leaving) this.drawPerson(g, s, STRANGER_COLOR);
     // Zombis (H4b): solo los que ven ahora los colonos, con una barrita si están heridos.
     const width = this.world.grid.width;
     for (const z of this.world.zombies) {
@@ -374,6 +384,34 @@ export class GameScene extends Phaser.Scene {
     g.fillCircle(x, y, SURVIVOR_RADIUS + 1);
     g.fillStyle(color, alpha);
     g.fillCircle(x, y, SURVIVOR_RADIUS);
+  }
+
+  /** "Ana (zombi)" bajo los zombis que fueron alguien y que se ven ahora (H5 §10). */
+  private drawZombieNames(): void {
+    const w = this.world;
+    const live = new Set<number>();
+    for (const z of w.zombies) {
+      const label = zombieLabel(z);
+      if (label === null) continue;
+      if (this.visible[Math.floor(z.pos.y) * w.grid.width + Math.floor(z.pos.x)] !== 1) continue;
+      live.add(z.id);
+      let t = this.zombieNames.get(z.id);
+      if (!t) {
+        t = this.add
+          .text(0, 0, label, { fontSize: '6px', color: '#c8e6a0' })
+          .setOrigin(0.5, 0)
+          .setResolution(4);
+        this.bubbleLayer.add(t);
+        this.zombieNames.set(z.id, t);
+      }
+      t.setPosition(z.pos.x * TILE_PX, z.pos.y * TILE_PX + SURVIVOR_RADIUS + 1);
+      t.setVisible(true);
+    }
+    for (const [id, t] of this.zombieNames)
+      if (!live.has(id)) {
+        t.destroy();
+        this.zombieNames.delete(id);
+      }
   }
 
   /** Iconos sobre la cabeza (charla, pelea…): se reutilizan los textos para no crearlos cada vez. */
@@ -496,9 +534,12 @@ export class GameScene extends Phaser.Scene {
     if (!this.dragged(p, b.screen)) {
       const { x: tx, y: ty } = this.tileAt(p);
       const seen = w.seen[ty * w.grid.width + tx] === 1;
-      const h = seen ? houseAt(w, tx, ty) : null;
+      // Una cama (H5) abre su ficha; si no, el edificio.
+      const bed = seen ? bedAt(w, tx, ty) : null;
+      const h = seen && !bed ? houseAt(w, tx, ty) : null;
       this.selection.set(null);
       this.houseSelection.set(h?.id ?? null);
+      this.bedSelection.set(bed?.id ?? null);
       return;
     }
     const [x0, x1] = [Math.min(b.from.x, b.to.x), Math.max(b.from.x, b.to.x)];
@@ -562,10 +603,20 @@ export class GameScene extends Phaser.Scene {
     m.clear();
     for (const b of w.beds) {
       const [x, y] = [b.pos.x * TILE_PX, b.pos.y * TILE_PX];
-      g.fillStyle(BED_COLOR);
+      g.fillStyle(b.medical ? MEDICAL_BED_COLOR : BED_COLOR);
       g.fillRect(x + 2, y + 1, TILE_PX - 4, TILE_PX - 2);
       g.fillStyle(PILLOW_COLOR);
       g.fillRect(x + 3, y + 2, TILE_PX - 6, 4);
+      if (b.medical) {
+        // Una cruz roja en la manta (H5 §6).
+        g.fillStyle(MEDICAL_CROSS);
+        g.fillRect(x + TILE_PX / 2 - 1, y + 7, 2, 6);
+        g.fillRect(x + TILE_PX / 2 - 3, y + 9, 6, 2);
+      }
+      if (this.bedSelection.id === b.id) {
+        m.lineStyle(1, SELECTION_RING, 1);
+        m.strokeRect(x + 1, y + 0.5, TILE_PX - 2, TILE_PX - 1);
+      }
     }
     for (const c of w.containers) {
       if (w.seen[c.pos.y * w.grid.width + c.pos.x] !== 1) continue;

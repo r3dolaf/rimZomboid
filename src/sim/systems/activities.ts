@@ -134,6 +134,7 @@ function finishSearch(w: World, s: Survivor, containerId: number): void {
   const taken = takeUpTo(c.items, s.carrying, capacityKg(s));
   c.searched = true;
   c.reservedBy = null;
+  addInto(w.stats.looted, { ...taken }); // para el resumen final (H5 §9)
   // Un cuerpo (H4d) no es de ninguna casa.
   if (c.kind === 'corpse') {
     logEvent(w, { kind: 'corpseSearched', survivorId: s.id, items: taken });

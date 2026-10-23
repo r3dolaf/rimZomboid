@@ -2,7 +2,7 @@
 import { es } from '../i18n/es';
 import { LONELY_BELOW, MOOD_CRISIS, MOOD_EDGE, TICKS_PER_HOUR } from '../sim/balance';
 import { gameTime } from '../sim/clock';
-import { ITEM_KINDS, type Inventory } from '../sim/items';
+import { ITEM_KINDS, type Inventory, type ItemKind } from '../sim/items';
 import type { LogEntry } from '../sim/log';
 import type { MoodModifier } from '../sim/mood';
 import type { Building, MemoryId, Survivor, Tone, World } from '../sim/types';
@@ -172,11 +172,13 @@ export function formatModifier(
 }
 
 /** "4 latas, 1 venda y 2 bates", o "nada". */
-export function formatItems(inv: Inventory): string {
-  const parts = ITEM_KINDS.filter((k) => inv[k] > 0).map((k) => {
-    const [one, many] = es.items[k];
-    return `${inv[k]} ${inv[k] === 1 ? one : many}`;
-  });
+export function formatItems(inv: Inventory, order: readonly ItemKind[] = ITEM_KINDS): string {
+  const parts = order
+    .filter((k) => inv[k] > 0)
+    .map((k) => {
+      const [one, many] = es.items[k];
+      return `${inv[k]} ${inv[k] === 1 ? one : many}`;
+    });
   if (parts.length === 0) return es.nothing;
   if (parts.length === 1) return parts[0]!;
   return `${parts.slice(0, -1).join(', ')} ${es.and} ${parts.at(-1)}`;
@@ -436,6 +438,9 @@ export function logText(e: LogEntry, w: World): string {
       break;
     case 'killedForNothing':
       text = l.killedForNothing(e.name);
+      break;
+    case 'colonyFell':
+      text = l.colonyFell;
       break;
   }
   return text;

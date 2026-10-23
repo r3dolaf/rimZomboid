@@ -119,3 +119,24 @@
   border-color: #c9a227;
   color: #111;
 }
+/* Pantalla final (H5 §9): encima del juego, que queda en pausa detrás. */
+.start.end {
+  z-index: 50;
+  background: rgba(10, 10, 10, 0.92);
+}
+.end ul {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+.end-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+.end-buttons button {
+  padding: 8px 16px;
+  font: inherit;
+  cursor: pointer;
+}

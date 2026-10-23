@@ -252,5 +252,6 @@ export function acceptStrangers(w: World): void {
     w.survivors.push(s);
   }
   w.stranger = null;
+  w.stats.joined.push(...st.survivors.map((s) => s.name));
   logEvent(w, { kind: 'strangerAccepted', names: st.survivors.map((s) => s.name) });
 }

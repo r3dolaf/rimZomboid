@@ -118,6 +118,8 @@ export function emptyWorld(width: number, height: number): World {
     leaving: [],
     returning: [],
     mercy: [],
+    over: null,
+    stats: { kills: 0, siegesRepelled: 0, looted: emptyInventory(), joined: [] },
   };
 }
 

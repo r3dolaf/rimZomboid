@@ -100,7 +100,8 @@ export type LogEvent =
   | { kind: 'banished'; name: string }
   | { kind: 'returned'; name: string }
   | { kind: 'sawTurned'; name: string }
-  | { kind: 'killedForNothing'; name: string };
+  | { kind: 'killedForNothing'; name: string }
+  | { kind: 'colonyFell' };
 
 export type LogEntry = LogEvent & { tick: number };
 

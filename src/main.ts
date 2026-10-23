@@ -12,6 +12,7 @@ import { createWorld } from './sim/world';
 import { mountBuildMenu } from './ui/buildMenu';
 import { mountCards } from './ui/cards';
 import { mountCraftPanel } from './ui/craftPanel';
+import { mountEndScreen } from './ui/endScreen';
 import { siegeText } from './ui/describe';
 import { mountGroupPanel } from './ui/groupPanel';
 import { bindEscape } from './ui/escape';
@@ -87,6 +88,13 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
   const craftPanel = mountCraftPanel(ui, { world, open: craftOpen });
   const buildMenu = mountBuildMenu(ui, { tool });
   const noticeMenu = mountNoticeMenu(ui, { prefs, open: noticesOpen });
+  // Al caer la colonia (H5 §9): otra partida con el mismo narrador y zombis, o a la portada.
+  const endScreen = mountEndScreen(ui, {
+    world,
+    time,
+    onRestart: () => location.assign(startUrl(location.search, randomSeed(), style, zombies)),
+    onTitle: () => location.assign(location.pathname),
+  });
   const notices = mountNotices(ui, {
     world,
     time,
@@ -157,6 +165,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
       workPanel.update();
       craftPanel.update();
       buildMenu.update();
+      endScreen.update();
     },
   };
   game.scene.add('game', GameScene, true, data);

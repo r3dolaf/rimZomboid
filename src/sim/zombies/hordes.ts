@@ -210,6 +210,7 @@ export function hordeSystem(w: World): void {
     if (h.kind === 'siege') {
       if (mine.length === 0) {
         h.done = true;
+        if (w.over === null) w.stats.siegesRepelled++;
         logEvent(w, { kind: 'siegeRepelled' });
         continue;
       }
@@ -221,6 +222,7 @@ export function hordeSystem(w: World): void {
         w.tick - h.allDownSince >= SIEGE_GIVE_UP_HOURS * TICKS_PER_HOUR;
       if (tired || w.tick >= h.until!) {
         endSiege(w, h, mine);
+        if (w.over === null) w.stats.siegesRepelled++;
         logEvent(w, { kind: 'siegeEnded' });
       }
       continue;

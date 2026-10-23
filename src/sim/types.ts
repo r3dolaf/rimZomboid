@@ -600,6 +600,10 @@ export interface World {
   returning: Returning[];
   /** A quién hay que acabar con su sufrimiento (esperan a que alguien pueda). */
   mercy: number[];
+  /** Fin de partida (H5 §9): cuándo no quedó nadie en la colonia. */
+  over: { tick: number } | null;
+  /** Para el resumen final. */
+  stats: { kills: number; siegesRepelled: number; looted: Inventory; joined: string[] };
 }
 
 /** Uno que echaron y que vuelve en `at` por donde se fue (`pos`). */

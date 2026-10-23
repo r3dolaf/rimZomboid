@@ -31,7 +31,9 @@ export function colonistHit(w: World, s: Survivor, z: Zombie): void {
   if (z.health > 0) return;
   w.zombies = w.zombies.filter((x) => x !== z);
   leaveCorpse(w, z); // H4d
-  if (colonist) logEvent(w, { kind: 'zombieKilled', survivorId: s.id });
+  if (!colonist) return;
+  w.stats.kills++;
+  logEvent(w, { kind: 'zombieKilled', survivorId: s.id });
 }
 
 /** Quien pelea con un zombi: si lo tiene al lado, le golpea; si no, va corriendo hacia él. */

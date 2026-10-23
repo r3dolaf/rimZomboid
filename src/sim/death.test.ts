@@ -11,16 +11,20 @@ import {
   TICKS_PER_HOUR,
 } from './balance';
 import { addWound, knockDown } from './body';
+import { colonistHit } from './combat';
 import { gameTime } from './clock';
 import { deathSystem, killSurvivor } from './death';
 import { addDecision } from './decisions';
 import { checkInvariants } from './invariants';
+import { emptyInventory } from './items';
 import { moodModifiers } from './mood';
 import { step } from './step';
-import { doorOutside, newStranger } from './systems/strangers';
+import { activitiesSystem } from './systems/activities';
+import { acceptStrangers, doorOutside, newStranger } from './systems/strangers';
 import { addBase, addSurvivor, emptyWorld, withoutZombies } from './testing/fixtures';
 import type { Survivor, World } from './types';
-import { tileOf } from './world';
+import { createWorld, tileOf } from './world';
+import { hordeSystem } from './zombies/hordes';
 import { newZombie } from './zombies/spawn';
 
 /** Base en (2, 2)–(11, 9); Ana (con cama), Bea y Cris dentro. */
@@ -256,4 +260,70 @@ test('invariantes: ningún muerto sigue en la colonia', () => {
   const { w, ana } = world();
   w.dead.push({ id: ana.id, name: 'Ana', day: 1, cause: 'blood' });
   expect(checkInvariants(w).join()).toMatch(/Ana.*muert/);
+});
+
+// --- H5 §9: fin de partida ---
+
+test('cuando no queda nadie en la colonia (muertos o idos), se acaba: sin narrador ni desconocidos; los zombis siguen', () => {
+  const { w, ana, bea, cris } = world();
+  const door = doorOutside(w);
+  const x = newStranger(w, door);
+  w.stranger = { survivors: [x], leaving: false };
+  addDecision(w, 'stranger', [x.id]);
+  killSurvivor(w, ana, 'blood');
+  killSurvivor(w, bea, 'wounds');
+  step(w);
+  expect(w.over).toBeNull();
+  killSurvivor(w, cris, 'hunger');
+  step(w);
+  expect(w.over).toEqual({ tick: w.tick - 1 });
+  expect(w.log.some((e) => e.kind === 'colonyFell')).toBe(true);
+  expect(w.stranger?.leaving ?? true).toBe(true); // el que esperaba se va
+  expect(w.decisions).toEqual([]);
+  w.narrator.nextEventAt = w.tick;
+  const events = w.log.length;
+  w.zombies.push(newZombie(w, { x: 30, y: 30 }));
+  for (let i = 0; i < 2 * TICKS_PER_HOUR; i++) step(w);
+  expect(w.log.slice(events).some((e) => e.kind === 'strangerArrived')).toBe(false);
+  expect(w.narrator.nextEventAt).toBeLessThanOrEqual(w.tick); // el narrador ya no hace nada
+  expect(w.zombies[0]!.pos).not.toEqual({ x: 30.5, y: 30.5 });
+  expect(w.over).toEqual({ tick: expect.any(Number) });
+  expect(checkInvariants(w)).toEqual([]);
+});
+
+test('para el resumen: zombis matados, asedios resistidos, lo saqueado y quién se unió', () => {
+  const { w } = world();
+  expect(w.stats).toEqual({ kills: 0, siegesRepelled: 0, looted: emptyInventory(), joined: [] });
+  const fresh = createWorld(3);
+  expect(fresh.stats).toEqual(w.stats);
+  expect(fresh.over).toBeNull();
+});
+
+test('las cuentas: cada zombi que mata un colono, cada asedio que se acaba, lo saqueado y quien se une', () => {
+  const { w, ana } = world();
+  const z = newZombie(w, { x: 5, y: 5 });
+  w.zombies.push(z);
+  for (let i = 0; i < 200 && w.zombies.includes(z); i++) colonistHit(w, ana, z);
+  expect(w.stats.kills).toBe(1);
+  w.hordes.push({ id: 1, kind: 'siege', goal: { x: 5, y: 5 }, until: w.tick + 100, done: false });
+  hordeSystem(w);
+  expect(w.stats.siegesRepelled).toBe(1);
+  w.containers.push({
+    id: 60,
+    houseId: 1,
+    pos: { x: 4, y: 5 },
+    kind: 'fridge',
+    items: { ...emptyInventory(), food: 3 },
+    searched: false,
+    designated: true,
+    reservedBy: ana.id,
+  });
+  ana.action = { type: 'search', containerId: 60, ticksLeft: 1 };
+  activitiesSystem(w);
+  expect(w.stats.looted.food).toBe(3);
+  expect(w.log.find((e) => e.kind === 'found')).toMatchObject({ items: { food: 3 } });
+  const x = newStranger(w, doorOutside(w));
+  w.stranger = { survivors: [x], leaving: false };
+  acceptStrangers(w);
+  expect(w.stats.joined).toEqual([x.name]);
 });

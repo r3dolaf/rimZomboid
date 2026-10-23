@@ -28,7 +28,7 @@ import { logEvent } from './log';
 import { findPath, regionOf } from './path/astar';
 import { dropPile } from './piles';
 import { nextInt } from './rng';
-import { doorOutside, exitFor } from './systems/strangers';
+import { doorOutside, exitFor, leaveStrangers } from './systems/strangers';
 import { walkStep } from './systems/movement';
 import type {
   Action,
@@ -201,7 +201,7 @@ function leavingSystem(w: World): void {
 function returningSystem(w: World): void {
   for (const r of [...w.returning]) {
     if (w.tick < r.at) continue;
-    if (r.kind === 'stranger' && w.stranger !== null) continue;
+    if (r.kind === 'stranger' && (w.stranger !== null || w.over !== null)) continue;
     w.returning = w.returning.filter((x) => x !== r);
     if (r.kind === 'zombie') {
       const z = newZombie(w, r.pos);
@@ -332,4 +332,13 @@ export function deathSystem(w: World): void {
   leavingSystem(w);
   returningSystem(w);
   turnedSystem(w);
+  if (w.over === null && w.survivors.length === 0) endGame(w);
+}
+
+/** No queda nadie (H5 §9): se acaba la partida; el que esperaba a la puerta se va. */
+function endGame(w: World): void {
+  w.over = { tick: w.tick };
+  if (w.stranger && !w.stranger.leaving) leaveStrangers(w);
+  w.decisions = [];
+  logEvent(w, { kind: 'colonyFell' });
 }

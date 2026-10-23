@@ -202,6 +202,21 @@ export const es = {
     cut: 'le ha hecho un corte',
     bite: 'ha mordido',
   } satisfies Record<WoundKind, string>,
+  /** Pantalla final (H5 §9). */
+  end: {
+    fell: 'La colonia ha caído',
+    survived: (days: number) => `Sobrevivisteis ${days} ${days === 1 ? 'día' : 'días'}`,
+    dead: 'Quién murió',
+    deadLine: (who: string, day: number, cause: string) => `${who}: día ${day}, ${cause}`,
+    joined: 'Quién se unió',
+    nobody: 'Nadie',
+    nothing: 'Nada',
+    kills: (n: number) => `Zombis matados: ${n}`,
+    sieges: (n: number) => `Asedios resistidos: ${n}`,
+    looted: (what: string) => `Lo más saqueado: ${what}`,
+    restart: 'Otra partida',
+    title: 'Volver a la portada',
+  },
   /** De qué ha muerto (H5 §8): "Ana ha muerto desangrándose". */
   deathCauses: {
     blood: 'desangrándose',
@@ -423,6 +438,7 @@ export const es = {
     returned: (who: string) => `${who} ha vuelto y pide entrar`,
     sawTurned: (who: string) => `Hemos visto a ${who}: ya es un zombi`,
     killedForNothing: (who: string) => `Matamos a ${who} por nada: solo era una gripe`,
+    colonyFell: 'La colonia ha caído',
     painkiller: (who: string, other: string) =>
       who === other
         ? `${who} se ha tomado un analgésico`

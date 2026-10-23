@@ -162,6 +162,11 @@ export function checkInvariants(w: World): string[] {
     for (const o of w.houses.slice(i + 1))
       if (intersects(h.rect, o.rect)) problems.push(`edificios ${h.id} y ${o.id} se solapan`);
   });
+  const containerIds = new Set<number>();
+  for (const c of w.containers) {
+    if (containerIds.has(c.id)) problems.push(`contenedor ${c.id}: id repetido`);
+    containerIds.add(c.id);
+  }
   for (const c of w.containers) {
     const home = byId.get(c.houseId);
     if (c.kind !== 'corpse' && home && !contains(home.rect, c.pos))
@@ -211,9 +216,9 @@ export function checkInvariants(w: World): string[] {
   for (const i of w.chopMarks)
     if (w.grid.tiles[i] !== Tile.Tree) problems.push(`marca de talar en ${i}: no es un árbol`);
   // H4b: zombis y daños.
-  // Las hordas (H4e) pueden pasar del tope; los demás, no.
+  // Las hordas (H4e) y los que fueron colonos (H5, con nombre) pueden pasar del tope; los demás, no.
   const max = zombieMax(w.narrator.style, w.zombieLevel);
-  const loose = w.zombies.filter((z) => z.hordeId === null).length;
+  const loose = w.zombies.filter((z) => z.hordeId === null && z.name === undefined).length;
   if (loose > max) problems.push(`demasiados zombis: ${loose} > ${max}`);
   const hordeIds = new Set(w.hordes.map((h) => h.id));
   for (const z of w.zombies) {

@@ -26,7 +26,7 @@ import { addBase, addSurvivor, emptyWorld, withoutZombies } from './testing/fixt
 import type { Survivor, World } from './types';
 import { createWorld, tileOf } from './world';
 import { hordeSystem } from './zombies/hordes';
-import { newZombie } from './zombies/spawn';
+import { newZombie, zombieMax } from './zombies/spawn';
 
 /** Base en (2, 2)–(11, 9); Ana (con cama), Bea y Cris dentro. */
 function world(): { w: World; ana: Survivor; bea: Survivor; cris: Survivor } {
@@ -356,5 +356,17 @@ test('al pudrirse el cuerpo de una persona, lo que llevaba queda en el suelo (na
     wood: 2,
     bandage: 1,
   });
+  expect(checkInvariants(w)).toEqual([]);
+});
+
+test('el que se levanta como zombi puede pasar del tope de zombis (es uno de los nuestros)', () => {
+  const { w, ana } = world();
+  const max = zombieMax(w.narrator.style, w.zombieLevel);
+  for (let i = 0; i < max; i++) w.zombies.push(newZombie(w, { x: 30, y: 30 }));
+  ana.infection = { at: 0, deathAt: w.tick };
+  killSurvivor(w, ana, 'infection');
+  w.tick += RISE_TICKS;
+  deathSystem(w);
+  expect(w.zombies).toHaveLength(max + 1);
   expect(checkInvariants(w)).toEqual([]);
 });

@@ -392,3 +392,19 @@ test('si no hay nadie que pueda, espera', () => {
   for (let i = 0; i < 600 && w.survivors.includes(ana); i++) step(w);
   expect(w.survivors).not.toContain(ana);
 });
+
+test('mientras espera a que alguien acabe con su sufrimiento, come y duerme (no se queda sin comer)', () => {
+  const { w, ana } = colony();
+  w.survivors = [ana]; // nadie más que pueda hacerlo
+  w.beds = w.beds.filter((b) => b.ownerId === ana.id);
+  startFever(w, ana, 'flu');
+  answer(w, 2);
+  expect(w.mercy).toEqual([ana.id]);
+  ana.needs.hunger = 10;
+  ana.carrying.food = 0;
+  w.storage.items.food = 5;
+  expect(brains.ai.decide(ana, w)).toMatchObject({ type: 'moveTo', then: { type: 'eat' } });
+  ana.needs.hunger = 100;
+  ana.action = { type: 'idle', ticksLeft: 0 };
+  expect(brains.ai.decide(ana, w)).toBeNull(); // si no, espera donde está
+});

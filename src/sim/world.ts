@@ -156,7 +156,8 @@ export function createWorld(
     seen: new Array<number>(grid.width * grid.height).fill(0),
     orders: [],
     log: [],
-    nextId: survivors.length + 1,
+    // Por encima de los muebles (H5): un cuerpo con el id de un mueble no se podía marcar.
+    nextId: Math.max(survivors.length, ...containers.map((c) => c.id)) + 1,
     stranger: null,
     narrator: {
       style,

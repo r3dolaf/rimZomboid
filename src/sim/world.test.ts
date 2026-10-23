@@ -92,3 +92,15 @@ test('necesidades iniciales entre 60 y 100, sin recuerdos y con 1–2 rasgos', (
       expect(s.traits.length).toBeGreaterThanOrEqual(1);
     }
 });
+
+test('lo que se crea después (cuerpos, montones…) no repite el id de ningún mueble', () => {
+  const w = createWorld(1);
+  expect(w.nextId).toBeGreaterThan(Math.max(...w.containers.map((c) => c.id)));
+  expect(w.nextId).toBeGreaterThan(Math.max(...w.survivors.map((s) => s.id)));
+});
+
+test('invariantes: dos contenedores con el mismo id', () => {
+  const w = createWorld(1);
+  w.containers.push({ ...w.containers[0]!, pos: { ...w.containers[0]!.pos } });
+  expect(checkInvariants(w).join()).toMatch(/id repetido/);
+});

@@ -39,11 +39,6 @@ const AiBrain: Brain = {
     const danger = dangerDecision(s, w, () => rest(s, w));
     if (danger !== undefined) return danger;
     const a = s.action;
-    // A quien van a acabar con su sufrimiento (H5 §7.4), espera donde está.
-    if (w.mercy.includes(s.id))
-      return a.type === 'idle' || a.type === 'rest' || a.type === 'sleep'
-        ? null
-        : { type: 'idle', ticksLeft: 0 };
     // Vendarse lo que sangra (H5 §4): lo siguiente, antes de comer o dormir.
     const care = selfCare(s, w);
     if (care !== undefined) return care;
@@ -72,6 +67,9 @@ const AiBrain: Brain = {
     // Mucho dolor (H5 §5): se acuesta hasta que se le pase.
     const resting = restDecision(s, w);
     if (resting !== undefined) return resting;
+    // A quien van a acabar con su sufrimiento (H5 §7.4): come y duerme, y si no, espera donde está.
+    if (w.mercy.includes(s.id))
+      return a.type === 'idle' || a.type === 'rest' ? null : { type: 'idle', ticksLeft: 0 };
     if (crisisDue(s, w))
       return { type: 'moveTo', target: pick(w.rng, baseFloor(w)), then: { type: 'crisis' } };
     if (a.type === 'moveTo' && a.then?.type === 'console')

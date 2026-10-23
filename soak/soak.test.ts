@@ -1,7 +1,7 @@
 // Partida larga sin pantalla: solo IA, a toda velocidad. Comprueba que nada se rompe.
 // Las de antes de H4b, sin zombis (prueban lo suyo); las de H4b, al final, con zombis.
 import { describe, expect, test } from 'vitest';
-import { TICKS_PER_DAY, TICKS_PER_HOUR } from '../src/sim/balance';
+import { FAINT_UNTIL, TICKS_PER_DAY, TICKS_PER_HOUR } from '../src/sim/balance';
 import { gameTime } from '../src/sim/clock';
 import { checkInvariants } from '../src/sim/invariants';
 import { step } from '../src/sim/step';
@@ -532,7 +532,8 @@ test.each([1, 2, 3])(
       for (const s of w.survivors) {
         const n = s.action.type === 'downed' ? (streak.get(s.id) ?? 0) + 1 : 0;
         streak.set(s.id, n);
-        if (n > 0) downTicks.set(s.id, (downTicks.get(s.id) ?? 0) + 1);
+        // (H5: el desmayado por falta de sangre no cuenta: no es caer una y otra vez.)
+        if (n > 0 && s.blood >= FAINT_UNTIL) downTicks.set(s.id, (downTicks.get(s.id) ?? 0) + 1);
         expect(n, `${s.name}, un día entero en el suelo`).toBeLessThan(TICKS_PER_DAY);
       }
     }

@@ -44,10 +44,15 @@ Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al p
 
 **Hechos en H3b:** tarjetas que se crean y se quitan según quién está en la colonia; `goSleep` sin cama (duerme en el suelo de la base) y `bedId` nulo en las invariantes.
 
-**Para H5 (muertes):**
+**Hechos en H5:** al morir se libera su cama, la pareja queda sin pareja, se cortan las acciones de dos (pelea, consuelo, vendar, rescatar, acabar con su sufrimiento) y las invariantes lo comprueban. Queda pendiente probar el desplome en plena crisis de principio a fin.
 
-- La invariante "cada cama tiene un dueño vivo" tendrá que contemplar las muertes (liberar la cama o borrarla), igual que las parejas (la pareja de un muerto) y las acciones de dos (pelea, consuelo).
-- Probar el desplome en plena crisis de principio a fin.
+**Para H6 (pulido), de H5:**
+
+- Equilibrio (6 semillas, Equilibrado/normal, saqueando todo desde el principio, con mesa y "vendas hasta 10", marcando los cuerpos, sin defender): con las cifras de la spec la colonia caía en 2–3 días; tras el ajuste (spec §13), cae los días 10–20 (la mitad, hacia el 13). Las primeras muertes llegan los días 4–7, sobre todo por infección (de arañazos más que de mordiscos) y luego desangrados cuando se acaban las vendas. Se pelea mucho: 80–260 zombis matados y 90–185 heridas por partida. El usuario pidió "1–2 semanas" saqueando todo sin defenderse.
+- Las vendas se acaban siempre (0–2 en el almacén al caer): casi todas vienen de fabricarlas con tela. Quizá el saqueo debería dar más, o los colonos guardar algunas.
+- Los colonos no evitan saquear donde hay zombis a la vista (probado: no cambiaba mucho, porque los zombis acaban yendo a la base).
+- El que se va (Que se vaya) anda hasta el borde sin que le ataquen los zombis.
+- El registro, vacío al empezar, no se ve (y sus filtros tampoco) hasta el primer suceso.
 
 **Pedido por el usuario (después de H4b):** habilidades en cada trabajo → H4c. Al diseñarlas, el usuario pidió también cortinas (como en Zomboid: no ves fuera, pero los zombis no te ven), tela que se saquea y se convierte en vendas o cortinas, y cuerpos de zombi que se registran (ropa y, a veces, armas o equipo) → H4d.
 

@@ -185,15 +185,23 @@ export function startBandage(w: World, healer: Survivor, p: Survivor): Action | 
  */
 export function selfCare(s: Survivor, w: World): Action | null | undefined {
   const a = s.action;
+  const bleeding = s.wounds.some((wd) => wd.bleeding);
+  const unloading = a.type === 'unload' || (a.type === 'moveTo' && a.then?.type === 'unload');
   if (a.type === 'bandage' && a.patientId === s.id) return null;
   if (a.type === 'moveTo' && (a.then?.type === 'takeBandages' || a.then?.type === 'takePainkiller'))
     return null;
-  if (armFactor(s) > 0 && s.wounds.some((wd) => wd.bleeding)) {
+  if (bleeding && unloading && s.carrying.bandage === 0) return null; // descarga para coger vendas
+  // Si otro viene a vendarle, no se venda a la vez (gastarían dos vendas).
+  const helped = w.survivors.some((o) => o !== s && bandageTargetId(o) === s.id);
+  if (armFactor(s) > 0 && bleeding && !helped) {
     if (s.carrying.bandage > 0) {
       const own = startBandage(w, s, s);
       if (own) return own;
-    } else if (w.storage.items.bandage > 0 && room(s, 'bandage') > 0 && reachesStorage(w, s))
-      return goTakeBandages(w); // (sin sitio, primero descarga: si no, iría y vendría)
+    } else if (w.storage.items.bandage > 0 && reachesStorage(w, s)) {
+      // Sin sitio para vendas, primero descarga (si no, iría y vendría, o seguiría saqueando).
+      if (room(s, 'bandage') > 0) return goTakeBandages(w);
+      return { type: 'moveTo', target: pick(w.rng, w.storage.tiles), then: { type: 'unload' } };
+    }
   }
   // Le han mandado tomarse un analgésico (§5): si puede andar, va él al almacén.
   if (s.painkillerWanted && canWalk(s) && w.storage.items.painkillers > 0 && reachesStorage(w, s))
@@ -292,7 +300,7 @@ export function startPainkillerActivity(
 
 /** ¿Lo está vendando ya otro (o va a hacerlo)? */
 const claimed = (w: World, p: Survivor, s: Survivor) =>
-  w.survivors.some((o) => o !== s && o !== p && bandageTargetId(o) === p.id);
+  w.survivors.some((o) => o !== s && bandageTargetId(o) === p.id); // (también si se venda él)
 
 /**
  * Sanar: vendar o cambiar la venda a quien está en la base (él mismo también). Si no lleva vendas,
@@ -315,7 +323,8 @@ export function bandageJob(s: Survivor, w: World): Action | null {
     }
   }
   if (!best) return null;
-  if (s.carrying.bandage === 0) {
+  // Sin vendas encima: las del herido (§4); si no lleva, al almacén.
+  if (s.carrying.bandage === 0 && best.carrying.bandage === 0) {
     return w.storage.items.bandage > 0 && reachesStorage(w, s) ? goTakeBandages(w) : null;
   }
   if (best === s) return startBandage(w, s, s);
@@ -362,7 +371,9 @@ export function bandageStep(w: World, s: Survivor): void {
   practice(w, s, 'heal', 1);
   if (--a.ticksLeft > 0) return;
   s.action = { type: 'idle', ticksLeft: 0 };
-  if (!useBandage(w, s, p)) return;
+  // Si otro ya la ha vendado mientras tanto, no se gasta otra venda.
+  const needed = wd.bleeding || (wd.cleanUntil > 0 && wd.cleanUntil <= w.tick);
+  if (!needed || !useBandage(w, s, p)) return;
   wd.bleeding = false;
   wd.cleanUntil = w.tick + BANDAGE_CLEAN_HOURS * TICKS_PER_HOUR;
   logEvent(w, { kind: 'bandaged', survivorId: s.id, otherId: p.id });

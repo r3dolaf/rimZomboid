@@ -600,6 +600,8 @@ export interface World {
   returning: Returning[];
   /** A quién hay que acabar con su sufrimiento (esperan a que alguien pueda). */
   mercy: number[];
+  /** Los que echaron (para su nombre en el registro y en los recuerdos, aunque ya no estén). */
+  gone: { id: number; name: string }[];
   /** Fin de partida (H5 §9): cuándo no quedó nadie en la colonia. */
   over: { tick: number } | null;
   /** Para el resumen final. */

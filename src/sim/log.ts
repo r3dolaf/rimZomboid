@@ -71,7 +71,8 @@ export type LogEvent =
   // H4d
   | { kind: 'forced'; survivorId: number; houseId: number }
   | { kind: 'crafted'; survivorId: number; recipe: RecipeId }
-  | { kind: 'corpseSearched'; survivorId: number; items: Inventory }
+  /** `name`: de quién era el cuerpo, si era de una persona (H5). */
+  | { kind: 'corpseSearched'; survivorId: number; items: Inventory; name?: string }
   | { kind: 'craftFailed'; survivorId: number; recipe: RecipeId; lost: Inventory }
   /** El primer zombi que entra en la base (x, y: por dónde). */
   | { kind: 'zombiesInBase'; x: number; y: number }

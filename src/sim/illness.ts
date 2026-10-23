@@ -79,6 +79,7 @@ function grave(w: World, s: Survivor, f: Fever): void {
 /** Se le pasa la gripe. */
 function cure(w: World, s: Survivor): void {
   s.fever = null;
+  w.mercy = w.mercy.filter((id) => id !== s.id); // curado, ya no hay sufrimiento que acabar
   if (!colonist(w, s)) return;
   dropFeverDecisions(w, s);
   logEvent(w, { kind: 'feverGone', survivorId: s.id });
@@ -141,6 +142,7 @@ export function resolveFever(w: World, d: Decision, option: 0 | 1 | 2): void {
   const s = w.survivors.find((x) => x.id === d.survivorIds[0]);
   if (!s?.fever) return;
   if (option === 0) {
+    w.mercy = w.mercy.filter((id) => id !== s.id); // que descanse en vez de lo otro
     if (s.fever.rest) return;
     s.fever.rest = true;
     logEvent(w, { kind: 'feverRest', survivorId: s.id });

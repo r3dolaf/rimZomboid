@@ -137,7 +137,12 @@ function finishSearch(w: World, s: Survivor, containerId: number): void {
   addInto(w.stats.looted, { ...taken }); // para el resumen final (H5 §9)
   // Un cuerpo (H4d) no es de ninguna casa.
   if (c.kind === 'corpse') {
-    logEvent(w, { kind: 'corpseSearched', survivorId: s.id, items: taken });
+    logEvent(
+      w,
+      c.name === undefined
+        ? { kind: 'corpseSearched', survivorId: s.id, items: taken }
+        : { kind: 'corpseSearched', survivorId: s.id, items: taken, name: c.name },
+    );
     if (isEmpty(c.items)) c.designated = false;
     return;
   }

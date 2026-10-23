@@ -31,6 +31,7 @@ export function personName(w: World, id: number): string {
     all.find((s) => s.id === id)?.name ??
     w.returning.flatMap((r) => (r.kind === 'zombie' && r.survivorId === id ? [r.name] : []))[0] ??
     w.dead.find((d) => d.id === id)?.name ??
+    w.gone.find((g) => g.id === id)?.name ??
     '?'
   );
 }
@@ -115,6 +116,7 @@ export function activityText(s: Survivor, w?: World): string {
       return t.crisis;
     case 'search': {
       const c = container(a.containerId);
+      if (c?.name) return t.search(es.bodyOf(c.name)); // H5: "Registrando el cuerpo de Ana"
       return t.search(c ? es.containers[c.kind] : es.containers.shelf);
     }
     case 'unload':
@@ -158,7 +160,7 @@ export function activityText(s: Survivor, w?: World): string {
       if (a.then?.type === 'mercy') return t.goMercy(name(a.then.patientId));
       if (a.then?.type === 'search') {
         const c = container(a.then.containerId);
-        if (c?.kind === 'corpse') return t.goCorpse;
+        if (c?.kind === 'corpse') return c.name ? t.goBody(c.name) : t.goCorpse; // H5
         return t.goLoot(w && c ? buildingThe(w, c.houseId) : es.buildings.house.the);
       }
       if (a.then?.type === 'unload') return t.goUnload;
@@ -470,7 +472,7 @@ export function logText(e: LogEntry, w: World): string {
       text = l.forced(name(e.survivorId), buildingThe(w, e.houseId));
       break;
     case 'corpseSearched':
-      text = l.corpseSearched(name(e.survivorId), formatItems(e.items));
+      text = l.corpseSearched(name(e.survivorId), formatItems(e.items), e.name);
       break;
     case 'crafted':
       text = l.crafted(name(e.survivorId), es.recipes[e.recipe].done);

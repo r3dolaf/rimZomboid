@@ -13,7 +13,16 @@ import type { World } from '../sim/types';
 import { createWorld } from '../sim/world';
 import { mountBedPanel } from './bedPanel';
 import { mountCards } from './cards';
-import { healthIcons, healthView, logText, noticeFor, personName, zombieLabel } from './describe';
+import { es } from '../i18n/es';
+import {
+  activityText,
+  healthIcons,
+  healthView,
+  logText,
+  noticeFor,
+  personName,
+  zombieLabel,
+} from './describe';
 import { mountHud } from './hud';
 import { NOTICE_GROUPS } from './noticePrefs';
 import { createSelection } from './selection';
@@ -211,4 +220,43 @@ test('avisos nuevos: rojos (muerte, se levanta, mordisco, lo visto), que no paus
   expect(logText(e({ kind: 'died', name: 'Lola', cause: 'hunger' }), w)).toBe(
     'Lola ha muerto de hambre',
   );
+});
+
+test('revisión: el nombre de quien se fue; "el cuerpo de Ana"; textos neutros', () => {
+  const w = world();
+  w.gone.push({ id: 88, name: 'Lola' });
+  expect(personName(w, 88)).toBe('Lola');
+  const s = w.survivors[0]!;
+  w.containers.push({
+    id: 500,
+    houseId: -1,
+    pos: { x: 20, y: 20 },
+    kind: 'corpse',
+    items: { ...w.storage.items, food: 1 },
+    searched: false,
+    designated: true,
+    reservedBy: s.id,
+    name: 'Lola',
+  });
+  s.action = {
+    type: 'moveTo',
+    target: { x: 20, y: 20 },
+    then: { type: 'search', containerId: 500 },
+  };
+  expect(activityText(s, w)).toBe('Va a registrar el cuerpo de Lola');
+  const e = {
+    tick: 0,
+    kind: 'corpseSearched',
+    survivorId: s.id,
+    items: { ...w.storage.items, food: 0, bandage: 1 },
+    name: 'Lola',
+  } as LogEntry;
+  expect(logText(e, w)).toBe(`${s.name} ha registrado el cuerpo de Lola: 1 venda`);
+  const texts = [
+    es.notices.sawTurned,
+    es.modifiers.sawTurned,
+    es.healthUi.givePainkillerHint,
+    es.bed.noOwner,
+  ];
+  for (const t of texts) expect(t).not.toMatch(/\buno\b|\bdueño\b/);
 });

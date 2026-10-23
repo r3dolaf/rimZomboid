@@ -234,7 +234,7 @@ export const es = {
     painkiller: (hours: number) => `Analgésico (${hours} h)`,
     givePainkiller: 'Dar analgésico',
     givePainkillerHint:
-      'Si puede andar, va al almacén a tomárselo; si no, se lo lleva uno con Sanar',
+      'Si puede andar, va al almacén a tomárselo; si no, se lo lleva alguien con Sanar',
     icons: {
       bleeding: { icon: '🩸', label: 'Sangrando' },
       fever: { icon: '🤒', label: 'Fiebre' },
@@ -245,10 +245,12 @@ export const es = {
     },
     zombie: (who: string) => `${who} (zombi)`,
   },
+  /** El cuerpo de una persona (H5 §8). */
+  bodyOf: (who: string) => `el cuerpo de ${who}`,
   /** La ficha de una cama (H5 §6). */
   bed: {
     of: (who: string) => `Cama de ${who}`,
-    noOwner: 'Cama sin dueño',
+    noOwner: 'Cama libre',
     hospital: 'Cama de hospital',
     hospitalHint: 'Para heridos y enfermos: no es de nadie y allí se curan antes',
   },
@@ -287,7 +289,7 @@ export const es = {
     died: 'Muerte',
     rose: 'Se ha levantado',
     wounded: 'Mordisco',
-    sawTurned: 'Uno de los nuestros',
+    sawTurned: 'Alguien de la colonia',
     killedForNothing: 'Por nada',
     banished: 'Se ha ido',
     returned: 'Ha vuelto',
@@ -468,7 +470,8 @@ export const es = {
       `${who} ha intentado consolar a ${other}, sin éxito`,
     forced: (who: string, where: string) => `${who} ha forzado la puerta de ${where}`,
     crafted: (who: string, what: string) => `${who} ${what}`,
-    corpseSearched: (who: string, what: string) => `${who} ha registrado un cuerpo: ${what}`,
+    corpseSearched: (who: string, what: string, whose?: string) =>
+      `${who} ha registrado ${whose === undefined ? 'un cuerpo' : `el cuerpo de ${whose}`}: ${what}`,
     craftFailed: (who: string, what: string, lost: string) =>
       `${who} ha fallado al ${what} (${lost})`,
     skillUp: (who: string, skill: string, level: number) =>
@@ -593,7 +596,7 @@ export const es = {
     partnerDied: 'Ha muerto su pareja',
     banished: 'Echamos a alguien',
     partnerBanished: 'Echamos a su pareja',
-    sawTurned: 'Uno de los nuestros es un zombi',
+    sawTurned: 'Alguien de la colonia es un zombi',
     hadToKill: 'Tuvo que matar a alguien',
     killedForNothing: 'Matamos a alguien por nada',
   } satisfies Record<MoodModifierId, string>,
@@ -659,6 +662,7 @@ export const es = {
     crisis: 'En crisis: encerrado en la base',
     goLoot: (where: string) => `Va a saquear ${where}`,
     goCorpse: 'Va a registrar un cuerpo',
+    goBody: (who: string) => `Va a registrar el cuerpo de ${who}`,
     search: (what: string) => `Registrando ${what}`,
     goUnload: 'Llevando cosas al almacén',
     unload: 'Dejando cosas en el almacén',

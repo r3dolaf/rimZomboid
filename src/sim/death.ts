@@ -172,6 +172,7 @@ export function banish(w: World, s: Survivor): void {
   s.action = { type: 'moveTo', target: exit };
   s.path = findPath(w.grid, tileOf(s.pos), exit) ?? [];
   w.leaving.push(s);
+  w.gone.push({ id: s.id, name: s.name });
   logEvent(w, { kind: 'banished', name: s.name });
 }
 
@@ -240,8 +241,12 @@ function turnedSystem(w: World): void {
   }
 }
 
-/** ¿Puede acabar con el sufrimiento de alguien? En pie, con un brazo al menos y sin modo combate. */
-const ableToMercy = (s: Survivor) => canWalk(s) && armFactor(s) > 0 && !s.drafted;
+/**
+ * ¿Puede acabar con el sufrimiento de alguien? En pie, con un brazo al menos, sin modo combate y
+ * sin estar él mismo esperando a que lo hagan con él.
+ */
+const ableToMercy = (s: Survivor, w: World) =>
+  canWalk(s) && armFactor(s) > 0 && !s.drafted && !w.mercy.includes(s.id);
 
 /** A quién va a acabar con su sufrimiento (o está en ello), o `null`. */
 function mercyTargetId(s: Survivor): number | null {
@@ -257,7 +262,7 @@ function mercyTargetId(s: Survivor): number | null {
  */
 export function mercyDecision(s: Survivor, w: World): Action | null | undefined {
   if (mercyTargetId(s) !== null) return null;
-  if (w.mercy.length === 0 || !ableToMercy(s)) return undefined;
+  if (w.mercy.length === 0 || !ableToMercy(s, w)) return undefined;
   for (const id of w.mercy) {
     const p = w.survivors.find((x) => x.id === id);
     if (!p || p === s || w.survivors.some((o) => mercyTargetId(o) === id)) continue;
@@ -268,7 +273,7 @@ export function mercyDecision(s: Survivor, w: World): Action | null | undefined 
       const h = tileOf(o.pos);
       return regionOf(w.grid, h.x, h.y) === region;
     };
-    const able = w.survivors.filter((o) => o !== p && ableToMercy(o) && reaches(o));
+    const able = w.survivors.filter((o) => o !== p && ableToMercy(o, w) && reaches(o));
     const nearest = able.reduce<Survivor | null>((b, o) => (b && d2(b) <= d2(o) ? b : o), null);
     if (nearest === s) return { type: 'moveTo', target: t, then: { type: 'mercy', patientId: id } };
   }

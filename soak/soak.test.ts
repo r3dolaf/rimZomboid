@@ -128,6 +128,21 @@ test.each([1, 2, 3])(
   240_000,
 );
 
+/** ¿Hay algún árbol marcado al lado de una casilla a la que se llega desde el almacén? */
+function markedTreeReachable(w: World): boolean {
+  const st = w.storage.tiles[0]!;
+  const region = regionOf(w.grid, st.x, st.y);
+  return w.chopMarks.some((i) => {
+    const [x, y] = [i % w.grid.width, Math.floor(i / w.grid.width)];
+    return [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ].some(([dx, dy]) => regionOf(w.grid, x + dx!, y + dy!) === region);
+  });
+}
+
 /** Palancas que tiene la colonia (almacén, carga o mano) o hay en el suelo. */
 function allCrowbars(w: World): number {
   return (
@@ -291,7 +306,8 @@ test.each([1, 2, 3])(
       if (day === Math.floor(DAYS / 2)) choppedHalf = w.woodLog.chopped;
     }
     // H4d: se sigue talando (antes, el machete y la palanca le quitaban el hacha a quien tala).
-    if (DAYS >= 10)
+    // (H5: si los muros al azar han dejado fuera todos los árboles marcados, no se puede.)
+    if (DAYS >= 10 && markedTreeReachable(w))
       expect(w.woodLog.chopped, 'se tala también en la segunda mitad').toBeGreaterThan(choppedHalf);
     if (DAYS >= 10) {
       expect(w.woodLog.chopped, 'se ha talado').toBeGreaterThan(0);

@@ -273,11 +273,28 @@ export const CACHE_CANS_MAX = 6;
 export const STORM_HOURS_MIN = 8;
 export const STORM_HOURS_MAX = 12;
 export const STORM_SLEEP_FACTOR = 0.75;
+// La fiebre (H5 §7): la gripe se cura a los 2 días si descansa desde el principio, si no a los 4.
 export const FLU_DAYS = 4;
 export const FLU_REST_DAYS = 2;
-export const FLU_HUNGER_MULT = 1.3;
-export const FLU_MOOD = -10;
-export const WORKING_SICK_MOOD = -5;
+/** Gripe: náuseas a las 12 h si no ha descansado el 75 % del tiempo (o con mala suerte, 30 %). */
+export const FLU_NAUSEA_HOURS = 12;
+export const FLU_NAUSEA_REST = 0.75;
+export const FLU_BAD_LUCK = 0.3;
+/** Gripe: muy grave (derribado 6 h) a las 36 h si no ha descansado ni la mitad. */
+export const FLU_GRAVE_HOURS = 36;
+export const FLU_GRAVE_REST = 0.5;
+export const GRAVE_HOURS = 6;
+/** Infección (oculta): fiebre a las 12 h, náuseas a las 24, muy grave 6 h antes de morir. */
+export const INFECTION_FEVER_HOURS = 12;
+export const INFECTION_NAUSEA_HOURS = 24;
+export const INFECTION_DEATH_HOURS_MIN = 48;
+export const INFECTION_DEATH_HOURS_MAX = 72;
+/** Síntomas: fiebre (−15, hambre ×1,3) y náuseas (−10 más, hambre ×2, +20 de dolor). */
+export const FEVER_MOOD = -15;
+export const FEVER_HUNGER_MULT = 1.3;
+export const NAUSEA_MOOD = -10;
+export const NAUSEA_HUNGER_MULT = 2;
+export const NAUSEA_PAIN = 20;
 
 // Defensa y trabajos (H4a)
 

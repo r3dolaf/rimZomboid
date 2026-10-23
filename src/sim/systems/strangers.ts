@@ -190,7 +190,7 @@ export function newStranger(w: World, start: Point): Survivor {
     partnerId: null,
     nextChatAt: 0,
     bubble: null,
-    sick: null,
+    fever: null,
     celebrated: false,
     drafted: false,
     carryingId: null,

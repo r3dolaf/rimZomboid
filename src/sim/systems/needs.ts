@@ -1,6 +1,5 @@
 import {
   FLOOR_SLEEP_FACTOR,
-  FLU_HUNGER_MULT,
   GLUTTON_HUNGER_MULT,
   HUNGER_PER_TICK,
   SLEEP_DRAIN_PER_TICK,
@@ -9,17 +8,16 @@ import {
   SOCIAL_PER_TICK,
   STORM_SLEEP_FACTOR,
 } from '../balance';
-import { logEvent } from '../log';
+import { feverHunger } from '../illness';
 import type { World } from '../types';
 
 const clamp = (v: number) => Math.min(100, Math.max(0, v));
 
-/** Hambre, sueño y necesidad social avanzan; los recuerdos caducados se olvidan; la gripe se cura. */
+/** Hambre, sueño y necesidad social avanzan; los recuerdos caducados se olvidan. */
 export function needsSystem(w: World): void {
   for (const s of w.survivors) {
     const n = s.needs;
-    const hungerMult =
-      (s.traits.includes('glutton') ? GLUTTON_HUNGER_MULT : 1) * (s.sick ? FLU_HUNGER_MULT : 1);
+    const hungerMult = (s.traits.includes('glutton') ? GLUTTON_HUNGER_MULT : 1) * feverHunger(s);
     n.hunger = clamp(n.hunger - HUNGER_PER_TICK * hungerMult);
     n.social = clamp(n.social - SOCIAL_PER_TICK);
 
@@ -33,10 +31,6 @@ export function needsSystem(w: World): void {
       n.sleep = clamp(n.sleep - SLEEP_DRAIN_PER_TICK * sleepMult);
     }
 
-    if (s.sick && w.tick >= s.sick.until) {
-      s.sick = null;
-      logEvent(w, { kind: 'fluOver', survivorId: s.id });
-    }
     if (s.memories.some((m) => m.expiresAt <= w.tick))
       s.memories = s.memories.filter((m) => m.expiresAt > w.tick);
   }

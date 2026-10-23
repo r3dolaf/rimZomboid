@@ -70,10 +70,10 @@ function goUnload(w: World): Action {
   return { type: 'moveTo', target: pick(w.rng, w.storage.tiles), then: { type: 'unload' } };
 }
 
-/** ¿Puede hacer ese trabajo? Con gripe y descansando (H3c), ninguno (salvo Social), como si no
- * tuviera permiso. */
+/** ¿Puede hacer ese trabajo? Con fiebre y "Que descanse" (H5), ninguno, como si no tuviera
+ * permiso. */
 function may(s: Survivor, work: WorkType): boolean {
-  return s.work[work] && s.sick?.plan !== 'rest';
+  return s.work[work] && s.fever?.rest !== true;
 }
 
 function lootJob(s: Survivor, w: World): Action | null {
@@ -164,7 +164,7 @@ export function stillWorthIt(s: Survivor, w: World): boolean {
   const what = a.type === 'moveTo' ? a.then?.type : a.type;
   // Si le mandan descansar, deja lo que esté haciendo (descargar o cambiar de arma, no).
   const finishing = what === 'unload' || what === 'storeAxe' || what === 'swapWeapon';
-  if (s.sick?.plan === 'rest' && !finishing && what !== 'dropOff') return false;
+  if (s.fever?.rest && !finishing && what !== 'dropOff') return false;
   if (
     what === 'rescue' ||
     what === 'dropOff' ||

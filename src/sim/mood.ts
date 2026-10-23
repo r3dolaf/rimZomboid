@@ -3,11 +3,12 @@ import {
   HUNGRY_MOOD,
   HURT_BELOW,
   HURT_MOOD,
-  FLU_MOOD,
+  FEVER_MOOD,
   LONELY_BELOW,
   LONELY_MOOD,
   MEMORY_EFFECTS,
   MOOD_BASE,
+  NAUSEA_MOOD,
   OPTIMIST_MOOD,
   PESSIMIST_MOOD,
   SCARED_OUTSIDE_MOOD,
@@ -15,7 +16,6 @@ import {
   TICKS_PER_HOUR,
   TIRED_BELOW,
   TIRED_MOOD,
-  WORKING_SICK_MOOD,
 } from './balance';
 import { contains } from './geom';
 import type { Memory, MemoryId, Rect, Survivor } from './types';
@@ -25,8 +25,8 @@ export type MoodModifierId =
   | 'starving'
   | 'tired'
   | 'lonely'
-  | 'flu'
-  | 'workingSick'
+  | 'fever'
+  | 'nausea'
   | 'optimist'
   | 'pessimist'
   | 'scaredOutside'
@@ -52,9 +52,9 @@ export function moodModifiers(s: Survivor, tick: number, base?: Rect): MoodModif
   if (s.needs.sleep < TIRED_BELOW) mods.push({ id: 'tired', value: TIRED_MOOD });
   if (s.needs.social < LONELY_BELOW) mods.push({ id: 'lonely', value: LONELY_MOOD });
   if (s.health < HURT_BELOW) mods.push({ id: 'hurt', value: HURT_MOOD });
-  if (s.sick) {
-    mods.push({ id: 'flu', value: FLU_MOOD });
-    if (s.sick.plan === 'work') mods.push({ id: 'workingSick', value: WORKING_SICK_MOOD });
+  if (s.fever) {
+    mods.push({ id: 'fever', value: FEVER_MOOD });
+    if (s.fever.stage !== 'fever') mods.push({ id: 'nausea', value: NAUSEA_MOOD });
   }
   if (s.traits.includes('optimist')) mods.push({ id: 'optimist', value: OPTIMIST_MOOD });
   if (s.traits.includes('pessimist')) mods.push({ id: 'pessimist', value: PESSIMIST_MOOD });

@@ -92,7 +92,7 @@ export function createWorld(
     partnerId: null,
     nextChatAt: 0,
     bubble: null,
-    sick: null,
+    fever: null,
     celebrated: false,
     drafted: false,
     carryingId: null,

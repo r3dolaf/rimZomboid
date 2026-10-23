@@ -125,7 +125,7 @@ export function statusIcon(s: Survivor): { icon: string; label: string } | null 
   if (a.type === 'sleep') return es.status.sleeping;
   if (a.type === 'eat') return es.status.eating;
   if (s.needs.mood < MOOD_EDGE) return es.status.edge;
-  if (s.sick) return es.status.sick;
+  if (s.fever) return es.status.sick;
   return null;
 }
 
@@ -329,17 +329,17 @@ export function logText(e: LogEntry, w: World): string {
     case 'storm':
       text = l.storm;
       break;
-    case 'flu':
-      text = l.flu(name(e.survivorId));
+    case 'fever':
+      text = l.fever(name(e.survivorId));
       break;
-    case 'fluRest':
-      text = l.fluRest(name(e.survivorId));
+    case 'feverWorse':
+      text = l.feverWorse(name(e.survivorId));
       break;
-    case 'fluWork':
-      text = l.fluWork(name(e.survivorId));
+    case 'feverRest':
+      text = l.feverRest(name(e.survivorId));
       break;
-    case 'fluOver':
-      text = l.fluOver(name(e.survivorId));
+    case 'feverGone':
+      text = l.feverGone(name(e.survivorId));
       break;
     case 'built':
       text = l.built(e.what);

@@ -14,7 +14,7 @@ export type Order =
   /** Prioridad de un trabajo, de 1 (lo primero) a 4 (H4d). */
   | { type: 'setPriority'; survivorId: number; work: WorkType; priority: number }
   /** Respuesta a una decisión (spec H3c §4): 0 es la primera opción. */
-  | { type: 'decide'; decisionId: number; option: 0 | 1 }
+  | { type: 'decide'; decisionId: number; option: 0 | 1 | 2 }
   // Talar y construir (H4a)
   | { type: 'markTree'; x: number; y: number; on: boolean }
   | { type: 'placeBlueprint'; kind: BuildKind; x: number; y: number }

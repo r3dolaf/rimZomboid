@@ -70,20 +70,20 @@ test('desaparecen al cabo de un día y como mucho hay 5', () => {
   expect(all()).toHaveLength(0);
 });
 
-test('una decisión: aviso con dos botones, pausa, sin ✕, y se oculta al contestar', () => {
+test('una decisión: aviso con sus botones (la fiebre, tres), pausa, sin ✕, y se oculta al contestar', () => {
   const { root, world, time, notices } = setup();
   const s = world.survivors[0]!;
-  const d = addDecision(world, 'flu', [s.id]);
+  const d = addDecision(world, 'fever', [s.id]);
   notices.update();
-  const el = root.querySelector('[data-testid="decision-flu"]') as HTMLElement;
+  const el = root.querySelector('[data-testid="decision-fever"]') as HTMLElement;
   expect(el.hidden).toBe(false);
-  expect(el.textContent).toContain(`${s.name} ha cogido la gripe`);
+  expect(el.textContent).toContain(`${s.name} tiene fiebre. ¿Qué hacéis?`);
   expect(el.querySelector('[data-testid="notice-close"]')).toBeNull();
   expect(time.speed).toBe(0);
-  const [rest, work] = [...el.querySelectorAll('button')];
-  expect(rest!.textContent).toBe('Que descanse');
-  expect(work!.textContent).toBe('Que siga trabajando');
-  rest!.click();
+  const buttons = [...el.querySelectorAll('button')].map((b) => b.textContent);
+  expect(buttons).toEqual(['Que descanse', 'Que se vaya', 'Acabar con su sufrimiento']);
+  const rest = el.querySelector('[data-testid="decision-option-0"]') as HTMLButtonElement;
+  rest.click();
   expect(world.orders).toContainEqual({ type: 'decide', decisionId: d.id, option: 0 });
   notices.update();
   expect(el.hidden).toBe(true);
@@ -140,11 +140,11 @@ test('desconocidos: nombres, rasgos y lo que llevan; Aceptar da la orden', () =>
 
 test('las decisiones resueltas desaparecen', () => {
   const { root, world, notices } = setup();
-  addDecision(world, 'flu', [world.survivors[0]!.id]);
+  addDecision(world, 'fever', [world.survivors[0]!.id]);
   notices.update();
   world.decisions = [];
   notices.update();
-  expect(root.querySelector('[data-testid="decision-flu"]')).toBeNull();
+  expect(root.querySelector('[data-testid="decision-fever"]')).toBeNull();
 });
 
 test('lo que se aplica al dejar pasar una decisión también se avisa, en amarillo y sin pausa', () => {

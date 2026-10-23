@@ -3,6 +3,7 @@ import { combatSystem } from './combat';
 import { deathSystem } from './death';
 import { furnitureSystem } from './furniture';
 import { healthSystem } from './health';
+import { illnessSystem } from './illness';
 import { carrySystem } from './jobs/heal';
 import { narratorSystem } from './narrator';
 import { ordersSystem } from './orders';
@@ -22,6 +23,7 @@ import { reservationsSystem } from './work';
 export function step(w: World): void {
   ordersSystem(w);
   needsSystem(w);
+  illnessSystem(w); // H5
   healthSystem(w);
   deathSystem(w); // H5
   furnitureSystem(w);

@@ -98,15 +98,17 @@ function restSpot(s: Survivor, w: World): Point {
 }
 
 /**
- * Descansar por dolor (§5): con la Salud bajo REST_BELOW y sin analgésico, se acuesta; sigue hasta
- * pasar de REST_UNTIL. `null`: sigue descansando; `undefined`: no le hace falta.
+ * Descansar (§5): por dolor, con la Salud bajo REST_BELOW y sin analgésico, hasta pasar de
+ * REST_UNTIL; por fiebre con "Que descanse" (§7), hasta que se le pase. `null`: sigue
+ * descansando; `undefined`: no le hace falta.
  */
 export function restDecision(s: Survivor, w: World): Action | null | undefined {
   const a = s.action;
   const resting = a.type === 'rest' || (a.type === 'moveTo' && a.then?.type === 'rest');
   const pain = !hasPainkiller(s, w) && s.health < (resting ? REST_UNTIL : REST_BELOW);
-  if (resting) return pain ? null : { type: 'idle', ticksLeft: 0 };
-  if (!pain) return undefined;
+  const needed = pain || s.fever?.rest === true;
+  if (resting) return needed ? null : { type: 'idle', ticksLeft: 0 };
+  if (!needed) return undefined;
   return { type: 'moveTo', target: restSpot(s, w), then: { type: 'rest' } };
 }
 

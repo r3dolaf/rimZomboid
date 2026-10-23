@@ -13,6 +13,7 @@ import { bloodTick } from './blood';
 import { knockDown, refreshHealth } from './body';
 import { zombieInSight } from './danger';
 import { logEvent } from './log';
+import { tooIllToStand } from './illness';
 import { addMemory } from './mood';
 import type { Survivor, World } from './types';
 
@@ -37,6 +38,7 @@ function healthOf(w: World, s: Survivor, colonist: boolean): void {
   // Pasadas las 8 h, si tiene uno encima, tampoco (H4e: en un asedio volvía a caer al momento),
   // pero no más de 16 h.
   if (w.tick < a.until || s.health < GET_UP_HEALTH || s.blood < FAINT_UNTIL) return;
+  if (tooIllToStand(s)) return; // muy grave (H5 §7)
   const since = w.tick - (a.until - DOWNED_TICKS);
   const range =
     since < DOWNED_MAX_TICKS

@@ -17,7 +17,7 @@ test('por defecto, narrador Equilibrado en calma; el primer suceso, al día y me
   expect(w.decisions).toEqual([]);
   expect(w.stormUntil).toBe(0);
   for (const s of w.survivors) {
-    expect(s.sick).toBeNull();
+    expect(s.fever).toBeNull();
     expect(s.celebrated).toBe(false);
   }
 });
@@ -31,13 +31,21 @@ test('el estilo no cambia el resto del mundo (se sortea después de todo), salvo
   expect({ ...b, narrator: a.narrator, zombies, zombieRng, nextZombieId }).toEqual(a);
 });
 
-test('invariantes: decisiones de colonos que no existen y gripe sin fin', () => {
+test('invariantes: decisiones de colonos que no existen y fiebre sin principio', () => {
   const w = createWorld(3);
   w.decisions.push({ id: 90, kind: 'birthday', survivorIds: [999], expiresAt: 100 });
   expect(checkInvariants(w).length).toBeGreaterThan(0);
   w.decisions = [{ id: 90, kind: 'birthday', survivorIds: [w.survivors[0]!.id], expiresAt: 100 }];
   expect(checkInvariants(w)).toEqual([]);
-  w.survivors[1]!.sick = { until: Number.NaN, plan: 'undecided' };
+  w.survivors[1]!.fever = {
+    cause: 'flu',
+    since: Number.NaN,
+    stage: 'fever',
+    rest: false,
+    restTicks: 0,
+    badLuck: false,
+    checks: 0,
+  };
   expect(checkInvariants(w).length).toBeGreaterThan(0);
 });
 

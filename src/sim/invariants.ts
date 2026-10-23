@@ -117,9 +117,11 @@ export function checkInvariants(w: World): string[] {
         problems.push(`${s.name}: lo lleva #${a.carriedBy}, que no lo lleva`);
     }
   }
-  for (const s of w.survivors)
-    if (s.sick && !(Number.isFinite(s.sick.until) && s.sick.until >= 0))
-      problems.push(`${s.name}: gripe con fin no válido (${s.sick.until})`);
+  for (const s of w.survivors) {
+    const f = s.fever;
+    if (f && !(Number.isFinite(f.since) && f.restTicks >= 0 && f.restTicks <= w.tick - f.since + 1))
+      problems.push(`${s.name}: fiebre no válida (desde ${f.since}, ${f.restTicks} de descanso)`);
+  }
   const strangerIds = new Set(w.stranger?.survivors.map((s) => s.id) ?? []);
   // H5 §8: los muertos ya no están.
   for (const d of w.dead)

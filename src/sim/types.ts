@@ -277,8 +277,8 @@ export interface Survivor {
   /** Tick en que intentará charlar con alguien. */
   nextChatAt: number;
   bubble: { kind: BubbleKind; until: number } | null;
-  /** Con gripe hasta `until`; `plan`, lo que decidió el jugador (descansar: sin saquear). */
-  sick: { until: number; plan: 'undecided' | 'rest' | 'work' } | null;
+  /** Fiebre (H5 §7): de gripe o de infección, que se ven igual; sustituye a la gripe de H3c. */
+  fever: Fever | null;
   /** Ya ha tenido su cumpleaños. */
   celebrated: boolean;
   /** En modo combate (H4e): solo obedece al jugador. */
@@ -296,6 +296,23 @@ export interface Survivor {
   painkillerWanted: boolean;
   /** Infección oculta (H5 §7.1): desde cuándo y cuándo muere de ella; el jugador no la ve. */
   infection: { at: number; deathAt: number } | null;
+}
+
+/**
+ * Fiebre (H5 §7.2): `since`, cuándo empezó; `rest`, si el jugador ha dicho "Que descanse";
+ * `restTicks`, cuánto ha estado acostado desde entonces; `badLuck`, gripe con náuseas aunque
+ * descanse (se sortea al empezar); `checks`, cuántas etapas de la gripe se han mirado ya;
+ * `graveUntil`, hasta cuándo sigue muy grave la gripe.
+ */
+export interface Fever {
+  cause: 'flu' | 'infection';
+  since: number;
+  stage: 'fever' | 'nausea' | 'grave';
+  rest: boolean;
+  restTicks: number;
+  badLuck: boolean;
+  checks: number;
+  graveUntil?: number;
 }
 
 /** De qué se muere (H5 §8). */
@@ -496,11 +513,13 @@ export interface Narrator {
 /** Algo que el jugador tiene que decidir; si no contesta antes de `expiresAt`, se aplica la opción por defecto. */
 export interface Decision {
   id: number;
-  kind: 'theft' | 'birthday' | 'flu' | 'stranger';
+  kind: 'theft' | 'birthday' | 'fever' | 'stranger';
   survivorIds: number[];
   expiresAt: number;
   /** Robo: si el sospechoso es el culpable de verdad. */
   guilty?: boolean;
+  /** Fiebre (H5): el segundo aviso, "está peor". */
+  worse?: boolean;
 }
 
 export interface World {

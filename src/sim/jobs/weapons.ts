@@ -13,12 +13,12 @@ const rank = (x: Weapon | null) => (x ? RANK[x] : 0);
 
 /** ¿Puede talar? (permiso, sin gripe con descanso y sin otra arma fijada) */
 export function canChop(s: Survivor): boolean {
-  return s.work.chop && s.sick?.plan !== 'rest' && !(s.weaponLocked && s.equipped !== 'axe');
+  return s.work.chop && s.fever?.rest !== true && !(s.weaponLocked && s.equipped !== 'axe');
 }
 
 /** ¿Puede forzar puertas? (permiso de Saquear, sin gripe con descanso y sin otra arma fijada) */
 export function canPry(s: Survivor): boolean {
-  return s.work.loot && s.sick?.plan !== 'rest' && !(s.weaponLocked && s.equipped !== 'crowbar');
+  return s.work.loot && s.fever?.rest !== true && !(s.weaponLocked && s.equipped !== 'crowbar');
 }
 
 /**

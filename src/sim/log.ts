@@ -52,10 +52,11 @@ export type LogEvent =
   | { kind: 'birthdaySkipped'; survivorId: number }
   | { kind: 'cache'; survivorId: number; houseId: number; cans: number }
   | { kind: 'storm' }
-  | { kind: 'flu'; survivorId: number }
-  | { kind: 'fluRest'; survivorId: number }
-  | { kind: 'fluWork'; survivorId: number }
-  | { kind: 'fluOver'; survivorId: number }
+  // La fiebre (H5 §7): igual para la gripe y la infección.
+  | { kind: 'fever'; survivorId: number }
+  | { kind: 'feverWorse'; survivorId: number }
+  | { kind: 'feverRest'; survivorId: number }
+  | { kind: 'feverGone'; survivorId: number }
   | { kind: 'built'; what: BuildKind }
   // Zombis (H4b)
   | { kind: 'broken'; what: 'door' | 'window' | 'wall'; x: number; y: number; inBase: boolean }

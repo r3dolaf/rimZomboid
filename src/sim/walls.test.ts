@@ -135,12 +135,20 @@ test('para construir, mejor no ponerse encima de otro plano de muro o puerta (sa
   expect(standBeside(w, s, { x: 1, y: 0 })).toEqual({ x: 2, y: 0 });
 });
 
-test('con gripe y "Que descanse" no hace ningún trabajo (salvo terminar de descargar)', () => {
+test('con fiebre y "Que descanse" no hace ningún trabajo (salvo terminar de descargar)', () => {
   const w = emptyWorld(8, 8);
   w.seen.fill(1);
   const s = w.survivors[0]!;
   s.pos = { x: 1.5, y: 1.5 };
-  s.sick = { until: 1e9, plan: 'rest' };
+  s.fever = {
+    cause: 'flu',
+    since: 0,
+    stage: 'fever',
+    rest: true,
+    restTicks: 0,
+    badLuck: false,
+    checks: 0,
+  };
   w.blueprints.push({ id: 70, kind: 'campfire', pos: { x: 4, y: 4 }, wood: 3, progress: 0 });
   w.woodLog.start = 3;
   w.piles.push({ id: 71, pos: { x: 5, y: 5 }, items: { ...emptyInventory(), wood: 2 } });
@@ -151,7 +159,7 @@ test('con gripe y "Que descanse" no hace ningún trabajo (salvo terminar de desc
   w.chopMarks = [7 * 8 + 7];
   expect(findWork(s, w)).toMatchObject({ type: 'moveTo', then: { type: 'storeAxe' } });
   s.equipped = null;
-  s.sick.plan = 'work';
+  s.fever.rest = false;
   expect(findWork(s, w)).not.toBeNull();
 });
 

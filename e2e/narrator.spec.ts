@@ -52,7 +52,7 @@ test('un suceso malo deja un aviso rojo y pausa; una decisión se contesta con s
 
   await page.locator('[data-speed="1"]').click();
   await page.evaluate(force, 'flu');
-  const flu = page.getByTestId('decision-flu');
+  const flu = page.getByTestId('decision-fever');
   await expect(flu).toBeVisible();
   await expect(page.locator('[data-speed="0"]')).toHaveClass(/active/);
   await flu.getByTestId('decision-option-0').click();

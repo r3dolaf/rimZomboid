@@ -75,7 +75,7 @@ export function createPrefsStore(storage: Store | null = local()): PrefsStore {
   };
 }
 
-const DECISIONS: readonly Decision['kind'][] = ['theft', 'birthday', 'flu', 'stranger'];
+const DECISIONS: readonly Decision['kind'][] = ['theft', 'birthday', 'fever', 'stranger'];
 
 /** Los tipos de aviso por grupos, en el orden del menú. */
 export const NOTICE_GROUPS: readonly {

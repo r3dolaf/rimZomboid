@@ -1,6 +1,6 @@
-// Tormenta y gripe (spec H3c §3.3).
+// Tormenta y gripe (spec H3c §3.3; la gripe, desde H5 §7).
 import { expect, test } from 'vitest';
-import { FLOOR_SLEEP_FACTOR, SLEEP_GAIN_PER_TICK, TICKS_PER_DAY, TICKS_PER_HOUR } from '../balance';
+import { FLOOR_SLEEP_FACTOR, SLEEP_GAIN_PER_TICK, TICKS_PER_HOUR } from '../balance';
 import { checkInvariants } from '../invariants';
 import { moodModifiers } from '../mood';
 import { issue } from '../orders';
@@ -9,6 +9,7 @@ import { needsSystem } from '../systems/needs';
 import type { Survivor, World } from '../types';
 import { findWork } from '../work';
 import { createWorld } from '../world';
+import { startFever } from '../illness';
 import { fluEvent } from './flu';
 import { stormEvent } from './storm';
 
@@ -55,67 +56,39 @@ test('con tormenta el sueño se recupera un 25 % más despacio', () => {
   expect(a.needs.sleep - 10).toBeCloseTo(normal * 0.75, 9);
 });
 
-// --- 12. Gripe ---
+// --- 12. Gripe (desde H5, una fiebre: ver illness.test.ts) ---
 
-test('gripe: a alguien sano, 4 días, decisión, "Con gripe" −10 y más hambre', () => {
-  const { w, a, b } = calm();
+test('gripe: a alguien sin fiebre, la fiebre y su aviso; no vuelve mientras todos tengan', () => {
+  const { w, a } = calm();
   expect(fluEvent.tone).toBe('bad');
   expect(fluEvent.severity).toBe(2);
   expect(fluEvent.cooldownDays).toBe(5);
-  for (const s of w.survivors) if (s !== a) s.sick = { until: 1e9, plan: 'work' };
+  for (const s of w.survivors) if (s !== a) startFever(w, s, 'flu');
+  w.decisions = [];
   fluEvent.happen(w);
-  expect(a.sick).toEqual({ until: w.tick + 4 * TICKS_PER_DAY, plan: 'undecided' });
-  expect(w.decisions[0]).toMatchObject({ kind: 'flu', survivorIds: [a.id] });
-  expect(w.log.at(-1)).toMatchObject({ kind: 'flu', survivorId: a.id });
+  expect(a.fever).toMatchObject({ cause: 'flu', since: w.tick, stage: 'fever', rest: false });
+  expect(w.decisions[0]).toMatchObject({ kind: 'fever', survivorIds: [a.id] });
+  expect(w.log.at(-1)).toMatchObject({ kind: 'fever', survivorId: a.id });
   expect(fluEvent.canHappen(w)).toBe(false);
-  const ids = moodModifiers(a, w.tick).map((m) => m.id);
-  expect(ids).toContain('flu');
-  expect(ids).not.toContain('workingSick'); // aún no se ha decidido
-  a.needs.hunger = 50;
-  b.sick = null;
-  b.needs.hunger = 50;
-  needsSystem(w);
-  expect(50 - a.needs.hunger).toBeCloseTo((50 - b.needs.hunger) * 1.3, 9);
+  expect(moodModifiers(a, w.tick).map((m) => m.id)).toContain('fever');
   expect(checkInvariants(w)).toEqual([]);
 });
 
-function sickA() {
-  const x = calm();
-  x.b.sick = { until: 1e9, plan: 'work' };
-  for (const s of x.w.survivors.slice(2)) s.sick = { until: 1e9, plan: 'work' };
-  fluEvent.happen(x.w);
-  return { ...x, d: x.w.decisions[0]! };
-}
-
-test('Que descanse: se cura a los 2 días y mientras no saquea', () => {
-  const { w, a, d } = sickA();
-  const start = w.tick;
-  issue(w, { type: 'decide', decisionId: d.id, option: 0 });
-  step(w);
-  expect(a.sick).toEqual({ until: start + 2 * TICKS_PER_DAY, plan: 'rest' });
-  for (const c of w.containers) c.designated = true;
-  a.work.loot = true;
-  const job = findWork(a, w);
-  expect(job === null || (job.type === 'moveTo' && job.then?.type === 'unload')).toBe(true);
-  expect(moodModifiers(a, w.tick).map((m) => m.id)).not.toContain('workingSick');
-  w.tick = start + 2 * TICKS_PER_DAY;
-  step(w);
-  expect(a.sick).toBeNull();
-  expect(w.log.at(-1)).toMatchObject({ kind: 'fluOver', survivorId: a.id });
-});
-
-test('Que siga trabajando (o si caduca): 4 días y "Trabaja con gripe" −5', () => {
+test('Que descanse (contestado o si caduca): no saquea mientras tenga fiebre', () => {
   for (const timeout of [false, true]) {
-    const { w, a, d } = sickA();
-    const start = w.tick;
-    if (timeout) w.tick = d.expiresAt;
-    else issue(w, { type: 'decide', decisionId: d.id, option: 1 });
+    const { w, a } = calm();
+    for (const s of w.survivors) if (s !== a) startFever(w, s, 'flu');
+    w.decisions = [];
+    fluEvent.happen(w);
+    const d = w.decisions[0]!;
+    if (timeout)
+      d.expiresAt = w.tick; // (sin adelantar el reloj: a las 12 h ya estaría peor)
+    else issue(w, { type: 'decide', decisionId: d.id, option: 0 });
     step(w);
-    expect(a.sick).toEqual({ until: start + 4 * TICKS_PER_DAY, plan: 'work' });
-    expect(moodModifiers(a, w.tick)).toContainEqual({ id: 'workingSick', value: -5 });
+    expect(a.fever?.rest).toBe(true);
     for (const c of w.containers) c.designated = true;
     a.work.loot = true;
-    a.carrying.food = 0;
-    expect(findWork(a, w)?.type).toBe('moveTo');
+    const job = findWork(a, w);
+    expect(job === null || (job.type === 'moveTo' && job.then?.type === 'unload')).toBe(true);
   }
 });

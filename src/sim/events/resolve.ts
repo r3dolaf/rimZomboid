@@ -2,12 +2,22 @@
 import { logEvent } from '../log';
 import { acceptStrangers, leaveStrangers } from '../systems/strangers';
 import { resolveBirthday } from './birthday';
-import { resolveFlu } from './flu';
 import { resolveTheft } from './theft';
+import { resolveFever } from '../illness';
 import type { Decision, World } from '../types';
 
-/** Opción 0 o 1; `timedOut`, si nadie contestó y se aplica la de por defecto (la 1). */
-type Resolver = (w: World, d: Decision, option: 0 | 1, timedOut: boolean) => void;
+export type DecisionOption = 0 | 1 | 2;
+
+/** La que se aplica si nadie contesta: la 1 (no hacer nada), salvo la fiebre, Que descanse. */
+export const DEFAULT_OPTION: Record<Decision['kind'], DecisionOption> = {
+  stranger: 1,
+  theft: 1,
+  birthday: 1,
+  fever: 0,
+};
+
+/** `timedOut`, si nadie contestó y se aplica la de por defecto. */
+type Resolver = (w: World, d: Decision, option: DecisionOption, timedOut: boolean) => void;
 
 const RESOLVERS: Record<Decision['kind'], Resolver> = {
   stranger(w, _d, option, timedOut) {
@@ -18,20 +28,26 @@ const RESOLVERS: Record<Decision['kind'], Resolver> = {
     logEvent(w, timedOut ? { kind: 'strangerLeft', names } : { kind: 'strangerRejected', names });
     leaveStrangers(w);
   },
-  theft: (w, d, option) => resolveTheft(w, d, option),
-  birthday: (w, d, option) => resolveBirthday(w, d, option),
-  flu: (w, d, option) => resolveFlu(w, d, option),
+  theft: (w, d, option) => resolveTheft(w, d, option === 0 ? 0 : 1),
+  birthday: (w, d, option) => resolveBirthday(w, d, option === 0 ? 0 : 1),
+  fever: (w, d, option) => resolveFever(w, d, option),
 };
 
 /** Quita la decisión y aplica la opción elegida. */
-export function resolveDecision(w: World, id: number, option: 0 | 1, timedOut = false): void {
+export function resolveDecision(
+  w: World,
+  id: number,
+  option: DecisionOption,
+  timedOut = false,
+): void {
   const d = w.decisions.find((x) => x.id === id);
   if (!d) return;
   w.decisions = w.decisions.filter((x) => x !== d);
   RESOLVERS[d.kind](w, d, option, timedOut);
 }
 
-/** Las que caducan se resuelven con la opción por defecto (la 1). */
+/** Las que caducan se resuelven con su opción por defecto. */
 export function expireDecisions(w: World): void {
-  for (const d of [...w.decisions]) if (w.tick >= d.expiresAt) resolveDecision(w, d.id, 1, true);
+  for (const d of [...w.decisions])
+    if (w.tick >= d.expiresAt) resolveDecision(w, d.id, DEFAULT_OPTION[d.kind], true);
 }

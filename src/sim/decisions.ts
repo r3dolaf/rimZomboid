@@ -7,7 +7,7 @@ export function addDecision(
   w: World,
   kind: Decision['kind'],
   survivorIds: number[],
-  extra: Partial<Pick<Decision, 'guilty'>> = {},
+  extra: Partial<Pick<Decision, 'guilty' | 'worse'>> = {},
 ): Decision {
   const d: Decision = {
     id: w.nextId++,

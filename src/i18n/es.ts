@@ -256,10 +256,12 @@ export const es = {
       text: (who: string) => `Hoy es el cumpleaños de ${who}. ¿Lo celebráis?`,
       options: [`Celebrarlo con ${BIRTHDAY_CANS} latas`, 'No hay para fiestas'],
     },
-    flu: {
-      title: 'Gripe',
-      text: (who: string) => `${who} ha cogido la gripe.`,
-      options: ['Que descanse', 'Que siga trabajando'],
+    // H5 §7.4: la gripe y la infección, igual.
+    fever: {
+      title: 'Fiebre',
+      text: (who: string) => `${who} tiene fiebre. ¿Qué hacéis?`,
+      worse: (who: string) => `${who} está peor. ¿Qué hacéis?`,
+      options: ['Que descanse', 'Que se vaya', 'Acabar con su sufrimiento'],
     },
     stranger: {
       title: 'Alguien se acerca',
@@ -268,7 +270,20 @@ export const es = {
     },
   } satisfies Record<
     Decision['kind'],
-    { title: string; text: (who: string) => string; options: [string, string] }
+    {
+      title: string;
+      text: (who: string) => string;
+      worse?: (who: string) => string;
+      options: readonly string[];
+    }
+  > as Record<
+    Decision['kind'],
+    {
+      title: string;
+      text: (who: string) => string;
+      worse?: (who: string) => string;
+      options: readonly string[];
+    }
   >,
   lootToolHint: 'Marcar casas, muebles o cuerpos para saquear; arrastrar marca los cuerpos (L)',
   pause: 'Pausa',
@@ -417,10 +432,10 @@ export const es = {
             : 'echado abajo un muro'
       }${inBase ? ' de la base' : ''}`,
     storm: 'Se desata una tormenta',
-    flu: (who: string) => `${who} ha cogido la gripe`,
-    fluRest: (who: string) => `${who} guarda reposo`,
-    fluWork: (who: string) => `${who} sigue trabajando con gripe`,
-    fluOver: (who: string) => `${who} se ha recuperado de la gripe`,
+    fever: (who: string) => `${who} tiene fiebre`,
+    feverWorse: (who: string) => `${who} está peor`,
+    feverRest: (who: string) => `${who} guarda reposo`,
+    feverGone: (who: string) => `A ${who} se le ha pasado la fiebre`,
   },
 
   needs: { hunger: 'Hambre', sleep: 'Sueño', mood: 'Ánimo', social: 'Social' },
@@ -458,8 +473,8 @@ export const es = {
     starving: 'Desnutrido',
     tired: 'Cansado',
     lonely: 'Soledad',
-    flu: 'Con gripe',
-    workingSick: 'Trabaja con gripe',
+    fever: 'Tiene fiebre',
+    nausea: 'Náuseas',
     optimist: 'Optimista',
     pessimist: 'Pesimista',
     scaredOutside: 'Asustado fuera',
@@ -672,7 +687,7 @@ export const es = {
     sleeping: { icon: '💤', label: 'Durmiendo' },
     eating: { icon: '🍽', label: 'Comiendo' },
     edge: { icon: '⚠', label: 'Al límite' },
-    sick: { icon: '🤒', label: 'Con gripe' },
+    sick: { icon: '🤒', label: 'Con fiebre' },
     downed: { icon: '🤕', label: 'En el suelo' },
     meleeZombie: { icon: '⚔️', label: 'Peleando con zombis' },
     fleeing: { icon: '🏃', label: 'Huyendo' },

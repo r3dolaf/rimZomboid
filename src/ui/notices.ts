@@ -2,6 +2,7 @@ import type { TimeController } from '../game/timeController';
 import { es } from '../i18n/es';
 import { BIRTHDAY_CANS, TICKS_PER_DAY } from '../sim/balance';
 import { decisionAnswered } from '../sim/decisions';
+import type { DecisionOption } from '../sim/events/resolve';
 import type { LogEntry } from '../sim/log';
 import { issue } from '../sim/orders';
 import type { Decision, Tone, World } from '../sim/types';
@@ -13,7 +14,7 @@ const MAX_NOTICES = 5;
 const DECISION_TONE: Record<Decision['kind'], Tone> = {
   theft: 'bad',
   birthday: 'good',
-  flu: 'bad',
+  fever: 'bad',
   stranger: 'mixed',
 };
 
@@ -120,7 +121,7 @@ export function mountNotices(
               s.traits.map((tr) => es.traits[tr].name).join(', '),
               es.strangerCarrying(formatItems(s.carrying)),
             ])
-        : [t.text(name(d.survivorIds[0]!))];
+        : [(d.worse && t.worse ? t.worse : t.text)(name(d.survivorIds[0]!))];
     const focusId = d.kind === 'stranger' ? null : d.survivorIds[0]!;
     const el = card(DECISION_TONE[d.kind], t.title, lines, focusId);
     el.classList.add('decision');
@@ -128,10 +129,11 @@ export function mountNotices(
     const row = document.createElement('div');
     row.className = 'buttons';
     // Los botones se crean una sola vez: si se rehicieran al pulsarlos, el clic podría perderse.
-    const buttons = ([0, 1] as const).map((option) => {
+    const buttons = t.options.map((label, i) => {
+      const option = i as DecisionOption;
       const b = document.createElement('button');
       b.type = 'button';
-      b.textContent = t.options[option];
+      b.textContent = label;
       b.dataset.testid = `decision-option-${option}`;
       b.addEventListener('click', (ev) => {
         ev.stopPropagation();

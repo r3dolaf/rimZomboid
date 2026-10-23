@@ -53,6 +53,8 @@ Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al p
 - Los colonos no evitan saquear donde hay zombis a la vista (probado: no cambiaba mucho, porque los zombis acaban yendo a la base).
 - El que se va (Que se vaya) anda hasta el borde sin que le ataquen los zombis.
 - El registro, vacío al empezar, no se ve (y sus filtros tampoco) hasta el primer suceso.
+- Nadie da de comer a los derribados: quien pasa mucho tiempo en el suelo (un asedio) puede morir de hambre.
+- Pequeños de la revisión, aplazados: al morir uno de varios elegidos, la ficha y el panel de grupo del que queda desaparecen; vendarse o descansar por dolor cortan llevar a un derribado en brazos (lo suelta donde está); la partida larga cuenta "acostado" como "se ha movido" (solo la del asedio vigila un día entero en el suelo); el echado sin camino al borde (base sellada) sale y vuelve desde dentro; con alguien acostado en una cama de hospital, el clic elige a la persona y no abre la ficha de la cama.
 
 **Pedido por el usuario (después de H4b):** habilidades en cada trabajo → H4c. Al diseñarlas, el usuario pidió también cortinas (como en Zomboid: no ves fuera, pero los zombis no te ven), tela que se saquea y se convierte en vendas o cortinas, y cuerpos de zombi que se registran (ropa y, a veces, armas o equipo) → H4d.
 

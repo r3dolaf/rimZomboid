@@ -2,9 +2,11 @@
 // Las de antes de H4b, sin zombis (prueban lo suyo); las de H4b, al final, con zombis.
 import { describe, expect, test } from 'vitest';
 import { TICKS_PER_DAY, TICKS_PER_HOUR } from '../src/sim/balance';
+import { gameTime } from '../src/sim/clock';
 import { checkInvariants } from '../src/sim/invariants';
 import { step } from '../src/sim/step';
 import { isEmpty } from '../src/sim/items';
+import { hasCargo } from '../src/sim/jobs/medical';
 import { issue } from '../src/sim/orders';
 import { createRng, nextInt } from '../src/sim/rng';
 import { canPlace } from '../src/sim/build';
@@ -13,6 +15,7 @@ import { WEAPONS } from '../src/sim/jobs/weapons';
 import {
   Tile,
   type BuildKind,
+  type Decision,
   type EventId,
   type NarratorStyle,
   type Survivor,
@@ -26,6 +29,13 @@ import { targetContainerId } from '../src/sim/work';
 
 const DAYS = Number(process.env.SOAK_DAYS || 30);
 
+/** Descansando o derribado (H5): no moverse en todo el día no es estar bloqueado. */
+const lying = (s: Survivor) => s.action.type === 'rest' || s.action.type === 'downed';
+
+/** Una respuesta al azar (la fiebre, H5, tiene tres opciones). */
+const answer = (r: ReturnType<typeof createRng>, d: Decision) =>
+  nextInt(r, 0, d.kind === 'fever' ? 2 : 1) as 0 | 1 | 2;
+
 test('SOAK_DAYS es un número de días válido', () => {
   expect(Number.isInteger(DAYS) && DAYS > 0).toBe(true);
 });
@@ -35,22 +45,25 @@ test.each([1, 2, 3])(
   (seed) => {
     const w = withoutZombies(createWorld(seed));
     for (let day = 1; day <= DAYS; day++) {
-      const moved = w.survivors.map(() => false);
+      const present = new Set(w.survivors.map((s) => s.id));
+      const moved = new Set<number>();
       for (let i = 0; i < TICKS_PER_DAY; i++) {
-        const before = w.survivors.map((s) => ({ ...s.pos }));
+        const before = new Map(w.survivors.map((s) => [s.id, { ...s.pos }]));
         step(w);
         const problems = checkInvariants(w);
         if (problems.length > 0) expect(problems, `tick ${w.tick}`).toEqual([]);
-        w.survivors.forEach((s, j) => {
-          if (s.pos.x !== before[j]!.x || s.pos.y !== before[j]!.y) moved[j] = true;
-        });
+        for (const s of w.survivors) {
+          const b = before.get(s.id);
+          if (lying(s) || (b && (b.x !== s.pos.x || b.y !== s.pos.y))) moved.add(s.id);
+        }
       }
       // H2: con ~10 días de comida, el almacén está vacío antes del día 15
       if (day === 15) expect(w.storage.items.food, 'comida el día 15').toBe(0);
-      // sin bloqueos: cada superviviente se ha movido en algún momento del día
-      w.survivors.forEach((s, j) =>
-        expect(moved[j], `día ${day}: ${s.name} no se ha movido`).toBe(true),
-      );
+      // sin bloqueos: cada superviviente se ha movido en algún momento del día (o ha estado
+      // acostado: descansando o derribado, H5)
+      for (const s of w.survivors)
+        if (present.has(s.id))
+          expect(moved.has(s.id), `día ${day}: ${s.name} no se ha movido`).toBe(true);
     }
     expect(w.tick).toBe(DAYS * TICKS_PER_DAY);
   },
@@ -80,7 +93,8 @@ test.each([1, 2, 3])(
     if (shut.size > 0) expect(allCrowbars(w), 'atrancadas habiendo palanca').toBe(0);
     for (const c of w.containers)
       if (!shut.has(c.houseId)) expect(isEmpty(c.items), `contenedor ${c.id}`).toBe(true);
-    for (const s of w.survivors) expect(isEmpty(s.carrying), s.name).toBe(true);
+    // (salvo sus 2 vendas, H5)
+    for (const s of w.survivors) expect(hasCargo(s), s.name).toBe(false);
   },
   120_000,
 );
@@ -102,7 +116,7 @@ test.each([1, 2, 3])(
         if (problems.length > 0) expect(problems, `tick ${w.tick}`).toEqual([]);
         for (const s of w.survivors) {
           const b = before.get(s.id);
-          if (b && (b.x !== s.pos.x || b.y !== s.pos.y)) moved.add(s.id);
+          if (lying(s) || (b && (b.x !== s.pos.x || b.y !== s.pos.y))) moved.add(s.id);
         }
       }
       for (const s of w.survivors)
@@ -143,7 +157,7 @@ describe.each(STYLES)('narrador %s', (style) => {
         for (let i = 0; i < TICKS_PER_DAY; i++) {
           const d = w.decisions[0];
           if (d && w.orders.length === 0)
-            issue(w, { type: 'decide', decisionId: d.id, option: nextInt(answers, 0, 1) as 0 | 1 });
+            issue(w, { type: 'decide', decisionId: d.id, option: answer(answers, d) });
           const before = new Map(w.survivors.map((s) => [s.id, { ...s.pos }]));
           step(w);
           const problems = checkInvariants(w);
@@ -153,7 +167,7 @@ describe.each(STYLES)('narrador %s', (style) => {
           if (w.narrator.phase === 'tension') tension = true;
           for (const s of w.survivors) {
             const b = before.get(s.id);
-            if (b && (b.x !== s.pos.x || b.y !== s.pos.y)) moved.add(s.id);
+            if (lying(s) || (b && (b.x !== s.pos.x || b.y !== s.pos.y))) moved.add(s.id);
             if (s.needs.mood < 25) edge = true;
             if (Object.values(s.opinions).some((v) => v < 0)) negative = true;
           }
@@ -215,14 +229,14 @@ function playDay(
   for (let i = 0; i < TICKS_PER_DAY; i++) {
     const d = w.decisions[0];
     if (d && !w.orders.some((o) => o.type === 'decide'))
-      issue(w, { type: 'decide', decisionId: d.id, option: nextInt(r, 0, 1) as 0 | 1 });
+      issue(w, { type: 'decide', decisionId: d.id, option: answer(r, d) });
     const before = new Map(w.survivors.map((s) => [s.id, { ...s.pos }]));
     step(w);
     const problems = checkInvariants(w);
     if (problems.length > 0) expect(problems, `tick ${w.tick}`).toEqual([]);
     for (const s of w.survivors) {
       const b = before.get(s.id);
-      if (b && (b.x !== s.pos.x || b.y !== s.pos.y)) moved.add(s.id);
+      if (lying(s) || (b && (b.x !== s.pos.x || b.y !== s.pos.y))) moved.add(s.id);
     }
   }
   for (const s of w.survivors)
@@ -367,6 +381,9 @@ const zombieTotals = {
   wanderers: 0,
   healed: 0,
   strangersFled: 0,
+  // H5: muertos y hasta qué día se llega en cada partida
+  dead: 0,
+  survived: [] as number[],
 };
 
 /**
@@ -440,7 +457,7 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
       for (let i = 0; i < TICKS_PER_DAY; i++) {
         const d = w.decisions[0];
         if (d && !w.orders.some((o) => o.type === 'decide'))
-          issue(w, { type: 'decide', decisionId: d.id, option: nextInt(r, 0, 1) as 0 | 1 });
+          issue(w, { type: 'decide', decisionId: d.id, option: answer(r, d) });
         const before = new Map(w.survivors.map((s) => [s.id, { ...s.pos }]));
         const last = w.log.at(-1);
         drill(w, i);
@@ -462,7 +479,7 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
         }
         for (const s of w.survivors) {
           const b = before.get(s.id);
-          if (b && (b.x !== s.pos.x || b.y !== s.pos.y)) moved.add(s.id);
+          if (lying(s) || (b && (b.x !== s.pos.x || b.y !== s.pos.y))) moved.add(s.id);
           if (s.action.type === 'downed') down.set(s.id, (down.get(s.id) ?? 0) + 1);
         }
       }
@@ -485,7 +502,11 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
     }
     // Límite generoso (en local va por 0,1–0,2 ms por tick).
     expect(ms / (DAYS * TICKS_PER_DAY), 'ms por tick').toBeLessThan(1);
-    if (DAYS >= 10) expect(levels(w), 'las habilidades han subido').toBeGreaterThan(levelsAtStart);
+    // H5: ¿cuánto se sobrevive? (Sin nadie, las habilidades ya no cuentan.)
+    zombieTotals.survived.push(w.over ? gameTime(w.over.tick).day : DAYS);
+    zombieTotals.dead += w.dead.length;
+    if (DAYS >= 10 && w.over === null)
+      expect(levels(w), 'las habilidades han subido').toBeGreaterThan(levelsAtStart);
   }, 600_000);
 });
 

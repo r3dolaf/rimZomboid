@@ -10,6 +10,7 @@ import {
 } from './balance';
 import { emptyInventory, isEmpty } from './items';
 import { WEAPONS } from './jobs/weapons';
+import { dropPile } from './piles';
 import { nextFloat, nextInt, weightedPick } from './rng';
 import type { Container, World, Zombie } from './types';
 import { tileOf } from './world';
@@ -39,8 +40,9 @@ export function leaveCorpse(w: World, z: Zombie): void {
 }
 
 /**
- * Registrado y vacío, se va en un día; si no, se pudre a los 3 días con lo que lleve. Mientras
- * alguien va a registrarlo (lo tiene reservado), espera: si no, llegaría a un cuerpo que ya no está.
+ * Registrado y vacío, se va en un día; si no, se pudre a los 3 días con lo que lleve (el de una
+ * persona, H5, lo deja en el suelo). Mientras alguien va a registrarlo (lo tiene reservado),
+ * espera: si no, llegaría a un cuerpo que ya no está.
  */
 export function corpsesSystem(w: World): void {
   const due = (c: Container) =>
@@ -50,10 +52,11 @@ export function corpsesSystem(w: World): void {
     if (c.kind !== 'corpse' || c.until === undefined) continue;
     if (c.searched && isEmpty(c.items) && c.until > w.tick + CORPSE_EMPTY_TICKS)
       c.until = w.tick + CORPSE_EMPTY_TICKS;
-    if (due(c)) {
-      w.weaponLog.rotted += weaponsIn(c);
-      gone = true;
-    }
+    if (!due(c)) continue;
+    gone = true;
+    // El de una persona (H5) deja en el suelo lo que llevaba; lo del zombi se pudre con él.
+    if (c.name !== undefined) dropPile(w, c.pos, c.items);
+    else w.weaponLog.rotted += weaponsIn(c);
   }
   if (gone) w.containers = w.containers.filter((c) => !due(c));
 }

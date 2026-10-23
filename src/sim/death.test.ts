@@ -12,6 +12,7 @@ import {
 } from './balance';
 import { addWound, knockDown } from './body';
 import { colonistHit } from './combat';
+import { corpsesSystem } from './corpses';
 import { gameTime } from './clock';
 import { deathSystem, killSurvivor } from './death';
 import { addDecision } from './decisions';
@@ -338,5 +339,22 @@ test('si muere uno de una pareja de desconocidos, el otro se queda sin pareja (y
   killSurvivor(w, x, 'blood');
   expect(y.partnerId).toBeNull();
   acceptStrangers(w);
+  expect(checkInvariants(w)).toEqual([]);
+});
+
+test('al pudrirse el cuerpo de una persona, lo que llevaba queda en el suelo (nada desaparece)', () => {
+  const { w, ana } = world();
+  ana.carrying.wood = 2;
+  ana.carrying.bandage = 1;
+  w.woodLog.start += 2;
+  killSurvivor(w, ana, 'blood');
+  const c = body(w, 'Ana')!;
+  w.tick = c.until!;
+  corpsesSystem(w);
+  expect(body(w, 'Ana')).toBeUndefined();
+  expect(w.piles.find((p) => p.pos.x === 4 && p.pos.y === 5)?.items).toMatchObject({
+    wood: 2,
+    bandage: 1,
+  });
   expect(checkInvariants(w)).toEqual([]);
 });

@@ -32,7 +32,10 @@ test('marcar la casa más cercana: la vacían y sus objetos acaban en el almacé
   w.survivors.forEach(happy);
   const house = byDistance(w)[0]!;
   const inHouse = w.containers.filter((c) => c.houseId === house.id);
-  const bandages = inHouse.reduce((n, c) => n + c.items.bandage, 0);
+  // (más las 2 con que sale cada uno, H5)
+  const bandages =
+    inHouse.reduce((n, c) => n + c.items.bandage, 0) +
+    w.survivors.reduce((n, s) => n + s.carrying.bandage, 0);
   const weapons = inHouse.reduce((n, c) => n + c.items.knife + c.items.bat, 0);
   issue(w, { type: 'designateHouse', houseId: house.id, on: true });
   for (let i = 0; i < TICKS_PER_DAY; i++) step(w);
@@ -45,7 +48,8 @@ test('marcar la casa más cercana: la vacían y sus objetos acaban en el almacé
   // H5: cada uno se queda con hasta 2 vendas encima; lo demás, al almacén.
   for (const s of w.survivors) expect(hasCargo(s)).toBe(false);
   const carried = w.survivors.reduce((n, s) => n + s.carrying.bandage, 0);
-  expect(w.storage.items.bandage + carried).toBe(bandages);
+  const used = w.log.filter((e) => e.kind === 'bandaged').length; // si alguien se ha vendado
+  expect(w.storage.items.bandage + carried + used).toBe(bandages);
   // Las armas, en el almacén o ya en la mano de alguien (spec H4b §6.2), más el cuchillo con que
   // empieza cada uno.
   const inHand = w.survivors.filter((s) => s.equipped === 'knife' || s.equipped === 'bat').length;

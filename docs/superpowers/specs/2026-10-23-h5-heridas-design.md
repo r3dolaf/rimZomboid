@@ -176,3 +176,16 @@ Avisos de decisión con tres botones:
 - **Unitarias:** cada tipo de herida y dónde cae; el dolor y la Salud; piernas y brazos; la sangre, el desmayo y el hambre; vendarse, Sanar y las vendas sucias; analgésicos y descanso por dolor; camas de hospital; las etapas de la gripe y de la infección; las tres opciones del aviso de fiebre (también que vuelva como zombi o como desconocido); cada causa de muerte, el cuerpo, levantarse como zombi; el fin de partida y su resumen; filtros del registro y panel de Almacén.
 - **Partida larga** (30 semillas × 30 días): ahora se muere; nada se rompe aunque mueran todos (la partida acaba y sigue sin bloquearse); se mide cuánto se sobrevive.
 - **Navegador:** pestaña Salud, cama de hospital, aviso de fiebre, pantalla final (forzando una muerte), filtros del registro y panel de Almacén.
+
+## 13. Ajuste tras la partida larga
+
+Con las cifras de arriba, saqueando todo el pueblo sin defenderse (Equilibrado, zombis normales, con mesa y "vendas hasta 10"), la colonia entera caía en 2–3 días (6 de 6 partidas): salían sin vendas, los cortes no paraban de sangrar y los arañazos infectaban a menudo. El usuario pidió que aguante 1–2 semanas. Cambios:
+
+- Cada colono sale con sus 2 vendas.
+- Corte: 4 de sangre por hora (antes 5) y deja de sangrar solo a las 3 h. Mordisco: 5 por hora (antes 8), hasta vendarlo.
+- Arañazo: infecta 3 de cada 100 (antes 1 de cada 10); 85 % de los golpes normales (antes 75 %). Rodeado o muy herido, mordisco 1 de cada 20 (antes 3 de cada 10).
+- Sangre: sube 2 por hora despierto, 4 descansando, 6 en una cama de hospital (antes 1/2/3).
+- Los zombis aciertan 1 de cada 4 (antes 4 de cada 10).
+- Con Decidir: pelea solo contra uno (antes dos), huye por debajo de 30 de Salud (antes 20) y con menos de 60 de Sangre.
+
+Resultado (6 partidas de 30 días): la colonia cae los días 10–20 (la mitad, hacia el 13); las primeras muertes, los días 4–7, sobre todo por infección.

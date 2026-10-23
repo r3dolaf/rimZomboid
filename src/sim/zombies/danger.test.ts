@@ -86,15 +86,14 @@ test('Huir: dentro de la base se queda dentro y no sale a trabajar mientras vea 
   expect(decide(s, w)).toBeNull();
 });
 
-test('Decidir: pelea con arma, Salud ≥ 50 y como mucho 2; si no, huye', () => {
+test('Decidir: pelea con arma, Salud ≥ 50 y contra uno (H5: con dos, muerden); si no, huye', () => {
   const w = world();
   const s = w.survivors[0]!;
   s.stance = 'decide';
   s.health = 60;
   zombieAt(w, 16, 12);
-  zombieAt(w, 16, 13);
   expect(fights(decide(s, w))).toBe(true);
-  zombieAt(w, 16, 11);
+  zombieAt(w, 16, 13);
   expect(flees(decide(s, w), w)).toBe(true);
   s.health = 40;
   w.zombies = w.zombies.slice(0, 1);
@@ -105,7 +104,7 @@ test('Decidir: cada compañero que pelea al lado cuenta como un zombi menos', ()
   const w = world();
   const s = w.survivors[0]!;
   s.stance = 'decide';
-  const zs = [zombieAt(w, 16, 11), zombieAt(w, 16, 12), zombieAt(w, 16, 13)];
+  const zs = [zombieAt(w, 16, 11), zombieAt(w, 16, 12)];
   expect(flees(decide(s, w), w)).toBe(true);
   const b = addSurvivor(w, { x: 13, y: 12 }, 'Bea');
   b.action = { type: 'melee', zombieId: zs[0]!.id, cooldown: 0 };

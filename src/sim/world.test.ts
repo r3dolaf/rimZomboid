@@ -76,8 +76,9 @@ test('almacén de 2 casillas junto a la puerta, con 10 latas', () => {
   expect(w.storage.items).toEqual({ ...emptyInventory(), food: 10 });
 });
 
-test('los supervivientes empiezan sin cargar nada', () => {
-  for (const s of createWorld(10).survivors) expect(s.carrying).toEqual(emptyInventory());
+test('los supervivientes empiezan sin cargar nada (salvo sus 2 vendas, H5)', () => {
+  for (const s of createWorld(10).survivors)
+    expect(s.carrying).toEqual({ ...emptyInventory(), bandage: 2 });
 });
 
 test('necesidades iniciales entre 60 y 100, sin recuerdos y con 1–2 rasgos', () => {

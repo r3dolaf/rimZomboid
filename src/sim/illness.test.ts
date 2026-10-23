@@ -51,7 +51,7 @@ function until(w: World, tick: number, each?: () => void): void {
   }
 }
 
-test('infección: el mordisco infecta siempre, el arañazo 1 de cada 10, el corte nunca; muere a las 48–72 h', () => {
+test('infección: el mordisco infecta siempre, el arañazo 3 de cada 100 (ajuste), el corte nunca; muere a las 48–72 h', () => {
   const { w, ana } = world();
   addWound(w, ana, 'leftLeg', 'cut');
   expect(ana.infection).toBeNull();
@@ -71,8 +71,8 @@ test('infección: el mordisco infecta siempre, el arañazo 1 de cada 10, el cort
     addWound(w, ana, 'leftLeg', 'scratch');
     if (ana.infection) infected++;
   }
-  expect(infected / 1000).toBeGreaterThan(0.07);
-  expect(infected / 1000).toBeLessThan(0.13);
+  expect(infected / 1000).toBeGreaterThan(0.015);
+  expect(infected / 1000).toBeLessThan(0.05);
 });
 
 test('infección: fiebre a las 12 h, náuseas a las 24, muy grave 6 h antes de morir (y no se levanta) y muere', () => {

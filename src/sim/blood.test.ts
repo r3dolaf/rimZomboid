@@ -33,42 +33,43 @@ const hours = (w: World, h: number) => {
   }
 };
 
-test('cifras: se recupera 1/2/3 por hora; desnutrido −2; se desmaya bajo 30 y se levanta a 35', () => {
-  expect(BLOOD_REGEN).toEqual({ awake: 1, rest: 2, hospital: 3 });
+test('cifras: se recupera 2/4/6 por hora (ajuste); desnutrido −2; se desmaya bajo 30 y se levanta a 35', () => {
+  expect(BLOOD_REGEN).toEqual({ awake: 2, rest: 4, hospital: 6 });
   expect([STARVING_BLOOD, FAINT_BELOW, FAINT_UNTIL]).toEqual([2, 30, 35]);
   expect([CLEAN_BANDAGE_HEAL, REST_HEAL]).toEqual([2, 2]);
   expect(world().s.blood).toBe(100);
 });
 
-test('sangrar: un corte, 5 por hora; un mordisco, 8; se suman', () => {
+test('sangrar: un corte, 4 por hora; un mordisco, 5 (ajuste); se suman', () => {
   const { w, s } = world();
   addWound(w, s, 'leftArm', 'cut');
   hours(w, 1);
-  expect(s.blood).toBeCloseTo(95, 5);
+  expect(s.blood).toBeCloseTo(96, 5);
   addWound(w, s, 'rightArm', 'bite');
   hours(w, 1);
-  expect(s.blood).toBeCloseTo(82, 5);
+  expect(s.blood).toBeCloseTo(87, 5);
 });
 
-test('un arañazo sangra 2 por hora y para solo a la hora; luego se recupera (1 por hora)', () => {
+test('un arañazo sangra 2 por hora y para solo a la hora; luego se recupera (2 por hora)', () => {
   const { w, s } = world();
   const wd = addWound(w, s, 'torso', 'scratch');
   hours(w, 1);
   expect(s.blood).toBeCloseTo(98, 5);
   expect(wd.bleeding).toBe(false);
+  s.blood = 90;
   hours(w, 1);
-  expect(s.blood).toBeCloseTo(99, 5);
+  expect(s.blood).toBeCloseTo(92, 5);
 });
 
-test('recuperarse: 1 por hora despierto, 2 durmiendo; nunca pasa de 100', () => {
+test('recuperarse: 2 por hora despierto, 4 durmiendo; nunca pasa de 100', () => {
   const { w, s } = world();
   s.blood = 50;
   hours(w, 2);
-  expect(s.blood).toBeCloseTo(52, 5);
+  expect(s.blood).toBeCloseTo(54, 5);
   s.action = { type: 'sleep', inBed: false };
   s.needs.sleep = 0;
   hours(w, 2);
-  expect(s.blood).toBeCloseTo(56, 5);
+  expect(s.blood).toBeCloseTo(62, 5);
   s.blood = 99.9;
   hours(w, 1);
   expect(s.blood).toBe(100);

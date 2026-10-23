@@ -59,11 +59,9 @@ test('seis partes con su vida; dónde caen los golpes; los tres tipos de herida'
     leftLeg: 10,
     rightLeg: 10,
   });
-  expect(WOUNDS).toEqual({
-    scratch: { damage: 3, bleed: 2, stopsHours: 1, healDays: 1, infect: 0.1 },
-    cut: { damage: 6, bleed: 5, stopsHours: null, healDays: 3, infect: 0 },
-    bite: { damage: 10, bleed: 8, stopsHours: null, healDays: 5, infect: 1 },
-  });
+  // (Las cifras, tras el ajuste de la partida larga: balanceH5.test.ts.)
+  expect(Object.keys(WOUNDS)).toEqual(['scratch', 'cut', 'bite']);
+  expect([WOUNDS.scratch.damage, WOUNDS.cut.damage, WOUNDS.bite.damage]).toEqual([3, 6, 10]);
 });
 
 test('una herida quita vida a su parte (nunca por debajo de 0)', () => {
@@ -155,17 +153,19 @@ function hits(surrounded: boolean, health = 100, n = 2000) {
   return { kinds, parts };
 }
 
-test('golpes de zombi: solo, 3 de cada 4 arañazos y el resto cortes, sin mordiscos', () => {
+test('golpes de zombi: solo, arañazos (85 %, ajuste) y el resto cortes, sin mordiscos', () => {
   const { kinds, parts } = hits(false);
   expect(kinds.bite).toBe(0);
-  expect(kinds.scratch / 2000).toBeCloseTo(0.75, 1);
+  expect(kinds.scratch / 2000).toBeCloseTo(0.85, 1);
   expect(parts.torso / 2000).toBeCloseTo(0.3, 1);
   expect(parts.head / 2000).toBeCloseTo(0.1, 1);
 });
 
-test('rodeado (o muy herido, Salud bajo 30): 3 de cada 10, mordiscos', () => {
-  expect(hits(true).kinds.bite / 2000).toBeCloseTo(0.3, 1);
-  expect(hits(false, 25).kinds.bite / 2000).toBeCloseTo(0.3, 1);
+test('rodeado (o muy herido, Salud bajo 30): 1 de cada 20, mordiscos (ajuste)', () => {
+  expect(hits(true).kinds.bite / 2000).toBeCloseTo(0.05, 1);
+  expect(hits(true).kinds.bite).toBeGreaterThan(40);
+  expect(hits(false, 25).kinds.bite / 2000).toBeCloseTo(0.05, 1);
+  expect(hits(false, 25).kinds.bite).toBeGreaterThan(40);
 });
 
 test('piernas: una a 0, la mitad de rápido; las dos, un cuarto; a medias, en proporción', () => {

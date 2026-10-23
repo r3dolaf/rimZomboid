@@ -26,6 +26,7 @@ function scene(): { w: World; a: Survivor } {
     s.needs.mood = 60;
     s.nextChatAt = 1e9;
     s.traits = [];
+    s.carrying.bandage = 0; // (H5: sin sus vendas, para que quepan 8 tablas justas)
     s.work = {
       heal: false,
       social: false,

@@ -505,7 +505,7 @@ export const ZOMBIE_THINK_TICKS = 5; // cada cuánto decide cada zombi (repartid
 export const ZOMBIE_REPATH_TICKS = 20; // al perseguir, cada cuánto rehace el camino
 export const LOSE_TRACK_TICKS = 50; // sin ver a su presa este tiempo, pierde el rastro
 export const ZOMBIE_REACH = 1.5; // casillas de centro a centro para golpear
-export const ZOMBIE_HIT_CHANCE = 0.4;
+export const ZOMBIE_HIT_CHANCE = 0.25; // H5: desde que hay heridas (antes 0,4)
 export const HERD_RANGE = 10; // al vagar, se fija en los zombis a esta distancia
 export const HERD_CHANCE = 0.75; // de los paseos, cuántos van hacia el grupo
 export const WANDER_MIN = 3;
@@ -552,9 +552,11 @@ export const HEAD_HIT_CHANCE = 1 / 6; // de los golpes que aciertan; hacen el do
 export const SURVIVOR_REACH = 1.5; // casillas de centro a centro para golpear
 // Posturas y peligro (spec H4b §7)
 export const DANGER_RANGE = 8; // como mucho, aunque de día vean más lejos
-export const FLEE_HEALTH = 20; // por debajo, huye siempre
+export const FLEE_HEALTH = 30; // por debajo, huye siempre (H5: donde empiezan los mordiscos)
 export const DECIDE_MIN_HEALTH = 50;
-export const DECIDE_MAX_THREATS = 2;
+export const DECIDE_MAX_THREATS = 1; // H5: con dos al alcance, muerden (antes 2)
+/** Con Decidir (H5), con menos sangre que esto, huye. */
+export const DECIDE_MIN_BLOOD = 60;
 export const UNARMED_MIN_HEALTH = 70;
 export const UNARMED_MAX_THREATS = 1;
 export const ALLY_RANGE = 5; // compañeros peleando a esta distancia o menos
@@ -666,9 +668,11 @@ export const HIT_WEIGHTS = {
  * `null`: hasta vendarla), días para curarse y probabilidad de infectar.
  */
 export const WOUNDS = {
-  scratch: { damage: 3, bleed: 2, stopsHours: 1, healDays: 1, infect: 0.1 },
-  cut: { damage: 6, bleed: 5, stopsHours: null, healDays: 3, infect: 0 },
-  bite: { damage: 10, bleed: 8, stopsHours: null, healDays: 5, infect: 1 },
+  // Ajuste tras la partida larga (H5 §11): cortes que paran solos a las 3 h, se sangra algo
+  // menos y el arañazo infecta 1 de cada 33 (con la spec, la colonia caía en 2–3 días).
+  scratch: { damage: 3, bleed: 2, stopsHours: 1, healDays: 1, infect: 0.03 },
+  cut: { damage: 6, bleed: 4, stopsHours: 3, healDays: 3, infect: 0 },
+  bite: { damage: 10, bleed: 5, stopsHours: null, healDays: 5, infect: 1 },
 } as const satisfies Record<
   WoundKind,
   { damage: number; bleed: number; stopsHours: number | null; healDays: number; infect: number }
@@ -678,12 +682,12 @@ export const PAIN_PER_DAMAGE = 1.5;
 export const FRESH_PAIN = 2.5;
 export const FRESH_PAIN_HOURS = 6;
 /** Golpes de zombi: arañazo (si no, corte); rodeado o con la Salud bajo MAUL_BELOW, mordiscos. */
-export const SCRATCH_CHANCE = 0.75;
+export const SCRATCH_CHANCE = 0.85; // ajuste (antes 0,75)
 export const MAUL_BELOW = 30;
-export const MAUL_BITE_CHANCE = 0.3;
+export const MAUL_BITE_CHANCE = 0.05; // ajuste (antes 0,3): el mordisco, raro pero mortal
 // Sangre y curación (H5 §2.2 y §3)
 /** Lo que se recupera por hora si no sangra nada: despierto, durmiendo o descansando, en el hospital. */
-export const BLOOD_REGEN = { awake: 1, rest: 2, hospital: 3 } as const;
+export const BLOOD_REGEN = { awake: 2, rest: 4, hospital: 6 } as const; // ajuste (antes 1/2/3)
 /** Desnutrido (hambre a 0): sangre que pierde por hora. */
 export const STARVING_BLOOD = 2;
 /** Se desmaya por debajo de esto y no se levanta hasta volver a FAINT_UNTIL. */

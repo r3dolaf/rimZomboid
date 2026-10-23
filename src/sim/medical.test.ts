@@ -310,7 +310,7 @@ test('el que descansa, primero a una cama de hospital libre; el rescatado, tambi
   expect(tileOf(bea.pos)).toEqual({ x: 10, y: 3 });
 });
 
-test('en una cama de hospital se cura el triple y recupera 3 de sangre por hora', () => {
+test('en una cama de hospital se cura el triple y recupera el triple de sangre (6 por hora)', () => {
   expect(HOSPITAL_HEAL).toBe(3);
   const { w, ana } = world();
   w.beds.push({ id: 9, pos: { x: 9, y: 3 }, ownerId: null, medical: true });
@@ -323,7 +323,7 @@ test('en una cama de hospital se cura el triple y recupera 3 de sangre por hora'
     healthSystem(w);
     w.tick++;
   }
-  expect(ana.blood).toBeCloseTo(53, 5);
+  expect(ana.blood).toBeCloseTo(56, 5);
   expect(6 - wd.damage).toBeCloseTo((6 * 3) / 72, 5);
 });
 

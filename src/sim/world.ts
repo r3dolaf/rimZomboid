@@ -1,17 +1,18 @@
 import {
+  BANDAGES_CARRIED,
+  BUILDINGS,
   CALM_DAYS_MAX,
   CALM_DAYS_MIN,
   CHAT_EVERY_MAX,
   EVENTS_START,
   INITIAL_REVEAL,
+  LOCKED_DOOR_SALT,
   NEED_START_MAX,
   NEED_START_MIN,
-  BUILDINGS,
-  LOCKED_DOOR_SALT,
   START_FOOD,
-  START_WEAPON,
   START_OPINION_MAX,
   START_OPINION_MIN,
+  START_WEAPON,
   SURVIVOR_COUNT,
   TICKS_PER_DAY,
 } from './balance';
@@ -81,7 +82,7 @@ export function createWorld(
     skills: rollSkills(skillRng(seed, i + 1), []), // se sortea abajo con los rasgos
     memories: [],
     bedId: i + 1,
-    carrying: emptyInventory(),
+    carrying: { ...emptyInventory(), bandage: BANDAGES_CARRIED }, // H5: salen con sus vendas
     work: defaultWork([]), // se ajusta abajo con los rasgos
     priorities: defaultPriorities(),
     equipped: START_WEAPON,

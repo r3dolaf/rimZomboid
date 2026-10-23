@@ -3,6 +3,7 @@ import {
   ALLY_RANGE,
   DANGER_RANGE,
   DECIDE_MAX_THREATS,
+  DECIDE_MIN_BLOOD,
   DECIDE_MIN_HEALTH,
   FLED_LOG_TICKS,
   FLEE_HEALTH,
@@ -60,6 +61,7 @@ export function willFight(w: World, s: Survivor, threats: Zombie[], stance = s.s
   if (s.health < FLEE_HEALTH || armFactor(s) === 0) return false; // sin brazos (H5), huye
   if (stance === 'fight') return true;
   if (stance === 'flee') return false;
+  if (s.blood < DECIDE_MIN_BLOOD) return false; // H5: con poca sangre, mejor no
   const allies = w.survivors.filter(
     (o) => o !== s && o.action.type === 'melee' && d2(o.pos, s.pos) <= ALLY_RANGE * ALLY_RANGE,
   ).length;

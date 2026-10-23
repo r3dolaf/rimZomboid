@@ -133,7 +133,7 @@ test('persigue al colono que ve y le golpea cuando lo tiene al lado', () => {
   const s = w.survivors[0]!;
   s.pos = { x: 10.5, y: 10.5 };
   const z = zombieAt(w, 16, 10);
-  run(w, 120);
+  run(w, 200); // H5: acierta 1 de cada 4
   expect(z.state).toBe('chase');
   expect(z.targetId).toBe(s.id);
   expect(dist(z.pos, s.pos)).toBeLessThanOrEqual(1.5);

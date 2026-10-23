@@ -18,8 +18,9 @@ import { logEvent } from './log';
 import { nextFloat, pick } from './rng';
 import { equipFromPack } from './jobs/weapons';
 import { findWork, isWorking, stillWorthIt } from './work';
-import { selfCare } from './jobs/medical';
+import { restDecision, selfCare } from './jobs/medical';
 import type { Action, BrainId, Survivor, World } from './types';
+import { tileOf } from './world';
 
 /**
  * Decide la siguiente acción de un superviviente, o `null` para seguir con la actual.
@@ -59,6 +60,9 @@ const AiBrain: Brain = {
 
     const r = rest(s, w);
     if (r) return r;
+    // Mucho dolor (H5 §5): se acuesta hasta que se le pase.
+    const resting = restDecision(s, w);
+    if (resting !== undefined) return resting;
     if (crisisDue(s, w))
       return { type: 'moveTo', target: pick(w.rng, baseFloor(w)), then: { type: 'crisis' } };
     if (a.type === 'moveTo' && a.then?.type === 'console')
@@ -130,8 +134,15 @@ function goEat(w: World): Action {
   return { type: 'moveTo', target: pick(w.rng, w.storage.tiles), then: { type: 'eat' } };
 }
 
-/** A su cama; si no tiene, a cualquier sitio del suelo de la base. */
+/**
+ * A su cama; si no tiene, a cualquier sitio del suelo de la base. Si está descansando, se duerme
+ * allí mismo (también en una cama de hospital, H5 §6).
+ */
 function goSleep(s: Survivor, w: World): Action {
+  if (s.action.type === 'rest') {
+    const t = tileOf(s.pos);
+    return { type: 'sleep', inBed: w.beds.some((b) => b.pos.x === t.x && b.pos.y === t.y) };
+  }
   const bed = w.beds.find((b) => b.id === s.bedId);
   const target = bed ? bed.pos : pick(w.rng, baseFloor(w));
   return { type: 'moveTo', target, then: { type: 'sleep' } };

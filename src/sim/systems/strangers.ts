@@ -197,6 +197,8 @@ export function newStranger(w: World, start: Point): Survivor {
     wounds: [],
     blood: 100,
     dying: null,
+    painkillerUntil: 0,
+    painkillerWanted: false,
   };
   s.needs.mood = moodTarget(s, w.tick, w.base.rect);
   s.stance = defaultStance(s.traits);
@@ -236,7 +238,7 @@ export function acceptStrangers(w: World): void {
     s.work = defaultWork(s.traits);
     s.nextChatAt = w.tick + nextInt(w.rng, 0, CHAT_EVERY_MAX);
     // Primero una cama construida que esté libre (H4a); si no, uno de los sitios de serie.
-    const spare = w.beds.find((b) => b.ownerId === null);
+    const spare = w.beds.find((b) => b.ownerId === null && b.medical !== true);
     const free = baseLayout(w.base).beds.find((p) => freeFloor(w, p));
     if (spare) {
       spare.ownerId = s.id;

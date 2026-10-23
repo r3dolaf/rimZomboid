@@ -304,6 +304,7 @@ export const es = {
     needle: ['aguja', 'agujas'],
     crowbar: ['palanca', 'palancas'],
     machete: ['machete', 'machetes'],
+    painkillers: ['analgésico', 'analgésicos'],
   } satisfies Record<ItemKind, [string, string]>,
   log: {
     found: (who: string, what: string, where: string) => `${who} ha encontrado ${what} en ${where}`,
@@ -388,6 +389,10 @@ export const es = {
       `Un zombi ${es.woundVerb[wound]} a ${who} en ${es.bodyParts[part].the}`,
     bandaged: (who: string, other: string) =>
       who === other ? `${who} se ha vendado` : `${who} ha vendado a ${other}`,
+    painkiller: (who: string, other: string) =>
+      who === other
+        ? `${who} se ha tomado un analgésico`
+        : `${who} le ha dado un analgésico a ${other}`,
     broken: (what: 'door' | 'window' | 'wall', inBase: boolean) =>
       `Los zombis han ${
         what === 'door'
@@ -512,6 +517,13 @@ export const es = {
     goBandage: (who: string) => `Va a vendar a ${who}`,
     bandage: (who: string) => `Vendando a ${who}`,
     bandageSelf: 'Vendándose',
+    goTakeBandages: 'Va a por vendas',
+    // Analgésicos y descanso (H5)
+    goRest: 'Va a descansar',
+    rest: 'Descansando',
+    takePainkiller: 'Va a tomarse un analgésico',
+    fetchPainkiller: (who: string) => `Va a por un analgésico para ${who}`,
+    givePainkiller: (who: string) => `Lleva un analgésico a ${who}`,
     wander: 'Paseando',
     goEat: 'Va a comer',
     eat: 'Comiendo',

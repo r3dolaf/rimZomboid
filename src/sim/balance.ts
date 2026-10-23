@@ -116,6 +116,7 @@ export const ITEM_WEIGHT_KG = {
   needle: 0.05,
   crowbar: 2,
   machete: 1,
+  painkillers: 0.05, // H5
 } as const;
 export const START_WEAPON = 'knife' as const; // H4b: sin arma, caían enseguida
 
@@ -559,7 +560,8 @@ export const BUILDINGS: Record<
 export type LootAmount = [number, number] | { chance: number };
 
 /** Lo que se reparte (el hilo, en carretes de THREAD_PER_SPOOL usos). */
-export type LootItem = 'food' | 'bandage' | 'wood' | 'cloth' | 'thread' | 'needle' | Weapon;
+export type LootItem =
+  'food' | 'bandage' | 'wood' | 'cloth' | 'thread' | 'needle' | 'painkillers' | Weapon;
 
 /** El botín de cada tipo de edificio (spec H4f §4). */
 export const LOOT: Record<LootKind, Partial<Record<LootItem, LootAmount>>> = {
@@ -572,9 +574,10 @@ export const LOOT: Record<LootKind, Partial<Record<LootItem, LootAmount>>> = {
     needle: { chance: 0.05 },
     knife: { chance: 0.25 },
     bat: { chance: 0.15 },
+    painkillers: { chance: 1 / 3 },
   },
-  supermarket: { food: [40, 60], bandage: [1, 3], knife: [1, 1] },
-  pharmacy: { food: [0, 4], bandage: [12, 18], needle: [1, 1] },
+  supermarket: { food: [40, 60], bandage: [1, 3], knife: [1, 1], painkillers: [0, 2] },
+  pharmacy: { food: [0, 4], bandage: [12, 18], needle: [1, 1], painkillers: [6, 10] },
   hardware: {
     bandage: [0, 2],
     wood: [16, 24],
@@ -585,9 +588,16 @@ export const LOOT: Record<LootKind, Partial<Record<LootItem, LootAmount>>> = {
     machete: [1, 1],
     knife: [1, 1],
   },
-  police: { food: [2, 6], bandage: [2, 4], bat: [2, 2], crowbar: [1, 1], machete: [1, 1] },
+  police: {
+    food: [2, 6],
+    bandage: [2, 4],
+    bat: [2, 2],
+    crowbar: [1, 1],
+    machete: [1, 1],
+    painkillers: [1, 2],
+  },
   clothes: { cloth: [20, 30], thread: [6, 6], needle: [3, 3] },
-  gas: { food: [8, 16], bandage: [0, 2], bat: [1, 1] },
+  gas: { food: [8, 16], bandage: [0, 2], bat: [1, 1], painkillers: [0, 2] },
   farm: {
     food: [8, 16],
     bandage: [0, 2],
@@ -655,6 +665,11 @@ export const FAINT_BELOW = 30;
 export const FAINT_UNTIL = 35;
 /** Curación: con venda limpia, el doble; descansando o durmiendo, el doble; en el hospital, el triple. */
 export const CLEAN_BANDAGE_HEAL = 2;
+/** Analgésicos y descanso (H5 §5): con la Salud por debajo de REST_BELOW descansa hasta REST_UNTIL. */
+export const REST_BELOW = 40;
+export const REST_UNTIL = 50;
+export const PAINKILLER_HOURS = 8;
+export const PAINKILLER_PAIN = 0.5; // con analgésico, el dolor se queda en esto
 export const REST_HEAL = 2;
 export const HOSPITAL_HEAL = 3;
 /** Sin brazos no se trabaja; esto evita dividir por 0 si algo empieza igualmente. */

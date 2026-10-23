@@ -31,6 +31,7 @@ test('muestra la casa seleccionada con sus contenedores y se cierra con la ✕',
     needle: 0,
     crowbar: 0,
     machete: 0,
+    painkillers: 0,
   };
   cs[1]!.designated = true;
   sel.set(h.id);

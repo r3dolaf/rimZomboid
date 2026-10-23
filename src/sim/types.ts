@@ -194,7 +194,12 @@ export type Activity =
   | { type: 'dropOff'; downedId: number }
   | { type: 'bandage'; patientId: number }
   // Vendas (H5): coger del almacén hasta llevar las que tocan.
-  | { type: 'takeBandages' };
+  | { type: 'takeBandages' }
+  // Descansar (en la cama a la que va) y analgésicos (tomárselo; ir a por uno y llevárselo a otro).
+  | { type: 'rest' }
+  | { type: 'takePainkiller' }
+  | { type: 'fetchPainkiller'; patientId: number }
+  | { type: 'givePainkiller'; patientId: number };
 
 export type Action =
   /** `wait`: esperando tras no encontrar camino (no se consulta al cerebro) o tras negarse a trabajar. */
@@ -225,7 +230,9 @@ export type Action =
   // Fabricando en una mesa (H4d): `recipe` por si el pedido se quita a medias.
   | { type: 'craft'; billId: number; tableId: number; recipe: RecipeId; ticksLeft: number }
   // Vendando a `patientId` (Sanar, H4e).
-  | { type: 'bandage'; patientId: number; woundId: number; ticksLeft: number };
+  | { type: 'bandage'; patientId: number; woundId: number; ticksLeft: number }
+  // Descansando por dolor (y, en H5 §7, por fiebre): acostado sin trabajar.
+  | { type: 'rest' };
 
 export interface Survivor {
   id: number;
@@ -277,6 +284,9 @@ export interface Survivor {
   blood: number;
   /** De qué va a morir en este tick (lo apuntan la sangre y las heridas; lo resuelve la muerte). */
   dying: DeathCause | null;
+  /** Con analgésico hasta este tick (H5 §5); y si el jugador ha pedido darle uno. */
+  painkillerUntil: number;
+  painkillerWanted: boolean;
 }
 
 /** De qué se muere (H5 §8). */
@@ -357,6 +367,8 @@ export interface Bed {
   pos: Point;
   /** `null`: cama construida que aún no es de nadie. */
   ownerId: number | null;
+  /** Cama de hospital (H5 §6): para quien la necesite, sin dueño. */
+  medical?: boolean;
 }
 
 /** Objetos tirados en una casilla transitable. */

@@ -6,11 +6,13 @@ import {
   FRESH_PAIN,
   FRESH_PAIN_HOURS,
   PAIN_PER_DAMAGE,
+  PAINKILLER_PAIN,
   TICKS_PER_HOUR,
   WOUNDS,
 } from './balance';
 import { logEvent } from './log';
 import type { BodyPart, Survivor, World, Wound, WoundKind } from './types';
+import { tileOf } from './world';
 
 export const BODY_PARTS: readonly BodyPart[] = [
   'head',
@@ -55,7 +57,13 @@ function painOfWound(wd: Wound, tick: number): number {
 export function painOf(s: Survivor, tick: number): number {
   let pain = 0;
   for (const wd of s.wounds) pain += painOfWound(wd, tick);
-  return pain;
+  // Con analgésico (H5 §5), la mitad.
+  return s.painkillerUntil > tick ? pain * PAINKILLER_PAIN : pain;
+}
+
+/** ¿Puede andar? Ni derribado ni con las dos piernas a 0. */
+export function canWalk(s: Survivor): boolean {
+  return s.action.type !== 'downed' && legFactor(s) > 0.25;
 }
 
 /** La Salud es 100 menos el dolor (entre 0 y 100). */
@@ -66,7 +74,13 @@ export function refreshHealth(w: World, s: Survivor): void {
 /** Cae derribado (lo que estuviera haciendo se corta) y sale del modo combate. */
 export function knockDown(w: World, s: Survivor): void {
   if (s.action.type === 'downed') return;
-  s.action = { type: 'downed', until: w.tick + DOWNED_TICKS };
+  // Si estaba acostado en una cama (durmiendo o descansando), sigue en ella (H5 §6).
+  const a = s.action;
+  const t = tileOf(s.pos);
+  const inBed =
+    (a.type === 'sleep' && a.inBed) ||
+    (a.type === 'rest' && w.beds.some((b) => b.pos.x === t.x && b.pos.y === t.y));
+  s.action = { type: 'downed', until: w.tick + DOWNED_TICKS, ...(inBed ? { inBed } : {}) };
   s.path = [];
   s.drafted = false;
   // Un desconocido no es de la colonia: se apunta con su nombre y sin aviso.

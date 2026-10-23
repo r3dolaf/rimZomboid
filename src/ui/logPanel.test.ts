@@ -20,6 +20,7 @@ test('formatItems: plurales y lista legible', () => {
       needle: 0,
       crowbar: 0,
       machete: 0,
+      painkillers: 0,
     }),
   ).toBe('4 latas, 1 venda y 2 bates');
   expect(
@@ -36,6 +37,7 @@ test('formatItems: plurales y lista legible', () => {
       needle: 0,
       crowbar: 0,
       machete: 0,
+      painkillers: 0,
     }),
   ).toBe('1 lata y 1 cuchillo');
   expect(
@@ -52,6 +54,7 @@ test('formatItems: plurales y lista legible', () => {
       needle: 0,
       crowbar: 0,
       machete: 0,
+      painkillers: 0,
     }),
   ).toBe('nada');
 });
@@ -77,6 +80,7 @@ test('cada suceso se convierte en una frase con día y hora', () => {
       needle: 0,
       crowbar: 0,
       machete: 0,
+      painkillers: 0,
     },
   });
   expect(formatLogEntry(w.log.at(-1)!, w)).toBe(

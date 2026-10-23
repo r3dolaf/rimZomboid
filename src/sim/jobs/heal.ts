@@ -10,7 +10,15 @@ import { pick } from '../rng';
 import { practice } from '../skills';
 import type { Action, Activity, Point, Survivor, World } from '../types';
 import { tileOf } from '../world';
-import { bandageJob, bandageStillWorth, startBandage, startBandageActivity } from './medical';
+import {
+  bandageJob,
+  bandageStillWorth,
+  freeHospitalBed,
+  painkillerJob,
+  painkillerStillWorth,
+  startBandage,
+  startBandageActivity,
+} from './medical';
 
 const sameTile = (a: Point, b: Point) => a.x === b.x && a.y === b.y;
 
@@ -32,13 +40,18 @@ function bedTaken(w: World, p: Point, except: Survivor): boolean {
 }
 
 /**
- * Adónde llevarlo: a su cama; si no, a una sin dueño; si no, al suelo de la base (`'floor'`). Si
- * ya está en la base y no hay cama, a ningún sitio (`null`).
+ * Adónde llevarlo: a una cama de hospital libre (H5 §6); si no, a su cama; si no, a una sin dueño;
+ * si no, al suelo de la base (`'floor'`). Si ya está en la base y no hay cama, a ningún sitio
+ * (`null`).
  */
 function rescueSpot(w: World, d: Survivor): Point | 'floor' | null {
+  const hospital = freeHospitalBed(w, d);
+  if (hospital) return hospital;
   const own = w.beds.find((b) => b.id === d.bedId && b.ownerId === d.id);
   if (own && !bedTaken(w, own.pos, d)) return own.pos;
-  const spare = w.beds.find((b) => b.ownerId === null && !bedTaken(w, b.pos, d));
+  const spare = w.beds.find(
+    (b) => b.ownerId === null && b.medical !== true && !bedTaken(w, b.pos, d),
+  );
   if (spare) return spare.pos;
   return contains(w.base.rect, tileOf(d.pos)) ? null : 'floor';
 }
@@ -84,9 +97,12 @@ function rescueJob(s: Survivor, w: World): Action | null {
   return best && goRescue(best);
 }
 
-/** El trabajo Sanar: rescatar y, si no, vendar (H5); `null` si no hay nada que hacer. */
+/**
+ * El trabajo Sanar: rescatar; si no, llevar un analgésico; si no, vendar (H5); `null` si no hay
+ * nada que hacer.
+ */
 export function healJob(s: Survivor, w: World): Action | null {
-  return rescueJob(s, w) ?? bandageJob(s, w);
+  return rescueJob(s, w) ?? painkillerJob(s, w) ?? bandageJob(s, w);
 }
 
 /** Rescate mandado en modo combate: sin mirar si hay zombis cerca. */
@@ -101,6 +117,8 @@ export function healStillWorth(s: Survivor, w: World): boolean {
   const then = a.then;
   if (then.type === 'dropOff') return s.carryingId === then.downedId;
   if (then.type === 'bandage') return s.work.heal && bandageStillWorth(s, w, then.patientId);
+  if (then.type === 'fetchPainkiller' || then.type === 'givePainkiller')
+    return s.work.heal && painkillerStillWorth(s, w, then.patientId);
   if (then.type !== 'rescue') return true;
   const d = w.survivors.find((x) => x.id === then.downedId);
   return d !== undefined && s.work.heal && rescuable(w, d, s) && !zombiesNear(w, d);

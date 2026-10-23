@@ -3,6 +3,7 @@
 import {
   BLOOD_REGEN,
   CLEAN_BANDAGE_HEAL,
+  HOSPITAL_HEAL,
   REST_HEAL,
   STARVING_BLOOD,
   TICKS_PER_DAY,
@@ -10,13 +11,8 @@ import {
   WOUNDS,
 } from './balance';
 import { partHp } from './body';
+import { inHospital, lyingDown } from './jobs/medical';
 import type { Survivor, World } from './types';
-
-/** ¿Está descansando? (Durmiendo, o derribado en una cama.) Cura y recupera el doble. */
-function resting(s: Survivor): boolean {
-  const a = s.action;
-  return a.type === 'sleep' || (a.type === 'downed' && a.inBed === true);
-}
 
 /**
  * Un tick de sus heridas y su sangre: sangrar, dejar de sangrar, curarse; recuperar o perder
@@ -25,7 +21,11 @@ function resting(s: Survivor): boolean {
 export function bloodTick(w: World, s: Survivor): void {
   // Sin cabeza o sin torso no se vive (antes de que la curación de este tick lo disimule).
   if (partHp(s, 'head') <= 0 || partHp(s, 'torso') <= 0) s.dying = 'wounds';
-  const rest = resting(s);
+  // Acostado (durmiendo, descansando o derribado en una cama) cura el doble; en una cama de
+  // hospital, el triple (§6).
+  const hospital = inHospital(w, s);
+  const rest = lyingDown(s);
+  const restMult = hospital ? HOSPITAL_HEAL : rest ? REST_HEAL : 1;
   let bleed = 0;
   for (const wd of s.wounds) {
     const spec = WOUNDS[wd.kind];
@@ -35,7 +35,7 @@ export function bloodTick(w: World, s: Survivor): void {
       if (spec.stopsHours !== null && w.tick + 1 - wd.at >= spec.stopsHours * TICKS_PER_HOUR)
         wd.bleeding = false;
     }
-    const mult = (wd.cleanUntil > w.tick ? CLEAN_BANDAGE_HEAL : 1) * (rest ? REST_HEAL : 1);
+    const mult = (wd.cleanUntil > w.tick ? CLEAN_BANDAGE_HEAL : 1) * restMult;
     wd.damage = Math.max(0, wd.damage - (wd.size * mult) / (spec.healDays * TICKS_PER_DAY));
   }
   s.wounds = s.wounds.filter((wd) => wd.damage > 0);
@@ -44,7 +44,8 @@ export function bloodTick(w: World, s: Survivor): void {
   let perHour = 0;
   if (bleed > 0) perHour -= bleed;
   if (starving) perHour -= STARVING_BLOOD;
-  if (bleed === 0 && !starving) perHour += rest ? BLOOD_REGEN.rest : BLOOD_REGEN.awake;
+  if (bleed === 0 && !starving)
+    perHour += hospital ? BLOOD_REGEN.hospital : rest ? BLOOD_REGEN.rest : BLOOD_REGEN.awake;
   s.blood = Math.max(0, Math.min(100, s.blood + perHour / TICKS_PER_HOUR));
 
   if (s.blood <= 0 && !s.dying) s.dying = bleed > 0 || !starving ? 'blood' : 'hunger';

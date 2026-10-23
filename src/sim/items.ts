@@ -13,7 +13,9 @@ export type ItemKind =
   | 'thread'
   | 'needle'
   | 'crowbar'
-  | 'machete';
+  | 'machete'
+  // H5
+  | 'painkillers';
 
 /** Orden en el que se cogen las cosas al registrar un contenedor. */
 export const ITEM_KINDS: readonly ItemKind[] = [
@@ -29,6 +31,7 @@ export const ITEM_KINDS: readonly ItemKind[] = [
   'needle',
   'crowbar',
   'machete',
+  'painkillers',
 ];
 
 /** Recuento de objetos por tipo. Lo usan el almacén, los contenedores y la carga. */
@@ -48,6 +51,7 @@ export function emptyInventory(): Inventory {
     needle: 0,
     crowbar: 0,
     machete: 0,
+    painkillers: 0,
   };
 }
 

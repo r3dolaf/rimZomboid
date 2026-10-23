@@ -80,7 +80,8 @@ export type LogEvent =
   | { kind: 'rescued'; survivorId: number; otherId: number }
   // Heridas (H5)
   | { kind: 'wounded'; survivorId: number; part: BodyPart; wound: WoundKind }
-  | { kind: 'bandaged'; survivorId: number; otherId: number };
+  | { kind: 'bandaged'; survivorId: number; otherId: number }
+  | { kind: 'painkiller'; survivorId: number; otherId: number };
 
 export type LogEntry = LogEvent & { tick: number };
 

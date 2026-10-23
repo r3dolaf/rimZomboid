@@ -228,6 +228,7 @@ test('alijo en una casa ya saqueada: una despensa escondida que vuelve a estar p
       needle: 0,
       crowbar: 0,
       machete: 0,
+      painkillers: 0,
     }; // la madera no se toca: tiene que cuadrar
   }
   expect(cacheEvent.canHappen(w)).toBe(true);

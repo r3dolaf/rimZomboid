@@ -105,6 +105,7 @@ test('dónde se puede construir cada cosa', () => {
       needle: 0,
       crowbar: 0,
       machete: 0,
+      painkillers: 0,
     },
   });
   expect(canPlace(w, 'table', floor)).toBe(false);

@@ -85,6 +85,7 @@ test('invariantes: planos con madera de más, montones raros, marcas que no son 
       needle: 0,
       crowbar: 0,
       machete: 0,
+      painkillers: 0,
     },
   });
   expect(checkInvariants(w).length).toBeGreaterThan(0);

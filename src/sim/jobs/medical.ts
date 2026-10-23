@@ -1,24 +1,114 @@
 // Vendas (spec H5 §4): cada uno lleva hasta 2; se venda lo que le sangra; Sanar venda a los demás
-// (y al derribado antes de cargarlo); a 1 día la venda está sucia y se cambia.
+// (y al derribado antes de cargarlo); a 1 día la venda está sucia y se cambia. Analgésicos,
+// descanso y camas de hospital (§5 y §6).
 import {
   BANDAGE_CLEAN_HOURS,
   BANDAGE_RANGE,
   BANDAGE_TICKS,
   BANDAGES_CARRIED,
+  PAINKILLER_HOURS,
+  REST_BELOW,
+  REST_UNTIL,
   TICKS_PER_HOUR,
   WOUNDS,
 } from '../balance';
-import { armFactor } from '../body';
+import { baseFloor } from '../base';
+import { armFactor, canWalk } from '../body';
 import { contains } from '../geom';
 import { ITEM_KINDS } from '../items';
 import { logEvent } from '../log';
-import { regionOf } from '../path/astar';
+import { findPath, regionOf } from '../path/astar';
 import { pick } from '../rng';
 import { practice, workSpeed } from '../skills';
-import type { Action, Survivor, World, Wound } from '../types';
+import type { Action, Point, Survivor, World, Wound } from '../types';
 import { tileOf } from '../world';
 
 const inBase = (w: World, s: Survivor) => contains(w.base.rect, tileOf(s.pos));
+const sameTile = (a: Point, b: Point) => a.x === b.x && a.y === b.y;
+const near = (a: Survivor, b: Survivor) =>
+  (a.pos.x - b.pos.x) ** 2 + (a.pos.y - b.pos.y) ** 2 <= BANDAGE_RANGE * BANDAGE_RANGE;
+
+/** ¿Está acostado? (Durmiendo, descansando o derribado en una cama.) */
+export function lyingDown(s: Survivor): boolean {
+  const a = s.action;
+  return a.type === 'sleep' || a.type === 'rest' || (a.type === 'downed' && a.inBed === true);
+}
+
+/** ¿Está acostado en una cama de hospital? */
+export function inHospital(w: World, s: Survivor): boolean {
+  if (!lyingDown(s)) return false;
+  const t = tileOf(s.pos);
+  return w.beds.some((b) => b.medical === true && sameTile(b.pos, t));
+}
+
+/**
+ * ¿Hay alguien (salvo `p`) acostado en esa cama o yendo a acostarse en ella? El que lleva a `p`
+ * en brazos, no cuenta.
+ */
+function bedOccupied(w: World, pos: Point, p: Survivor): boolean {
+  return w.survivors.some((o) => {
+    if (o === p) return false;
+    if (lyingDown(o) && sameTile(tileOf(o.pos), pos)) return true;
+    const a = o.action;
+    if (a.type !== 'moveTo' || !sameTile(a.target, pos)) return false;
+    const then = a.then?.type;
+    return then === 'rest' || (then === 'dropOff' && a.then?.downedId !== p.id);
+  });
+}
+
+/** Una cama de hospital libre para `p`, o `null`. */
+export function freeHospitalBed(w: World, p: Survivor): Point | null {
+  return w.beds.find((b) => b.medical === true && !bedOccupied(w, b.pos, p))?.pos ?? null;
+}
+
+/** Hace de una cama una de hospital (sin dueño) o la vuelve normal; luego reparte las camas. */
+export function setMedical(w: World, bedId: number, on: boolean): void {
+  const bed = w.beds.find((b) => b.id === bedId);
+  if (!bed || (bed.medical === true) === on) return;
+  bed.medical = on;
+  if (on && bed.ownerId !== null) {
+    const owner = w.survivors.find((s) => s.id === bed.ownerId);
+    if (owner) owner.bedId = null;
+    bed.ownerId = null;
+  }
+  assignBeds(w);
+}
+
+/** Da las camas normales sin dueño a los colonos que no tienen. */
+export function assignBeds(w: World): void {
+  for (const s of w.survivors) {
+    if (s.bedId !== null) continue;
+    const bed = w.beds.find((b) => b.ownerId === null && b.medical !== true);
+    if (!bed) return;
+    bed.ownerId = s.id;
+    s.bedId = bed.id;
+  }
+}
+
+/** ¿Le duele tanto que tiene que descansar? (Con analgésico, no.) */
+const hasPainkiller = (s: Survivor, w: World) => s.painkillerUntil > w.tick;
+
+/** Dónde descansar: una cama de hospital libre, si no la suya, si no el suelo de la base. */
+function restSpot(s: Survivor, w: World): Point {
+  const hospital = freeHospitalBed(w, s);
+  if (hospital) return hospital;
+  const own = w.beds.find((b) => b.id === s.bedId);
+  if (own) return own.pos;
+  return inBase(w, s) ? tileOf(s.pos) : pick(w.rng, baseFloor(w));
+}
+
+/**
+ * Descansar por dolor (§5): con la Salud bajo REST_BELOW y sin analgésico, se acuesta; sigue hasta
+ * pasar de REST_UNTIL. `null`: sigue descansando; `undefined`: no le hace falta.
+ */
+export function restDecision(s: Survivor, w: World): Action | null | undefined {
+  const a = s.action;
+  const resting = a.type === 'rest' || (a.type === 'moveTo' && a.then?.type === 'rest');
+  const pain = !hasPainkiller(s, w) && s.health < (resting ? REST_UNTIL : REST_BELOW);
+  if (resting) return pain ? null : { type: 'idle', ticksLeft: 0 };
+  if (!pain) return undefined;
+  return { type: 'moveTo', target: restSpot(s, w), then: { type: 'rest' } };
+}
 
 /** ¿Lleva algo que descargar? Todo cuenta salvo sus BANDAGES_CARRIED vendas. */
 export function hasCargo(s: Survivor): boolean {
@@ -85,11 +175,107 @@ export function startBandage(w: World, healer: Survivor, p: Survivor): Action | 
 export function selfCare(s: Survivor, w: World): Action | null | undefined {
   const a = s.action;
   if (a.type === 'bandage' && a.patientId === s.id) return null;
-  if (a.type === 'moveTo' && a.then?.type === 'takeBandages') return null;
-  if (armFactor(s) === 0 || !s.wounds.some((wd) => wd.bleeding)) return undefined;
-  if (s.carrying.bandage > 0) return startBandage(w, s, s) ?? undefined;
-  if (w.storage.items.bandage > 0 && reachesStorage(w, s)) return goTakeBandages(w);
+  if (a.type === 'moveTo' && (a.then?.type === 'takeBandages' || a.then?.type === 'takePainkiller'))
+    return null;
+  if (armFactor(s) > 0 && s.wounds.some((wd) => wd.bleeding)) {
+    if (s.carrying.bandage > 0) {
+      const own = startBandage(w, s, s);
+      if (own) return own;
+    } else if (w.storage.items.bandage > 0 && reachesStorage(w, s)) return goTakeBandages(w);
+  }
+  // Le han mandado tomarse un analgésico (§5): si puede andar, va él al almacén.
+  if (s.painkillerWanted && canWalk(s) && w.storage.items.painkillers > 0 && reachesStorage(w, s))
+    return {
+      type: 'moveTo',
+      target: pick(w.rng, w.storage.tiles),
+      then: { type: 'takePainkiller' },
+    };
   return undefined;
+}
+
+/** Le hace efecto el analgésico: 8 h con medio dolor. */
+function painkillerTaken(w: World, p: Survivor): void {
+  p.painkillerUntil = w.tick + PAINKILLER_HOURS * TICKS_PER_HOUR;
+  p.painkillerWanted = false;
+}
+
+/** En el almacén: se toma un analgésico (si queda). */
+export function takePainkiller(s: Survivor, w: World): void {
+  s.painkillerWanted = false;
+  if (w.storage.items.painkillers === 0) return;
+  w.storage.items.painkillers--;
+  painkillerTaken(w, s);
+  logEvent(w, { kind: 'painkiller', survivorId: s.id, otherId: s.id });
+}
+
+/** A quién lleva un analgésico (o va a por él), o `null`. */
+function painkillerTargetId(s: Survivor): number | null {
+  const a = s.action;
+  const then = a.type === 'moveTo' ? a.then : undefined;
+  return then?.type === 'fetchPainkiller' || then?.type === 'givePainkiller'
+    ? then.patientId
+    : null;
+}
+
+/** ¿Hay que llevarle un analgésico? Lo quiere, no puede andar y está en la base. */
+const needsPainkiller = (w: World, p: Survivor) =>
+  p.painkillerWanted && !canWalk(p) && inBase(w, p);
+
+const goGivePainkiller = (p: Survivor): Action => ({
+  type: 'moveTo',
+  target: tileOf(p.pos),
+  then: { type: 'givePainkiller', patientId: p.id },
+});
+
+/** Sanar: llevar un analgésico a quien lo quiere y no puede ir (antes, a por él al almacén). */
+export function painkillerJob(s: Survivor, w: World): Action | null {
+  const p = w.survivors.find(
+    (o) =>
+      o !== s &&
+      needsPainkiller(w, o) &&
+      !w.survivors.some((x) => x !== s && painkillerTargetId(x) === o.id),
+  );
+  if (!p) return null;
+  if (s.carrying.painkillers > 0) return goGivePainkiller(p);
+  if (w.storage.items.painkillers === 0 || !reachesStorage(w, s)) return null;
+  return {
+    type: 'moveTo',
+    target: pick(w.rng, w.storage.tiles),
+    then: { type: 'fetchPainkiller', patientId: p.id },
+  };
+}
+
+/** ¿Sigue teniendo sentido llevárselo? */
+export function painkillerStillWorth(s: Survivor, w: World, patientId: number): boolean {
+  const p = w.survivors.find((x) => x.id === patientId);
+  return p !== undefined && needsPainkiller(w, p);
+}
+
+/** En el almacén: coge uno y se lo lleva; junto al paciente: se lo da. */
+export function startPainkillerActivity(
+  s: Survivor,
+  w: World,
+  activity: { type: 'fetchPainkiller' | 'givePainkiller'; patientId: number },
+): Action {
+  const idle: Action = { type: 'idle', ticksLeft: 0 };
+  const p = w.survivors.find((x) => x.id === activity.patientId);
+  if (activity.type === 'fetchPainkiller') {
+    if (s.carrying.painkillers === 0) {
+      if (w.storage.items.painkillers === 0) return idle;
+      w.storage.items.painkillers--;
+      s.carrying.painkillers++;
+    }
+    if (!p || !needsPainkiller(w, p)) return idle;
+    const path = findPath(w.grid, tileOf(s.pos), tileOf(p.pos));
+    if (!path) return idle;
+    s.path = path;
+    return goGivePainkiller(p);
+  }
+  if (!p || !p.painkillerWanted || s.carrying.painkillers === 0 || !near(s, p)) return idle;
+  s.carrying.painkillers--;
+  painkillerTaken(w, p);
+  logEvent(w, { kind: 'painkiller', survivorId: s.id, otherId: p.id });
+  return idle;
 }
 
 /** ¿Lo está vendando ya otro (o va a hacerlo)? */
@@ -103,12 +289,16 @@ const claimed = (w: World, p: Survivor, s: Survivor) =>
 export function bandageJob(s: Survivor, w: World): Action | null {
   if (armFactor(s) === 0) return null;
   let best: Survivor | null = null;
+  let bestHospital = false;
   let bestD = Infinity;
   for (const p of w.survivors) {
     if (!inBase(w, p) || !woundToTend(p, w.tick) || claimed(w, p, s)) continue;
+    // Primero los de las camas de hospital (§6); entre iguales, el más cercano.
+    const hospital = inHospital(w, p);
     const d = (p.pos.x - s.pos.x) ** 2 + (p.pos.y - s.pos.y) ** 2;
-    if (d < bestD) {
+    if ((hospital && !bestHospital) || (hospital === bestHospital && d < bestD)) {
       best = p;
+      bestHospital = hospital;
       bestD = d;
     }
   }
@@ -135,8 +325,7 @@ export function startBandageActivity(s: Survivor, w: World, patientId: number): 
   const idle: Action = { type: 'idle', ticksLeft: 0 };
   const p = w.survivors.find((x) => x.id === patientId);
   if (!p) return idle;
-  const d2 = (p.pos.x - s.pos.x) ** 2 + (p.pos.y - s.pos.y) ** 2;
-  return d2 <= BANDAGE_RANGE * BANDAGE_RANGE ? (startBandage(w, s, p) ?? idle) : idle;
+  return near(s, p) ? (startBandage(w, s, p) ?? idle) : idle;
 }
 
 /** Gasta una venda: la suya; si no, la del herido; si no, del almacén (si está en la base). */
@@ -154,10 +343,7 @@ export function bandageStep(w: World, s: Survivor): void {
   if (a.type !== 'bandage') return;
   const p = w.survivors.find((x) => x.id === a.patientId);
   const wd = p?.wounds.find((x) => x.id === a.woundId);
-  const near =
-    p !== undefined &&
-    (p.pos.x - s.pos.x) ** 2 + (p.pos.y - s.pos.y) ** 2 <= BANDAGE_RANGE * BANDAGE_RANGE;
-  if (!p || !wd || !near) {
+  if (!p || !wd || !near(s, p)) {
     s.action = { type: 'idle', ticksLeft: 0 };
     return;
   }

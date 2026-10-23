@@ -17,6 +17,7 @@ const ITEMS: readonly LootItem[] = [
   'axe',
   'crowbar',
   'machete',
+  'painkillers', // H5: el último, para no cambiar el reparto de lo de antes más que lo justo
 ];
 
 /** El mueble de cada cosa (spec H4f §4). */
@@ -32,6 +33,7 @@ const HOME: Record<LootItem, readonly ContainerKind[]> = {
   axe: ['crate'],
   crowbar: ['crate'],
   wood: ['crate'],
+  painkillers: ['medicine'],
 };
 
 /** Muebles que admiten de todo (además del suyo, cada cosa puede ir aquí). */

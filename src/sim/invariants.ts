@@ -170,9 +170,12 @@ export function checkInvariants(w: World): string[] {
     if (id !== null && c?.reservedBy !== s.id)
       problems.push(`${s.name}: va al contenedor ${id} sin tenerlo reservado`);
   }
-  for (const b of w.beds)
+  for (const b of w.beds) {
     if (b.ownerId !== null && !ids.has(b.ownerId))
       problems.push(`cama ${b.id}: su dueño ${b.ownerId} no existe`);
+    if (b.medical === true && b.ownerId !== null)
+      problems.push(`cama ${b.id}: es de hospital y tiene dueño`);
+  }
   // H4a: montones, planos y marcas de talar.
   for (const p of w.piles) {
     checkInventory(problems, `montón ${p.id}`, p.items);

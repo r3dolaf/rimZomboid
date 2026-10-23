@@ -99,6 +99,8 @@ export function createWorld(
     wounds: [],
     blood: 100,
     dying: null,
+    painkillerUntil: 0,
+    painkillerWanted: false,
   }));
   for (const s of survivors) {
     s.work = defaultWork(s.traits);

@@ -99,6 +99,7 @@ test('muestra lo que lleva encima y su peso', () => {
     needle: 0,
     crowbar: 0,
     machete: 0,
+    painkillers: 0,
   };
   s.skills.haul.level = 5;
   selection.set(s.id);

@@ -121,6 +121,7 @@ test('desaparecen: registrado y vacío, al cabo de un día; si no, se pudre a lo
     axe: 0,
     crowbar: 0,
     machete: 0,
+    painkillers: 0,
   };
   a.searched = true;
   b.items.machete = 1; // se pudre con ella

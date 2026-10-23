@@ -40,6 +40,7 @@ test('update cambia la hora y refleja cambios de velocidad hechos con el teclado
       needle: 0,
       crowbar: 0,
       machete: 0,
+      painkillers: 0,
     },
   );
   expect(root.querySelector('[data-testid="hud-time"]')!.textContent).toBe('Día 2, 13:30');
@@ -81,6 +82,7 @@ test('muestra la comida del almacén', () => {
       needle: 0,
       crowbar: 0,
       machete: 0,
+      painkillers: 0,
     },
   );
   expect(root.querySelector('[data-testid="hud-food"]')!.textContent).toBe('Comida: 12');
@@ -124,6 +126,7 @@ test('muestra la madera del almacén y el botón Trabajos abre el panel', () => 
       needle: 0,
       crowbar: 0,
       machete: 0,
+      painkillers: 0,
     },
   );
   expect(root.querySelector('[data-testid="hud-wood"]')!.textContent).toBe('Madera: 7');
@@ -149,6 +152,7 @@ test('muestra el narrador y la tormenta mientras dura', () => {
     needle: 0,
     crowbar: 0,
     machete: 0,
+    painkillers: 0,
   };
   hud.update({ day: 1, hour: 9, minute: 0 }, stock, false);
   expect(weather.hidden).toBe(true);

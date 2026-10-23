@@ -3,6 +3,7 @@ import { resolveDecision } from './events/resolve';
 import { cancelBlueprint, markTree, placeBlueprint } from './build';
 import { BILL_DEFAULT_TARGET } from './balance';
 import { applyDraftOrder } from './draft';
+import { setMedical } from './jobs/medical';
 import type { Bill, BuildKind, Container, RecipeId, Stance, WorkType, World } from './types';
 
 /** Lo que pide el jugador. La interfaz solo cambia el mundo mediante órdenes. */
@@ -31,7 +32,10 @@ export type Order =
   | { type: 'draft'; survivorIds: number[]; on: boolean }
   | { type: 'draftMove'; survivorIds: number[]; x: number; y: number }
   | { type: 'draftAttack'; survivorIds: number[]; zombieId: number }
-  | { type: 'draftRescue'; survivorId: number; downedId: number };
+  | { type: 'draftRescue'; survivorId: number; downedId: number }
+  // Heridas (H5): dar un analgésico; marcar o desmarcar una cama de hospital.
+  | { type: 'givePainkiller'; survivorId: number }
+  | { type: 'setMedical'; bedId: number; on: boolean };
 
 /** Encola una orden; se aplica al principio del siguiente tick. */
 export function issue(w: World, order: Order): void {
@@ -161,6 +165,14 @@ export function ordersSystem(w: World): void {
       case 'draftAttack':
       case 'draftRescue':
         applyDraftOrder(w, o);
+        break;
+      case 'givePainkiller': {
+        const s = w.survivors.find((x) => x.id === o.survivorId);
+        if (s && w.storage.items.painkillers > 0) s.painkillerWanted = true;
+        break;
+      }
+      case 'setMedical':
+        setMedical(w, o.bedId, o.on);
         break;
     }
   }

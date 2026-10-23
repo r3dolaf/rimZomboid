@@ -11,6 +11,7 @@ import {
   SURVIVOR_WALK_SPEED,
   UNLOAD_TICKS,
 } from '../balance';
+import { legFactor } from '../body';
 import { tryStartConsoling } from '../consoling';
 import { startBuildActivity } from '../jobs/build';
 import { startChopActivity } from '../jobs/chop';
@@ -21,7 +22,7 @@ import { startPryActivity } from '../jobs/pry';
 import { startSwapWeapon } from '../jobs/weapons';
 import { logEvent } from '../log';
 import { makeNoise } from '../noise';
-import { loadFactor, practice, skillSpeed } from '../skills';
+import { loadFactor, practice, workSpeed } from '../skills';
 import { weightOf } from '../items';
 import { isWalkable } from '../map/grid';
 import { findPath } from '../path/astar';
@@ -80,7 +81,7 @@ export function walkStep(
   const dx = tx - s.pos.x;
   const dy = ty - s.pos.y;
   const dist = Math.sqrt(dx * dx + dy * dy); // sqrt es exacto en todos los navegadores; hypot no
-  speed *= loadFactor(s); // ir cargado frena (spec H4c §3.3)
+  speed *= loadFactor(s) * legFactor(s); // ir cargado frena (spec H4c §3.3), y las piernas heridas (H5)
   if (dist <= speed) {
     s.pos = { x: tx, y: ty };
     s.path.shift();
@@ -106,7 +107,7 @@ function startActivity(s: Survivor, activity: Activity, w: World): Action {
       return {
         type: 'search',
         containerId: activity.containerId,
-        ticksLeft: Math.round(SEARCH_TICKS / skillSpeed(s.skills.loot.level)),
+        ticksLeft: Math.round(SEARCH_TICKS / workSpeed(s, 'loot')),
       };
     case 'unload':
       return { type: 'unload', ticksLeft: UNLOAD_TICKS };

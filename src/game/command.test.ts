@@ -1,6 +1,6 @@
 // H4e §3.2: lo que manda el ratón y la R en modo combate (puro: sin Phaser).
 import { expect, test } from 'vitest';
-import { hurtSurvivor } from '../sim/health';
+import { knockDown } from '../sim/body';
 import { issue, ordersSystem } from '../sim/orders';
 import { addSurvivor, emptyWorld } from '../sim/testing/fixtures';
 import type { World } from '../sim/types';
@@ -36,7 +36,7 @@ test('R: el derribado no cuenta (no se le puede poner)', () => {
   const w = world();
   const [a, b] = w.survivors;
   a!.drafted = true;
-  hurtSurvivor(w, b!, 200);
+  knockDown(w, b!);
   expect(draftToggle(w, [a!.id, b!.id])).toMatchObject({ on: false });
 });
 
@@ -71,7 +71,7 @@ test('clic derecho: zombi a la vista → atacar; derribado → rescatar; si no, 
     x: 20,
     y: 20,
   });
-  hurtSurvivor(w, c!, 200);
+  knockDown(w, c!);
   expect(commandAt(w, ids, { x: c!.pos.x, y: c!.pos.y }, seen)).toEqual({
     type: 'draftRescue',
     survivorId: a!.id,

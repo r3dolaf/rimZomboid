@@ -1,6 +1,7 @@
 // Trabajos (spec H4a §3): cuál toca por orden de criticidad, si sigue teniendo sentido, y el
 // saqueo (elegir contenedor, reservar, descargar en el almacén).
 import { HUNGRY_LOOT_DAYS, ITEM_WEIGHT_KG } from './balance';
+import { armFactor } from './body';
 import { capacityKg } from './skills';
 import { foodDays } from './colony';
 import { buildJob, buildStillWorth } from './jobs/build';
@@ -84,6 +85,7 @@ function lootJob(s: Survivor, w: World): Action | null {
  * (Consolar, el trabajo Social, lo decide antes el cerebro.)
  */
 export function findWork(s: Survivor, w: World): Action | null {
+  if (armFactor(s) === 0) return null; // sin brazos no se trabaja (H5)
   const loot = may(s, 'loot');
   // Quien lleva cosas termina el viaje: sigue saqueando si puede o descarga.
   if (!isEmpty(s.carrying)) {

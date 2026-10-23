@@ -1,6 +1,6 @@
 // Talar (spec H4a §3.2): coger el hacha, ir al árbol marcado más cercano y talarlo.
 import { CHOP_TICKS, CHOP_WOOD_MAX, CHOP_WOOD_MIN } from '../balance';
-import { skillSpeed } from '../skills';
+import { workSpeed } from '../skills';
 import { emptyInventory } from '../items';
 import { getTile, setTile } from '../map/grid';
 import { dropPile } from '../piles';
@@ -107,7 +107,7 @@ export function startChopActivity(
   const next = Math.max(Math.abs(t.x - tx), Math.abs(t.y - ty)) === 1;
   if (!next || s.equipped !== 'axe' || !marked(w, activity.tree)) return idle;
   // Con más habilidad, antes (spec H4c §3.2).
-  const ticksLeft = Math.round(CHOP_TICKS / skillSpeed(s.skills.chop.level));
+  const ticksLeft = Math.round(CHOP_TICKS / workSpeed(s, 'chop'));
   return { type: 'chop', tree: activity.tree, ticksLeft };
 }
 

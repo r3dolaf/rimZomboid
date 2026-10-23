@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // H4e §3.2: con varios elegidos, la lista de nombres y el botón Combate.
 import { expect, test } from 'vitest';
-import { hurtSurvivor } from '../sim/health';
+import { knockDown } from '../sim/body';
 import { createWorld } from '../sim/world';
 import { mountGroupPanel } from './groupPanel';
 import { createSelection } from './selection';
@@ -44,7 +44,7 @@ test('Combate: pone o quita el modo combate a todos (orden), y se ve encendido',
   expect(world.orders).toEqual([{ type: 'draft', survivorIds: [a!.id, b!.id], on: true }]);
   panel.update();
   expect(q('group-draft').classList.contains('active')).toBe(true); // en pausa, al momento
-  hurtSurvivor(world, b!, 200);
+  knockDown(world, b!);
   world.orders = [];
   a!.drafted = true;
   panel.update();

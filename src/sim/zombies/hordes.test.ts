@@ -20,7 +20,8 @@ import { siegeEvent } from '../events/siege';
 import { strangersEvent } from '../events/strangers';
 import { wanderersEvent } from '../events/wanderers';
 import { contains } from '../geom';
-import { healthSystem, hurtSurvivor } from '../health';
+import { knockDown } from '../body';
+import { healthSystem } from '../health';
 import { checkInvariants } from '../invariants';
 import { createRng } from '../rng';
 import { chooseEvent } from '../narrator';
@@ -407,7 +408,7 @@ test('derribado: no se levanta con un zombi a 3 casillas o menos, ni pasadas las
   const w = world();
   const s = w.survivors[0]!;
   s.pos = { x: 60.5, y: 60.5 };
-  hurtSurvivor(w, s, 200);
+  knockDown(w, s);
   const start = w.tick;
   const z = newZombie(w, { x: 62, y: 60 });
   w.zombies.push(z);
@@ -417,7 +418,7 @@ test('derribado: no se levanta con un zombi a 3 casillas o menos, ni pasadas las
   z.pos = { x: 66.5, y: 60.5 }; // a 6: lo ve, pero ya no está encima
   healthSystem(w);
   expect(s.action.type).toBe('idle');
-  hurtSurvivor(w, s, 200);
+  knockDown(w, s);
   const again = w.tick;
   z.pos = { x: 61.5, y: 60.5 };
   w.tick = again + DOWNED_HARD_MAX_TICKS;
@@ -429,7 +430,7 @@ test('sin nadie en pie durante 2 h, la horda del asedio se cansa y se dispersa',
   expect(SIEGE_GIVE_UP_HOURS).toBe(2);
   const w = besieged(5);
   const s = w.survivors[0]!;
-  hurtSurvivor(w, s, 200);
+  knockDown(w, s);
   hordeSystem(w);
   w.tick += SIEGE_GIVE_UP_HOURS * TICKS_PER_HOUR - 1;
   hordeSystem(w);
@@ -443,13 +444,13 @@ test('sin nadie en pie durante 2 h, la horda del asedio se cansa y se dispersa',
 test('si alguien se levanta, la cuenta de "nadie en pie" vuelve a empezar', () => {
   const w = besieged(5);
   const s = w.survivors[0]!;
-  hurtSurvivor(w, s, 200);
+  knockDown(w, s);
   hordeSystem(w);
   w.tick += TICKS_PER_HOUR;
   s.action = { type: 'idle', ticksLeft: 0 };
   s.health = 15;
   hordeSystem(w);
-  hurtSurvivor(w, s, 200);
+  knockDown(w, s);
   w.tick += TICKS_PER_HOUR + 10;
   hordeSystem(w);
   expect(siegeActive(w)).toBe(true);

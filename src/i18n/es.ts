@@ -4,6 +4,7 @@ import type { MoodModifierId } from '../sim/mood';
 import type { ItemKind } from '../sim/items';
 import type { RelationLabel } from '../sim/social';
 import type {
+  BodyPart,
   BubbleKind,
   BuildingKind,
   BuildKind,
@@ -15,6 +16,7 @@ import type {
   RecipeId,
   SkillId,
   WorkType,
+  WoundKind,
   ZombieLevel,
 } from '../sim/types';
 
@@ -185,6 +187,24 @@ export const es = {
   lockWeapon: 'Fijar',
   lockWeaponHint: 'No cambia ni devuelve lo que lleva en la mano',
   logToggle: { hide: 'Minimizar el registro', show: 'Abrir el registro' },
+  // Cuerpo y heridas (H5)
+  bodyParts: {
+    head: { name: 'Cabeza', the: 'la cabeza' },
+    torso: { name: 'Torso', the: 'el torso' },
+    leftArm: { name: 'Brazo izquierdo', the: 'el brazo izquierdo' },
+    rightArm: { name: 'Brazo derecho', the: 'el brazo derecho' },
+    leftLeg: { name: 'Pierna izquierda', the: 'la pierna izquierda' },
+    rightLeg: { name: 'Pierna derecha', the: 'la pierna derecha' },
+  } satisfies Record<BodyPart, { name: string; the: string }>,
+  woundVerb: {
+    scratch: 'ha arañado',
+    cut: 'le ha hecho un corte',
+    bite: 'ha mordido',
+  } satisfies Record<WoundKind, string>,
+  wounds: { scratch: 'Arañazo', cut: 'Corte', bite: 'Mordisco' } satisfies Record<
+    WoundKind,
+    string
+  >,
   /** Lados del mapa (0 norte, 1 sur, 2 oeste, 3 este). */
   sides: ['norte', 'sur', 'oeste', 'este'],
   notices: {
@@ -364,6 +384,8 @@ export const es = {
     siegeEnded: 'La horda se dispersa',
     wanderersSighted: 'Una horda errante cruza el mapa',
     rescued: (who: string, other: string) => `${who} ha rescatado a ${other}`,
+    wounded: (who: string, part: BodyPart, wound: WoundKind) =>
+      `Un zombi ${es.woundVerb[wound]} a ${who} en ${es.bodyParts[part].the}`,
     bandaged: (who: string, other: string) =>
       who === other ? `${who} se ha vendado` : `${who} ha vendado a ${other}`,
     broken: (what: 'door' | 'window' | 'wall', inBase: boolean) =>

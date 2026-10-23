@@ -14,6 +14,7 @@ import {
   WAKE_RANGE,
 } from './balance';
 import { baseFloor } from './base';
+import { armFactor } from './body';
 import { visionFor } from './furniture';
 import { contains } from './geom';
 import { logEvent } from './log';
@@ -56,7 +57,7 @@ export function zombieInSight(w: World, s: Survivor, range: number): boolean {
 
 /** ¿Pelea o huye? (spec H4b §7) Los desconocidos (H4e), siempre como con Decidir. */
 export function willFight(w: World, s: Survivor, threats: Zombie[], stance = s.stance): boolean {
-  if (s.health < FLEE_HEALTH) return false;
+  if (s.health < FLEE_HEALTH || armFactor(s) === 0) return false; // sin brazos (H5), huye
   if (stance === 'fight') return true;
   if (stance === 'flee') return false;
   const allies = w.survivors.filter(

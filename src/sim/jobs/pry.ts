@@ -2,7 +2,7 @@
 import { PRY_TICKS } from '../balance';
 import { getTile } from '../map/grid';
 import { pick } from '../rng';
-import { skillSpeed } from '../skills';
+import { workSpeed } from '../skills';
 import { Tile, type Action, type Point, type Survivor, type World } from '../types';
 import { tileOf } from '../world';
 import { atOrBeside, standBeside } from './stand';
@@ -97,6 +97,6 @@ export function startPryActivity(
   const p = { x: activity.door % w.grid.width, y: Math.floor(activity.door / w.grid.width) };
   if (!atOrBeside(s, p) || !hasCrowbar(s) || getTile(w.grid, p.x, p.y) !== Tile.LockedDoor)
     return idle;
-  const ticksLeft = Math.round(PRY_TICKS / skillSpeed(s.skills.loot.level));
+  const ticksLeft = Math.round(PRY_TICKS / workSpeed(s, 'loot'));
   return { type: 'pry', door: activity.door, ticksLeft };
 }

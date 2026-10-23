@@ -2,11 +2,13 @@
 import type { ItemKind } from './items';
 import {
   Tile,
+  type BodyPart,
   type BuildKind,
   type LootKind,
   type NarratorStyle,
   type RecipeId,
   type Weapon,
+  type WoundKind,
 } from './types';
 
 // Tiempo
@@ -477,8 +479,6 @@ export const ZOMBIE_REPATH_TICKS = 20; // al perseguir, cada cuánto rehace el c
 export const LOSE_TRACK_TICKS = 50; // sin ver a su presa este tiempo, pierde el rastro
 export const ZOMBIE_REACH = 1.5; // casillas de centro a centro para golpear
 export const ZOMBIE_HIT_CHANCE = 0.4;
-export const ZOMBIE_DAMAGE_MIN = 8;
-export const ZOMBIE_DAMAGE_MAX = 12;
 export const HERD_RANGE = 10; // al vagar, se fija en los zombis a esta distancia
 export const HERD_CHANCE = 0.75; // de los paseos, cuántos van hacia el grupo
 export const WANDER_MIN = 3;
@@ -496,9 +496,7 @@ export const DOWNED_MAX_TICKS = 8 * TICKS_PER_HOUR; // con zombis a la vista esp
 export const GET_UP_CLEAR_RANGE = 3;
 export const DOWNED_HARD_MAX_TICKS = 16 * TICKS_PER_HOUR;
 /** Salud que se recupera por hora (spec H4b §5). */
-export const HEALTH_PER_HOUR = { awake: 1, floor: 4, bed: 6 } as const;
-export const GET_UP_HEALTH = 15; // al levantarse tras un derribo
-export const GET_UP_HEALTH_BED = 40; // H4e: si lo han dejado en una cama
+export const GET_UP_HEALTH = 15; // a las 4 h se levanta si su Salud (por el dolor) llega a esto
 /** Sanar (H4e §4): no se sale a rescatar si se ve un zombi a esta distancia del derribado. */
 export const RESCUE_SAFE_RANGE = 8;
 /** Con alguien en brazos se anda a esta parte de la velocidad. */
@@ -608,3 +606,45 @@ export const LOOT: Record<LootKind, Partial<Record<LootItem, LootAmount>>> = {
     axe: [1, 1],
   },
 };
+
+// Heridas (H5 §2)
+/** Vida de cada parte del cuerpo. */
+export const BODY_HP = {
+  head: 20,
+  torso: 40,
+  leftArm: 25,
+  rightArm: 25,
+  leftLeg: 25,
+  rightLeg: 25,
+} as const satisfies Record<BodyPart, number>;
+/** Dónde cae un golpe (pesos). */
+export const HIT_WEIGHTS = {
+  head: 10,
+  torso: 30,
+  leftArm: 20,
+  rightArm: 20,
+  leftLeg: 10,
+  rightLeg: 10,
+} as const satisfies Record<BodyPart, number>;
+/**
+ * Cada tipo de herida: vida que quita, sangre por hora, horas hasta que deja de sangrar sola (o
+ * `null`: hasta vendarla), días para curarse y probabilidad de infectar.
+ */
+export const WOUNDS = {
+  scratch: { damage: 3, bleed: 2, stopsHours: 1, healDays: 1, infect: 0.1 },
+  cut: { damage: 6, bleed: 5, stopsHours: null, healDays: 3, infect: 0 },
+  bite: { damage: 10, bleed: 8, stopsHours: null, healDays: 5, infect: 1 },
+} as const satisfies Record<
+  WoundKind,
+  { damage: number; bleed: number; stopsHours: number | null; healDays: number; infect: number }
+>;
+/** Dolor por punto de daño; una herida recién hecha duele FRESH_PAIN veces más y baja en unas horas. */
+export const PAIN_PER_DAMAGE = 1.5;
+export const FRESH_PAIN = 2.5;
+export const FRESH_PAIN_HOURS = 6;
+/** Golpes de zombi: arañazo (si no, corte); rodeado o con la Salud bajo MAUL_BELOW, mordiscos. */
+export const SCRATCH_CHANCE = 0.75;
+export const MAUL_BELOW = 30;
+export const MAUL_BITE_CHANCE = 0.3;
+/** Sin brazos no se trabaja; esto evita dividir por 0 si algo empieza igualmente. */
+export const MIN_WORK_SPEED = 0.05;

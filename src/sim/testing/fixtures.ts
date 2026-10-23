@@ -69,6 +69,7 @@ export function emptyWorld(width: number, height: number): World {
         drafted: false,
         carryingId: null,
         bandagedUntil: 0,
+        wounds: [],
       },
     ],
     beds: [{ id: 1, pos: { x: width - 1, y: 0 }, ownerId: 1 }],
@@ -108,6 +109,7 @@ export function emptyWorld(width: number, height: number): World {
     hordes: [],
     nextHordeId: 1,
     siege: null,
+    nextWoundId: 1,
   };
 }
 
@@ -134,6 +136,7 @@ export function addSurvivor(w: World, t: Point, name = 'Bea'): Survivor {
     drafted: false,
     carryingId: null,
     bandagedUntil: 0,
+    wounds: [],
   };
   w.survivors.push(s);
   return s;

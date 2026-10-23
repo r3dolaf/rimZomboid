@@ -1,6 +1,6 @@
 import { LOG_MAX } from './balance';
 import type { Inventory } from './items';
-import type { BuildKind, MapSide, RecipeId, SkillId, World } from './types';
+import type { BodyPart, BuildKind, MapSide, RecipeId, SkillId, World, WoundKind } from './types';
 
 /** Suceso del registro: solo datos; la interfaz los convierte en texto. */
 export type LogEvent =
@@ -78,6 +78,8 @@ export type LogEvent =
   | { kind: 'wanderersSighted'; x: number; y: number }
   // Sanar (H4e)
   | { kind: 'rescued'; survivorId: number; otherId: number }
+  // Heridas (H5)
+  | { kind: 'wounded'; survivorId: number; part: BodyPart; wound: WoundKind }
   | { kind: 'bandaged'; survivorId: number; otherId: number };
 
 export type LogEntry = LogEvent & { tick: number };

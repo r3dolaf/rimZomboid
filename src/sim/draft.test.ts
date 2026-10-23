@@ -2,7 +2,7 @@
 import { expect, test } from 'vitest';
 import { MOOD_CRISIS, SURVIVOR_WALK_SPEED, TICKS_PER_DAY } from './balance';
 import { combatSystem } from './combat';
-import { hurtSurvivor } from './health';
+import { knockDown } from './body';
 import { checkInvariants } from './invariants';
 import { isWalkable, setTile } from './map/grid';
 import { issue, ordersSystem } from './orders';
@@ -159,7 +159,7 @@ test('sale del modo combate al caer derribado, al desplomarse de sueño o en cri
     addSurvivor(w, { x: 14, y: 10 }),
   ];
   draft(w, [a, b, c]);
-  hurtSurvivor(w, a, 200);
+  knockDown(w, a);
   expect(a.drafted).toBe(false);
   b.needs.sleep = 0;
   c.needs.mood = MOOD_CRISIS - 5;

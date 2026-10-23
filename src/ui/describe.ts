@@ -397,6 +397,9 @@ export function logText(e: LogEntry, w: World): string {
     case 'rescued':
       text = l.rescued(name(e.survivorId), name(e.otherId));
       break;
+    case 'wounded':
+      text = l.wounded(name(e.survivorId), e.part, e.wound);
+      break;
     case 'bandaged':
       text = l.bandaged(name(e.survivorId), name(e.otherId));
       break;

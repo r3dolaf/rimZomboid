@@ -113,7 +113,6 @@ test('invariantes: zombis dentro de lo que no pisan, salud rara, de más; Salud 
   z.pos = { x: door.x + 0.5, y: door.y + 0.5 };
   z.health = 0;
   s.health = 120;
-  w.survivors[1]!.action = { type: 'downed', until: 100 };
   w.damage[String(door.y * w.grid.width + door.x)] = RESISTANCE[Tile.Door]!;
   const grass = w.grid.tiles.indexOf(Tile.Grass);
   w.damage[String(grass)] = 5;
@@ -124,7 +123,6 @@ test('invariantes: zombis dentro de lo que no pisan, salud rara, de más; Salud 
   expect(p).toMatch(/zombi #\d+: salud fuera de 1–60/);
   expect(p).toMatch(/demasiados zombis/);
   expect(p).toMatch(/Salud fuera de 0–100/);
-  expect(p).toMatch(/derribad[oa] con Salud/);
   expect(p).toMatch(/daño en .*: resistencia 100 fuera de 1–99/);
   expect(p).toMatch(/daño en .*: no se puede romper/);
 });

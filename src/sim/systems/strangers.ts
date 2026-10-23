@@ -195,6 +195,7 @@ export function newStranger(w: World, start: Point): Survivor {
     drafted: false,
     carryingId: null,
     bandagedUntil: 0,
+    wounds: [],
   };
   s.needs.mood = moodTarget(s, w.tick, w.base.rect);
   s.stance = defaultStance(s.traits);

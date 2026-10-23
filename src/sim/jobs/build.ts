@@ -7,7 +7,7 @@ import { makeNoise } from '../noise';
 import { getTile, isWalkable, setTile } from '../map/grid';
 import { dropPile, pileAt, walkableNear } from '../piles';
 import { nextFloat } from '../rng';
-import { buildFailChance, practice, skillSpeed } from '../skills';
+import { buildFailChance, practice, workSpeed } from '../skills';
 import { repairTile } from '../structures';
 import {
   Tile,
@@ -75,7 +75,7 @@ export function workOnBlueprint(w: World, s: Survivor, blueprintId: number): boo
   if (b.progress < ticks) {
     // Avanza según la habilidad (spec H4c §3.1); se aprende aunque luego falle.
     const before = b.progress;
-    b.progress = Math.min(ticks, b.progress + skillSpeed(s.skills.build.level));
+    b.progress = Math.min(ticks, b.progress + workSpeed(s, 'build'));
     practice(w, s, 'build', 1);
     // Cada martillazo se oye (spec H4b §3): cada BUILD_NOISE_TICKS de avance.
     if (Math.floor(b.progress / BUILD_NOISE_TICKS) > Math.floor(before / BUILD_NOISE_TICKS))

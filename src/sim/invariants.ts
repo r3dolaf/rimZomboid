@@ -1,4 +1,5 @@
 import {
+  BODY_HP,
   BUILD,
   BUILDINGS,
   CURTAINS_COST,
@@ -41,8 +42,13 @@ export function checkInvariants(w: World): string[] {
     }
     if (!Number.isFinite(s.health) || s.health < 0 || s.health > 100)
       problems.push(`${who}: Salud fuera de 0–100 (${s.health})`);
-    if (s.action.type === 'downed' && s.health !== 0)
-      problems.push(`${who}: derribado con Salud ${s.health}`);
+    // Heridas (H5): en partes que existen y con su daño entre 0 y su tamaño.
+    for (const wd of s.wounds) {
+      if (!(wd.part in BODY_HP))
+        problems.push(`${who}: herida ${wd.id} en una parte que no existe (${wd.part})`);
+      if (!Number.isFinite(wd.damage) || wd.damage < 0 || wd.damage > wd.size)
+        problems.push(`${who}: herida ${wd.id}: daño ${wd.damage} fuera de 0–${wd.size}`);
+    }
     if (!Number.isFinite(s.bandagedUntil))
       problems.push(`${who}: vendado hasta ${s.bandagedUntil}`);
     if (s.drafted && (s.action.type === 'downed' || s.action.type === 'sleep'))

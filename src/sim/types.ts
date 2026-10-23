@@ -90,6 +90,24 @@ export type TraitId =
   | 'unpleasant'
   | 'keenEye';
 
+/** Partes del cuerpo (H5 §2.1). */
+export type BodyPart = 'head' | 'torso' | 'leftArm' | 'rightArm' | 'leftLeg' | 'rightLeg';
+export type WoundKind = 'scratch' | 'cut' | 'bite';
+
+/** Una herida (H5 §2.2): `damage` baja al curarse (de `size` a 0); `cleanUntil`, venda limpia. */
+export interface Wound {
+  id: number;
+  part: BodyPart;
+  kind: WoundKind;
+  size: number;
+  damage: number;
+  /** Tick en que se hizo (lo reciente que es: cuánto duele). */
+  at: number;
+  bleeding: boolean;
+  /** Con venda limpia hasta este tick (0: sin vendar). */
+  cleanUntil: number;
+}
+
 /** Necesidades de 0 a 100 (100 = bien). */
 export interface Needs {
   hunger: number;
@@ -253,6 +271,8 @@ export interface Survivor {
   carryingId: number | null;
   /** Vendado hasta este tick (H4e): se cura el doble y no se le vuelve a vendar. */
   bandagedUntil: number;
+  /** Heridas (H5). La Salud (`health`) es 100 menos lo que duelen. */
+  wounds: Wound[];
 }
 
 /** Uno o dos desconocidos que esperan a la puerta a que el jugador decida (su decisión caduca). */
@@ -507,6 +527,8 @@ export interface World {
   nextHordeId: number;
   /** El asedio anunciado que aún no ha llegado. */
   siege: { at: number; side: MapSide; size: number } | null;
+  // Heridas y muerte (H5)
+  nextWoundId: number;
 }
 
 /** Recetas de Fabricar (H4d). */

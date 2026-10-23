@@ -5,12 +5,12 @@ import {
   DOWNED_MAX_TICKS,
   DOWNED_TICKS,
   GET_UP_HEALTH,
-  HEALTH_PER_HOUR,
   HURT_BELOW,
   MEMORY_EFFECTS,
   TICKS_PER_HOUR,
 } from '../balance';
-import { hurtSurvivor, healthSystem } from '../health';
+import { knockDown } from '../body';
+import { healthSystem } from '../health';
 import { checkInvariants } from '../invariants';
 import { moodModifiers } from '../mood';
 import { step } from '../step';
@@ -28,25 +28,6 @@ const world = () => {
   return w;
 };
 
-test('la Salud se recupera: poco despierto, más durmiendo y más aún en cama', () => {
-  const w = world();
-  const s = w.survivors[0]!;
-  const hour = (action: typeof s.action) => {
-    s.health = 40;
-    s.action = action;
-    for (let i = 0; i < TICKS_PER_HOUR; i++) healthSystem(w);
-    return s.health - 40;
-  };
-  expect(hour({ type: 'idle', ticksLeft: 0 })).toBeCloseTo(HEALTH_PER_HOUR.awake);
-  expect(hour({ type: 'sleep', inBed: false })).toBeCloseTo(HEALTH_PER_HOUR.floor);
-  expect(hour({ type: 'sleep', inBed: true })).toBeCloseTo(HEALTH_PER_HOUR.bed);
-  expect(HEALTH_PER_HOUR.awake).toBeLessThan(HEALTH_PER_HOUR.floor);
-  expect(HEALTH_PER_HOUR.floor).toBeLessThan(HEALTH_PER_HOUR.bed);
-  s.health = 99.99;
-  for (let i = 0; i < TICKS_PER_HOUR; i++) healthSystem(w);
-  expect(s.health).toBe(100);
-});
-
 test('"Herido" (−10) mientras tenga menos de 50', () => {
   const w = world();
   const s = w.survivors[0]!;
@@ -56,25 +37,23 @@ test('"Herido" (−10) mientras tenga menos de 50', () => {
   expect(moodModifiers(s, w.tick)).toContainEqual({ id: 'hurt', value: -10 });
 });
 
-test('derribado: cae, no se recupera y a las 4 h se levanta con 15 y "Le derribaron"', () => {
+test('derribado: cae y a las 4 h se levanta (sin heridas, sin dolor) y "Le derribaron"', () => {
   const w = world();
   const s = w.survivors[0]!;
   s.action = { type: 'eat', ticksLeft: 5 };
-  hurtSurvivor(w, s, 150);
-  expect(s.health).toBe(0);
+  knockDown(w, s);
   expect(s.action).toEqual({ type: 'downed', until: DOWNED_TICKS });
   expect(w.log.at(-1)).toMatchObject({ kind: 'downed', survivorId: s.id });
-  hurtSurvivor(w, s, 10); // ya en el suelo: nada cambia
+  knockDown(w, s); // ya en el suelo: nada cambia
   expect(s.action).toEqual({ type: 'downed', until: DOWNED_TICKS });
   for (let i = 0; i < DOWNED_TICKS - 1; i++) {
     healthSystem(w);
     w.tick++;
   }
-  expect(s.health).toBe(0);
   expect(s.action.type).toBe('downed');
   w.tick++; // ya son las 4 h
   healthSystem(w);
-  expect(s.health).toBe(GET_UP_HEALTH);
+  expect(s.health).toBeGreaterThanOrEqual(GET_UP_HEALTH);
   expect(s.action).toEqual({ type: 'idle', ticksLeft: 0 });
   expect(s.memories.map((m) => m.id)).toContain('downed');
   expect(MEMORY_EFFECTS.downed.value).toBe(-15);
@@ -84,7 +63,7 @@ test('derribado: cae, no se recupera y a las 4 h se levanta con 15 y "Le derriba
 test('en el suelo el sueño sigue bajando, pero no se "desploma" encima: sigue derribado', () => {
   const w = world();
   const s = w.survivors[0]!;
-  hurtSurvivor(w, s, 100);
+  knockDown(w, s);
   s.needs.sleep = 0;
   const hunger = s.needs.hunger;
   for (let i = 0; i < 50; i++) step(w);
@@ -97,7 +76,7 @@ test('a las 4 h no se levanta con zombis a 8 casillas o menos: sigue en el suelo
   const w = emptyWorld(30, 30);
   const s = w.survivors[0]!;
   s.pos = { x: 5.5, y: 5.5 };
-  hurtSurvivor(w, s, 100);
+  knockDown(w, s);
   const z = newZombie(w, { x: 10, y: 5 });
   w.zombies.push(z);
   w.tick = DOWNED_TICKS + 10;
@@ -121,7 +100,7 @@ test('en el suelo (o peleando con zombis) nadie le consuela ni le habla: sigue e
   t.needs.mood = 5;
   c.opinions[t.id] = 50;
   c.pos = { ...t.pos };
-  hurtSurvivor(w, t, 200);
+  knockDown(w, t);
   for (let i = 0; i < TICKS_PER_HOUR; i++) step(w);
   expect(t.action.type).toBe('downed');
   expect(w.log.some((e) => e.kind === 'consoled' || e.kind === 'fight')).toBe(false);
@@ -135,7 +114,7 @@ test('para levantarse solo cuentan los zombis que ve; con uno al lado, ni a las 
   const w = emptyWorld(30, 30);
   const s = w.survivors[0]!;
   s.pos = { x: 5.5, y: 5.5 };
-  hurtSurvivor(w, s, 100);
+  knockDown(w, s);
   for (let y = 0; y < 30; y++) setTile(w.grid, 8, y, Tile.Wall);
   const z = newZombie(w, { x: 10, y: 5 }); // a 5 casillas, detrás de un muro
   w.zombies.push(z);
@@ -143,7 +122,7 @@ test('para levantarse solo cuentan los zombis que ve; con uno al lado, ni a las 
   healthSystem(w);
   expect(s.action.type).toBe('idle');
 
-  hurtSurvivor(w, s, 100);
+  knockDown(w, s);
   z.pos = { x: 6.5, y: 5.5 }; // al lado
   w.tick += DOWNED_MAX_TICKS;
   healthSystem(w);

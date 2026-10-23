@@ -25,7 +25,7 @@ export function colonistHit(w: World, s: Survivor, z: Zombie): void {
   // desconocidos (H4e) no se apunta.
   const colonist = w.survivors.includes(s);
   if (colonist) practice(w, s, 'fight', WEAPON_STATS[s.equipped ?? 'none'].ticks);
-  if (nextFloat(w.rng) >= hitChance(s.skills.fight.level)) return;
+  if (nextFloat(w.rng) >= hitChance(s.skills.fight.level, s)) return;
   const head = nextFloat(w.rng) < HEAD_HIT_CHANCE;
   z.health -= WEAPON_STATS[s.equipped ?? 'none'].damage * (head ? 2 : 1);
   if (z.health > 0) return;

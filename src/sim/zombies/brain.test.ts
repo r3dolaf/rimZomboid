@@ -9,8 +9,6 @@ import {
   WANDER_FAR_MIN,
   WANDER_MAX,
   START_HOUR,
-  ZOMBIE_DAMAGE_MAX,
-  ZOMBIE_DAMAGE_MIN,
   ZOMBIE_EVERY_HOURS,
   ZOMBIE_HIT_CHANCE,
 } from '../balance';
@@ -218,21 +216,17 @@ test('rompe la ventana para llegar a quien ve dentro y entra', () => {
   expect(checkInvariants(w)).toEqual([]);
 });
 
-test('el golpe de un zombi: acierta el 40 % y quita de 8 a 12', () => {
+test('el golpe de un zombi: acierta el 40 % y deja una herida (H5: ya no un daño fijo)', () => {
   const w = world();
   const s = w.survivors[0]!;
   const z = zombieAt(w, 5, 5);
   let hits = 0;
   const n = 2000;
   for (let i = 0; i < n; i++) {
-    s.health = 100;
+    s.wounds = [];
+    s.action = { type: 'idle', ticksLeft: 0 };
     zombieAttack(w, z, s);
-    const lost = 100 - s.health;
-    if (lost > 0) {
-      hits++;
-      expect(lost).toBeGreaterThanOrEqual(ZOMBIE_DAMAGE_MIN);
-      expect(lost).toBeLessThanOrEqual(ZOMBIE_DAMAGE_MAX);
-    }
+    if (s.wounds.length > 0) hits++;
   }
   expect(hits / n).toBeGreaterThan(ZOMBIE_HIT_CHANCE - 0.04);
   expect(hits / n).toBeLessThan(ZOMBIE_HIT_CHANCE + 0.04);
@@ -242,8 +236,7 @@ test('a 0 de Salud el colono cae derribado', () => {
   const w = world();
   const s = w.survivors[0]!;
   const z = zombieAt(w, 5, 5);
-  s.health = 1;
-  for (let i = 0; i < 50 && s.health > 0; i++) zombieAttack(w, z, s);
+  for (let i = 0; i < 500 && s.health > 0; i++) zombieAttack(w, z, s);
   expect(s.health).toBe(0);
   expect(s.action.type).toBe('downed');
   expect(checkInvariants(w)).toEqual([]);

@@ -2,19 +2,13 @@
 import { expect, test } from 'vitest';
 import {
   BANDAGE_BELOW,
-  BANDAGE_HEAL,
-  BANDAGE_HOURS,
-  BANDAGE_PER_LEVEL,
-  BANDAGE_TICKS,
   CARRY_SPEED,
-  GET_UP_HEALTH_BED,
   RESCUE_SAFE_RANGE,
   SURVIVOR_WALK_SPEED,
   TICKS_PER_DAY,
-  TICKS_PER_HOUR,
 } from './balance';
 import { contains } from './geom';
-import { healthSystem, hurtSurvivor } from './health';
+import { knockDown } from './body';
 import { checkInvariants } from './invariants';
 import { carrySystem, healJob } from './jobs/heal';
 import { issue, ordersSystem } from './orders';
@@ -34,7 +28,7 @@ function world(): { w: World; ana: Survivor; bea: Survivor } {
   const ana = w.survivors[0]!;
   const bea = addSurvivor(w, { x: 20, y: 20 }); // antes de derribar a Ana (se copia de ella)
   ana.pos = { x: 25.5, y: 20.5 };
-  hurtSurvivor(w, ana, 200);
+  knockDown(w, ana);
   return { w, ana, bea };
 }
 
@@ -113,16 +107,6 @@ test('lo lleva a su cama, despacio y con él; al dejarlo, "en cama" y al registr
   expect(bea.skills.heal.xp + bea.skills.heal.level).toBeGreaterThan(5);
 });
 
-test('en cama se levanta a su hora con 40 de Salud (en el suelo, con 15)', () => {
-  expect(GET_UP_HEALTH_BED).toBe(40);
-  const { w, ana } = world();
-  if (ana.action.type !== 'downed') throw new Error();
-  ana.action.inBed = true;
-  w.tick = ana.action.until;
-  healthSystem(w);
-  expect(ana.health).toBe(40);
-});
-
 /** Bea ya lleva a Ana, de camino a la base. */
 function carrying(): { w: World; ana: Survivor; bea: Survivor } {
   const out = world();
@@ -159,7 +143,7 @@ test('con zombis: si le toca pelear, lo suelta y pelea; si le toca huir, sigue c
 
 test('si derriban al que lo lleva, el derribado queda en el suelo donde iba', () => {
   const { w, ana, bea } = carrying();
-  hurtSurvivor(w, bea, 200);
+  knockDown(w, bea);
   carrySystem(w);
   expect(bea.carryingId).toBeNull();
   expect(ana.action.type === 'downed' && ana.action.carriedBy).toBeUndefined();
@@ -250,48 +234,4 @@ test('vendar: también a sí mismo', () => {
   ana.health = 100;
   bea.health = 20;
   expect(healJob(bea, w)).toMatchObject({ type: 'bandage', patientId: bea.id });
-});
-
-test('vendar: media hora; +15 de Salud y 1 más por nivel; gasta una venda y dura 12 h', () => {
-  expect([BANDAGE_HEAL, BANDAGE_PER_LEVEL, BANDAGE_HOURS]).toEqual([15, 1, 12]);
-  const { w, ana, bea } = hurt();
-  bea.skills.heal = { level: 4, xp: 0 };
-  ana.action = { type: 'idle', ticksLeft: 1e9 }; // quieta
-  ana.work.heal = false; // que no se vende ella
-  let ticks = 0;
-  const start = ana.health;
-  for (; ticks < 400 && w.storage.items.bandage === 2; ticks++) step(w);
-  expect(w.storage.items.bandage).toBe(1);
-  // + 19 por la venda y lo poco que se cura sola mientras tanto (1 por hora despierta).
-  expect(ana.health - start).toBeGreaterThanOrEqual(19);
-  expect(ana.health - start).toBeLessThan(21);
-  expect(ana.bandagedUntil).toBe(w.tick - 1 + BANDAGE_HOURS * TICKS_PER_HOUR);
-  expect(
-    w.log.some((e) => e.kind === 'bandaged' && e.survivorId === bea.id && e.otherId === ana.id),
-  ).toBe(true);
-  expect(ticks).toBeGreaterThanOrEqual(BANDAGE_TICKS);
-  expect(checkInvariants(w)).toEqual([]);
-});
-
-test('vendado, la Salud sube el doble de rápido durante 12 h', () => {
-  const { w, ana } = hurt();
-  ana.action = { type: 'idle', ticksLeft: 1e9 };
-  const perHour = () => {
-    const h = ana.health;
-    for (let i = 0; i < TICKS_PER_HOUR; i++) healthSystem(w);
-    return ana.health - h;
-  };
-  const plain = perHour();
-  ana.bandagedUntil = w.tick + 1e6;
-  expect(perHour()).toBeCloseTo(2 * plain, 6);
-});
-
-test('si se acaban las vendas mientras venda, no hay vendaje', () => {
-  const { w, ana, bea } = hurt();
-  bea.action = { type: 'bandage', patientId: ana.id, ticksLeft: 1 };
-  w.storage.items.bandage = 0;
-  const h = ana.health;
-  step(w);
-  expect(ana.health).toBeLessThan(h + 1);
-  expect(ana.bandagedUntil).toBe(0);
 });

@@ -100,6 +100,7 @@ test('con una palanca en el almacén: la coge, va a la puerta, la fuerza (30 min
     z.goal = null;
     z.pos = { x: 3.5, y: 8.5 };
     z.path = [];
+    z.cooldown = 999; // solo está para oír: que no le hiera (H5: las heridas le frenarían)
   }
   expect(w.grid.tiles[4 * 14 + 6]).toBe(Tile.Door);
   expect(Math.abs(pryTicks - PRY_TICKS)).toBeLessThanOrEqual(1);

@@ -13,20 +13,23 @@ import {
   WANDER_PATH_BUDGET,
   WANDER_PAUSE_MAX,
   WANDER_PAUSE_MIN,
-  ZOMBIE_DAMAGE_MAX,
-  ZOMBIE_DAMAGE_MIN,
   ZOMBIE_HIT_CHANCE,
+  ZOMBIE_REACH,
+  HIT_WEIGHTS,
+  MAUL_BELOW,
+  MAUL_BITE_CHANCE,
+  SCRATCH_CHANCE,
   ZOMBIE_HIT_TICKS,
   ZOMBIE_REPATH_TICKS,
   ZOMBIE_THINK_TICKS,
   ZOMBIE_VISION,
 } from '../balance';
-import { hurtSurvivor } from '../health';
+import { addWound } from '../body';
 import { isZombieWalkable } from '../map/grid';
 import { makeNoise, visibleCampfire } from '../noise';
 import { findCostPath } from '../path/astar';
-import { nextFloat, nextInt } from '../rng';
-import type { Point, Survivor, World, Zombie } from '../types';
+import { nextFloat, nextInt, weightedPick } from '../rng';
+import type { BodyPart, Point, Survivor, World, WoundKind, Zombie } from '../types';
 import { lineOfSight } from '../vision';
 import { tileOf } from '../world';
 import { activeHorde, legToward, siegeTarget } from './hordes';
@@ -220,11 +223,28 @@ function wander(w: World, z: Zombie): void {
   if (bored) z.lastSeenAt = w.tick;
 }
 
-/** Un golpe a un colono: puede fallar; si acierta, le quita Salud. Siempre se oye. */
+/**
+ * Un golpe a un colono: puede fallar; si acierta, le deja una herida (H5 §2.3) en una parte al
+ * azar: arañazo o corte; rodeado (dos o más zombis a su alcance) o muy herido, también mordisco.
+ * Siempre se oye.
+ */
 export function zombieAttack(w: World, z: Zombie, s: Survivor): void {
   z.cooldown = ZOMBIE_HIT_TICKS;
   if (s.action.type === 'sleep') s.action = { type: 'idle', ticksLeft: 0 }; // le despierta
   makeNoise(w, s.pos, NOISE.fightHit);
-  if (nextFloat(w.zombieRng) >= ZOMBIE_HIT_CHANCE) return;
-  hurtSurvivor(w, s, nextInt(w.zombieRng, ZOMBIE_DAMAGE_MIN, ZOMBIE_DAMAGE_MAX));
+  const rng = w.zombieRng;
+  if (nextFloat(rng) >= ZOMBIE_HIT_CHANCE) return;
+  const part = weightedPick(rng, { ...HIT_WEIGHTS }) as BodyPart;
+  const reach2 = ZOMBIE_REACH * ZOMBIE_REACH;
+  const around = w.zombies.filter(
+    (o) => (o.pos.x - s.pos.x) ** 2 + (o.pos.y - s.pos.y) ** 2 <= reach2,
+  ).length;
+  const mauled = around >= 2 || s.health < MAUL_BELOW;
+  const kind: WoundKind =
+    mauled && nextFloat(rng) < MAUL_BITE_CHANCE
+      ? 'bite'
+      : nextFloat(rng) < SCRATCH_CHANCE
+        ? 'scratch'
+        : 'cut';
+  addWound(w, s, part, kind);
 }

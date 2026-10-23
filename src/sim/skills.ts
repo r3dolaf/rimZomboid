@@ -12,6 +12,7 @@ import {
   LEARN_MULT,
   LOAD_BRAKE_BASE,
   LOAD_BRAKE_PER_LEVEL,
+  MIN_WORK_SPEED,
   SKILL_MAX,
   SKILL_SPEED_MIN,
   SKILL_SPEED_PER_LEVEL,
@@ -21,6 +22,7 @@ import {
   TICKS_PER_HOUR,
   TRAIT_SKILL_MODS,
 } from './balance';
+import { armFactor } from './body';
 import { weightOf } from './items';
 import { logEvent } from './log';
 import { createRng, nextInt, pick, type RngState } from './rng';
@@ -87,8 +89,9 @@ export function loadFactor(s: Survivor): number {
 }
 
 /** Acierto de un golpe a un zombi: 60 % con Pelear 0, 75 % con 5, 90 % con 10. */
-export function hitChance(level: number): number {
-  return FIGHT_HIT_BASE + FIGHT_HIT_PER_LEVEL * level;
+export function hitChance(level: number, s?: Survivor): number {
+  // Con los brazos heridos (H5), menos.
+  return (FIGHT_HIT_BASE + FIGHT_HIT_PER_LEVEL * level) * (s ? armFactor(s) : 1);
 }
 
 /** Probabilidad de que consolar salga bien: 50 % con Social 0, 75 % con 5, siempre con 10. */
@@ -99,6 +102,11 @@ export function consoleChance(level: number): number {
 /** Rapidez con ese nivel: ×0,5 con 0, ×1 con 5 (como antes de H4c) y ×1,5 con 10. */
 export function skillSpeed(level: number): number {
   return SKILL_SPEED_MIN + SKILL_SPEED_PER_LEVEL * level;
+}
+
+/** Rapidez de un trabajo: la de su habilidad por los brazos (H5 §2.4; sin brazos, casi nada). */
+export function workSpeed(s: Survivor, skill: SkillId): number {
+  return Math.max(MIN_WORK_SPEED, skillSpeed(s.skills[skill].level) * armFactor(s));
 }
 
 /**

@@ -4,7 +4,7 @@ import { emptyInventory, isEmpty, weightOf, type ItemKind } from '../items';
 import { logEvent } from '../log';
 import { findPath } from '../path/astar';
 import { nextFloat, pick } from '../rng';
-import { buildFailChance, capacityKg, skillSpeed } from '../skills';
+import { buildFailChance, capacityKg, workSpeed } from '../skills';
 import type { Action, Bill, Furniture, RecipeId, Survivor, World } from '../types';
 import { tileOf } from '../world';
 import { atOrBeside, standOnOrBeside } from './stand';
@@ -127,7 +127,7 @@ export function startCraftActivity(
   const table = w.furniture.find((f) => f.id === activity.tableId);
   if (!table || !atOrBeside(s, table.pos) || !hasInputs(r, s.carrying) || !hasTool(s, w, r))
     return idle;
-  const ticksLeft = Math.round(r.ticks / skillSpeed(s.skills.craft.level));
+  const ticksLeft = Math.round(r.ticks / workSpeed(s, 'craft'));
   return { type: 'craft', billId: b.id, tableId: table.id, recipe: b.recipe, ticksLeft };
 }
 

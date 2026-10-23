@@ -3,7 +3,8 @@ import { expect, test } from 'vitest';
 import { DOWNED_TICKS, GET_UP_HEALTH, TICKS_PER_DAY } from '../balance';
 import { combatSystem } from '../combat';
 import { addDecision } from '../decisions';
-import { healthSystem, hurtSurvivor } from '../health';
+import { knockDown } from '../body';
+import { healthSystem } from '../health';
 import { checkInvariants } from '../invariants';
 import { setTile } from '../map/grid';
 import { issue, ordersSystem } from '../orders';
@@ -67,7 +68,7 @@ test('y los golpean: a 0 de Salud caen (al registro, sin aviso de colono) y se l
   w.tick += DOWNED_TICKS;
   healthSystem(w);
   expect(s.action.type).toBe('idle');
-  expect(s.health).toBe(GET_UP_HEALTH);
+  expect(s.health).toBeGreaterThanOrEqual(GET_UP_HEALTH); // H5: la Salud es el dolor
 });
 
 test('con un zombi, el desconocido pelea (como con Decidir) y le golpea', () => {
@@ -101,7 +102,7 @@ test('con muchos, huyen juntos: su aviso se quita y se van corriendo a la carret
 test('aceptados en el suelo: entran en la colonia derribados', () => {
   const { w, ss } = world();
   const s = ss[0]!;
-  hurtSurvivor(w, s, 200);
+  knockDown(w, s);
   issue(w, { type: 'decide', decisionId: w.decisions[0]!.id, option: 0 });
   ordersSystem(w);
   expect(w.survivors).toContain(s);
@@ -112,7 +113,7 @@ test('aceptados en el suelo: entran en la colonia derribados', () => {
 test('rechazados en el suelo: se va al levantarse; mientras, no desaparece', () => {
   const { w, ss } = world(true);
   const [a, b] = ss as [Survivor, Survivor];
-  hurtSurvivor(w, a, 200);
+  knockDown(w, a);
   issue(w, { type: 'decide', decisionId: w.decisions[0]!.id, option: 1 });
   ordersSystem(w);
   expect(a.action.type).toBe('downed');

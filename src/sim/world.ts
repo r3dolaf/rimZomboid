@@ -97,6 +97,7 @@ export function createWorld(
     drafted: false,
     carryingId: null,
     bandagedUntil: 0,
+    wounds: [],
   }));
   for (const s of survivors) {
     s.work = defaultWork(s.traits);
@@ -188,6 +189,7 @@ export function createWorld(
     hordes: [],
     nextHordeId: 1,
     siege: null,
+    nextWoundId: 1,
   };
   // Zombis (H4b), con su propio azar: no cambian nada de lo anterior.
   placeStartZombies(world);

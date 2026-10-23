@@ -413,6 +413,15 @@ export function logText(e: LogEntry, w: World): string {
     case 'painkiller':
       text = l.painkiller(name(e.survivorId), name(e.otherId));
       break;
+    case 'died':
+      text = l.died(e.name, e.cause);
+      break;
+    case 'strangerDied':
+      text = l.strangerDied(e.names);
+      break;
+    case 'rose':
+      text = l.rose(e.name);
+      break;
   }
   return text;
 }

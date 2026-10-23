@@ -89,6 +89,9 @@ export const MEMORY_EFFECTS = {
   ateAtTable: { value: 3, hours: 6 },
   byTheFire: { value: 4, hours: 1 },
   downed: { value: -15, hours: 24 },
+  // La muerte (H5 §8): todos 3 días (según su opinión, ver DEATH_MOOD_*); la pareja, 5.
+  died: { value: -15, hours: 72 },
+  partnerDied: { value: -30, hours: 120 },
   notConsoled: { value: 0, hours: 1 }, // no pesa en el ánimo: solo bloquea consolar
 } as const;
 export const EAT_BELOW = 35;
@@ -674,3 +677,11 @@ export const REST_HEAL = 2;
 export const HOSPITAL_HEAL = 3;
 /** Sin brazos no se trabaja; esto evita dividir por 0 si algo empieza igualmente. */
 export const MIN_WORK_SPEED = 0.05;
+
+// La muerte (H5 §8)
+/** "Ha muerto Ana": −15 más o menos lo que se pensaba de él (opinión × 0,1), entre −25 y −5. */
+export const DEATH_OPINION_MOOD = 0.1;
+export const DEATH_MOOD_MIN = -25;
+export const DEATH_MOOD_MAX = -5;
+/** El cuerpo de un infectado se levanta como zombi a la hora. */
+export const RISE_TICKS = TICKS_PER_HOUR;

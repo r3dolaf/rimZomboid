@@ -1,6 +1,15 @@
 import { LOG_MAX } from './balance';
 import type { Inventory } from './items';
-import type { BodyPart, BuildKind, MapSide, RecipeId, SkillId, World, WoundKind } from './types';
+import type {
+  BodyPart,
+  BuildKind,
+  DeathCause,
+  MapSide,
+  RecipeId,
+  SkillId,
+  World,
+  WoundKind,
+} from './types';
 
 /** Suceso del registro: solo datos; la interfaz los convierte en texto. */
 export type LogEvent =
@@ -81,7 +90,11 @@ export type LogEvent =
   // Heridas (H5)
   | { kind: 'wounded'; survivorId: number; part: BodyPart; wound: WoundKind }
   | { kind: 'bandaged'; survivorId: number; otherId: number }
-  | { kind: 'painkiller'; survivorId: number; otherId: number };
+  | { kind: 'painkiller'; survivorId: number; otherId: number }
+  // La muerte (H5 §8): ya no está en la colonia, se guarda su nombre.
+  | { kind: 'died'; name: string; cause: DeathCause }
+  | { kind: 'strangerDied'; names: string[] }
+  | { kind: 'rose'; name: string };
 
 export type LogEntry = LogEvent & { tick: number };
 

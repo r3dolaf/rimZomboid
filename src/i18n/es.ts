@@ -8,6 +8,7 @@ import type {
   BubbleKind,
   BuildingKind,
   BuildKind,
+  DeathCause,
   Decision,
   MemoryId,
   NarratorStyle,
@@ -201,6 +202,14 @@ export const es = {
     cut: 'le ha hecho un corte',
     bite: 'ha mordido',
   } satisfies Record<WoundKind, string>,
+  /** De qué ha muerto (H5 §8): "Ana ha muerto desangrándose". */
+  deathCauses: {
+    blood: 'desangrándose',
+    wounds: 'por las heridas',
+    infection: 'por una infección',
+    mercy: 'para no sufrir más',
+    hunger: 'de hambre',
+  } satisfies Record<DeathCause, string>,
   wounds: { scratch: 'Arañazo', cut: 'Corte', bite: 'Mordisco' } satisfies Record<
     WoundKind,
     string
@@ -389,6 +398,12 @@ export const es = {
       `Un zombi ${es.woundVerb[wound]} a ${who} en ${es.bodyParts[part].the}`,
     bandaged: (who: string, other: string) =>
       who === other ? `${who} se ha vendado` : `${who} ha vendado a ${other}`,
+    died: (who: string, cause: DeathCause) => `${who} ha muerto ${es.deathCauses[cause]}`,
+    strangerDied: (names: string[]) =>
+      names.length === 1
+        ? `${names[0]} ha muerto a la puerta`
+        : `${list(names)} han muerto a la puerta`,
+    rose: (who: string) => `${who} se ha levantado: ahora es un zombi`,
     painkiller: (who: string, other: string) =>
       who === other
         ? `${who} se ha tomado un analgésico`
@@ -479,6 +494,8 @@ export const es = {
     hurt: 'Con heridas',
     downed: 'Le derribaron',
     notConsoled: 'No le supieron consolar',
+    died: 'Ha muerto alguien',
+    partnerDied: 'Ha muerto su pareja',
   } satisfies Record<MoodModifierId, string>,
   /** Los recuerdos con otra persona, con su nombre. */
   modifiersWith: {
@@ -491,6 +508,8 @@ export const es = {
     breakup: (who: string) => `Ruptura con ${who}`,
     jealous: (who: string) => `Celos de ${who}`,
     clash: (who: string) => `No soporta a ${who}`,
+    died: (who: string) => `Ha muerto ${who}`,
+    partnerDied: (who: string) => `Ha muerto ${who}, su pareja`,
   } satisfies Partial<Record<MemoryId, (who: string) => string>> as Partial<
     Record<MemoryId, (who: string) => string>
   >,

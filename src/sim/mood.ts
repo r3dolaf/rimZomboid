@@ -61,10 +61,10 @@ export function moodModifiers(s: Survivor, tick: number, base?: Rect): MoodModif
   if (base && s.traits.includes('coward') && !contains(base, tileOf(s.pos)))
     mods.push({ id: 'scaredOutside', value: SCARED_OUTSIDE_MOOD });
   for (const m of s.memories)
-    if (m.expiresAt > tick && MEMORY_EFFECTS[m.id].value !== 0) {
+    if (m.expiresAt > tick && (m.value ?? MEMORY_EFFECTS[m.id].value) !== 0) {
       const mod: MoodModifier = {
         id: m.id,
-        value: MEMORY_EFFECTS[m.id].value,
+        value: m.value ?? MEMORY_EFFECTS[m.id].value,
         expiresAt: m.expiresAt,
       };
       if (m.otherId !== undefined) mod.otherId = m.otherId;

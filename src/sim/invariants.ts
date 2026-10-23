@@ -121,6 +121,10 @@ export function checkInvariants(w: World): string[] {
     if (s.sick && !(Number.isFinite(s.sick.until) && s.sick.until >= 0))
       problems.push(`${s.name}: gripe con fin no válido (${s.sick.until})`);
   const strangerIds = new Set(w.stranger?.survivors.map((s) => s.id) ?? []);
+  // H5 §8: los muertos ya no están.
+  for (const d of w.dead)
+    if (ids.has(d.id) || strangerIds.has(d.id))
+      problems.push(`${d.name} (#${d.id}): ha muerto y sigue en el mundo`);
   for (const d of w.decisions)
     for (const id of d.survivorIds)
       if (!ids.has(id) && !strangerIds.has(id))

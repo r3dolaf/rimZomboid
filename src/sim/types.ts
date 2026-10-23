@@ -150,14 +150,21 @@ export type MemoryId =
   | 'byTheFire'
   // Zombis (H4b)
   | 'downed'
+  // La muerte (H5 §8): de alguien de la colonia y de su pareja.
+  | 'died'
+  | 'partnerDied'
   // Habilidades (H4c): tras un consuelo que no funciona, 1 h sin que nadie lo intente (no pesa).
   | 'notConsoled';
 
-/** Recuerdo con efecto en el ánimo hasta el tick `expiresAt`; `otherId`, con quién fue. */
+/**
+ * Recuerdo con efecto en el ánimo hasta el tick `expiresAt`; `otherId`, con quién fue; `value`, si
+ * no es el de siempre (H5: una muerte pesa según lo que se pensaba del muerto).
+ */
 export interface Memory {
   id: MemoryId;
   expiresAt: number;
   otherId?: number;
+  value?: number;
 }
 
 /** Icono sobre la cabeza: charla, discusión o insulto, pelea, consuelo, compartir y pareja. */
@@ -287,6 +294,8 @@ export interface Survivor {
   /** Con analgésico hasta este tick (H5 §5); y si el jugador ha pedido darle uno. */
   painkillerUntil: number;
   painkillerWanted: boolean;
+  /** Infección oculta (H5 §7.1): desde cuándo y cuándo muere de ella; el jugador no la ve. */
+  infection: { at: number; deathAt: number } | null;
 }
 
 /** De qué se muere (H5 §8). */
@@ -327,6 +336,8 @@ export interface Zombie {
   waitUntil: number;
   /** La horda de la que salió (H4e), aunque ya haya terminado; `null` si no es de ninguna. */
   hordeId: number | null;
+  /** El colono que fue (H5 §8): "Ana (zombi)". */
+  name?: string;
 }
 
 /** Lado del mapa: 0 norte (y = 0), 1 sur, 2 oeste (x = 0), 3 este. */
@@ -446,6 +457,10 @@ export interface Container {
   reservedBy: number | null;
   /** Cuerpos (H4d): tick en que desaparece. */
   until?: number;
+  /** Cuerpo de una persona (H5 §8): de quién es ("Cuerpo de Ana"). */
+  name?: string;
+  /** Cuerpo de un infectado: tick en que se levanta como zombi. */
+  risesAt?: number;
 }
 
 export type NarratorStyle = 'calm' | 'balanced' | 'chaotic';
@@ -548,6 +563,8 @@ export interface World {
   siege: { at: number; side: MapSide; size: number } | null;
   // Heridas y muerte (H5)
   nextWoundId: number;
+  /** Los colonos que han muerto: quién, el día y de qué. */
+  dead: { id: number; name: string; day: number; cause: DeathCause }[];
 }
 
 /** Recetas de Fabricar (H4d). */

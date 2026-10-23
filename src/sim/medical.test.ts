@@ -19,8 +19,10 @@ import { healthSystem } from './health';
 import { checkInvariants } from './invariants';
 import { issue, ordersSystem } from './orders';
 import { brains } from './brain';
-import { emptyInventory } from './items';
+import { emptyInventory, weightOf } from './items';
 import { healJob } from './jobs/heal';
+import { startPainkillerActivity, takeBandages } from './jobs/medical';
+import { capacityKg } from './skills';
 import { step } from './step';
 import { addBase, addSurvivor, emptyWorld, withoutZombies } from './testing/fixtures';
 import type { Survivor, World } from './types';
@@ -355,4 +357,41 @@ test('si cae derribado acostado en una cama (durmiendo o descansando), sigue en 
   ana.action = { type: 'idle', ticksLeft: 0 }; // de pie en la casilla de la cama, no
   knockDown(w, ana);
   expect(ana.action).toEqual({ type: 'downed', until: w.tick + 4 * TICKS_PER_HOUR });
+});
+
+test('a por vendas o un analgésico, solo lo que le cabe (nunca pasa de lo que puede cargar)', () => {
+  const { w, ana, bea } = world();
+  ana.carrying.wood = Math.floor(capacityKg(ana) / ITEM_WEIGHT_KG.wood); // lleno de tablas
+  ana.carrying.bandage = 0;
+  const room = capacityKg(ana) - weightOf(ana.carrying);
+  takeBandages(ana, w);
+  expect(ana.carrying.bandage).toBe(Math.min(2, Math.floor(room / ITEM_WEIGHT_KG.bandage + 1e-9)));
+  expect(weightOf(ana.carrying)).toBeLessThanOrEqual(capacityKg(ana) + 1e-9);
+  // El que lleva el analgésico, igual.
+  bea.carrying.wood = Math.floor(capacityKg(bea) / ITEM_WEIGHT_KG.wood);
+  bea.carrying.bandage = 0;
+  bea.carrying.cloth = Math.floor(
+    (capacityKg(bea) - weightOf(bea.carrying)) / ITEM_WEIGHT_KG.cloth,
+  );
+  w.storage.items.painkillers = 1;
+  knockDown(w, ana);
+  ana.painkillerWanted = true;
+  if (weightOf(bea.carrying) + ITEM_WEIGHT_KG.painkillers > capacityKg(bea)) {
+    startPainkillerActivity(bea, w, { type: 'fetchPainkiller', patientId: ana.id });
+    expect(bea.carrying.painkillers).toBe(0);
+    expect(w.storage.items.painkillers).toBe(1);
+  }
+  expect(checkInvariants(w).filter((p) => p.includes('carga'))).toEqual([]);
+});
+
+test('sangrando y sin sitio para vendas: no va y viene a por ellas, primero descarga', () => {
+  const { w, ana } = world();
+  ana.carrying.bandage = 0;
+  ana.carrying.wood = Math.floor(capacityKg(ana) / ITEM_WEIGHT_KG.wood);
+  ana.carrying.cloth = Math.floor(
+    (capacityKg(ana) - weightOf(ana.carrying)) / ITEM_WEIGHT_KG.cloth,
+  );
+  addWound(w, ana, 'leftLeg', 'cut');
+  const a = brains.ai.decide(ana, w);
+  expect(a?.type === 'moveTo' ? a.then?.type : a?.type).toBe('unload');
 });

@@ -239,8 +239,13 @@ function playDay(
       if (lying(s) || (b && (b.x !== s.pos.x || b.y !== s.pos.y))) moved.add(s.id);
     }
   }
+  // Quien ha quedado encerrado (sin camino al almacén, ver la hoja de ruta) tampoco.
+  const store = w.storage.tiles[0]!;
+  const cut = (s: Survivor) =>
+    regionOf(w.grid, Math.floor(s.pos.x), Math.floor(s.pos.y)) !==
+    regionOf(w.grid, store.x, store.y);
   for (const s of w.survivors)
-    if (present.has(s.id) && !excused(s))
+    if (present.has(s.id) && !excused(s) && !cut(s))
       expect(moved.has(s.id), `día ${day}: ${s.name} no se ha movido`).toBe(true);
 }
 

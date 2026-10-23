@@ -6,6 +6,7 @@ import {
   BANDAGE_RANGE,
   BANDAGE_TICKS,
   BANDAGES_CARRIED,
+  ITEM_WEIGHT_KG,
   PAINKILLER_HOURS,
   REST_BELOW,
   REST_UNTIL,
@@ -15,11 +16,11 @@ import {
 import { baseFloor } from '../base';
 import { armFactor, canWalk } from '../body';
 import { contains } from '../geom';
-import { ITEM_KINDS } from '../items';
+import { ITEM_KINDS, weightOf, type ItemKind } from '../items';
 import { logEvent } from '../log';
 import { findPath, regionOf } from '../path/astar';
 import { pick } from '../rng';
-import { practice, workSpeed } from '../skills';
+import { capacityKg, practice, workSpeed } from '../skills';
 import type { Action, Point, Survivor, World, Wound } from '../types';
 import { tileOf } from '../world';
 
@@ -138,9 +139,17 @@ export function stockJob(s: Survivor, w: World): Action | null {
   return inBase(w, s) && reachesStorage(w, s) ? goTakeBandages(w) : null;
 }
 
-/** En el almacén: coge vendas hasta llevar BANDAGES_CARRIED. */
+/** Cuántas cosas de `kind` le caben aún encima. */
+const room = (s: Survivor, kind: ItemKind) =>
+  Math.floor((capacityKg(s) - weightOf(s.carrying)) / ITEM_WEIGHT_KG[kind] + 1e-9);
+
+/** En el almacén: coge vendas hasta llevar BANDAGES_CARRIED (las que le quepan). */
 export function takeBandages(s: Survivor, w: World): void {
-  const n = Math.min(BANDAGES_CARRIED - s.carrying.bandage, w.storage.items.bandage);
+  const n = Math.min(
+    BANDAGES_CARRIED - s.carrying.bandage,
+    w.storage.items.bandage,
+    room(s, 'bandage'),
+  );
   if (n <= 0) return;
   w.storage.items.bandage -= n;
   s.carrying.bandage += n;
@@ -183,7 +192,8 @@ export function selfCare(s: Survivor, w: World): Action | null | undefined {
     if (s.carrying.bandage > 0) {
       const own = startBandage(w, s, s);
       if (own) return own;
-    } else if (w.storage.items.bandage > 0 && reachesStorage(w, s)) return goTakeBandages(w);
+    } else if (w.storage.items.bandage > 0 && room(s, 'bandage') > 0 && reachesStorage(w, s))
+      return goTakeBandages(w); // (sin sitio, primero descarga: si no, iría y vendría)
   }
   // Le han mandado tomarse un analgésico (§5): si puede andar, va él al almacén.
   if (s.painkillerWanted && canWalk(s) && w.storage.items.painkillers > 0 && reachesStorage(w, s))
@@ -263,7 +273,7 @@ export function startPainkillerActivity(
   const p = w.survivors.find((x) => x.id === activity.patientId);
   if (activity.type === 'fetchPainkiller') {
     if (s.carrying.painkillers === 0) {
-      if (w.storage.items.painkillers === 0) return idle;
+      if (w.storage.items.painkillers === 0 || room(s, 'painkillers') === 0) return idle;
       w.storage.items.painkillers--;
       s.carrying.painkillers++;
     }

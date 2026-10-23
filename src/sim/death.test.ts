@@ -327,3 +327,16 @@ test('las cuentas: cada zombi que mata un colono, cada asedio que se acaba, lo s
   acceptStrangers(w);
   expect(w.stats.joined).toEqual([x.name]);
 });
+
+test('si muere uno de una pareja de desconocidos, el otro se queda sin pareja (y entra sin ella)', () => {
+  const { w } = world();
+  const door = doorOutside(w);
+  const [x, y] = [newStranger(w, door), newStranger(w, door)] as [Survivor, Survivor];
+  x.partnerId = y.id;
+  y.partnerId = x.id;
+  w.stranger = { survivors: [x, y], leaving: false };
+  killSurvivor(w, x, 'blood');
+  expect(y.partnerId).toBeNull();
+  acceptStrangers(w);
+  expect(checkInvariants(w)).toEqual([]);
+});

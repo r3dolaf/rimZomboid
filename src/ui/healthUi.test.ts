@@ -118,7 +118,7 @@ test('tarjeta: barra de Sangre bajo la de Salud e iconos de salud', () => {
   const bars = [...card.querySelectorAll('.bar')].map((b) => (b as HTMLElement).dataset.need);
   expect(bars.slice(0, 2)).toEqual(['health', 'blood']);
   expect((card.querySelector('[data-need="blood"] .fill') as HTMLElement).style.width).toBe('40%');
-  expect(card.querySelector('[data-testid="card-health"]')?.textContent).toBe('🩸');
+  expect(card.querySelector('[data-testid="health-icons"]')?.textContent).toBe('🩸');
 });
 
 test('ficha de la cama: de quién es y la casilla Cama de hospital', () => {

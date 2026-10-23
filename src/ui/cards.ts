@@ -57,7 +57,7 @@ export function mountCards(
     status.className = 'status';
     const icons = document.createElement('span');
     icons.className = 'health-icons';
-    icons.dataset.testid = 'card-health';
+    icons.dataset.testid = 'health-icons';
     const who = document.createElement('span');
     who.append(name, love);
     const right = document.createElement('span');

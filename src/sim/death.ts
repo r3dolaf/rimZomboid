@@ -112,6 +112,7 @@ function detach(w: World, s: Survivor): void {
   for (const o of [...w.survivors, ...(w.stranger?.survivors ?? [])]) {
     if (o === s) continue;
     if (o.carryingId === s.id) o.carryingId = null;
+    if (o.partnerId === s.id) o.partnerId = null; // también entre desconocidos
     if (involves(o.action, s.id)) {
       o.action = { type: 'idle', ticksLeft: 0 };
       o.path = [];

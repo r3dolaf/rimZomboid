@@ -92,6 +92,12 @@ export const MEMORY_EFFECTS = {
   // La muerte (H5 §8): todos 3 días (según su opinión, ver DEATH_MOOD_*); la pareja, 5.
   died: { value: -15, hours: 72 },
   partnerDied: { value: -30, hours: 120 },
+  // Que se vaya y acabar con su sufrimiento (H5 §7.4).
+  banished: { value: -10, hours: 72 },
+  partnerBanished: { value: -25, hours: 120 },
+  sawTurned: { value: -15, hours: 72 },
+  hadToKill: { value: -15, hours: 72 },
+  killedForNothing: { value: -25, hours: 120 },
   notConsoled: { value: 0, hours: 1 }, // no pesa en el ánimo: solo bloquea consolar
 } as const;
 export const EAT_BELOW = 35;
@@ -702,3 +708,11 @@ export const DEATH_MOOD_MIN = -25;
 export const DEATH_MOOD_MAX = -5;
 /** El cuerpo de un infectado se levanta como zombi a la hora. */
 export const RISE_TICKS = TICKS_PER_HOUR;
+/** Acabar con su sufrimiento: media hora. */
+export const MERCY_TICKS = TICKS_PER_HOUR / 2;
+/** El que echaron infectado vuelve al día siguiente como zombi; el de la gripe, a los 2–4 días. */
+export const TURNED_RETURN_TICKS = TICKS_PER_DAY;
+export const RETURN_DAYS_MIN = 2;
+export const RETURN_DAYS_MAX = 4;
+/** Lo que se piensan el que vuelve y los de la colonia, el uno del otro. */
+export const RETURNED_OPINION = -40;

@@ -115,6 +115,9 @@ export function emptyWorld(width: number, height: number): World {
     siege: null,
     nextWoundId: 1,
     dead: [],
+    leaving: [],
+    returning: [],
+    mercy: [],
   };
 }
 

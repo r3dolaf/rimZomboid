@@ -17,6 +17,7 @@ import {
   TICKS_PER_HOUR,
 } from './balance';
 import { knockDown } from './body';
+import { banish } from './death';
 import { addDecision } from './decisions';
 import { lyingDown } from './jobs/medical';
 import { logEvent } from './log';
@@ -143,5 +144,6 @@ export function resolveFever(w: World, d: Decision, option: 0 | 1 | 2): void {
     if (s.fever.rest) return;
     s.fever.rest = true;
     logEvent(w, { kind: 'feverRest', survivorId: s.id });
-  }
+  } else if (option === 1) banish(w, s);
+  else if (!w.mercy.includes(s.id)) w.mercy.push(s.id);
 }

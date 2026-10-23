@@ -95,7 +95,12 @@ export type LogEvent =
   // La muerte (H5 §8): ya no está en la colonia, se guarda su nombre.
   | { kind: 'died'; name: string; cause: DeathCause }
   | { kind: 'strangerDied'; names: string[] }
-  | { kind: 'rose'; name: string };
+  | { kind: 'rose'; name: string }
+  // Que se vaya y acabar con su sufrimiento (H5 §7.4).
+  | { kind: 'banished'; name: string }
+  | { kind: 'returned'; name: string }
+  | { kind: 'sawTurned'; name: string }
+  | { kind: 'killedForNothing'; name: string };
 
 export type LogEntry = LogEvent & { tick: number };
 

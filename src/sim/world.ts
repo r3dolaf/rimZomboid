@@ -195,6 +195,9 @@ export function createWorld(
     siege: null,
     nextWoundId: 1,
     dead: [],
+    leaving: [],
+    returning: [],
+    mercy: [],
   };
   // Zombis (H4b), con su propio azar: no cambian nada de lo anterior.
   placeStartZombies(world);

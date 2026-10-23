@@ -123,6 +123,15 @@ export function checkInvariants(w: World): string[] {
       problems.push(`${s.name}: fiebre no válida (desde ${f.since}, ${f.restTicks} de descanso)`);
   }
   const strangerIds = new Set(w.stranger?.survivors.map((s) => s.id) ?? []);
+  // H5 §7.4: los que se van y vuelven ya no son de la colonia; a quien acabar con su sufrimiento, sí.
+  for (const s of [
+    ...w.leaving,
+    ...w.returning.flatMap((r) => (r.kind === 'stranger' ? [r.survivor] : [])),
+  ])
+    if (ids.has(s.id) || strangerIds.has(s.id))
+      problems.push(`${s.name}: se fue y sigue en la colonia`);
+  for (const id of w.mercy)
+    if (!ids.has(id)) problems.push(`acabar con su sufrimiento: #${id} no es de la colonia`);
   // H5 §8: los muertos ya no están.
   for (const d of w.dead)
     if (ids.has(d.id) || strangerIds.has(d.id))

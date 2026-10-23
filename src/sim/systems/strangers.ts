@@ -91,7 +91,7 @@ function strangerDanger(w: World): void {
 }
 
 /** El extremo de carretera más cercano (o donde está, si no hay). */
-function exitFor(w: World, s: Survivor): Point {
+export function exitFor(w: World, s: Survivor): Point {
   const here = tileOf(s.pos);
   let exit = here;
   let best = Infinity;

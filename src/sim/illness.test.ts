@@ -4,13 +4,14 @@ import { expect, test } from 'vitest';
 import {
   FEVER_HUNGER_MULT,
   FEVER_MOOD,
+  MERCY_TICKS,
   NAUSEA_HUNGER_MULT,
   NAUSEA_MOOD,
   NAUSEA_PAIN,
   TICKS_PER_DAY,
   TICKS_PER_HOUR,
 } from './balance';
-import { addWound, painOf } from './body';
+import { addWound, knockDown, painOf } from './body';
 import { brains } from './brain';
 import { deathSystem } from './death';
 import { expireDecisions } from './events/resolve';
@@ -18,11 +19,13 @@ import { fluEvent } from './events/flu';
 import { healthSystem } from './health';
 import { illnessSystem, startFever } from './illness';
 import { checkInvariants } from './invariants';
+import { setTile } from './map/grid';
 import { moodModifiers } from './mood';
 import { issue, ordersSystem } from './orders';
+import { step } from './step';
 import { needsSystem } from './systems/needs';
 import { addBase, addSurvivor, emptyWorld, withoutZombies } from './testing/fixtures';
-import type { Survivor, World } from './types';
+import { Tile, type Survivor, type World } from './types';
 import { findWork } from './work';
 
 const H = TICKS_PER_HOUR;
@@ -226,4 +229,166 @@ test('invariantes: la fiebre bien formada', () => {
   expect(checkInvariants(w)).toEqual([]);
   ana.fever!.since = Number.NaN;
   expect(checkInvariants(w).join()).toMatch(/fiebre/);
+});
+
+// --- H5 §7.4: Que se vaya y Acabar con su sufrimiento ---
+
+/** Con carretera de lado a lado en y = 12 (sus extremos, (0, 12) y (39, 12)); Bea y Cris dentro. */
+function colony() {
+  const x = world();
+  for (let i = 0; i < 40; i++) setTile(x.w.grid, i, 12, Tile.Road);
+  const bea = addSurvivor(x.w, { x: 6, y: 5 });
+  const cris = addSurvivor(x.w, { x: 8, y: 6 }, 'Cris');
+  for (const s of x.w.survivors) s.carrying.bandage = 2; // que no vayan a por vendas
+  return { ...x, bea, cris };
+}
+
+const answer = (w: World, option: 0 | 1 | 2) => {
+  issue(w, { type: 'decide', decisionId: w.decisions[0]!.id, option });
+  ordersSystem(w);
+};
+
+test('Que se vaya: deja lo suyo en el almacén y se marcha a pie por la carretera más cercana', () => {
+  const { w, ana, bea, cris } = colony();
+  ana.partnerId = bea.id;
+  bea.partnerId = ana.id;
+  ana.carrying.food = 2;
+  ana.equipped = 'knife';
+  const before = { ...w.storage.items };
+  startFever(w, ana, 'flu');
+  answer(w, 1);
+  expect(w.storage.items).toMatchObject({
+    food: before.food + 2,
+    bandage: before.bandage + 2,
+    knife: before.knife + 1,
+  });
+  expect(ana.equipped).toBeNull();
+  expect(w.survivors).not.toContain(ana);
+  expect(w.leaving).toEqual([ana]);
+  expect(ana.action).toMatchObject({ type: 'moveTo', target: { x: 0, y: 12 } });
+  expect(w.beds[0]!.ownerId).toBe(bea.id); // su cama, para otro
+  expect(w.log.some((e) => e.kind === 'banished' && e.name === 'Ana')).toBe(true);
+  const grief = (s: Survivor) => moodModifiers(s, w.tick).filter((m) => m.otherId === ana.id);
+  expect(grief(cris)).toEqual([
+    { id: 'banished', value: -10, expiresAt: w.tick + 72 * H, otherId: ana.id },
+  ]);
+  expect(grief(bea)).toEqual([
+    { id: 'partnerBanished', value: -25, expiresAt: w.tick + 120 * H, otherId: ana.id },
+  ]);
+  expect(bea.partnerId).toBeNull();
+  expect(checkInvariants(w)).toEqual([]);
+  for (let i = 0; i < 2000 && w.leaving.length > 0; i++) step(w);
+  expect(w.leaving).toEqual([]);
+  expect(w.returning).toEqual([
+    expect.objectContaining({ kind: 'stranger', pos: { x: 0, y: 12 } }),
+  ]);
+  const back = w.returning[0]!.at - w.tick;
+  expect(back).toBeGreaterThanOrEqual(2 * TICKS_PER_DAY - 1);
+  expect(back).toBeLessThanOrEqual(4 * TICKS_PER_DAY);
+  expect(checkInvariants(w)).toEqual([]);
+});
+
+test('si era gripe, a los 2–4 días vuelve y pide entrar, con la opinión por los suelos', () => {
+  const { w, ana, bea } = colony();
+  bea.opinions[ana.id] = 30;
+  startFever(w, ana, 'flu');
+  answer(w, 1);
+  for (let i = 0; i < 2000 && w.leaving.length > 0; i++) step(w);
+  w.tick = w.returning[0]!.at;
+  step(w);
+  expect(w.returning).toEqual([]);
+  expect(w.stranger?.survivors.map((s) => s.name)).toEqual(['Ana']);
+  const back = w.stranger!.survivors[0]!;
+  expect(back.fever).toBeNull();
+  expect(back.opinions[bea.id]).toBe(-40);
+  expect(bea.opinions[back.id]).toBe(-40);
+  expect(w.decisions).toEqual([
+    expect.objectContaining({ kind: 'stranger', survivorIds: [back.id] }),
+  ]);
+  expect(w.log.some((e) => e.kind === 'returned' && e.name === 'Ana')).toBe(true);
+  expect(checkInvariants(w)).toEqual([]);
+});
+
+test('si estaba infectado, al día siguiente su zombi llega por donde salió y va a la base; al verlo, todos lo sienten', () => {
+  const { w, ana, bea, cris } = colony();
+  ana.infection = { at: w.tick - 12 * H, deathAt: w.tick + 40 * H };
+  illnessSystem(w);
+  answer(w, 1);
+  for (let i = 0; i < 2000 && w.leaving.length > 0; i++) step(w);
+  const r = w.returning[0]!;
+  expect(r).toMatchObject({ kind: 'zombie', pos: { x: 0, y: 12 } });
+  expect(r.at - w.tick).toBeGreaterThan(TICKS_PER_DAY - 5);
+  w.tick = r.at;
+  step(w);
+  const z = w.zombies.find((x) => x.name === 'Ana')!;
+  expect(z).toBeDefined();
+  expect(z.state).toBe('alert');
+  expect(z.goal).toEqual(w.base.door);
+  // Al verlo (aquí, a su lado), "Ana ya es un zombi".
+  z.pos = { x: 7.5, y: 11.5 };
+  bea.pos = { x: 7.5, y: 10.5 };
+  step(w);
+  for (const s of [bea, cris])
+    expect(moodModifiers(s, w.tick).filter((m) => m.id === 'sawTurned')).toEqual([
+      expect.objectContaining({ value: -15, otherId: ana.id }),
+    ]);
+  expect(w.log.filter((e) => e.kind === 'sawTurned')).toHaveLength(1);
+  step(w);
+  expect(w.log.filter((e) => e.kind === 'sawTurned')).toHaveLength(1); // una sola vez
+});
+
+test('Acabar con su sufrimiento: va el más cercano que puede, tarda media hora y el cuerpo no se levanta', () => {
+  const { w, ana, bea, cris } = colony();
+  ana.infection = { at: w.tick - 12 * H, deathAt: w.tick + 40 * H };
+  illnessSystem(w);
+  cris.pos = { x: 5.5, y: 5.5 }; // la más cercana, pero en modo combate
+  cris.drafted = true;
+  bea.pos = { x: 7.5, y: 5.5 };
+  answer(w, 2);
+  expect(w.mercy).toEqual([ana.id]);
+  expect(brains.ai.decide(bea, w)).toMatchObject({
+    type: 'moveTo',
+    then: { type: 'mercy', patientId: ana.id },
+  });
+  let ticks = 0;
+  for (let i = 0; i < 600 && w.survivors.includes(ana); i++) {
+    step(w);
+    if (bea.action.type === 'mercy') ticks++;
+  }
+  expect(w.survivors).not.toContain(ana);
+  expect(Math.abs(ticks - MERCY_TICKS)).toBeLessThanOrEqual(1);
+  expect(w.dead[0]).toMatchObject({ name: 'Ana', cause: 'mercy' });
+  expect(w.containers.find((c) => c.name === 'Ana')?.risesAt).toBeUndefined();
+  expect(moodModifiers(bea, w.tick).map((m) => [m.id, m.value])).toContainEqual(['hadToKill', -15]);
+  expect(moodModifiers(cris, w.tick).map((m) => m.id)).not.toContain('hadToKill');
+  expect(moodModifiers(cris, w.tick).map((m) => m.id)).not.toContain('killedForNothing');
+  expect(w.mercy).toEqual([]);
+  expect(checkInvariants(w)).toEqual([]);
+});
+
+test('si era gripe: "Matamos a Ana por nada" (−25, 5 días) y el registro lo dice', () => {
+  const { w, ana, bea, cris } = colony();
+  startFever(w, ana, 'flu');
+  bea.pos = { x: 5.5, y: 5.5 };
+  answer(w, 2);
+  for (let i = 0; i < 600 && w.survivors.includes(ana); i++) step(w);
+  for (const s of [bea, cris])
+    expect(moodModifiers(s, w.tick).filter((m) => m.id === 'killedForNothing')).toEqual([
+      expect.objectContaining({ value: -25, otherId: ana.id }),
+    ]);
+  expect(w.log.some((e) => e.kind === 'killedForNothing' && e.name === 'Ana')).toBe(true);
+});
+
+test('si no hay nadie que pueda, espera', () => {
+  const { w, ana, bea, cris } = colony();
+  startFever(w, ana, 'flu');
+  knockDown(w, bea);
+  cris.drafted = true;
+  answer(w, 2);
+  for (let i = 0; i < 50; i++) step(w);
+  expect(w.survivors).toContain(ana);
+  expect(w.mercy).toEqual([ana.id]);
+  cris.drafted = false;
+  for (let i = 0; i < 600 && w.survivors.includes(ana); i++) step(w);
+  expect(w.survivors).not.toContain(ana);
 });

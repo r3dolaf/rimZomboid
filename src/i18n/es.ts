@@ -419,6 +419,10 @@ export const es = {
         ? `${names[0]} ha muerto a la puerta`
         : `${list(names)} han muerto a la puerta`,
     rose: (who: string) => `${who} se ha levantado: ahora es un zombi`,
+    banished: (who: string) => `${who} se ha ido de la colonia`,
+    returned: (who: string) => `${who} ha vuelto y pide entrar`,
+    sawTurned: (who: string) => `Hemos visto a ${who}: ya es un zombi`,
+    killedForNothing: (who: string) => `Matamos a ${who} por nada: solo era una gripe`,
     painkiller: (who: string, other: string) =>
       who === other
         ? `${who} se ha tomado un analgésico`
@@ -511,6 +515,11 @@ export const es = {
     notConsoled: 'No le supieron consolar',
     died: 'Ha muerto alguien',
     partnerDied: 'Ha muerto su pareja',
+    banished: 'Echamos a alguien',
+    partnerBanished: 'Echamos a su pareja',
+    sawTurned: 'Uno de los nuestros es un zombi',
+    hadToKill: 'Tuvo que matar a alguien',
+    killedForNothing: 'Matamos a alguien por nada',
   } satisfies Record<MoodModifierId, string>,
   /** Los recuerdos con otra persona, con su nombre. */
   modifiersWith: {
@@ -525,6 +534,11 @@ export const es = {
     clash: (who: string) => `No soporta a ${who}`,
     died: (who: string) => `Ha muerto ${who}`,
     partnerDied: (who: string) => `Ha muerto ${who}, su pareja`,
+    banished: (who: string) => `Echamos a ${who}`,
+    partnerBanished: (who: string) => `Echamos a ${who}, su pareja`,
+    sawTurned: (who: string) => `${who} ya es un zombi`,
+    hadToKill: (who: string) => `Tuvo que matar a ${who}`,
+    killedForNothing: (who: string) => `Matamos a ${who} por nada`,
   } satisfies Partial<Record<MemoryId, (who: string) => string>> as Partial<
     Record<MemoryId, (who: string) => string>
   >,
@@ -558,6 +572,8 @@ export const es = {
     takePainkiller: 'Va a tomarse un analgésico',
     fetchPainkiller: (who: string) => `Va a por un analgésico para ${who}`,
     givePainkiller: (who: string) => `Lleva un analgésico a ${who}`,
+    goMercy: (who: string) => `Va a acabar con el sufrimiento de ${who}`,
+    mercy: (who: string) => `Acabando con el sufrimiento de ${who}`,
     wander: 'Paseando',
     goEat: 'Va a comer',
     eat: 'Comiendo',

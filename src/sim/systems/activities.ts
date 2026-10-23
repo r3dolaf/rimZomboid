@@ -11,6 +11,7 @@ import { finishConsoling } from '../consoling';
 import { nearTable } from '../furniture';
 import { workOnBlueprint } from '../jobs/build';
 import { finishChop } from '../jobs/chop';
+import { mercyStep } from '../death';
 import { bandageStep } from '../jobs/medical';
 import { finishCraft, unloadAfterCraft } from '../jobs/craft';
 import { logEvent } from '../log';
@@ -54,6 +55,8 @@ export function activitiesSystem(w: World): void {
       s.action = { type: 'idle', ticksLeft: 0 };
     } else if (a.type === 'bandage') {
       bandageStep(w, s); // Sanar (H4e)
+    } else if (a.type === 'mercy') {
+      mercyStep(w, s); // H5 §7.4
     } else if (a.type === 'unload') {
       if (--a.ticksLeft > 0) continue;
       // Se queda con sus vendas (H5 §4).

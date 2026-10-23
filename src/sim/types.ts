@@ -153,6 +153,12 @@ export type MemoryId =
   // La muerte (H5 §8): de alguien de la colonia y de su pareja.
   | 'died'
   | 'partnerDied'
+  // Que se vaya y acabar con su sufrimiento (H5 §7.4).
+  | 'banished'
+  | 'partnerBanished'
+  | 'sawTurned'
+  | 'hadToKill'
+  | 'killedForNothing'
   // Habilidades (H4c): tras un consuelo que no funciona, 1 h sin que nadie lo intente (no pesa).
   | 'notConsoled';
 
@@ -200,6 +206,7 @@ export type Activity =
   | { type: 'rescue'; downedId: number }
   | { type: 'dropOff'; downedId: number }
   | { type: 'bandage'; patientId: number }
+  | { type: 'mercy'; patientId: number }
   // Vendas (H5): coger del almacén hasta llevar las que tocan.
   | { type: 'takeBandages' }
   // Descansar (en la cama a la que va) y analgésicos (tomárselo; ir a por uno y llevárselo a otro).
@@ -238,6 +245,7 @@ export type Action =
   | { type: 'craft'; billId: number; tableId: number; recipe: RecipeId; ticksLeft: number }
   // Vendando a `patientId` (Sanar, H4e).
   | { type: 'bandage'; patientId: number; woundId: number; ticksLeft: number }
+  | { type: 'mercy'; patientId: number; ticksLeft: number }
   // Descansando por dolor (y, en H5 §7, por fiebre): acostado sin trabajar.
   | { type: 'rest' };
 
@@ -355,6 +363,8 @@ export interface Zombie {
   hordeId: number | null;
   /** El colono que fue (H5 §8): "Ana (zombi)". */
   name?: string;
+  /** El colono que echaron infectado (H5 §7.4), hasta que alguien lo ve. */
+  turnedFrom?: number;
 }
 
 /** Lado del mapa: 0 norte (y = 0), 1 sur, 2 oeste (x = 0), 3 este. */
@@ -584,7 +594,18 @@ export interface World {
   nextWoundId: number;
   /** Los colonos que han muerto: quién, el día y de qué. */
   dead: { id: number; name: string; day: number; cause: DeathCause }[];
+  /** Los que echaron, de camino al borde por la carretera (H5 §7.4). */
+  leaving: Survivor[];
+  /** Los que volverán: el infectado, como zombi; el de la gripe, a pedir entrar. */
+  returning: Returning[];
+  /** A quién hay que acabar con su sufrimiento (esperan a que alguien pueda). */
+  mercy: number[];
 }
+
+/** Uno que echaron y que vuelve en `at` por donde se fue (`pos`). */
+export type Returning =
+  | { kind: 'zombie'; at: number; pos: Point; name: string; survivorId: number }
+  | { kind: 'stranger'; at: number; pos: Point; survivor: Survivor };
 
 /** Recetas de Fabricar (H4d). */
 export type RecipeId = 'bandages' | 'curtains' | 'unpick';

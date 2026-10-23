@@ -18,6 +18,7 @@ import { logEvent } from './log';
 import { nextFloat, pick } from './rng';
 import { equipFromPack } from './jobs/weapons';
 import { findWork, isWorking, stillWorthIt } from './work';
+import { mercyDecision } from './death';
 import { restDecision, selfCare } from './jobs/medical';
 import type { Action, BrainId, Survivor, World } from './types';
 import { tileOf } from './world';
@@ -37,10 +38,18 @@ const AiBrain: Brain = {
     // Peligro (spec H4b §7): lo primero de todo.
     const danger = dangerDecision(s, w, () => rest(s, w));
     if (danger !== undefined) return danger;
+    const a = s.action;
+    // A quien van a acabar con su sufrimiento (H5 §7.4), espera donde está.
+    if (w.mercy.includes(s.id))
+      return a.type === 'idle' || a.type === 'rest' || a.type === 'sleep'
+        ? null
+        : { type: 'idle', ticksLeft: 0 };
     // Vendarse lo que sangra (H5 §4): lo siguiente, antes de comer o dormir.
     const care = selfCare(s, w);
     if (care !== undefined) return care;
-    const a = s.action;
+    // Acabar con el sufrimiento de alguien, si le toca (H5 §7.4).
+    const mercy = mercyDecision(s, w);
+    if (mercy !== undefined) return mercy;
     const goingTo = a.type === 'moveTo' ? a.then?.type : undefined;
     const inCrisis = crisisNow(s);
 

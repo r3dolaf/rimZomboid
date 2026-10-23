@@ -56,6 +56,8 @@ export function activityText(s: Survivor, w?: World): string {
       return a.patientId === s.id ? t.bandageSelf : t.bandage(name(a.patientId));
     case 'rest':
       return t.rest;
+    case 'mercy':
+      return t.mercy(name(a.patientId));
     case 'moveTo':
       // Sanar (H4e)
       if (a.then?.type === 'rescue') return t.goRescue(name(a.then.downedId));
@@ -66,6 +68,7 @@ export function activityText(s: Survivor, w?: World): string {
       if (a.then?.type === 'takePainkiller') return t.takePainkiller;
       if (a.then?.type === 'fetchPainkiller') return t.fetchPainkiller(name(a.then.patientId));
       if (a.then?.type === 'givePainkiller') return t.givePainkiller(name(a.then.patientId));
+      if (a.then?.type === 'mercy') return t.goMercy(name(a.then.patientId));
       if (a.then?.type === 'search') {
         const c = container(a.then.containerId);
         if (c?.kind === 'corpse') return t.goCorpse;
@@ -421,6 +424,18 @@ export function logText(e: LogEntry, w: World): string {
       break;
     case 'rose':
       text = l.rose(e.name);
+      break;
+    case 'banished':
+      text = l.banished(e.name);
+      break;
+    case 'returned':
+      text = l.returned(e.name);
+      break;
+    case 'sawTurned':
+      text = l.sawTurned(e.name);
+      break;
+    case 'killedForNothing':
+      text = l.killedForNothing(e.name);
       break;
   }
   return text;

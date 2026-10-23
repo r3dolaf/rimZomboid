@@ -189,6 +189,18 @@ export const es = {
   lockWeapon: 'Fijar',
   lockWeaponHint: 'No cambia ni devuelve lo que lleva en la mano',
   logToggle: { hide: 'Minimizar el registro', show: 'Abrir el registro' },
+  /** Filtros del registro (H5 §10). */
+  logCategories: {
+    social: 'Social',
+    combat: 'Combate',
+    loot: 'Saqueo',
+    work: 'Trabajo',
+    health: 'Salud',
+    narrator: 'Narrador',
+    colony: 'Colonia',
+  },
+  /** Panel de Almacén (H5 §10). */
+  storage: { title: 'Almacén', button: 'Almacén', hint: 'Todo lo que hay en el almacén' },
   // Cuerpo y heridas (H5)
   bodyParts: {
     head: { name: 'Cabeza', the: 'la cabeza' },

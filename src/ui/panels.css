@@ -709,3 +709,58 @@
   display: block;
   margin-top: 8px;
 }
+
+/* Filtros del registro (H5 §10). */
+.log .log-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin: 2px 0 4px;
+}
+.log .log-filters button {
+  padding: 0 5px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.log .log-filters button.off {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+/* Panel de Almacén (H5 §10). */
+.storage-panel {
+  position: absolute;
+  left: 12px;
+  top: 56px;
+  width: 220px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 10px 12px;
+  background: rgba(20, 22, 26, 0.94);
+  border: 1px solid #3a3d42;
+  border-radius: 6px;
+  color: #e8e6e3;
+  pointer-events: auto;
+}
+.storage-panel header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.storage-panel h2 {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+.storage-panel ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.storage-panel li {
+  display: flex;
+  justify-content: space-between;
+  padding: 1px 0;
+}
+.storage-panel .count {
+  font-variant-numeric: tabular-nums;
+}

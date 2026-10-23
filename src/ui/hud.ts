@@ -25,6 +25,8 @@ export function mountHud(
     narrator?: NarratorStyle;
     toggleWork?: () => void;
     toggleCraft?: () => void;
+    /** H5: el panel de Almacén. */
+    toggleStorage?: () => void;
     /** El menú de Avisos (H4e). */
     toggleNotices?: () => void;
   },
@@ -109,6 +111,10 @@ export function mountHud(
   work.hidden = !opts.toggleWork;
   const craft = button('hud-craft', es.craftPanel, es.craftPanelHint, () => opts.toggleCraft?.());
   craft.hidden = !opts.toggleCraft;
+  const storage = button('hud-storage', es.storage.button, es.storage.hint, () =>
+    opts.toggleStorage?.(),
+  );
+  storage.hidden = !opts.toggleStorage;
   const notices = button('hud-notices', es.noticesButton, es.noticesButtonHint, () =>
     opts.toggleNotices?.(),
   );
@@ -147,6 +153,7 @@ export function mountHud(
     bandages,
     painkillers,
     wood,
+    storage,
     ...tools.map((t) => t.b),
     work,
     craft,

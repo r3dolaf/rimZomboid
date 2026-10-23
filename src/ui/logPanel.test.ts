@@ -3,7 +3,7 @@ import { expect, test } from 'vitest';
 import { logEvent } from '../sim/log';
 import { createWorld } from '../sim/world';
 import { buildingThe, formatItems, formatLogEntry } from './describe';
-import { mountLog } from './logPanel';
+import { LOG_CATEGORIES, LOG_CATEGORY, mountLog } from './logPanel';
 
 test('formatItems: plurales y lista legible', () => {
   expect(
@@ -142,4 +142,62 @@ test('textos de los sucesos sociales del narrador', () => {
   );
   logEvent(w, { kind: 'foodFight' });
   expect(last()).toContain('Discusión por el reparto de la comida');
+});
+
+// --- H5 §10: filtros del registro ---
+
+test('cada tipo de suceso tiene su categoría (Social, Combate, Saqueo, Trabajo, Salud, Narrador, Colonia)', () => {
+  expect(LOG_CATEGORIES).toEqual([
+    'social',
+    'combat',
+    'loot',
+    'work',
+    'health',
+    'narrator',
+    'colony',
+  ]);
+  expect(LOG_CATEGORY.fight).toBe('social');
+  expect(LOG_CATEGORY.zombieKilled).toBe('combat');
+  expect(LOG_CATEGORY.found).toBe('loot');
+  expect(LOG_CATEGORY.built).toBe('work');
+  expect(LOG_CATEGORY.wounded).toBe('health');
+  expect(LOG_CATEGORY.died).toBe('health');
+  expect(LOG_CATEGORY.storm).toBe('narrator');
+  expect(LOG_CATEGORY.strangerArrived).toBe('colony');
+});
+
+test('filtros: un botón por categoría; apagarlo oculta sus sucesos y se recuerda en el navegador', () => {
+  localStorage.removeItem('rimzomboid.logFilters');
+  const root = document.createElement('div');
+  const w = createWorld(2);
+  const s = w.survivors[0]!;
+  const panel = mountLog(root, { world: w });
+  logEvent(w, { kind: 'houseEmptied', houseId: 1 });
+  logEvent(w, { kind: 'wounded', survivorId: s.id, part: 'leftArm', wound: 'cut' });
+  panel.update();
+  const items = () =>
+    [...root.querySelectorAll('[data-testid="log"] li')]
+      .filter((li) => !(li as HTMLElement).hidden)
+      .map((li) => li.textContent);
+  expect(items()).toHaveLength(2);
+  const loot = root.querySelector('[data-testid="log-filter-loot"]') as HTMLButtonElement;
+  expect(loot.textContent).toBe('Saqueo');
+  expect(loot.classList.contains('off')).toBe(false);
+  loot.click();
+  expect(loot.classList.contains('off')).toBe(true);
+  expect(items()).toEqual([expect.stringContaining('le ha hecho un corte')]);
+  expect(JSON.parse(localStorage.getItem('rimzomboid.logFilters')!)).toEqual(['loot']);
+  // Al volver a abrir el juego, sigue apagado.
+  const again = document.createElement('div');
+  const panel2 = mountLog(again, { world: w });
+  panel2.update();
+  expect(
+    (again.querySelector('[data-testid="log-filter-loot"]') as HTMLElement).classList.contains(
+      'off',
+    ),
+  ).toBe(true);
+  expect([...again.querySelectorAll('li')].filter((li) => !li.hidden)).toHaveLength(1);
+  loot.click();
+  expect(items()).toHaveLength(2);
+  localStorage.removeItem('rimzomboid.logFilters');
 });

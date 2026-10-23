@@ -10,6 +10,7 @@ import { pryJob, pryStillWorth } from './jobs/pry';
 import { craftJob, craftStillWorth } from './jobs/craft';
 import { deliverJob, haulJob, haulStillWorth } from './jobs/haul';
 import { healJob, healStillWorth } from './jobs/heal';
+import { hasCargo, stockJob } from './jobs/medical';
 import { swapWeaponStillWorth, weaponJob } from './jobs/weapons';
 import { isEmpty, ITEM_KINDS, weightOf } from './items';
 import { regionOf } from './path/astar';
@@ -88,7 +89,7 @@ export function findWork(s: Survivor, w: World): Action | null {
   if (armFactor(s) === 0) return null; // sin brazos no se trabaja (H5)
   const loot = may(s, 'loot');
   // Quien lleva cosas termina el viaje: sigue saqueando si puede o descarga.
-  if (!isEmpty(s.carrying)) {
+  if (hasCargo(s)) {
     // Si en el almacén no queda comida y él lleva, lo primero es llevarla para que coman todos.
     if (s.carrying.food > 0 && w.storage.items.food === 0) return goUnload(w);
     // La madera que lleva, a un plano que la necesite.
@@ -98,6 +99,9 @@ export function findWork(s: Survivor, w: World): Action | null {
   }
   const back = returnAxeJob(s, w);
   if (back) return back;
+  // H5: en la base, a por sus vendas.
+  const stock = stockJob(s, w);
+  if (stock) return stock;
   const arm = weaponJob(s, w);
   if (arm) return arm;
   // Con poca comida, saquear va delante de todo, tenga la prioridad que tenga.
@@ -143,6 +147,7 @@ const WORK_ACTIONS: ReadonlySet<string> = new Set([
   'rescue',
   'dropOff',
   'bandage',
+  'takeBandages',
 ]);
 
 /** ¿Está trabajando (o yendo a trabajar)? */

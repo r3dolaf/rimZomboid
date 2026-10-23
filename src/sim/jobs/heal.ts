@@ -1,16 +1,6 @@
-// Sanar (spec H4e §4): rescatar a los derribados (llevarlos en brazos a una cama o a la base) y
-// vendar a los heridos que están en la base.
-import {
-  BANDAGE_BELOW,
-  BANDAGE_HEAL,
-  BANDAGE_HOURS,
-  BANDAGE_PER_LEVEL,
-  BANDAGE_RANGE,
-  BANDAGE_TICKS,
-  RESCUE_REACH,
-  RESCUE_SAFE_RANGE,
-  TICKS_PER_HOUR,
-} from '../balance';
+// Sanar (spec H4e §4): rescatar a los derribados (llevarlos en brazos a una cama o a la base). Lo
+// de vendar está en medical.ts (H5).
+import { RESCUE_REACH, RESCUE_SAFE_RANGE } from '../balance';
 import { baseFloor } from '../base';
 import { seenByColony } from '../danger';
 import { contains } from '../geom';
@@ -20,6 +10,7 @@ import { pick } from '../rng';
 import { practice } from '../skills';
 import type { Action, Activity, Point, Survivor, World } from '../types';
 import { tileOf } from '../world';
+import { bandageJob, bandageStillWorth, startBandage, startBandageActivity } from './medical';
 
 const sameTile = (a: Point, b: Point) => a.x === b.x && a.y === b.y;
 
@@ -93,91 +84,9 @@ function rescueJob(s: Survivor, w: World): Action | null {
   return best && goRescue(best);
 }
 
-/** A quién va a vendar o está vendando, o `null`. */
-export function bandageTargetId(s: Survivor): number | null {
-  const a = s.action;
-  if (a.type === 'bandage') return a.patientId;
-  if (a.type === 'moveTo' && a.then?.type === 'bandage') return a.then.patientId;
-  return null;
-}
-
-/** ¿Hay que vendarle? En la base, en pie, con poca Salud y sin venda reciente. */
-function needsBandage(w: World, p: Survivor): boolean {
-  return (
-    p.action.type !== 'downed' &&
-    p.health < BANDAGE_BELOW &&
-    p.bandagedUntil <= w.tick &&
-    contains(w.base.rect, tileOf(p.pos))
-  );
-}
-
-/** ¿Puede `s` ir a vendar a `p`? Hace falta, nadie más va y queda alguna venda en el almacén. */
-function bandageable(w: World, p: Survivor, s: Survivor): boolean {
-  return (
-    w.storage.items.bandage > 0 &&
-    needsBandage(w, p) &&
-    !w.survivors.some((o) => o !== s && bandageTargetId(o) === p.id)
-  );
-}
-
-const startBandage = (patientId: number): Action => ({
-  type: 'bandage',
-  patientId,
-  ticksLeft: BANDAGE_TICKS,
-});
-
-/** Vendar al herido más cercano (él mismo también). */
-function bandageJob(s: Survivor, w: World): Action | null {
-  if (w.storage.items.bandage === 0) return null;
-  let best: Survivor | null = null;
-  let bestD = Infinity;
-  for (const p of w.survivors) {
-    if (!bandageable(w, p, s)) continue;
-    const d = (p.pos.x - s.pos.x) ** 2 + (p.pos.y - s.pos.y) ** 2;
-    if (d < bestD) {
-      best = p;
-      bestD = d;
-    }
-  }
-  if (!best) return null;
-  if (best === s) return startBandage(s.id);
-  return {
-    type: 'moveTo',
-    target: tileOf(best.pos),
-    then: { type: 'bandage', patientId: best.id },
-  };
-}
-
-/** El trabajo Sanar: rescatar y, si no, vendar; `null` si no hay nada que hacer. */
+/** El trabajo Sanar: rescatar y, si no, vendar (H5); `null` si no hay nada que hacer. */
 export function healJob(s: Survivor, w: World): Action | null {
   return rescueJob(s, w) ?? bandageJob(s, w);
-}
-
-/** Termina el vendaje: gasta una venda del almacén (si queda) y cura según su habilidad. */
-function finishBandage(w: World, s: Survivor, p: Survivor): void {
-  if (w.storage.items.bandage === 0) return;
-  w.storage.items.bandage--;
-  p.health = Math.min(100, p.health + BANDAGE_HEAL + BANDAGE_PER_LEVEL * s.skills.heal.level);
-  p.bandagedUntil = w.tick + BANDAGE_HOURS * TICKS_PER_HOUR;
-  logEvent(w, { kind: 'bandaged', survivorId: s.id, otherId: p.id });
-}
-
-/** Vendando: aprende y, a la media hora, termina; si el herido se va (o cae), lo deja. */
-export function bandageStep(w: World, s: Survivor): void {
-  const a = s.action;
-  if (a.type !== 'bandage') return;
-  const p = w.survivors.find((x) => x.id === a.patientId);
-  const near =
-    p !== undefined &&
-    (p.pos.x - s.pos.x) ** 2 + (p.pos.y - s.pos.y) ** 2 <= BANDAGE_RANGE * BANDAGE_RANGE;
-  if (!p || !near || p.action.type === 'downed') {
-    s.action = { type: 'idle', ticksLeft: 0 };
-    return;
-  }
-  practice(w, s, 'heal', 1);
-  if (--a.ticksLeft > 0) return;
-  finishBandage(w, s, p);
-  s.action = { type: 'idle', ticksLeft: 0 };
 }
 
 /** Rescate mandado en modo combate: sin mirar si hay zombis cerca. */
@@ -191,10 +100,7 @@ export function healStillWorth(s: Survivor, w: World): boolean {
   if (a.type !== 'moveTo' || !a.then) return true;
   const then = a.then;
   if (then.type === 'dropOff') return s.carryingId === then.downedId;
-  if (then.type === 'bandage') {
-    const p = w.survivors.find((x) => x.id === then.patientId);
-    return p !== undefined && s.work.heal && bandageable(w, p, s);
-  }
+  if (then.type === 'bandage') return s.work.heal && bandageStillWorth(s, w, then.patientId);
   if (then.type !== 'rescue') return true;
   const d = w.survivors.find((x) => x.id === then.downedId);
   return d !== undefined && s.work.heal && rescuable(w, d, s) && !zombiesNear(w, d);
@@ -207,17 +113,14 @@ export function startHealActivity(
   activity: Extract<Activity, { type: 'rescue' | 'dropOff' | 'bandage' }>,
 ): Action {
   const idle: Action = { type: 'idle', ticksLeft: 0 };
-  if (activity.type === 'bandage') {
-    // Si al llegar se ha ido (o ya no hace falta), vuelve a decidir.
-    const p = w.survivors.find((x) => x.id === activity.patientId);
-    if (!p || !bandageable(w, p, s)) return idle;
-    const d2 = (p.pos.x - s.pos.x) ** 2 + (p.pos.y - s.pos.y) ** 2;
-    return d2 <= BANDAGE_RANGE * BANDAGE_RANGE ? startBandage(p.id) : idle;
-  }
+  if (activity.type === 'bandage') return startBandageActivity(s, w, activity.patientId);
   const d = w.survivors.find((x) => x.id === activity.downedId);
   if (activity.type === 'rescue') {
     if (!d || d.action.type !== 'downed' || !rescuable(w, d, s)) return idle;
     if ((d.pos.x - s.pos.x) ** 2 + (d.pos.y - s.pos.y) ** 2 > RESCUE_REACH ** 2) return idle;
+    // Si sangra y hay venda a mano (la suya o la del derribado), primero le venda (H5 §4).
+    if (d.wounds.some((x) => x.bleeding) && s.carrying.bandage + d.carrying.bandage > 0)
+      return startBandage(w, s, d) ?? idle;
     const spot = rescueSpot(w, d);
     if (spot === null) return idle;
     const target = spot === 'floor' ? pick(w.rng, baseFloor(w)) : spot;

@@ -133,10 +133,12 @@ test('de principio a fin: coge la tela, cose en la mesa (a su ritmo) y lleva las
     const p = checkInvariants(w);
     if (p.length > 0) expect(p, `tick ${w.tick}`).toEqual([]);
   }
-  expect(w.storage.items.bandage).toBe(4);
+  // H5: se queda con 2 vendas encima; las demás, al almacén.
+  expect(w.storage.items.bandage + s.carrying.bandage).toBe(4);
+  expect(s.carrying.bandage).toBeLessThanOrEqual(2);
   expect(w.storage.items.cloth).toBe(4);
   expect(b.done).toBe(2);
-  expect(s.carrying.bandage + s.carrying.cloth).toBe(0);
+  expect(s.carrying.cloth).toBe(0);
   const each = Math.round(RECIPES.bandages.ticks / skillSpeed(10));
   expect(Math.abs(crafting - 2 * each)).toBeLessThanOrEqual(2);
   expect(w.log.filter((e) => e.kind === 'crafted' && e.recipe === 'bandages')).toHaveLength(2);
@@ -151,7 +153,8 @@ test('dos colonos con un pedido de una vez: solo lo hace uno', () => {
   other.skills.craft.level = 10;
   for (let i = 0; i < 2 * TICKS_PER_HOUR; i++) step(w);
   expect(b.done).toBe(1);
-  expect(w.storage.items.bandage).toBe(2);
+  const carried = w.survivors.reduce((n, x) => n + x.carrying.bandage, 0); // H5: las suyas
+  expect(w.storage.items.bandage + carried).toBe(2);
   expect(w.storage.items.cloth).toBe(5);
 });
 
@@ -201,6 +204,7 @@ test('al terminar lleva lo hecho al almacén antes de nada, aunque tenga Saquear
     designated: true,
     reservedBy: null,
   });
+  s.carrying.bandage = 2; // H5: las 2 suyas ya las lleva; lo que haga, al almacén
   const b = bill(w, 'bandages');
   issue(w, { type: 'setBill', billId: b.id, mode: 'count', target: 1 });
   ordersSystem(w);

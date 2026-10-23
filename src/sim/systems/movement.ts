@@ -17,6 +17,7 @@ import { startBuildActivity } from '../jobs/build';
 import { startChopActivity } from '../jobs/chop';
 import { startHaulActivity } from '../jobs/haul';
 import { startHealActivity } from '../jobs/heal';
+import { takeBandages } from '../jobs/medical';
 import { startCraftActivity } from '../jobs/craft';
 import { startPryActivity } from '../jobs/pry';
 import { startSwapWeapon } from '../jobs/weapons';
@@ -133,6 +134,9 @@ function startActivity(s: Survivor, activity: Activity, w: World): Action {
     case 'dropOff':
     case 'bandage':
       return startHealActivity(s, w, activity);
+    case 'takeBandages':
+      takeBandages(s, w);
+      return { type: 'idle', ticksLeft: 0 };
     case 'console':
       // Si se ha movido o está ocupado, vuelve a decidir (y a acercarse) en el siguiente tick.
       return tryStartConsoling(w, s, activity.otherId) ? s.action : { type: 'idle', ticksLeft: 0 };

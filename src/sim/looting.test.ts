@@ -5,6 +5,7 @@ import { REFUSE_CHANCE, TICKS_PER_DAY } from './balance';
 import { brains } from './brain';
 import { foodDays } from './colony';
 import { checkInvariants } from './invariants';
+import { hasCargo } from './jobs/medical';
 import { emptyInventory, isEmpty } from './items';
 import { moodModifiers } from './mood';
 import { issue } from './orders';
@@ -41,8 +42,10 @@ test('marcar la casa más cercana: la vacían y sus objetos acaban en el almacé
   }
   expect(w.log.some((e) => e.kind === 'houseEmptied' && e.houseId === house.id)).toBe(true);
   expect(w.log.some((e) => e.kind === 'found')).toBe(true);
-  for (const s of w.survivors) expect(isEmpty(s.carrying)).toBe(true);
-  expect(w.storage.items.bandage).toBe(bandages);
+  // H5: cada uno se queda con hasta 2 vendas encima; lo demás, al almacén.
+  for (const s of w.survivors) expect(hasCargo(s)).toBe(false);
+  const carried = w.survivors.reduce((n, s) => n + s.carrying.bandage, 0);
+  expect(w.storage.items.bandage + carried).toBe(bandages);
   // Las armas, en el almacén o ya en la mano de alguien (spec H4b §6.2), más el cuchillo con que
   // empieza cada uno.
   const inHand = w.survivors.filter((s) => s.equipped === 'knife' || s.equipped === 'bat').length;

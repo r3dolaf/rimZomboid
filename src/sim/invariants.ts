@@ -51,8 +51,6 @@ export function checkInvariants(w: World): string[] {
       if (!Number.isFinite(wd.damage) || wd.damage < 0 || wd.damage > wd.size)
         problems.push(`${who}: herida ${wd.id}: daño ${wd.damage} fuera de 0–${wd.size}`);
     }
-    if (!Number.isFinite(s.bandagedUntil))
-      problems.push(`${who}: vendado hasta ${s.bandagedUntil}`);
     if (s.drafted && (s.action.type === 'downed' || s.action.type === 'sleep'))
       problems.push(
         `${who}: en modo combate y ${s.action.type === 'sleep' ? 'durmiendo' : 'derribado'}`,

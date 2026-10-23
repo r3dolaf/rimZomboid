@@ -192,7 +192,9 @@ export type Activity =
   // Sanar (H4e): coger al derribado y dejarlo en su sitio.
   | { type: 'rescue'; downedId: number }
   | { type: 'dropOff'; downedId: number }
-  | { type: 'bandage'; patientId: number };
+  | { type: 'bandage'; patientId: number }
+  // Vendas (H5): coger del almacén hasta llevar las que tocan.
+  | { type: 'takeBandages' };
 
 export type Action =
   /** `wait`: esperando tras no encontrar camino (no se consulta al cerebro) o tras negarse a trabajar. */
@@ -223,7 +225,7 @@ export type Action =
   // Fabricando en una mesa (H4d): `recipe` por si el pedido se quita a medias.
   | { type: 'craft'; billId: number; tableId: number; recipe: RecipeId; ticksLeft: number }
   // Vendando a `patientId` (Sanar, H4e).
-  | { type: 'bandage'; patientId: number; ticksLeft: number };
+  | { type: 'bandage'; patientId: number; woundId: number; ticksLeft: number };
 
 export interface Survivor {
   id: number;
@@ -269,8 +271,6 @@ export interface Survivor {
   drafted: boolean;
   /** El derribado que lleva en brazos (Sanar, H4e), o `null`. */
   carryingId: number | null;
-  /** Vendado hasta este tick (H4e): se cura el doble y no se le vuelve a vendar. */
-  bandagedUntil: number;
   /** Heridas (H5). La Salud (`health`) es 100 menos lo que duelen. */
   wounds: Wound[];
   /** Sangre, de 0 a 100 (H5 §3). */

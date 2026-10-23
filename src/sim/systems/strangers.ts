@@ -194,7 +194,6 @@ export function newStranger(w: World, start: Point): Survivor {
     celebrated: false,
     drafted: false,
     carryingId: null,
-    bandagedUntil: 0,
     wounds: [],
     blood: 100,
     dying: null,

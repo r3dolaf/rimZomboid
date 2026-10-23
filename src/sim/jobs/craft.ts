@@ -1,12 +1,13 @@
 // Fabricar (spec H4d §4): pedidos en la mesa — coger los materiales, trabajarlos y llevar lo hecho.
 import { ITEM_WEIGHT_KG, RECIPES, type Recipe } from '../balance';
-import { emptyInventory, isEmpty, weightOf, type ItemKind } from '../items';
+import { emptyInventory, weightOf, type ItemKind } from '../items';
 import { logEvent } from '../log';
 import { findPath } from '../path/astar';
 import { nextFloat, pick } from '../rng';
 import { buildFailChance, capacityKg, workSpeed } from '../skills';
 import type { Action, Bill, Furniture, RecipeId, Survivor, World } from '../types';
 import { tileOf } from '../world';
+import { hasCargo } from './medical';
 import { atOrBeside, standOnOrBeside } from './stand';
 
 const entries = (part: Partial<Record<ItemKind, number>>) =>
@@ -136,7 +137,7 @@ export function startCraftActivity(
  * si no, con la carga a cuestas seguiría saqueando, fuera cual fuera la prioridad.
  */
 export function unloadAfterCraft(s: Survivor, w: World): Action {
-  if (isEmpty(s.carrying)) return { type: 'idle', ticksLeft: 0 };
+  if (!hasCargo(s)) return { type: 'idle', ticksLeft: 0 };
   const target = pick(w.rng, w.storage.tiles);
   const path = findPath(w.grid, tileOf(s.pos), target);
   if (!path) return { type: 'idle', ticksLeft: 0 };

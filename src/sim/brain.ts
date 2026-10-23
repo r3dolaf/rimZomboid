@@ -18,6 +18,7 @@ import { logEvent } from './log';
 import { nextFloat, pick } from './rng';
 import { equipFromPack } from './jobs/weapons';
 import { findWork, isWorking, stillWorthIt } from './work';
+import { selfCare } from './jobs/medical';
 import type { Action, BrainId, Survivor, World } from './types';
 
 /**
@@ -35,6 +36,9 @@ const AiBrain: Brain = {
     // Peligro (spec H4b §7): lo primero de todo.
     const danger = dangerDecision(s, w, () => rest(s, w));
     if (danger !== undefined) return danger;
+    // Vendarse lo que sangra (H5 §4): lo siguiente, antes de comer o dormir.
+    const care = selfCare(s, w);
+    if (care !== undefined) return care;
     const a = s.action;
     const goingTo = a.type === 'moveTo' ? a.then?.type : undefined;
     const inCrisis = crisisNow(s);

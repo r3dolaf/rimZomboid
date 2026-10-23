@@ -504,12 +504,11 @@ export const CARRY_SPEED = 0.6;
 /** Casillas de centro a centro para coger al derribado. */
 export const RESCUE_REACH = 1.5;
 /** Vendar (H4e §4.3): a quién, cuánto tarda y cuánto cura (más por nivel de Sanar) y dura. */
-export const BANDAGE_BELOW = 50;
-export const BANDAGE_TICKS = 0.5 * TICKS_PER_HOUR;
-export const BANDAGE_HEAL = 15;
-export const BANDAGE_PER_LEVEL = 1;
-export const BANDAGE_HOURS = 12; // mientras, la Salud sube el doble
+export const BANDAGE_TICKS = 0.5 * TICKS_PER_HOUR; // vendar, con Sanar 5
 export const BANDAGE_RANGE = 1.5; // casillas: más lejos, el herido se ha ido
+/** Vendas (H5 §4): las que lleva cada uno encima; horas que la venda está limpia. */
+export const BANDAGES_CARRIED = 2;
+export const BANDAGE_CLEAN_HOURS = 24;
 export const HURT_BELOW = 50; // "Herido" por debajo de esto
 export const HURT_MOOD = -10;
 /** Golpes de los colonos según lo que llevan en la mano (spec H4b §6.1). */

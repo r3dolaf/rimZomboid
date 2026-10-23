@@ -1,11 +1,17 @@
-import { CHOP_NOISE_TICKS, EAT_RESTORE, NOISE, PRY_NOISE_TICKS } from '../balance';
+import {
+  BANDAGES_CARRIED,
+  CHOP_NOISE_TICKS,
+  EAT_RESTORE,
+  NOISE,
+  PRY_NOISE_TICKS,
+} from '../balance';
 import { setTile } from '../map/grid';
 import { isNight } from '../clock';
 import { finishConsoling } from '../consoling';
 import { nearTable } from '../furniture';
 import { workOnBlueprint } from '../jobs/build';
 import { finishChop } from '../jobs/chop';
-import { bandageStep } from '../jobs/heal';
+import { bandageStep } from '../jobs/medical';
 import { finishCraft, unloadAfterCraft } from '../jobs/craft';
 import { logEvent } from '../log';
 import { makeNoise } from '../noise';
@@ -50,7 +56,11 @@ export function activitiesSystem(w: World): void {
       bandageStep(w, s); // Sanar (H4e)
     } else if (a.type === 'unload') {
       if (--a.ticksLeft > 0) continue;
+      // Se queda con sus vendas (H5 §4).
+      const keep = Math.min(s.carrying.bandage, BANDAGES_CARRIED);
+      s.carrying.bandage -= keep;
       addInto(w.storage.items, s.carrying);
+      s.carrying.bandage = keep;
       s.action = { type: 'idle', ticksLeft: 0 };
     } else if (a.type === 'fight') {
       // Termina a su tiempo o en cuanto el otro deja de pelear con él (p. ej., se desploma).

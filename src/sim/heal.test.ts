@@ -1,12 +1,6 @@
 // H4e §4: el trabajo Sanar — rescatar derribados (y llevarlos a una cama) y vendar.
 import { expect, test } from 'vitest';
-import {
-  BANDAGE_BELOW,
-  CARRY_SPEED,
-  RESCUE_SAFE_RANGE,
-  SURVIVOR_WALK_SPEED,
-  TICKS_PER_DAY,
-} from './balance';
+import { CARRY_SPEED, RESCUE_SAFE_RANGE, SURVIVOR_WALK_SPEED, TICKS_PER_DAY } from './balance';
 import { contains } from './geom';
 import { knockDown } from './body';
 import { checkInvariants } from './invariants';
@@ -175,63 +169,4 @@ test('invariantes: el llevado está derribado, con quien lo lleva y en su sitio'
   ana.pos = { ...bea.pos };
   if (ana.action.type === 'downed') delete ana.action.carriedBy;
   expect(checkInvariants(w).join()).toMatch(/lleva a Ana/);
-});
-
-// --- Tarea 5: vendar ---
-
-/** Ana herida (30 de Salud) y Bea, las dos en la base; 2 vendas en el almacén. */
-function hurt(): { w: World; ana: Survivor; bea: Survivor } {
-  const w = withoutZombies(addBase(emptyWorld(40, 40), { x: 2, y: 2, w: 10, h: 8 }));
-  w.seen.fill(1);
-  w.tick = TICKS_PER_DAY / 2;
-  const ana = w.survivors[0]!;
-  const bea = addSurvivor(w, { x: 8, y: 6 });
-  ana.pos = { x: 5.5, y: 6.5 };
-  ana.health = 30;
-  w.storage.items.bandage = 2;
-  return { w, ana, bea };
-}
-
-test('vendar: a quien está en la base con menos de 50 de Salud', () => {
-  expect(BANDAGE_BELOW).toBe(50);
-  const { w, ana, bea } = hurt();
-  expect(healJob(bea, w)).toEqual({
-    type: 'moveTo',
-    target: tileOf(ana.pos),
-    then: { type: 'bandage', patientId: ana.id },
-  });
-});
-
-test('vendar: no con 50 o más, fuera de la base, derribado, con venda reciente o sin vendas', () => {
-  const cases: ((x: ReturnType<typeof hurt>) => void)[] = [
-    ({ ana }) => (ana.health = 50),
-    ({ ana }) => (ana.pos = { x: 25.5, y: 20.5 }),
-    ({ w, ana }) => (ana.bandagedUntil = w.tick + 1),
-    ({ w }) => (w.storage.items.bandage = 0),
-    ({ w, ana }) => {
-      ana.health = 0;
-      ana.action = { type: 'downed', until: w.tick + 100, inBed: true };
-    },
-    ({ w, ana }) => {
-      const cris = addSurvivor(w, { x: 4, y: 4 }, 'Cris');
-      cris.health = 100;
-      cris.action = {
-        type: 'moveTo',
-        target: tileOf(ana.pos),
-        then: { type: 'bandage', patientId: ana.id },
-      };
-    },
-  ];
-  for (const change of cases) {
-    const x = hurt();
-    change(x);
-    expect(healJob(x.bea, x.w)).toBeNull();
-  }
-});
-
-test('vendar: también a sí mismo', () => {
-  const { w, ana, bea } = hurt();
-  ana.health = 100;
-  bea.health = 20;
-  expect(healJob(bea, w)).toMatchObject({ type: 'bandage', patientId: bea.id });
 });

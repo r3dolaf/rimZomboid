@@ -96,7 +96,6 @@ export function createWorld(
     celebrated: false,
     drafted: false,
     carryingId: null,
-    bandagedUntil: 0,
     wounds: [],
     blood: 100,
     dying: null,

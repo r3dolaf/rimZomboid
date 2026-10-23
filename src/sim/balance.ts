@@ -646,5 +646,17 @@ export const FRESH_PAIN_HOURS = 6;
 export const SCRATCH_CHANCE = 0.75;
 export const MAUL_BELOW = 30;
 export const MAUL_BITE_CHANCE = 0.3;
+// Sangre y curación (H5 §2.2 y §3)
+/** Lo que se recupera por hora si no sangra nada: despierto, durmiendo o descansando, en el hospital. */
+export const BLOOD_REGEN = { awake: 1, rest: 2, hospital: 3 } as const;
+/** Desnutrido (hambre a 0): sangre que pierde por hora. */
+export const STARVING_BLOOD = 2;
+/** Se desmaya por debajo de esto y no se levanta hasta volver a FAINT_UNTIL. */
+export const FAINT_BELOW = 30;
+export const FAINT_UNTIL = 35;
+/** Curación: con venda limpia, el doble; descansando o durmiendo, el doble; en el hospital, el triple. */
+export const CLEAN_BANDAGE_HEAL = 2;
+export const REST_HEAL = 2;
+export const HOSPITAL_HEAL = 3;
 /** Sin brazos no se trabaja; esto evita dividir por 0 si algo empieza igualmente. */
 export const MIN_WORK_SPEED = 0.05;

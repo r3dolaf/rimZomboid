@@ -42,6 +42,8 @@ export function checkInvariants(w: World): string[] {
     }
     if (!Number.isFinite(s.health) || s.health < 0 || s.health > 100)
       problems.push(`${who}: Salud fuera de 0–100 (${s.health})`);
+    if (!Number.isFinite(s.blood) || s.blood < 0 || s.blood > 100)
+      problems.push(`${who}: Sangre fuera de 0–100 (${s.blood})`);
     // Heridas (H5): en partes que existen y con su daño entre 0 y su tamaño.
     for (const wd of s.wounds) {
       if (!(wd.part in BODY_HP))

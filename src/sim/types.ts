@@ -273,7 +273,14 @@ export interface Survivor {
   bandagedUntil: number;
   /** Heridas (H5). La Salud (`health`) es 100 menos lo que duelen. */
   wounds: Wound[];
+  /** Sangre, de 0 a 100 (H5 §3). */
+  blood: number;
+  /** De qué va a morir en este tick (lo apuntan la sangre y las heridas; lo resuelve la muerte). */
+  dying: DeathCause | null;
 }
+
+/** De qué se muere (H5 §8). */
+export type DeathCause = 'blood' | 'wounds' | 'infection' | 'mercy' | 'hunger';
 
 /** Uno o dos desconocidos que esperan a la puerta a que el jugador decida (su decisión caduca). */
 export interface Stranger {

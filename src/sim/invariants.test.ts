@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest';
+import { newGarment } from './clothes';
 import { checkInvariants } from './invariants';
 import { createWorld } from './world';
 
@@ -148,4 +149,16 @@ test('el desconocido: id distinto de los colonos y necesidades en rango', () => 
   expect(checkInvariants(w)).toEqual([]);
   s.needs.hunger = 120;
   expect(checkInvariants(w).length).toBeGreaterThan(0);
+});
+
+test('piezas (H5b §1): una en dos sitios o una perdida se detecta', () => {
+  const w = createWorld(1);
+  const g = newGarment(w, 'cap');
+  w.storage.items.pieces.push(g);
+  expect(checkInvariants(w)).toEqual([]);
+  w.containers[0]!.items.pieces.push(g);
+  expect(checkInvariants(w).some((p) => p.includes('pieza'))).toBe(true);
+  w.containers[0]!.items.pieces = [];
+  w.storage.items.pieces = [];
+  expect(checkInvariants(w).some((p) => p.includes('pieza'))).toBe(true);
 });

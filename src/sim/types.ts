@@ -94,6 +94,47 @@ export type TraitId =
 export type BodyPart = 'head' | 'torso' | 'leftArm' | 'rightArm' | 'leftLeg' | 'rightLeg';
 export type WoundKind = 'scratch' | 'cut' | 'bite';
 
+/** Prendas (H5b §2). */
+export type GarmentKind =
+  | 'tshirt'
+  | 'longSleeve'
+  | 'shirt'
+  | 'hoodie'
+  | 'sweater'
+  | 'denimJacket'
+  | 'leatherJacket'
+  | 'coat'
+  | 'vest'
+  | 'tracksuit'
+  | 'jeans'
+  | 'workPants'
+  | 'chaps'
+  | 'cap'
+  | 'beanie'
+  | 'helmet';
+/** Capas, de dentro a fuera; lo de la cabeza es de fuera (así dos de cabeza siempre chocan). */
+export type Layer = 'inner' | 'middle' | 'outer';
+/** Material de un parche o un refuerzo (el montón del mismo nombre). */
+export type Material = 'cloth' | 'denim' | 'leather';
+
+/**
+ * Una prenda (H5b §2): agujeros, parches y refuerzos por zona; horas puesta desde que se lavó; si
+ * tiene sangre; si es de un muerto (de una persona o de un zombi).
+ */
+export interface Garment {
+  id: number;
+  kind: GarmentKind;
+  holes: BodyPart[];
+  patches: Partial<Record<BodyPart, Material>>;
+  pads: Partial<Record<BodyPart, Material>>;
+  dirtHours: number;
+  bloody: boolean;
+  from: 'colonist' | 'zombie' | null;
+}
+
+/** Lo que se guarda suelto, con su estado (H5b §1). En H5b2, también las mochilas. */
+export type Piece = Garment;
+
 /** Una herida (H5 §2.2): `damage` baja al curarse (de `size` a 0); `cleanUntil`, venda limpia. */
 export interface Wound {
   id: number;
@@ -606,6 +647,10 @@ export interface World {
   over: { tick: number } | null;
   /** Para el resumen final. */
   stats: { kills: number; siegesRepelled: number; looted: Inventory; joined: string[] };
+  // Ropa (H5b)
+  nextPieceId: number;
+  /** Cuentas de las piezas: las que se han hecho y las que han desaparecido. */
+  pieceLog: { made: number; gone: number };
 }
 
 /** Uno que echaron y que vuelve en `at` por donde se fue (`pos`). */

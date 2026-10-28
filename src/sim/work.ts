@@ -12,7 +12,7 @@ import { deliverJob, haulJob, haulStillWorth } from './jobs/haul';
 import { healJob, healStillWorth } from './jobs/heal';
 import { hasCargo, stockJob } from './jobs/medical';
 import { swapWeaponStillWorth, weaponJob } from './jobs/weapons';
-import { isEmpty, ITEM_KINDS, weightOf } from './items';
+import { isEmpty, ITEM_KINDS, pieceKg, weightOf } from './items';
 import { regionOf } from './path/astar';
 import { pick } from './rng';
 import type { Action, Container, Survivor, WorkType, World } from './types';
@@ -44,7 +44,10 @@ const LIGHTEST_KG = Math.min(...ITEM_KINDS.map((k) => ITEM_WEIGHT_KG[k]));
 function canTakeSomething(c: Container, s: Survivor): boolean {
   const room = capacityKg(s) - weightOf(s.carrying) + 1e-9;
   if (!c.searched) return room >= LIGHTEST_KG;
-  return ITEM_KINDS.some((k) => c.items[k] > 0 && ITEM_WEIGHT_KG[k] <= room);
+  return (
+    ITEM_KINDS.some((k) => c.items[k] > 0 && ITEM_WEIGHT_KG[k] <= room) ||
+    c.items.pieces.some((p) => pieceKg(p) <= room)
+  );
 }
 
 /** El contenedor disponible y alcanzable más cercano en línea recta. */

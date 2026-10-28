@@ -203,6 +203,8 @@ export function createWorld(
     gone: [],
     over: null,
     stats: { kills: 0, siegesRepelled: 0, looted: emptyInventory(), joined: [] },
+    nextPieceId: 1,
+    pieceLog: { made: 0, gone: 0 },
   };
   // Zombis (H4b), con su propio azar: no cambian nada de lo anterior.
   placeStartZombies(world);

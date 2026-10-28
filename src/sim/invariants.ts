@@ -9,6 +9,7 @@ import {
   SKILL_MAX,
   ZOMBIE_HEALTH,
 } from './balance';
+import { allPieces } from './clothes';
 import { ITEM_KINDS, weightOf, type Inventory } from './items';
 import { inBounds, isWalkable, isZombieWalkable } from './map/grid';
 import { capacityKg, SKILLS, xpToNext } from './skills';
@@ -279,7 +280,24 @@ export function checkInvariants(w: World): string[] {
     problems.push(
       `la madera no cuadra: hay ${wood}, gastada ${log.spent}, perdida ${log.wasted}; repartida ${log.start}, talada ${log.chopped}, recuperada ${log.recovered}`,
     );
+  checkPieces(problems, w);
   return problems;
+}
+
+/** Piezas (H5b §1): cada una en un solo sitio, con id válido, y ninguna perdida. */
+function checkPieces(problems: string[], w: World): void {
+  const seen = new Map<number, string>();
+  const all = allPieces(w);
+  for (const { where, piece } of all) {
+    const before = seen.get(piece.id);
+    if (before !== undefined)
+      problems.push(`pieza #${piece.id} en dos sitios: ${before} y ${where}`);
+    seen.set(piece.id, where);
+    if (!Number.isInteger(piece.id) || piece.id < 1 || piece.id >= w.nextPieceId)
+      problems.push(`pieza #${piece.id} (${where}): id no válido`);
+  }
+  const alive = w.pieceLog.made - w.pieceLog.gone;
+  if (all.length !== alive) problems.push(`piezas: hay ${all.length} y las cuentas dicen ${alive}`);
 }
 
 function checkInventory(problems: string[], where: string, inv: Inventory): void {

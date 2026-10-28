@@ -4,6 +4,8 @@ import {
   Tile,
   type BodyPart,
   type BuildKind,
+  type GarmentKind,
+  type Layer,
   type LootKind,
   type NarratorStyle,
   type RecipeId,
@@ -126,6 +128,12 @@ export const ITEM_WEIGHT_KG = {
   crowbar: 2,
   machete: 1,
   painkillers: 0.05, // H5
+  // H5b: retales, tiras, cubos y botellas.
+  denim: 0.2,
+  leather: 0.2,
+  bucket: 1,
+  waterBucket: 5,
+  waterBottle: 1,
 } as const;
 export const START_WEAPON = 'knife' as const; // H4b: sin arma, caían enseguida
 
@@ -720,3 +728,126 @@ export const RETURN_DAYS_MIN = 2;
 export const RETURN_DAYS_MAX = 4;
 /** Lo que se piensan el que vuelve y los de la colonia, el uno del otro. */
 export const RETURNED_OPINION = -40;
+
+// Ropa (H5b §2)
+export interface GarmentSpec {
+  covers: readonly BodyPart[];
+  layer: Layer;
+  /** Probabilidad de parar un arañazo o un corte, y un mordisco. */
+  scratch: number;
+  bite: number;
+  kg: number;
+  /** Lo que da al descoserla destrozada (el casco, nada). */
+  unpick: Partial<Record<ItemKind, number>>;
+}
+const TORSO_ARMS: readonly BodyPart[] = ['torso', 'leftArm', 'rightArm'];
+const LEGS: readonly BodyPart[] = ['leftLeg', 'rightLeg'];
+export const GARMENTS = {
+  tshirt: {
+    covers: ['torso'],
+    layer: 'inner',
+    scratch: 0.1,
+    bite: 0,
+    kg: 0.2,
+    unpick: { cloth: 1 },
+  },
+  longSleeve: {
+    covers: TORSO_ARMS,
+    layer: 'inner',
+    scratch: 0.1,
+    bite: 0,
+    kg: 0.3,
+    unpick: { cloth: 1 },
+  },
+  shirt: {
+    covers: TORSO_ARMS,
+    layer: 'middle',
+    scratch: 0.15,
+    bite: 0.05,
+    kg: 0.3,
+    unpick: { cloth: 2 },
+  },
+  hoodie: {
+    covers: TORSO_ARMS,
+    layer: 'middle',
+    scratch: 0.25,
+    bite: 0.1,
+    kg: 0.6,
+    unpick: { cloth: 2 },
+  },
+  sweater: {
+    covers: TORSO_ARMS,
+    layer: 'middle',
+    scratch: 0.3,
+    bite: 0.1,
+    kg: 0.7,
+    unpick: { cloth: 2 },
+  },
+  denimJacket: {
+    covers: TORSO_ARMS,
+    layer: 'outer',
+    scratch: 0.45,
+    bite: 0.25,
+    kg: 1.2,
+    unpick: { denim: 3 },
+  },
+  leatherJacket: {
+    covers: TORSO_ARMS,
+    layer: 'outer',
+    scratch: 0.6,
+    bite: 0.35,
+    kg: 1.5,
+    unpick: { leather: 3 },
+  },
+  coat: {
+    covers: TORSO_ARMS,
+    layer: 'outer',
+    scratch: 0.4,
+    bite: 0.2,
+    kg: 1.5,
+    unpick: { cloth: 3 },
+  },
+  vest: {
+    covers: ['torso'],
+    layer: 'outer',
+    scratch: 0.7,
+    bite: 0.5,
+    kg: 2.5,
+    unpick: { cloth: 2 },
+  },
+  tracksuit: {
+    covers: LEGS,
+    layer: 'inner',
+    scratch: 0.15,
+    bite: 0.05,
+    kg: 0.5,
+    unpick: { cloth: 2 },
+  },
+  jeans: { covers: LEGS, layer: 'inner', scratch: 0.35, bite: 0.15, kg: 0.8, unpick: { denim: 2 } },
+  workPants: {
+    covers: LEGS,
+    layer: 'inner',
+    scratch: 0.4,
+    bite: 0.2,
+    kg: 0.9,
+    unpick: { cloth: 2 },
+  },
+  chaps: {
+    covers: LEGS,
+    layer: 'outer',
+    scratch: 0.55,
+    bite: 0.35,
+    kg: 1.5,
+    unpick: { leather: 2 },
+  },
+  cap: { covers: ['head'], layer: 'outer', scratch: 0.1, bite: 0, kg: 0.1, unpick: { cloth: 1 } },
+  beanie: {
+    covers: ['head'],
+    layer: 'outer',
+    scratch: 0.15,
+    bite: 0.05,
+    kg: 0.2,
+    unpick: { cloth: 1 },
+  },
+  helmet: { covers: ['head'], layer: 'outer', scratch: 0.6, bite: 0.5, kg: 1.5, unpick: {} },
+} as const satisfies Record<GarmentKind, GarmentSpec>;

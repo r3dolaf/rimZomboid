@@ -121,6 +121,8 @@ export function emptyWorld(width: number, height: number): World {
     gone: [],
     over: null,
     stats: { kills: 0, siegesRepelled: 0, looted: emptyInventory(), joined: [] },
+    nextPieceId: 1,
+    pieceLog: { made: 0, gone: 0 },
   };
 }
 

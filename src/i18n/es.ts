@@ -406,6 +406,11 @@ export const es = {
     crowbar: ['palanca', 'palancas'],
     machete: ['machete', 'machetes'],
     painkillers: ['analgésico', 'analgésicos'],
+    denim: ['retal de vaquero', 'retales de vaquero'],
+    leather: ['tira de cuero', 'tiras de cuero'],
+    bucket: ['cubo vacío', 'cubos vacíos'],
+    waterBucket: ['cubo de agua', 'cubos de agua'],
+    waterBottle: ['botella de agua', 'botellas de agua'],
   } satisfies Record<ItemKind, [string, string]>,
   log: {
     found: (who: string, what: string, where: string) => `${who} ha encontrado ${what} en ${where}`,

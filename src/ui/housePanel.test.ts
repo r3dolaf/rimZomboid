@@ -32,6 +32,12 @@ test('muestra la casa seleccionada con sus contenedores y se cierra con la ✕',
     crowbar: 0,
     machete: 0,
     painkillers: 0,
+    denim: 0,
+    leather: 0,
+    bucket: 0,
+    waterBucket: 0,
+    waterBottle: 0,
+    pieces: [],
   };
   cs[1]!.designated = true;
   sel.set(h.id);

@@ -17,7 +17,7 @@ import { finishCraft, unloadAfterCraft } from '../jobs/craft';
 import { logEvent } from '../log';
 import { makeNoise } from '../noise';
 import { addMemory } from '../mood';
-import { addInto, isEmpty, takeUpTo } from '../items';
+import { addInto, addStacks, isEmpty, snapshot, takeUpTo } from '../items';
 import { capacityKg, practice } from '../skills';
 import { Tile, type Survivor, type World } from '../types';
 
@@ -134,7 +134,7 @@ function finishSearch(w: World, s: Survivor, containerId: number): void {
   const taken = takeUpTo(c.items, s.carrying, capacityKg(s));
   c.searched = true;
   c.reservedBy = null;
-  addInto(w.stats.looted, { ...taken }); // para el resumen final (H5 §9)
+  addStacks(w.stats.looted, taken); // para el resumen final (H5 §9)
   // Un cuerpo (H4d) no es de ninguna casa.
   if (c.kind === 'corpse') {
     logEvent(
@@ -148,7 +148,7 @@ function finishSearch(w: World, s: Survivor, containerId: number): void {
   }
   if (wasEmpty) logEvent(w, { kind: 'emptyContainer', survivorId: s.id, houseId: c.houseId });
   else if (!isEmpty(taken))
-    logEvent(w, { kind: 'found', survivorId: s.id, houseId: c.houseId, items: taken });
+    logEvent(w, { kind: 'found', survivorId: s.id, houseId: c.houseId, items: snapshot(taken) });
   if (!isEmpty(c.items)) return;
   c.designated = false;
   const house = w.containers.filter((x) => x.houseId === c.houseId);

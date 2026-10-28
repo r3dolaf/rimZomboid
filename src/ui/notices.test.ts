@@ -122,6 +122,12 @@ test('desconocidos: nombres, rasgos y lo que llevan; Aceptar da la orden', () =>
     crowbar: 0,
     machete: 0,
     painkillers: 0,
+    denim: 0,
+    leather: 0,
+    bucket: 0,
+    waterBucket: 0,
+    waterBottle: 0,
+    pieces: [],
   };
   notices.update();
   const el = root.querySelector('[data-testid="decision-stranger"]') as HTMLElement;

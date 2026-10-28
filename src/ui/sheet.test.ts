@@ -100,6 +100,12 @@ test('muestra lo que lleva encima y su peso', () => {
     crowbar: 0,
     machete: 0,
     painkillers: 0,
+    denim: 0,
+    leather: 0,
+    bucket: 0,
+    waterBucket: 0,
+    waterBottle: 0,
+    pieces: [],
   };
   s.skills.haul.level = 5;
   selection.set(s.id);

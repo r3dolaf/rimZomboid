@@ -106,6 +106,12 @@ test('dónde se puede construir cada cosa', () => {
       crowbar: 0,
       machete: 0,
       painkillers: 0,
+      denim: 0,
+      leather: 0,
+      bucket: 0,
+      waterBucket: 0,
+      waterBottle: 0,
+      pieces: [],
     },
   });
   expect(canPlace(w, 'table', floor)).toBe(false);

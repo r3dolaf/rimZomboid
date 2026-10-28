@@ -86,6 +86,12 @@ test('invariantes: planos con madera de más, montones raros, marcas que no son 
       crowbar: 0,
       machete: 0,
       painkillers: 0,
+      denim: 0,
+      leather: 0,
+      bucket: 0,
+      waterBucket: 0,
+      waterBottle: 0,
+      pieces: [],
     },
   });
   expect(checkInvariants(w).length).toBeGreaterThan(0);

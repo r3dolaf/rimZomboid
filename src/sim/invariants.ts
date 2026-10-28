@@ -259,7 +259,8 @@ export function checkInvariants(w: World): string[] {
   for (const b of w.bills)
     if (
       !(b.recipe in RECIPES) ||
-      (b.mode !== 'count' && b.mode !== 'until') ||
+      // Sobre prendas (H5b), "veces" o "siempre que haya"; lo demás, "veces" o "hasta tener".
+      (b.mode !== 'count' && (b.mode === 'always') !== (RECIPES[b.recipe].piece !== undefined)) ||
       !Number.isInteger(b.target) ||
       b.target < 1 ||
       !Number.isInteger(b.done) ||

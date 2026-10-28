@@ -242,7 +242,8 @@ export type Activity =
   | { type: 'pry'; door: number }
   // Fabricar (H4d): coger del almacén los materiales del pedido y trabajarlos en la mesa `tableId`.
   | { type: 'fetchCraft'; billId: number }
-  | { type: 'craft'; billId: number; tableId: number }
+  /** Con `pieceId`, sobre esa prenda (H5b), y con `material`, el que se llevó. */
+  | { type: 'craft'; billId: number; tableId: number; pieceId?: number; material?: Material }
   // Sanar (H4e): coger al derribado y dejarlo en su sitio.
   | { type: 'rescue'; downedId: number }
   | { type: 'dropOff'; downedId: number }
@@ -283,7 +284,15 @@ export type Action =
   // Forzando una puerta atrancada (H4d).
   | { type: 'pry'; door: number; ticksLeft: number }
   // Fabricando en una mesa (H4d): `recipe` por si el pedido se quita a medias.
-  | { type: 'craft'; billId: number; tableId: number; recipe: RecipeId; ticksLeft: number }
+  | {
+      type: 'craft';
+      billId: number;
+      tableId: number;
+      recipe: RecipeId;
+      ticksLeft: number;
+      pieceId?: number;
+      material?: Material;
+    }
   // Vendando a `patientId` (Sanar, H4e).
   | { type: 'bandage'; patientId: number; woundId: number; ticksLeft: number }
   | { type: 'mercy'; patientId: number; ticksLeft: number }
@@ -666,13 +675,23 @@ export type Returning =
   | { kind: 'stranger'; at: number; pos: Point; survivor: Survivor };
 
 /** Recetas de Fabricar (H4d). */
-export type RecipeId = 'bandages' | 'curtains' | 'unpick';
+export type RecipeId =
+  | 'bandages'
+  | 'curtains'
+  | 'unpick'
+  // Sobre prendas (H5b §3)
+  | 'mend'
+  | 'pad'
+  | 'unpickGarment';
 
-/** Un pedido: `count`, hacer N veces (`done` lleva la cuenta); `until`, hasta tener N en el almacén. */
+/**
+ * Un pedido: `count`, hacer N veces (`done` lleva la cuenta); `until`, hasta tener N en el almacén;
+ * `always` (H5b, solo sobre prendas), siempre que haya una prenda que lo necesite.
+ */
 export interface Bill {
   id: number;
   recipe: RecipeId;
-  mode: 'count' | 'until';
+  mode: 'count' | 'until' | 'always';
   target: number;
   done: number;
 }

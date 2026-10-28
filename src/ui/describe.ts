@@ -475,7 +475,12 @@ export function logText(e: LogEntry, w: World): string {
       text = l.corpseSearched(name(e.survivorId), formatItems(e.items), e.name);
       break;
     case 'crafted':
-      text = l.crafted(name(e.survivorId), es.recipes[e.recipe].done);
+      text = l.crafted(
+        name(e.survivorId),
+        e.garment
+          ? (es.garmentDone[e.recipe]?.(es.garments[e.garment].the) ?? es.recipes[e.recipe].done)
+          : es.recipes[e.recipe].done,
+      );
       break;
     case 'craftFailed':
       text = l.craftFailed(name(e.survivorId), es.recipes[e.recipe].fail, formatLost(e.lost));

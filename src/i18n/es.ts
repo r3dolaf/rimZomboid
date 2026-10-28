@@ -74,11 +74,34 @@ export const es = {
       done: 'ha deshecho unas cortinas en 3 telas',
       fail: 'deshacer las cortinas',
     },
+    // H5b: sobre prendas (en el registro, con la prenda: ver `garmentDone`).
+    mend: {
+      name: 'Remendar',
+      doing: 'Remendando ropa',
+      done: 'ha remendado una prenda',
+      fail: 'remendar la ropa',
+    },
+    pad: {
+      name: 'Reforzar',
+      doing: 'Reforzando ropa',
+      done: 'ha reforzado una prenda',
+      fail: 'reforzar la ropa',
+    },
+    unpickGarment: {
+      name: 'Descoser ropa',
+      doing: 'Descosiendo ropa',
+      done: 'ha descosido una prenda',
+      fail: 'descoser la ropa',
+    },
   } satisfies Record<RecipeId, { name: string; doing: string; done: string; fail: string }>,
   /** Materiales que se pierden al fallar (sin plural): "−2 de tela". */
-  materials: { cloth: 'tela', thread: 'hilo', curtains: 'cortinas' } as Partial<
-    Record<ItemKind, string>
-  >,
+  materials: {
+    cloth: 'tela',
+    thread: 'hilo',
+    curtains: 'cortinas',
+    denim: 'vaquero',
+    leather: 'cuero',
+  } as Partial<Record<ItemKind, string>>,
   lostItem: (n: number, what: string) => `−${n} de ${what}`,
   craftPanel: 'Fabricar',
   craftPanelHint: 'Pedidos en la mesa (F)',
@@ -91,8 +114,17 @@ export const es = {
     bandages: '1 tela',
     curtains: '3 telas, 2 usos de hilo y una aguja',
     unpick: '1 juego de cortinas y un cuchillo',
+    mend: 'una prenda con agujeros, 1 uso de hilo, 1 tela, retal o tira y una aguja',
+    pad: 'una prenda, 1 uso de hilo, 1 tela, retal o tira y una aguja',
+    unpickGarment: 'una prenda destrozada y un cuchillo',
   } satisfies Record<RecipeId, string>,
-  billModes: { until: 'hasta tener', count: 'veces' },
+  /** En el registro, con la prenda (H5b): "Ana ha remendado la chaqueta vaquera". */
+  garmentDone: {
+    mend: (the: string) => `ha remendado ${the}`,
+    pad: (the: string) => `ha reforzado ${the}`,
+    unpickGarment: (the: string) => `ha descosido ${the}`,
+  } as Partial<Record<RecipeId, (the: string) => string>>,
+  billModes: { until: 'hasta tener', count: 'veces', always: 'siempre que haya' },
   billDone: (n: number, total: number) => `hechos ${n}/${total}`,
   billLess: 'Uno menos',
   billMore: 'Uno más',

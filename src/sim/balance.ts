@@ -324,6 +324,10 @@ export interface Recipe {
   output: Partial<Record<ItemKind, number>>;
   /** Con Fabricar 5. */
   ticks: number;
+  /** Sobre prendas (H5b §3): cuánto material gasta (el mejor que haya: cuero, vaquero, tela). */
+  material?: number;
+  /** Sobre qué prenda del almacén trabaja: con agujeros, que se pueda reforzar o destrozada. */
+  piece?: 'holed' | 'paddable' | 'destroyed';
 }
 export const RECIPES: Record<RecipeId, Recipe> = {
   bandages: {
@@ -343,6 +347,30 @@ export const RECIPES: Record<RecipeId, Recipe> = {
     tool: 'knife',
     output: { cloth: 3 },
     ticks: 0.25 * TICKS_PER_HOUR,
+  },
+  // H5b §3: remendar y reforzar (1 hilo + 1 material), descoser lo destrozado (lo da el catálogo).
+  mend: {
+    input: { thread: 1 },
+    material: 1,
+    tool: 'needle',
+    output: {},
+    ticks: 0.5 * TICKS_PER_HOUR,
+    piece: 'holed',
+  },
+  pad: {
+    input: { thread: 1 },
+    material: 1,
+    tool: 'needle',
+    output: {},
+    ticks: 0.5 * TICKS_PER_HOUR,
+    piece: 'paddable',
+  },
+  unpickGarment: {
+    input: {},
+    tool: 'knife',
+    output: {},
+    ticks: 0.25 * TICKS_PER_HOUR,
+    piece: 'destroyed',
   },
 };
 export const BILL_DEFAULT_TARGET = 5; // un pedido nuevo: "hasta tener 5"

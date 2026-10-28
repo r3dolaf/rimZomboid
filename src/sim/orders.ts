@@ -1,7 +1,7 @@
 import { isEmpty } from './items';
 import { resolveDecision } from './events/resolve';
 import { cancelBlueprint, markTree, placeBlueprint } from './build';
-import { BILL_DEFAULT_TARGET } from './balance';
+import { BILL_DEFAULT_TARGET, RECIPES } from './balance';
 import { applyDraftOrder } from './draft';
 import { setMedical } from './jobs/medical';
 import type { Bill, BuildKind, Container, RecipeId, Stance, WorkType, World } from './types';
@@ -25,7 +25,7 @@ export type Order =
   // Pedidos de Fabricar (H4d)
   | { type: 'addBill'; recipe: RecipeId }
   | { type: 'removeBill'; billId: number }
-  | { type: 'setBill'; billId: number; mode?: 'count' | 'until'; target?: number }
+  | { type: 'setBill'; billId: number; mode?: Bill['mode']; target?: number }
   /** Sube (-1) o baja (+1) un puesto en la lista. */
   | { type: 'moveBill'; billId: number; dir: -1 | 1 }
   // Modo combate (H4e §3.1)
@@ -77,7 +77,7 @@ function applyBillOrder(w: { bills: Bill[]; nextBillId: number }, o: BillOrder):
       w.bills.push({
         id: w.nextBillId++,
         recipe: o.recipe,
-        mode: 'until',
+        mode: RECIPES[o.recipe].piece ? 'always' : 'until', // H5b: sobre prendas, "siempre que haya"
         target: BILL_DEFAULT_TARGET,
         done: 0,
       });
@@ -88,7 +88,9 @@ function applyBillOrder(w: { bills: Bill[]; nextBillId: number }, o: BillOrder):
     case 'setBill': {
       const b = w.bills.find((x) => x.id === o.billId);
       if (!b) break;
-      if (o.mode) b.mode = o.mode;
+      // Sobre prendas, "veces" o "siempre que haya"; lo demás, "veces" o "hasta tener" (H5b).
+      const piece = RECIPES[b.recipe].piece !== undefined;
+      if (o.mode && (o.mode === 'count' || (o.mode === 'always') === piece)) b.mode = o.mode;
       if (o.target !== undefined && Number.isInteger(o.target)) b.target = Math.max(1, o.target);
       break;
     }

@@ -53,7 +53,28 @@ export const es = {
     chop: 'Talar',
     loot: 'Saquear',
   } satisfies Record<WorkType, string>,
-  sheetTabs: { general: 'General', skills: 'Habilidades', health: 'Salud' },
+  sheetTabs: { general: 'General', skills: 'Habilidades', health: 'Salud', clothes: 'Ropa' },
+  /** La ropa en pantalla (H5b §8). */
+  clothesUi: {
+    /** Concordancia con la prenda: "rota", "rotos"… según su artículo. */
+    torn: (end: string, where: string) => `rot${end} por ${where}`,
+    patch: (material: string, where: string) => `parche de ${material} en ${where}`,
+    pad: (material: string, where: string) => `refuerzo de ${material} en ${where}`,
+    dirty: (end: string) => `suci${end}`,
+    bloody: 'con sangre',
+    fromColonist: 'de un muerto',
+    fromZombie: 'de un zombi',
+    nothing: 'Nada',
+    protection: (scratch: number, bite: number) => `Arañazos ${scratch} % · Mordiscos ${bite} %`,
+    outfit: 'Atuendo',
+    likes: (name: string) => `Favorita: ${name}`,
+    hates: (name: string) => `Odiada: ${name}`,
+    zonesTitle: 'Lo que lleva',
+    materials: 'Materiales',
+    clothes: 'Ropa',
+  },
+  /** Las piezas sueltas en una lista de cosas (H5b): "2 latas y 3 prendas". */
+  pieceWord: ['prenda', 'prendas'] as [string, string],
   /** Recetas de Fabricar (H4d): nombre, lo que hace quien la trabaja, cómo queda en el registro. */
   recipes: {
     bandages: {
@@ -345,6 +366,7 @@ export const es = {
   /** Lados del mapa (0 norte, 1 sur, 2 oeste, 3 este). */
   sides: ['norte', 'sur', 'oeste', 'este'],
   notices: {
+    waterCut: 'Se ha cortado el agua', // H5b
     skillUp: 'Mejora',
     // H5
     died: 'Muerte',

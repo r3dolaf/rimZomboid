@@ -4,12 +4,14 @@ import { moodModifiers, moodTarget } from '../sim/mood';
 import { draftToggle, effectiveDrafted } from '../game/command';
 import { canDraft } from '../sim/draft';
 import { issue } from '../sim/orders';
+import { effectiveOutfits } from '../sim/outfits';
 import { SKILL_MAX } from '../sim/balance';
 import { capacityKg, SKILLS, xpToNext } from '../sim/skills';
 import { opinionOf, relationLabel } from '../sim/social';
 import type { Survivor, World } from '../sim/types';
 import {
   activityText,
+  clothesView,
   formatItems,
   formatModifier,
   healthView,
@@ -175,6 +177,29 @@ export function mountSheet(
   });
   healthPane.append(healthBody, painkiller);
   let healthShown = '';
+  // Ropa (H5b §8): cada zona con lo que lleva, su atuendo, favorita y odiada.
+  const clothesPane = document.createElement('div');
+  clothesPane.className = 'clothes';
+  clothesPane.dataset.testid = 'sheet-pane-clothes';
+  const outfitRow = document.createElement('label');
+  outfitRow.className = 'outfit';
+  outfitRow.textContent = `${es.clothesUi.outfit}: `;
+  const outfitSelect = document.createElement('select');
+  outfitSelect.dataset.testid = 'sheet-outfit';
+  outfitSelect.addEventListener('change', () => {
+    const id = opts.selection.id;
+    if (id !== null)
+      issue(opts.world, {
+        type: 'setOutfit',
+        survivorId: id,
+        outfitId: Number(outfitSelect.value),
+      });
+  });
+  outfitRow.append(outfitSelect);
+  const clothesBody = document.createElement('div');
+  clothesPane.append(outfitRow, clothesBody);
+  let clothesShown = '';
+  let outfitsShown = '';
 
   const tabs = document.createElement('nav');
   tabs.className = 'tabs';
@@ -182,6 +207,7 @@ export function mountSheet(
     general,
     skills: skillsPane,
     health: healthPane,
+    clothes: clothesPane,
   };
   let tab = loadTab();
   const tabButtons = SHEET_TABS.map((k) => {
@@ -203,7 +229,7 @@ export function mountSheet(
     for (const k of SHEET_TABS) panes[k].hidden = k !== tab;
   };
   showTab();
-  panel.append(head, tabs, general, skillsPane, healthPane);
+  panel.append(head, tabs, general, skillsPane, healthPane, clothesPane);
 
   let shown = ''; // firma de lo pintado, para no rehacer el DOM en cada fotograma
 
@@ -282,6 +308,32 @@ export function mountSheet(
         healthBody.replaceChildren(renderHealth(health));
       }
 
+      // Ropa: los atuendos (con las órdenes pendientes) y el suyo.
+      const outfits = effectiveOutfits(world);
+      const outfitsKey = JSON.stringify(outfits.map((o) => [o.id, o.name]));
+      if (outfitsKey !== outfitsShown) {
+        outfitsShown = outfitsKey;
+        outfitSelect.replaceChildren(
+          ...outfits.map((o) => {
+            const opt = document.createElement('option');
+            opt.value = String(o.id);
+            opt.textContent = o.name;
+            return opt;
+          }),
+        );
+      }
+      let outfitId = String(s.outfitId);
+      for (const o of world.orders)
+        if (o.type === 'setOutfit' && o.survivorId === s.id) outfitId = String(o.outfitId);
+      if (outfitSelect.value !== outfitId && document.activeElement !== outfitSelect)
+        outfitSelect.value = outfitId;
+      const clothes = clothesView(s);
+      const clothesKey = JSON.stringify(clothes);
+      if (clothesKey !== clothesShown) {
+        clothesShown = clothesKey;
+        clothesBody.replaceChildren(renderClothes(clothes));
+      }
+
       const key = JSON.stringify(view);
       panel.hidden = false;
       if (key === shown) return;
@@ -298,7 +350,7 @@ const kg = (n: number) =>
     ? String(Math.round(n))
     : n.toFixed(1).replace('.', ',');
 
-const SHEET_TABS = ['general', 'skills', 'health'] as const;
+const SHEET_TABS = ['general', 'skills', 'health', 'clothes'] as const;
 type SheetTab = (typeof SHEET_TABS)[number];
 const TAB_KEY = 'rimzomboid.sheetTab';
 
@@ -344,6 +396,31 @@ function renderHealth(v: ReturnType<typeof healthView>): DocumentFragment {
   if (v.symptoms.length === 0) ul.append(el('li', t.nothing, 'muted'));
   for (const x of v.symptoms) ul.append(el('li', x));
   f.append(ul);
+  return f;
+}
+
+/** La pestaña Ropa: cada zona con sus capas y lo que protege; favorita y odiada. */
+function renderClothes(v: ReturnType<typeof clothesView>): DocumentFragment {
+  const f = document.createDocumentFragment();
+  const el = <K extends keyof HTMLElementTagNameMap>(tag: K, text?: string, cls?: string) => {
+    const e = document.createElement(tag);
+    if (text !== undefined) e.textContent = text;
+    if (cls) e.className = cls;
+    return e;
+  };
+  const c = es.clothesUi;
+  f.append(el('h3', c.zonesTitle));
+  for (const z of v.zones) {
+    const row = el('div', undefined, 'zone');
+    row.dataset.testid = `clothes-${z.part}`;
+    row.append(el('strong', z.name), el('span', ` · ${z.protection}`, 'muted'));
+    const ul = el('ul');
+    if (z.layers.length === 0) ul.append(el('li', c.nothing, 'muted'));
+    for (const g of z.layers) ul.append(el('li', g));
+    row.append(ul);
+    f.append(row);
+  }
+  f.append(el('p', v.likes), el('p', v.hates));
   return f;
 }
 

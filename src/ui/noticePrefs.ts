@@ -101,6 +101,7 @@ export const NOTICE_GROUPS: readonly {
       'birthdaySkipped',
       'strangerAccepted',
       'strangerLeft',
+      'waterCut', // H5b
     ],
   },
   { id: 'zombies', kinds: ['downed', 'zombiesInBase', 'zombieSighted', 'broken', 'fled'] },

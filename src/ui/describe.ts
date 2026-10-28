@@ -3,6 +3,7 @@ import { es } from '../i18n/es';
 import {
   BODY_HP,
   CLEAN_BANDAGE_HEAL,
+  DIRTY_HOURS,
   LONELY_BELOW,
   MOOD_CRISIS,
   MOOD_EDGE,
@@ -10,11 +11,22 @@ import {
   WOUNDS,
 } from '../sim/balance';
 import { BODY_PARTS, painOf, partHp } from '../sim/body';
+import { layersOn, zoneBlock } from '../sim/clothes';
 import { gameTime } from '../sim/clock';
 import { ITEM_KINDS, type Inventory, type ItemKind } from '../sim/items';
 import type { LogEntry } from '../sim/log';
 import type { MoodModifier } from '../sim/mood';
-import type { Building, MemoryId, Survivor, Tone, World, Wound, Zombie } from '../sim/types';
+import type {
+  BodyPart,
+  Building,
+  Garment,
+  MemoryId,
+  Survivor,
+  Tone,
+  World,
+  Wound,
+  Zombie,
+} from '../sim/types';
 
 /**
  * El nombre de alguien por su id: de la colonia, a la puerta, de los que se fueron o de los muertos
@@ -63,6 +75,53 @@ function woundText(wd: Wound, tick: number): string {
   if (wd.bleeding) return name;
   const perDay = (wd.size * (clean ? CLEAN_BANDAGE_HEAL : 1)) / WOUNDS[wd.kind].healDays;
   return `${name} (${t.heals(Math.max(1, Math.ceil(wd.damage / perDay - 1e-9)))})`;
+}
+
+/** La terminación de un adjetivo para esa prenda, por su artículo: rota, roto, rotas, rotos. */
+function ending(g: Garment): string {
+  const article = es.garments[g.kind].the.split(' ')[0];
+  return { la: 'a', el: 'o', las: 'as', los: 'os' }[article as 'la' | 'el' | 'las' | 'los'] ?? 'a';
+}
+
+/** "Chaqueta vaquera (rota por el brazo izquierdo; parche de vaquero en el torso; sucia)" (H5b). */
+export function garmentText(g: Garment): string {
+  const c = es.clothesUi;
+  const where = (z: BodyPart) => es.bodyParts[z].the;
+  const marks: string[] = [];
+  for (const z of g.holes) marks.push(c.torn(ending(g), where(z)));
+  for (const [z, m] of Object.entries(g.patches))
+    marks.push(c.patch(es.materials[m] ?? m, where(z as BodyPart)));
+  for (const [z, m] of Object.entries(g.pads))
+    marks.push(c.pad(es.materials[m] ?? m, where(z as BodyPart)));
+  if (g.dirtHours >= DIRTY_HOURS) marks.push(c.dirty(ending(g)));
+  if (g.bloody) marks.push(c.bloody);
+  if (g.from === 'colonist') marks.push(c.fromColonist);
+  if (g.from === 'zombie') marks.push(c.fromZombie);
+  const name = es.garments[g.kind].name;
+  return marks.length > 0 ? `${name} (${marks.join('; ')})` : name;
+}
+
+/**
+ * La pestaña Ropa (H5b §8): cada zona con lo que lleva (de fuera a dentro) y lo que para (arañazos
+ * y mordiscos), y su prenda favorita y la odiada.
+ */
+export function clothesView(s: Survivor): {
+  zones: { part: BodyPart; name: string; layers: string[]; protection: string }[];
+  likes: string;
+  hates: string;
+} {
+  const pct = (z: BodyPart, kind: 'scratch' | 'bite') =>
+    Math.round(100 * zoneBlock(s.worn, z, kind));
+  return {
+    zones: BODY_PARTS.map((z) => ({
+      part: z,
+      name: es.bodyParts[z].name,
+      layers: layersOn(s.worn, z).map(garmentText),
+      protection: es.clothesUi.protection(pct(z, 'scratch'), pct(z, 'bite')),
+    })),
+    likes: es.clothesUi.likes(es.garments[s.likes].name),
+    hates: es.clothesUi.hates(es.garments[s.hates].name),
+  };
 }
 
 /** La pestaña Salud (H5 §10): cada parte, la Sangre y lo que sufre. Nunca la infección. */
@@ -274,6 +333,9 @@ export function formatItems(inv: Inventory, order: readonly ItemKind[] = ITEM_KI
       const [one, many] = es.items[k];
       return `${inv[k]} ${inv[k] === 1 ? one : many}`;
     });
+  // Las prendas sueltas (H5b), contadas.
+  const n = inv.pieces.length;
+  if (n > 0) parts.push(`${n} ${es.pieceWord[n === 1 ? 0 : 1]}`);
   if (parts.length === 0) return es.nothing;
   if (parts.length === 1) return parts[0]!;
   return `${parts.slice(0, -1).join(', ')} ${es.and} ${parts.at(-1)}`;
@@ -589,6 +651,8 @@ export function noticeFor(e: LogEntry): NoticeInfo | null {
       return { tone: 'good', title: t.cache, focusId: e.survivorId };
     case 'storm':
       return { tone: 'bad', title: t.storm, focusId: null };
+    case 'waterCut': // H5b: amarillo, sin pausa
+      return { tone: 'mixed', title: t.waterCut, focusId: null };
     case 'theftPunished':
       return { tone: e.guilty ? 'mixed' : 'bad', title: t.theftPunished, focusId: e.suspectId };
     case 'birthdayParty':

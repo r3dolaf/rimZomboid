@@ -1,5 +1,6 @@
 import { es } from '../i18n/es';
 import { ITEM_KINDS } from '../sim/items';
+import { garmentText } from './describe';
 import type { World } from '../sim/types';
 import type { Flag } from './flag';
 import './panels.css';
@@ -29,6 +30,8 @@ export function mountStoragePanel(
   x.setAttribute('aria-label', es.close);
   x.addEventListener('click', () => opts.open.set(false));
   head.append(title, x);
+  const materials = document.createElement('h3');
+  materials.textContent = es.clothesUi.materials;
   const list = document.createElement('ul');
   const counts = ITEM_KINDS.map((k) => {
     const li = document.createElement('li');
@@ -41,7 +44,14 @@ export function mountStoragePanel(
     list.append(li);
     return { k, n };
   });
-  panel.append(head, list);
+  // La ropa (H5b §8): cada prenda con su estado.
+  const clothesTitle = document.createElement('h3');
+  clothesTitle.textContent = es.clothesUi.clothes;
+  const clothes = document.createElement('ul');
+  clothes.className = 'clothes';
+  clothes.dataset.testid = 'storage-clothes';
+  let clothesShown = '';
+  panel.append(head, materials, list, clothesTitle, clothes);
   root.append(panel);
 
   return {
@@ -52,6 +62,18 @@ export function mountStoragePanel(
         const text = String(opts.world.storage.items[k]);
         if (n.textContent !== text) n.textContent = text;
       }
+      const texts = opts.world.storage.items.pieces.map(garmentText);
+      const key = JSON.stringify(texts);
+      if (key === clothesShown) return;
+      clothesShown = key;
+      clothes.replaceChildren(
+        ...(texts.length > 0 ? texts : [es.clothesUi.nothing]).map((t) => {
+          const li = document.createElement('li');
+          li.textContent = t;
+          if (texts.length === 0) li.className = 'muted';
+          return li;
+        }),
+      );
     },
   };
 }

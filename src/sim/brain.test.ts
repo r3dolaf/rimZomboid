@@ -6,7 +6,7 @@ import { checkInvariants } from './invariants';
 import { getTile } from './map/grid';
 import { step } from './step';
 import { decisionsSystem } from './systems/decisions';
-import { encloseTile, emptyWorld } from './testing/fixtures';
+import { encloseTile, emptyWorld, keepSurvivors } from './testing/fixtures';
 import { Tile } from './types';
 import { createWorld, tileOf } from './world';
 
@@ -60,7 +60,7 @@ test('sin camino posible espera NO_PATH_RETRY_TICKS', () => {
 test('encerrado durante 100 ticks no rompe nada', () => {
   const w = createWorld(3);
   const s = w.survivors[0]!;
-  w.survivors = [s]; // los muros nuevos podrían caer encima de los demás
+  keepSurvivors(w, [s]); // los muros nuevos podrían caer encima de los demás
   w.beds = w.beds.filter((b) => b.ownerId === s.id);
   const start = { ...s.pos };
   encloseTile(w, tileOf(s.pos));

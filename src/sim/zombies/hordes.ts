@@ -17,6 +17,7 @@ import {
 import { baseFloor } from '../base';
 import { gameTime } from '../clock';
 import { seenByColony } from '../danger';
+import { piecesGone } from '../clothes';
 import { logEvent } from '../log';
 import { isZombieWalkable } from '../map/grid';
 import { nextInt } from '../rng';
@@ -234,6 +235,7 @@ export function hordeSystem(w: World): void {
     );
     if (out.size > 0) {
       w.zombies = w.zombies.filter((z) => !out.has(z));
+      for (const z of out) piecesGone(w, z.worn); // H5b: se van con su ropa
       mine = mine.filter((z) => !out.has(z));
     }
     if (mine.length === 0) {

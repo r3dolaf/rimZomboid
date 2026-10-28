@@ -12,6 +12,7 @@ import {
 } from '../balance';
 import { baseLayout } from '../base';
 import { freeFloor } from '../build';
+import { dressStarter, piecesGone } from '../clothes';
 import { contains } from '../geom';
 import { threatsOf, willFight } from '../danger';
 import { emptyInventory } from '../items';
@@ -57,7 +58,10 @@ export function strangerSystem(w: World): void {
     if (walkStep(s, w.grid, speed) === 'walking') arrived = false;
     else s.action = { type: 'idle', ticksLeft: 0 };
   }
-  if (st.leaving && arrived) w.stranger = null;
+  if (!st.leaving || !arrived) return;
+  // Se van del mapa con lo que llevan (H5b: las piezas, en las cuentas).
+  for (const s of st.survivors) piecesGone(w, [...s.worn, ...s.carrying.pieces]);
+  w.stranger = null;
 }
 
 /**
@@ -200,7 +204,11 @@ export function newStranger(w: World, start: Point): Survivor {
     painkillerUntil: 0,
     painkillerWanted: false,
     infection: null,
+    worn: [],
+    likes: 'tshirt', // se sortean abajo con su ropa
+    hates: 'cap',
   };
+  dressStarter(w, s, w.rng); // H5b: llegan vestidos
   s.needs.mood = moodTarget(s, w.tick, w.base.rect);
   s.stance = defaultStance(s.traits);
   s.skills = rollSkills(skillRng(w.seed, s.id), s.traits);

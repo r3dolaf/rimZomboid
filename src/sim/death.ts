@@ -90,6 +90,10 @@ function leaveBody(w: World, s: Survivor, cause: DeathCause): void {
   const items = emptyInventory();
   addInto(items, s.carrying);
   if (s.equipped) items[s.equipped]++;
+  // Su ropa (H5b §7): ya es la de un muerto.
+  for (const g of s.worn) g.from = 'colonist';
+  items.pieces.push(...s.worn);
+  s.worn = [];
   const c: Container = {
     id: w.nextId++,
     houseId: -1,
@@ -183,7 +187,14 @@ function leavingSystem(w: World): void {
     w.leaving = w.leaving.filter((x) => x !== s);
     const pos = tileOf(s.pos);
     const r: Returning = s.infection
-      ? { kind: 'zombie', at: w.tick + TURNED_RETURN_TICKS, pos, name: s.name, survivorId: s.id }
+      ? {
+          kind: 'zombie',
+          at: w.tick + TURNED_RETURN_TICKS,
+          pos,
+          name: s.name,
+          survivorId: s.id,
+          worn: s.worn, // vuelve con la ropa que se llevó (H5b §7)
+        }
       : {
           kind: 'stranger',
           at:
@@ -209,6 +220,7 @@ function returningSystem(w: World): void {
       const z = newZombie(w, r.pos);
       z.name = r.name;
       z.turnedFrom = r.survivorId;
+      z.worn = r.worn;
       z.state = 'alert';
       z.goal = { ...w.base.door };
       z.lastSeenAt = w.tick;

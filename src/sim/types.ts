@@ -345,6 +345,11 @@ export interface Survivor {
   painkillerWanted: boolean;
   /** Infección oculta (H5 §7.1): desde cuándo y cuándo muere de ella; el jugador no la ve. */
   infection: { at: number; deathAt: number } | null;
+  /** La ropa que lleva puesta (H5b §2; no cuenta como carga). */
+  worn: Garment[];
+  /** Su prenda favorita y la que odia (H5b §5), distintas. */
+  likes: GarmentKind;
+  hates: GarmentKind;
 }
 
 /**
@@ -406,6 +411,8 @@ export interface Zombie {
   name?: string;
   /** El colono que echaron infectado (H5 §7.4), hasta que alguien lo ve. */
   turnedFrom?: number;
+  /** La ropa que lleva (H5b §7). */
+  worn: Garment[];
 }
 
 /** Lado del mapa: 0 norte (y = 0), 1 sur, 2 oeste (x = 0), 3 este. */
@@ -655,7 +662,7 @@ export interface World {
 
 /** Uno que echaron y que vuelve en `at` por donde se fue (`pos`). */
 export type Returning =
-  | { kind: 'zombie'; at: number; pos: Point; name: string; survivorId: number }
+  | { kind: 'zombie'; at: number; pos: Point; name: string; survivorId: number; worn: Garment[] }
   | { kind: 'stranger'; at: number; pos: Point; survivor: Survivor };
 
 /** Recetas de Fabricar (H4d). */

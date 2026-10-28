@@ -8,6 +8,7 @@ import {
   CORPSE_WEAPON_CHANCE,
   CORPSE_WEAPONS,
 } from './balance';
+import { piecesGone } from './clothes';
 import { emptyInventory, isEmpty } from './items';
 import { WEAPONS } from './jobs/weapons';
 import { dropPile } from './piles';
@@ -24,6 +25,10 @@ export function leaveCorpse(w: World, z: Zombie): void {
   items.cloth = nextInt(rng, CORPSE_CLOTH_MIN, CORPSE_CLOTH_MAX);
   if (nextFloat(rng) < CORPSE_WEAPON_CHANCE) items[weightedPick(rng, { ...CORPSE_WEAPONS })]++;
   if (nextFloat(rng) < CORPSE_SMALL_CHANCE) items[nextFloat(rng) < 0.5 ? 'bandage' : 'food']++;
+  // Su ropa (H5b §7), de un zombi (la de un colono que se levantó sigue siendo de un colono).
+  for (const g of z.worn) g.from ??= 'zombie';
+  items.pieces.push(...z.worn);
+  z.worn = [];
   const c: Container = {
     id: w.nextId++,
     houseId: -1,
@@ -56,7 +61,10 @@ export function corpsesSystem(w: World): void {
     gone = true;
     // El de una persona (H5) deja en el suelo lo que llevaba; lo del zombi se pudre con él.
     if (c.name !== undefined) dropPile(w, c.pos, c.items);
-    else w.weaponLog.rotted += weaponsIn(c);
+    else {
+      w.weaponLog.rotted += weaponsIn(c);
+      piecesGone(w, c.items.pieces); // H5b: su ropa se pudre con él
+    }
   }
   if (gone) w.containers = w.containers.filter((c) => !due(c));
 }

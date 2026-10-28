@@ -6,6 +6,7 @@ import {
   type BuildKind,
   type GarmentKind,
   type Layer,
+  type Material,
   type LootKind,
   type NarratorStyle,
   type RecipeId,
@@ -851,3 +852,19 @@ export const GARMENTS = {
   },
   helmet: { covers: ['head'], layer: 'outer', scratch: 0.6, bite: 0.5, kg: 1.5, unpick: {} },
 } as const satisfies Record<GarmentKind, GarmentSpec>;
+/** Parches: lo que conserva la prenda según el material; refuerzos: lo que suman contra arañazos
+ * (contra mordiscos, la mitad). Nunca más de PROTECTION_MAX (H5b §3). */
+export const PATCH_FACTOR = { cloth: 0.5, denim: 0.75, leather: 1 } as const satisfies Record<
+  Material,
+  number
+>;
+export const PAD_BONUS = { cloth: 0.1, denim: 0.15, leather: 0.25 } as const satisfies Record<
+  Material,
+  number
+>;
+export const PROTECTION_MAX = 0.95;
+/** Azar propio de la ropa (lo del principio, el botín de ropa, el agua): semilla ^ esto. */
+export const CLOTHES_SALT = 0x0c107e5;
+/** La ropa del principio: camiseta, vaqueros o chándal y, a veces, algo más (H5b §2). */
+export const START_EXTRA_CHANCE = 0.5;
+export const START_EXTRAS = ['hoodie', 'shirt', 'cap'] as const satisfies readonly GarmentKind[];

@@ -88,6 +88,7 @@ test('snapshot copia sin compartir piezas; addStacks suma solo los montones', ()
 
 test('newGarment: id nuevo, limpia, sin agujeros y apuntada en las cuentas', () => {
   const w = emptyWorld(5, 5);
+  const made = w.pieceLog.made;
   const a = newGarment(w, 'jeans');
   const b = newGarment(w, 'jeans');
   expect(b.id).toBe(a.id + 1);
@@ -101,7 +102,7 @@ test('newGarment: id nuevo, limpia, sin agujeros y apuntada en las cuentas', () 
     bloody: false,
     from: null,
   });
-  expect(w.pieceLog.made).toBe(2);
+  expect(w.pieceLog.made).toBe(made + 2);
   expect(w.nextPieceId).toBe(b.id + 1);
 });
 

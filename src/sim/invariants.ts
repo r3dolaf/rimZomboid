@@ -9,13 +9,13 @@ import {
   SKILL_MAX,
   ZOMBIE_HEALTH,
 } from './balance';
-import { allPieces } from './clothes';
+import { allPieces, clashes, coversOf, wornLists } from './clothes';
 import { ITEM_KINDS, weightOf, type Inventory } from './items';
 import { inBounds, isWalkable, isZombieWalkable } from './map/grid';
 import { capacityKg, SKILLS, xpToNext } from './skills';
 import { targetContainerId } from './work';
 import { contains, intersects } from './geom';
-import { Tile, type BuildingKind, type World } from './types';
+import { Tile, type BodyPart, type BuildingKind, type World } from './types';
 import { tileOf } from './world';
 import { zombieMax } from './zombies/spawn';
 
@@ -296,6 +296,24 @@ function checkPieces(problems: string[], w: World): void {
     if (!Number.isInteger(piece.id) || piece.id < 1 || piece.id >= w.nextPieceId)
       problems.push(`pieza #${piece.id} (${where}): id no válido`);
   }
+  // Prendas: agujeros, parches y refuerzos solo en lo que cubre; parche y agujero no a la vez.
+  for (const { where, piece: g } of all) {
+    const covers = coversOf(g);
+    const marks = [...g.holes, ...Object.keys(g.patches), ...Object.keys(g.pads)] as BodyPart[];
+    for (const z of marks)
+      if (!covers.includes(z))
+        problems.push(`prenda #${g.id} (${where}): marca en ${z}, que no cubre`);
+    for (const z of g.holes)
+      if (g.patches[z]) problems.push(`prenda #${g.id} (${where}): agujero y parche en ${z}`);
+    if (new Set(g.holes).size !== g.holes.length)
+      problems.push(`prenda #${g.id} (${where}): agujeros repetidos`);
+  }
+  // Nada que choque puesto a la vez.
+  for (const [where, worn] of wornLists(w))
+    for (let i = 0; i < worn.length; i++)
+      for (let j = i + 1; j < worn.length; j++)
+        if (clashes(worn[i]!, worn[j]!))
+          problems.push(`${where}: #${worn[i]!.id} y #${worn[j]!.id} chocan`);
   const alive = w.pieceLog.made - w.pieceLog.gone;
   if (all.length !== alive) problems.push(`piezas: hay ${all.length} y las cuentas dicen ${alive}`);
 }

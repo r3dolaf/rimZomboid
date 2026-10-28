@@ -49,6 +49,7 @@ export function newZombie(w: World, t: Point): Zombie {
     cooldown: 0,
     waitUntil: 0,
     hordeId: null,
+    worn: [],
   };
 }
 

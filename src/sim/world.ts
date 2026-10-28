@@ -1,4 +1,5 @@
 import {
+  CLOTHES_SALT,
   BANDAGES_CARRIED,
   BUILDINGS,
   CALM_DAYS_MAX,
@@ -17,6 +18,7 @@ import {
   TICKS_PER_DAY,
 } from './balance';
 import { baseLayout } from './base';
+import { dressStarter } from './clothes';
 import { emptyInventory } from './items';
 import { placeContainers } from './loot';
 import { revealFromSurvivors } from './vision';
@@ -103,7 +105,14 @@ export function createWorld(
     painkillerUntil: 0,
     painkillerWanted: false,
     infection: null,
+    worn: [], // H5b: se viste abajo, con su propio azar
+    likes: 'tshirt',
+    hates: 'cap',
   }));
+  // La ropa del principio y las preferencias (H5b), con su propio azar.
+  const clothesRng = createRng((seed ^ CLOTHES_SALT) >>> 0);
+  const pieces = { nextPieceId: 1, pieceLog: { made: 0, gone: 0 } };
+  for (const s of survivors) dressStarter(pieces, s, clothesRng);
   for (const s of survivors) {
     s.work = defaultWork(s.traits);
     s.stance = defaultStance(s.traits);
@@ -203,8 +212,8 @@ export function createWorld(
     gone: [],
     over: null,
     stats: { kills: 0, siegesRepelled: 0, looted: emptyInventory(), joined: [] },
-    nextPieceId: 1,
-    pieceLog: { made: 0, gone: 0 },
+    nextPieceId: pieces.nextPieceId,
+    pieceLog: pieces.pieceLog,
   };
   // Zombis (H4b), con su propio azar: no cambian nada de lo anterior.
   placeStartZombies(world);

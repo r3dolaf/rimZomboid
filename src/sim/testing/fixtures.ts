@@ -1,9 +1,31 @@
 // Ayudas para los tests de la simulación.
+import { newGarment, piecesGone } from '../clothes';
 import { emptyInventory } from '../items';
 import { createGrid, setTile } from '../map/grid';
 import { createRng } from '../rng';
 import { SKILLS } from '../skills';
-import { Tile, type Point, type Skill, type SkillId, type Survivor, type World } from '../types';
+import {
+  Tile,
+  type Garment,
+  type GarmentKind,
+  type Point,
+  type Skill,
+  type SkillId,
+  type Survivor,
+  type World,
+} from '../types';
+
+/** Una prenda nueva con ese id (para la ropa de serie de la fixture). */
+const garment = (id: number, kind: GarmentKind): Garment => ({
+  id,
+  kind,
+  holes: [],
+  patches: {},
+  pads: {},
+  dirtHours: 0,
+  bloody: false,
+  from: null,
+});
 
 /** Todas las habilidades a `level` (con 5, rapidez, carga y acierto como antes de H4c). */
 export function skillsAt(level: number): Record<SkillId, Skill> {
@@ -74,6 +96,10 @@ export function emptyWorld(width: number, height: number): World {
         painkillerUntil: 0,
         painkillerWanted: false,
         infection: null,
+        // H5b: camiseta y vaqueros (las piezas 1 y 2).
+        worn: [garment(1, 'tshirt'), garment(2, 'jeans')],
+        likes: 'helmet',
+        hates: 'chaps',
       },
     ],
     beds: [{ id: 1, pos: { x: width - 1, y: 0 }, ownerId: 1 }],
@@ -121,8 +147,8 @@ export function emptyWorld(width: number, height: number): World {
     gone: [],
     over: null,
     stats: { kills: 0, siegesRepelled: 0, looted: emptyInventory(), joined: [] },
-    nextPieceId: 1,
-    pieceLog: { made: 0, gone: 0 },
+    nextPieceId: 3,
+    pieceLog: { made: 2, gone: 0 },
   };
 }
 
@@ -154,9 +180,17 @@ export function addSurvivor(w: World, t: Point, name = 'Bea'): Survivor {
     painkillerUntil: 0,
     painkillerWanted: false,
     infection: null,
+    worn: [newGarment(w, 'tshirt'), newGarment(w, 'jeans')],
   };
   w.survivors.push(s);
   return s;
+}
+
+/** Deja solo a esos colonos (los demás se van del mundo con su ropa, H5b). */
+export function keepSurvivors(w: World, keep: Survivor[]): void {
+  for (const s of w.survivors)
+    if (!keep.includes(s)) piecesGone(w, [...s.worn, ...s.carrying.pieces]);
+  w.survivors = w.survivors.filter((s) => keep.includes(s));
 }
 
 /** Pone muros en las 8 casillas vecinas. */
@@ -176,6 +210,7 @@ export function encloseTile(w: World, t: Point): void {
  * ellos (antes de H4b). Las hordas, como si acabaran de salir para siempre.
  */
 export function withoutZombies(w: World): World {
+  for (const z of w.zombies) piecesGone(w, z.worn);
   w.zombies = [];
   w.nextZombieAt = Number.MAX_SAFE_INTEGER;
   w.narrator.lastAt.siege = Number.MAX_SAFE_INTEGER;

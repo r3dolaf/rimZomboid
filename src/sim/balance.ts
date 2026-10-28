@@ -598,7 +598,16 @@ export type LootAmount = [number, number] | { chance: number };
 
 /** Lo que se reparte (el hilo, en carretes de THREAD_PER_SPOOL usos). */
 export type LootItem =
-  'food' | 'bandage' | 'wood' | 'cloth' | 'thread' | 'needle' | 'painkillers' | Weapon;
+  | 'food'
+  | 'bandage'
+  | 'wood'
+  | 'cloth'
+  | 'thread'
+  | 'needle'
+  | 'painkillers'
+  | 'denim'
+  | 'leather'
+  | Weapon;
 
 /** El botín de cada tipo de edificio (spec H4f §4). */
 export const LOOT: Record<LootKind, Partial<Record<LootItem, LootAmount>>> = {
@@ -633,7 +642,7 @@ export const LOOT: Record<LootKind, Partial<Record<LootItem, LootAmount>>> = {
     machete: [1, 1],
     painkillers: [1, 2],
   },
-  clothes: { cloth: [20, 30], thread: [6, 6], needle: [3, 3] },
+  clothes: { cloth: [20, 30], thread: [6, 6], needle: [3, 3], denim: [3, 6], leather: [2, 4] },
   gas: { food: [8, 16], bandage: [0, 2], bat: [1, 1], painkillers: [0, 2] },
   farm: {
     food: [8, 16],
@@ -868,3 +877,48 @@ export const CLOTHES_SALT = 0x0c107e5;
 /** La ropa del principio: camiseta, vaqueros o chándal y, a veces, algo más (H5b §2). */
 export const START_EXTRA_CHANCE = 0.5;
 export const START_EXTRAS = ['hoodie', 'shirt', 'cap'] as const satisfies readonly GarmentKind[];
+/**
+ * La ropa del botín (H5b §2): cuántas prendas y cuáles (pesos) por tipo de edificio. Van a los
+ * armarios, taquillas y cajas (y a estanterías y mostradores, que tienen de todo).
+ */
+export const LOOT_GARMENTS: Partial<
+  Record<LootKind, { count: [number, number]; kinds: Partial<Record<GarmentKind, number>> }>
+> = {
+  house: {
+    count: [0, 3],
+    kinds: {
+      tshirt: 3,
+      longSleeve: 2,
+      shirt: 2,
+      hoodie: 2,
+      sweater: 2,
+      jeans: 3,
+      tracksuit: 2,
+      coat: 1,
+      denimJacket: 1,
+      cap: 1,
+      beanie: 1,
+    },
+  },
+  clothes: {
+    count: [12, 20],
+    kinds: {
+      tshirt: 3,
+      longSleeve: 2,
+      shirt: 3,
+      hoodie: 2,
+      sweater: 2,
+      denimJacket: 2,
+      leatherJacket: 1,
+      coat: 1,
+      tracksuit: 2,
+      jeans: 3,
+      cap: 2,
+      beanie: 2,
+    },
+  },
+  police: { count: [2, 4], kinds: { vest: 3, helmet: 2 } },
+  hardware: { count: [1, 3], kinds: { workPants: 3, chaps: 1, coat: 1 } },
+  farm: { count: [1, 3], kinds: { workPants: 2, chaps: 1, coat: 2, beanie: 1 } },
+  warehouse: { count: [1, 3], kinds: { workPants: 2, coat: 1, chaps: 1 } },
+};

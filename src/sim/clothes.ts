@@ -27,7 +27,7 @@ export const GARMENT_KINDS = Object.keys(GARMENTS) as GarmentKind[];
 const LAYER_RANK: Record<Layer, number> = { inner: 0, middle: 1, outer: 2 };
 
 /** Lo que lleva la cuenta de las piezas (el mundo, o el contador mientras se crea). */
-type PieceCounter = Pick<World, 'nextPieceId' | 'pieceLog'>;
+export type PieceCounter = Pick<World, 'nextPieceId' | 'pieceLog'>;
 
 /** Una prenda nueva, limpia y sin agujeros (se apunta en las cuentas de las piezas). */
 export function newGarment(w: PieceCounter, kind: GarmentKind): Garment {

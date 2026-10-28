@@ -20,7 +20,7 @@ import {
 import { baseLayout } from './base';
 import { dressStarter } from './clothes';
 import { emptyInventory } from './items';
-import { placeContainers } from './loot';
+import { fillGarments, placeContainers } from './loot';
 import { revealFromSurvivors } from './vision';
 import { generateMap } from './map/generate';
 import { getTile, setTile } from './map/grid';
@@ -134,6 +134,7 @@ export function createWorld(
 
   // Después de los supervivientes, para no cambiar partidas anteriores con la misma semilla.
   const containers = placeContainers(houses, furniture, rng);
+  fillGarments(pieces, houses, containers, clothesRng); // H5b: la ropa, con su azar
 
   // Relaciones (H3b), también después para no cambiar partidas anteriores.
   for (const s of survivors) {

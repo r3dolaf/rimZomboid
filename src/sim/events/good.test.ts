@@ -1,6 +1,7 @@
 // Sucesos buenos (spec H3c §3.2): noche de historias, cumpleaños y alijo.
 import { expect, test } from 'vitest';
 import { TICKS_PER_HOUR } from '../balance';
+import { piecesGone } from '../clothes';
 import { contains } from '../geom';
 import { checkInvariants } from '../invariants';
 import { issue } from '../orders';
@@ -215,6 +216,7 @@ test('alijo en una casa ya saqueada: una despensa escondida que vuelve a estar p
   const { w } = calm(12);
   for (const c of w.containers) {
     c.searched = true;
+    piecesGone(w, c.items.pieces); // H5b: la ropa se va con lo vaciado
     c.items = {
       food: 0,
       bandage: 0,

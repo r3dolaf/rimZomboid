@@ -70,7 +70,13 @@ test('botín por tipo (spec §4): rangos y, para lo de "a veces", la probabilida
     machete: [1, 1],
     painkillers: [1, 2],
   });
-  expect(LOOT.clothes).toEqual({ cloth: [20, 30], thread: [6, 6], needle: [3, 3] });
+  expect(LOOT.clothes).toEqual({
+    cloth: [20, 30],
+    thread: [6, 6],
+    needle: [3, 3],
+    denim: [3, 6], // H5b
+    leather: [2, 4],
+  });
   expect(LOOT.gas).toEqual({ food: [8, 16], bandage: [0, 2], bat: [1, 1], painkillers: [0, 2] });
   expect(LOOT.farm).toEqual({
     food: [8, 16],

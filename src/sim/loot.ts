@@ -1,8 +1,9 @@
 // Botín (spec H4f §4): cada tipo de edificio tiene el suyo, y cada cosa va a su mueble.
-import { LOOT, THREAD_PER_SPOOL, type LootAmount, type LootItem } from './balance';
+import { LOOT, LOOT_GARMENTS, THREAD_PER_SPOOL, type LootAmount, type LootItem } from './balance';
+import { newGarment, type PieceCounter } from './clothes';
 import { emptyInventory } from './items';
-import { nextFloat, nextInt, type RngState } from './rng';
-import type { Building, Container, ContainerKind, LootKind, Point } from './types';
+import { nextFloat, nextInt, weightedPick, type RngState } from './rng';
+import type { Building, Container, ContainerKind, GarmentKind, LootKind, Point } from './types';
 
 /** Lo que se reparte, siempre en este orden (para que el azar dé lo mismo con la misma semilla). */
 const ITEMS: readonly LootItem[] = [
@@ -18,6 +19,8 @@ const ITEMS: readonly LootItem[] = [
   'crowbar',
   'machete',
   'painkillers', // H5: el último, para no cambiar el reparto de lo de antes más que lo justo
+  'denim', // H5b
+  'leather',
 ];
 
 /** El mueble de cada cosa (spec H4f §4). */
@@ -34,7 +37,12 @@ const HOME: Record<LootItem, readonly ContainerKind[]> = {
   crowbar: ['crate'],
   wood: ['crate'],
   painkillers: ['medicine'],
+  denim: ['wardrobe'],
+  leather: ['wardrobe'],
 };
+
+/** Los muebles de la ropa (H5b §2); también las estanterías y los mostradores. */
+const GARMENT_HOME: readonly ContainerKind[] = ['wardrobe', 'locker', 'crate'];
 
 /** Muebles que admiten de todo (además del suyo, cada cosa puede ir aquí). */
 const ANYTHING: readonly ContainerKind[] = ['shelf', 'counter'];
@@ -123,4 +131,30 @@ function roll(rng: RngState, a: LootAmount | undefined): number {
 function placesFor(cs: Container[], item: LootItem): Container[] {
   const fit = cs.filter((c) => HOME[item].includes(c.kind) || ANYTHING.includes(c.kind));
   return fit.length > 0 ? fit : cs;
+}
+
+/**
+ * La ropa del botín (H5b §2), limpia y sin agujeros, con su propio azar: cada prenda en uno de sus
+ * muebles al azar; un edificio sin ninguno se queda sin ropa.
+ */
+export function fillGarments(
+  pieces: PieceCounter,
+  houses: Building[],
+  containers: Container[],
+  rng: RngState,
+): void {
+  for (const h of houses) {
+    if (h.kind === 'base') continue;
+    const spec = LOOT_GARMENTS[h.kind];
+    if (!spec) continue;
+    const pool = containers.filter(
+      (c) => c.houseId === h.id && (GARMENT_HOME.includes(c.kind) || ANYTHING.includes(c.kind)),
+    );
+    if (pool.length === 0) continue;
+    const n = nextInt(rng, spec.count[0], spec.count[1]);
+    for (let k = 0; k < n; k++) {
+      const kind = weightedPick(rng, { ...spec.kinds } as Record<GarmentKind, number>);
+      pool[nextInt(rng, 0, pool.length - 1)]!.items.pieces.push(newGarment(pieces, kind));
+    }
+  }
 }

@@ -1,6 +1,7 @@
 // H4f §4: el botín depende del tipo de edificio, y cada cosa va a su mueble.
 import { expect, test } from 'vitest';
-import { BUILDINGS, LOOT, THREAD_PER_SPOOL, type LootItem } from './balance';
+import { BUILDINGS, LOOT, LOOT_GARMENTS, THREAD_PER_SPOOL, type LootItem } from './balance';
+import { checkInvariants } from './invariants';
 import { emptyInventory } from './items';
 import { fillBuilding } from './loot';
 import { createRng } from './rng';
@@ -87,6 +88,8 @@ test('cada cosa va a su mueble (comida a la nevera, vendas al botiquín, tela al
     crowbar: ['crate'],
     wood: ['crate'],
     painkillers: ['medicine'],
+    denim: ['wardrobe'], // H5b
+    leather: ['wardrobe'],
   };
   for (const kind of Object.keys(LOOT) as LootKind[]) {
     const cs = furniture(KINDS);
@@ -191,4 +194,44 @@ test('pocos muebles vacíos: las estanterías y los mostradores tienen un poco d
   }
   expect(empty / all).toBeLessThan(0.1);
   expect(shopEmpty / shopAll).toBeLessThan(0.15);
+});
+
+// H5b §2–§3: ropa en el botín, cada prenda en su mueble; retales y tiras en la tienda de ropa.
+test('ropa en el botín: mucha en la tienda de ropa, chalecos y cascos en la comisaría, de trabajo en ferretería, granja y nave', () => {
+  const byKind: Partial<Record<LootKind, string[]>> = {};
+  for (const seed of [1, 2, 3, 4, 5, 6]) {
+    const w = createWorld(seed);
+    expect(checkInvariants(w)).toEqual([]);
+    for (const c of w.containers)
+      for (const g of c.items.pieces) {
+        const h = w.houses.find((x) => x.id === c.houseId)!;
+        (byKind[h.kind as LootKind] ??= []).push(g.kind);
+        expect(['wardrobe', 'locker', 'crate', 'shelf', 'counter']).toContain(c.kind);
+        expect(g).toMatchObject({ holes: [], bloody: false, dirtHours: 0, from: null });
+      }
+    for (const h of w.houses.filter((x) => x.kind === 'clothes')) {
+      const n = w.containers
+        .filter((c) => c.houseId === h.id)
+        .reduce((k, c) => k + c.items.pieces.length, 0);
+      expect(n).toBeGreaterThanOrEqual(LOOT_GARMENTS.clothes!.count[0]);
+    }
+  }
+  expect(byKind.police).toEqual(expect.arrayContaining(['vest', 'helmet']));
+  for (const k of ['hardware', 'farm', 'warehouse'] as const)
+    for (const g of byKind[k] ?? []) expect(['workPants', 'chaps', 'coat', 'beanie']).toContain(g);
+  expect(byKind.house!.length).toBeGreaterThan(0);
+  expect(byKind.supermarket ?? []).toEqual([]);
+});
+
+test('retales de vaquero y tiras de cuero en la tienda de ropa, en los armarios', () => {
+  let denim = 0;
+  let leather = 0;
+  for (let seed = 1; seed <= 50; seed++) {
+    const cs = furniture(['wardrobe', 'wardrobe', 'counter']);
+    fillBuilding('clothes', cs, createRng(seed));
+    denim += cs.reduce((n, c) => n + c.items.denim, 0);
+    leather += cs.reduce((n, c) => n + c.items.leather, 0);
+  }
+  expect(denim).toBeGreaterThan(0);
+  expect(leather).toBeGreaterThan(0);
 });

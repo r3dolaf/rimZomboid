@@ -292,3 +292,20 @@ test('días de comida: latas entre lo que comen todos al día', () => {
   w.survivors[0]!.carrying.food = 3;
   expect(foodDays(w)).toBeCloseTo(10 / 3.5, 9);
 });
+
+test('H5b: las prendas de una casa saqueada acaban en el almacén', () => {
+  const w = withSkills(createWorld(3));
+  w.survivors.forEach(happy);
+  const house = byDistance(w).find((h) =>
+    w.containers.some((c) => c.houseId === h.id && c.items.pieces.length > 0),
+  )!;
+  const ids = w.containers
+    .filter((c) => c.houseId === house.id)
+    .flatMap((c) => c.items.pieces.map((p) => p.id));
+  expect(ids.length).toBeGreaterThan(0);
+  issue(w, { type: 'designateHouse', houseId: house.id, on: true });
+  for (let i = 0; i < 2 * TICKS_PER_DAY; i++) step(w);
+  const stored = w.storage.items.pieces.map((p) => p.id);
+  for (const id of ids) expect(stored).toContain(id);
+  expect(checkInvariants(w)).toEqual([]);
+});

@@ -27,6 +27,8 @@ export function mountHud(
     toggleCraft?: () => void;
     /** H5: el panel de Almacén. */
     toggleStorage?: () => void;
+    /** El panel Atuendos (H5b). */
+    toggleOutfits?: () => void;
     /** El menú de Avisos (H4e). */
     toggleNotices?: () => void;
   },
@@ -115,6 +117,10 @@ export function mountHud(
     opts.toggleStorage?.(),
   );
   storage.hidden = !opts.toggleStorage;
+  const outfits = button('hud-outfits', es.outfitsUi.button, es.outfitsUi.hint, () =>
+    opts.toggleOutfits?.(),
+  );
+  outfits.hidden = !opts.toggleOutfits;
   const notices = button('hud-notices', es.noticesButton, es.noticesButtonHint, () =>
     opts.toggleNotices?.(),
   );
@@ -157,6 +163,7 @@ export function mountHud(
     ...tools.map((t) => t.b),
     work,
     craft,
+    outfits,
     notices,
     zombies,
     siege,

@@ -51,7 +51,7 @@ test('oculto hasta que se abre; lo que hay en el almacén y "Hace falta una mesa
   panel.update();
   expect(q('craft-panel').hidden).toBe(false);
   expect(q('craft-stock').textContent).toBe(
-    'En el almacén: 6 telas · 10 usos de hilo · 1 juego de cortinas · 0 agujas',
+    'En el almacén: 6 telas · 0 retales de vaquero · 0 tiras de cuero · 10 usos de hilo · 1 juego de cortinas · 0 agujas',
   );
   expect(q('craft-no-table').hidden).toBe(false);
   expect(q('craft-no-table').textContent).toBe('Hace falta una mesa');

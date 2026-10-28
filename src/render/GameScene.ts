@@ -14,7 +14,14 @@ import {
   toggleTree,
   wallLine,
 } from '../game/tools';
-import { BUILD, CAMPFIRE_RANGE, RESISTANCE, ZOMBIE_HEALTH } from '../sim/balance';
+import {
+  BUILD,
+  CAMPFIRE_RANGE,
+  CISTERN_LITERS,
+  RESISTANCE,
+  TUB_LITERS,
+  ZOMBIE_HEALTH,
+} from '../sim/balance';
 import { canPlace, markedTrees } from '../sim/build';
 import { darkness } from '../sim/clock';
 import { CATALOG } from '../sim/events/catalog';
@@ -30,7 +37,8 @@ import {
   type World,
   type Zombie,
 } from '../sim/types';
-import { buildingTitle, zombieLabel } from '../ui/describe';
+import { buildingTitle, furnitureLabel, zombieLabel } from '../ui/describe';
+import { mainsOn } from '../sim/water';
 import { visibleTiles } from '../sim/vision';
 import type { Selection } from '../ui/selection';
 import type { Tool, ToolMode } from '../ui/tool';
@@ -74,6 +82,10 @@ import {
   SURVIVOR_COLOR,
   SURVIVOR_OUTLINE,
   TABLE_COLOR,
+  TUB_COLOR,
+  WATER_COLOR,
+  SINK_COLOR,
+  CISTERN_COLOR,
   TABLE_EDGE,
   TILE_COLORS,
   ZOMBIE_COLOR,
@@ -163,6 +175,8 @@ export class GameScene extends Phaser.Scene {
   /** Dónde se pulsó el botón derecho (en pantalla): si se suelta cerca, es una orden (H4e). */
   private rightFrom: Point | null = null;
   private hover: Point | null = null;
+  /** El agua del barreño o la cisterna bajo el ratón (H5b). */
+  private waterLabel: Phaser.GameObjects.Text | null = null;
   private fog!: Phaser.Textures.CanvasTexture;
   /** Lo que ven ahora los colonos (se rehace con la niebla): solo ahí se dibujan los zombis. */
   private visible: Uint8Array = new Uint8Array(0);
@@ -235,6 +249,7 @@ export class GameScene extends Phaser.Scene {
     this.drawActors();
     this.drawBubbles();
     this.drawZombieNames();
+    this.drawWaterLabel();
     if (++this.frame % FOG_EVERY_FRAMES === 0) {
       this.drawFog();
       for (const l of this.labels) l.text.setVisible(this.world.seen[l.door] === 1);
@@ -412,6 +427,31 @@ export class GameScene extends Phaser.Scene {
         t.destroy();
         this.zombieNames.delete(id);
       }
+  }
+
+  /** Al pasar el ratón por el barreño, una cisterna o un fregadero vistos: su agua (H5b). */
+  private drawWaterLabel(): void {
+    const w = this.world;
+    const h = this.hover;
+    const f =
+      h && w.seen[h.y * w.grid.width + h.x] === 1
+        ? w.furniture.find((x) => x.pos.x === h.x && x.pos.y === h.y)
+        : undefined;
+    const text = f ? furnitureLabel(w, f) : null;
+    if (text === null) {
+      this.waterLabel?.setVisible(false);
+      return;
+    }
+    if (!this.waterLabel) {
+      this.waterLabel = this.add
+        .text(0, 0, text, { fontSize: '6px', color: '#d8ecff' })
+        .setOrigin(0.5, 1)
+        .setResolution(4);
+      this.bubbleLayer.add(this.waterLabel);
+    }
+    if (this.waterLabel.text !== text) this.waterLabel.setText(text);
+    this.waterLabel.setPosition((f!.pos.x + 0.5) * TILE_PX, f!.pos.y * TILE_PX - 1);
+    this.waterLabel.setVisible(true);
   }
 
   /** Iconos sobre la cabeza (charla, pelea…): se reutilizan los textos para no crearlos cada vez. */
@@ -639,6 +679,19 @@ export class GameScene extends Phaser.Scene {
         g.fillRect(x + 1, y + 3, TILE_PX - 2, TILE_PX - 6);
         g.fillStyle(TABLE_COLOR);
         g.fillRect(x + 2, y + 4, TILE_PX - 4, TILE_PX - 8);
+      } else if (f.kind === 'tub' || f.kind === 'cistern') {
+        // H5b: el barreño (de madera) y la cisterna, con su agua de abajo arriba.
+        const max = f.kind === 'tub' ? TUB_LITERS : CISTERN_LITERS;
+        g.fillStyle(f.kind === 'tub' ? TUB_COLOR : CISTERN_COLOR);
+        g.fillRect(x + 2, y + 2, TILE_PX - 4, TILE_PX - 4);
+        const h = Math.round((TILE_PX - 8) * Math.min(1, (f.water ?? 0) / max));
+        g.fillStyle(WATER_COLOR);
+        g.fillRect(x + 4, y + TILE_PX - 4 - h, TILE_PX - 8, h);
+      } else if (f.kind === 'sink') {
+        g.fillStyle(SINK_COLOR);
+        g.fillRect(x + 2, y + 4, TILE_PX - 4, TILE_PX - 8);
+        g.fillStyle(mainsOn(w) ? WATER_COLOR : TUB_COLOR);
+        g.fillRect(x + 5, y + 6, TILE_PX - 10, TILE_PX - 12);
       } else if (f.kind === 'campfire') {
         const [cx, cy] = [x + TILE_PX / 2, y + TILE_PX / 2];
         g.fillStyle(CAMPFIRE_STONE);
@@ -836,6 +889,9 @@ export class GameScene extends Phaser.Scene {
       case 'woodDoor':
         m.fillRect(x, y, TILE_PX, TILE_PX);
         m.strokeRect(x + 4.5, y + 3.5, TILE_PX - 9, TILE_PX - 4);
+        break;
+      case 'tub': // H5b
+        m.fillRect(x + 2, y + 2, TILE_PX - 4, TILE_PX - 4);
         break;
       case 'board':
         m.fillRect(x, y + 3, TILE_PX, 4);

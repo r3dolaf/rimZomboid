@@ -134,6 +134,7 @@ test('panel de Trabajos como matriz: columnas por habilidad, casilla y nivel; el
     'Talar',
     'Saquear',
     'Pelear',
+    'Atuendo', // H5b
   ]);
   const level = (s: Survivor, k: string) => q(root, `work-${s.id}-${k}-level`);
   expect(level(a, 'build').textContent).toBe('7');

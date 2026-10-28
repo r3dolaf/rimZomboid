@@ -27,6 +27,7 @@ import { mountNotices } from './ui/notices';
 import { createFlag } from './ui/flag';
 import { createSelection } from './ui/selection';
 import { mountSheet } from './ui/sheet';
+import { mountOutfitsPanel } from './ui/outfitsPanel';
 import { mountStoragePanel } from './ui/storagePanel';
 import { mountStartScreen } from './ui/startScreen';
 import { createTool } from './ui/tool';
@@ -65,8 +66,9 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
   const craftOpen = createFlag();
   const noticesOpen = createFlag(); // el menú de Avisos (H4e)
   const storageOpen = createFlag(); // el panel de Almacén (H5)
+  const outfitsOpen = createFlag(); // el panel Atuendos (H5b)
   // Los paneles salen en el mismo sitio: abrir uno cierra los otros.
-  const panels = [workOpen, craftOpen, noticesOpen, storageOpen];
+  const panels = [workOpen, craftOpen, noticesOpen, storageOpen, outfitsOpen];
   for (const f of panels) f.onChange((on) => on && panels.forEach((o) => o !== f && o.set(false)));
   const prefs = createPrefsStore();
   const toggles = { toggleWork: workOpen.toggle, toggleCraft: craftOpen.toggle };
@@ -83,6 +85,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
     ...toggles,
     toggleNotices: noticesOpen.toggle,
     toggleStorage: storageOpen.toggle,
+    toggleOutfits: outfitsOpen.toggle,
   });
   const cards = mountCards(ui, { world, selection });
   const sheet = mountSheet(ui, { world, selection });
@@ -95,6 +98,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
   const buildMenu = mountBuildMenu(ui, { tool });
   const noticeMenu = mountNoticeMenu(ui, { prefs, open: noticesOpen });
   const storagePanel = mountStoragePanel(ui, { world, open: storageOpen });
+  const outfitsPanel = mountOutfitsPanel(ui, { world, open: outfitsOpen });
   // Al caer la colonia (H5 §9): otra partida con el mismo narrador y zombis, o a la portada.
   const endScreen = mountEndScreen(ui, {
     world,
@@ -132,6 +136,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
     () => craftOpen.value && (craftOpen.set(false), true),
     () => noticesOpen.value && (noticesOpen.set(false), true),
     () => storageOpen.value && (storageOpen.set(false), true),
+    () => outfitsOpen.value && (outfitsOpen.set(false), true),
     () => houseSelection.id !== null && (houseSelection.set(null), true),
     () => bedSelection.id !== null && (bedSelection.set(null), true),
     () => selection.ids.length > 0 && (selection.set(null), true),
@@ -178,6 +183,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
       notices.update();
       noticeMenu.update();
       storagePanel.update();
+      outfitsPanel.update();
       workPanel.update();
       craftPanel.update();
       buildMenu.update();

@@ -52,6 +52,11 @@ export const HOUSE_SELECTED = 0xffffff;
 export const PLANK_COLOR = 0x8a6236;
 export const PLANK_SEAM = 0x4a321c;
 export const TABLE_COLOR = 0x8b5a2b;
+// Agua (H5b): el barreño de madera, los fregaderos y las cisternas, y el agua.
+export const TUB_COLOR = 0x7a5230;
+export const WATER_COLOR = 0x4a90c8;
+export const SINK_COLOR = 0xc8ccd0;
+export const CISTERN_COLOR = 0x5a6e7a;
 export const TABLE_EDGE = 0x4a2f16;
 export const CAMPFIRE_STONE = 0x6a6a6a;
 export const CAMPFIRE_FLAME = 0xff8c1a;

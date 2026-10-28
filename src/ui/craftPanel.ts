@@ -1,14 +1,24 @@
 import { es } from '../i18n/es';
+import { RECIPES } from '../sim/balance';
 import type { ItemKind } from '../sim/items';
 import { effectiveBills, issue } from '../sim/orders';
 import type { Bill, RecipeId, World } from '../sim/types';
 import type { Flag } from './flag';
 import './panels.css';
 
-const RECIPE_IDS: readonly RecipeId[] = ['bandages', 'curtains', 'unpick'];
+const RECIPE_IDS: readonly RecipeId[] = [
+  'bandages',
+  'curtains',
+  'unpick',
+  // H5b: sobre prendas
+  'mend',
+  'pad',
+  'unpickGarment',
+  'wash',
+];
 
-/** Lo que se enseña del almacén (spec H4d §8). */
-const STOCK: readonly ItemKind[] = ['cloth', 'thread', 'curtains', 'needle'];
+/** Lo que se enseña del almacén (spec H4d §8; H5b, los retales y las tiras). */
+const STOCK: readonly ItemKind[] = ['cloth', 'denim', 'leather', 'thread', 'curtains', 'needle'];
 
 const count = (k: ItemKind, n: number) => `${n} ${es.items[k][n === 1 ? 0 : 1]}`;
 
@@ -43,6 +53,10 @@ export function mountCraftPanel(
   noTable.className = 'craft-warning';
   noTable.dataset.testid = 'craft-no-table';
   noTable.textContent = es.craftNoTable;
+  const noTub = document.createElement('p');
+  noTub.className = 'craft-warning';
+  noTub.dataset.testid = 'craft-no-tub';
+  noTub.textContent = es.craftNoTub;
   const empty = document.createElement('p');
   empty.className = 'craft-empty';
   empty.dataset.testid = 'craft-empty';
@@ -65,7 +79,7 @@ export function mountCraftPanel(
     });
     add.append(b);
   }
-  panel.append(head, stock, noTable, empty, list, add);
+  panel.append(head, stock, noTable, noTub, empty, list, add);
   root.append(panel);
 
   const button = (testid: string, text: string, hint: string, onClick: () => void) => {
@@ -93,7 +107,9 @@ export function mountCraftPanel(
     name.textContent = es.recipes[bill.recipe].name;
     const mode = document.createElement('select');
     mode.dataset.testid = `bill-${id}-mode`;
-    for (const k of ['until', 'count'] as const) {
+    // Sobre prendas (H5b): "siempre que haya" o "veces"; lo demás, "hasta tener" o "veces".
+    const piece = RECIPES[bill.recipe].piece !== undefined;
+    for (const k of piece ? (['always', 'count'] as const) : (['until', 'count'] as const)) {
       const o = document.createElement('option');
       o.value = k;
       o.textContent = es.billModes[k];
@@ -107,13 +123,16 @@ export function mountCraftPanel(
     target.className = 'target';
     target.dataset.testid = `bill-${id}-target`;
     target.textContent = String(bill.target);
+    target.hidden = bill.mode === 'always';
     const less = button(`bill-${id}-less`, '−', es.billLess, () =>
       issue(world, { type: 'setBill', billId: id, target: bill.target - 1 }),
     );
     less.disabled = bill.target <= 1;
+    less.hidden = bill.mode === 'always';
     const more = button(`bill-${id}-more`, '+', es.billMore, () =>
       issue(world, { type: 'setBill', billId: id, target: bill.target + 1 }),
     );
+    more.hidden = bill.mode === 'always';
     const up = button(`bill-${id}-up`, '↑', es.billUp, () =>
       issue(world, { type: 'moveBill', billId: id, dir: -1 }),
     );
@@ -142,9 +161,16 @@ export function mountCraftPanel(
       if (!opts.open.value) return;
       const stockText = es.craftStock(STOCK.map((k) => count(k, world.storage.items[k])));
       if (stock.textContent !== stockText) stock.textContent = stockText;
-      const hasTable = world.furniture.some((f) => f.kind === 'table');
-      if (noTable.hidden !== hasTable) noTable.hidden = hasTable;
       const bills = effectiveBills(world);
+      // Falta la mesa (o el barreño, para lavar) si hay algún pedido que la necesite… o ninguno.
+      const needs = (station: 'table' | 'tub') =>
+        bills.length === 0
+          ? station === 'table'
+          : bills.some((b) => (RECIPES[b.recipe].station ?? 'table') === station);
+      const hasTable = !needs('table') || world.furniture.some((f) => f.kind === 'table');
+      if (noTable.hidden !== hasTable) noTable.hidden = hasTable;
+      const hasTub = !needs('tub') || world.furniture.some((f) => f.kind === 'tub');
+      if (noTub.hidden !== hasTub) noTub.hidden = hasTub;
       if (empty.hidden !== bills.length > 0) empty.hidden = bills.length > 0;
       const key = JSON.stringify(bills);
       if (key === shown) return;

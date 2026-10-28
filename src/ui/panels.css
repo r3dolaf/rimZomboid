@@ -764,3 +764,27 @@
 .storage-panel .count {
   font-variant-numeric: tabular-nums;
 }
+
+/* Atuendos (H5b): las casillas de cada zona en columnas. */
+.outfits-panel .outfit-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11em, 1fr));
+  gap: 0.15em 0.6em;
+  margin-top: 0.4em;
+}
+.outfits-panel .outfit-group h3 {
+  grid-column: 1 / -1;
+  margin: 0.3em 0 0;
+}
+.outfits-panel label {
+  display: block;
+  margin: 0.2em 0;
+}
+.outfits-panel .tabs button.selected,
+.sheet .clothes .zone strong {
+  font-weight: bold;
+}
+.sheet .clothes .zone ul {
+  margin: 0.1em 0 0.4em 1em;
+  padding: 0;
+}

@@ -33,6 +33,7 @@ test('oculto hasta que se abre; una fila por colono y una columna por trabajo, e
     'Talar',
     'Saquear',
     'Pelear', // H4c: la columna de la postura es la de Pelear
+    'Atuendo', // H5b
   ]);
   // Cada celda, la prioridad (H4d): "—" sin permiso o el número.
   for (const s of world.survivors)

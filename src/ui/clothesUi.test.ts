@@ -6,13 +6,21 @@ import { emptyInventory } from '../sim/items';
 import { logEvent, type LogEntry } from '../sim/log';
 import { ordersSystem } from '../sim/orders';
 import { emptyWorld } from '../sim/testing/fixtures';
-import { formatItems, garmentText, logText, noticeFor } from './describe';
+import { effectiveBills as effectiveBillsOf } from '../sim/orders';
+import { mountBuildMenu } from './buildMenu';
+import { mountCraftPanel } from './craftPanel';
+import { formatItems, furnitureLabel, garmentText, logText, noticeFor } from './describe';
+import { createTimeController } from '../game/timeController';
 import { createFlag } from './flag';
+import { mountHud } from './hud';
 import { LOG_CATEGORY } from './logPanel';
 import { NOTICE_GROUPS, pauses } from './noticePrefs';
 import { createSelection } from './selection';
 import { mountSheet } from './sheet';
+import { mountOutfitsPanel } from './outfitsPanel';
 import { mountStoragePanel } from './storagePanel';
+import { createTool } from './tool';
+import { mountWorkPanel } from './workPanel';
 
 const e = (x: Parameters<typeof logEvent>[1]) => ({ tick: 0, ...x }) as LogEntry;
 
@@ -122,4 +130,131 @@ test('aviso "Se ha cortado el agua" (amarillo, sin pausa, en el menú de Avisos)
   expect(
     logText(e({ kind: 'crafted', survivorId: s.id, recipe: 'mend', garment: 'jeans' }), w),
   ).toBe(`${s.name} ha remendado los vaqueros`);
+});
+
+// Tarea 15: atuendos, trabajos, fabricar, construir y mapa.
+test('panel Atuendos: los de serie, casillas por prenda agrupadas por zona, ropa de muertos; crear, renombrar y borrar', () => {
+  const root = document.createElement('div');
+  const w = emptyWorld(5, 5);
+  const panel = mountOutfitsPanel(root, { world: w, open: createFlag(true) });
+  panel.update();
+  const el = root.querySelector('[data-testid="outfits-panel"]') as HTMLElement;
+  expect(el.hidden).toBe(false);
+  const tabs = () =>
+    [...root.querySelectorAll('[data-testid^="outfit-tab-"]')].map((b) => b.textContent);
+  expect(tabs()).toEqual(['Cualquiera', 'Saqueo', 'Base']);
+  expect([...el.querySelectorAll('h3')].map((h) => h.textContent)).toEqual([
+    'Cabeza',
+    'Torso y brazos',
+    'Piernas',
+  ]);
+  const box = (k: string) =>
+    root.querySelector(`[data-testid="outfit-garment-${k}"]`) as HTMLInputElement;
+  expect(box('helmet').checked).toBe(true);
+  expect((root.querySelector('[data-testid="outfit-dead"]') as HTMLInputElement).checked).toBe(
+    true,
+  );
+  // Base: sin casco.
+  (root.querySelector('[data-testid="outfit-tab-3"]') as HTMLButtonElement).click();
+  panel.update();
+  expect(box('helmet').checked).toBe(false);
+  box('helmet').checked = true;
+  box('helmet').dispatchEvent(new Event('change'));
+  expect(w.orders).toContainEqual({
+    type: 'setOutfitGarment',
+    outfitId: 3,
+    garment: 'helmet',
+    on: true,
+  });
+  const name = root.querySelector('[data-testid="outfit-name"]') as HTMLInputElement;
+  name.value = 'Casa';
+  name.dispatchEvent(new Event('change'));
+  expect(w.orders).toContainEqual({ type: 'renameOutfit', outfitId: 3, name: 'Casa' });
+  (root.querySelector('[data-testid="outfit-add"]') as HTMLButtonElement).click();
+  panel.update(); // en pausa: ya se ve
+  expect(tabs()).toEqual(['Cualquiera', 'Saqueo', 'Casa', 'Atuendo 4']);
+  ordersSystem(w);
+  (root.querySelector('[data-testid="outfit-delete"]') as HTMLButtonElement).click();
+  ordersSystem(w);
+  panel.update();
+  expect(tabs()).toEqual(['Cualquiera', 'Saqueo', 'Casa']);
+});
+
+test('Trabajos: columna Atuendo para cambiar el de cada colono', () => {
+  const root = document.createElement('div');
+  const w = emptyWorld(5, 5);
+  const panel = mountWorkPanel(root, { world: w, open: createFlag(true) });
+  panel.update();
+  const s = w.survivors[0]!;
+  expect(root.querySelector('th:last-child')!.textContent).toBe('Atuendo');
+  const select = root.querySelector(`[data-testid="work-${s.id}-outfit"]`) as HTMLSelectElement;
+  expect(select.value).toBe('1');
+  select.value = '3';
+  select.dispatchEvent(new Event('change'));
+  expect(w.orders).toContainEqual({ type: 'setOutfit', survivorId: s.id, outfitId: 3 });
+  panel.update();
+  expect(select.value).toBe('3');
+});
+
+test('Fabricar: Remendar, Reforzar, Descoser ropa y Lavar ropa, con "siempre que haya" (sin N); aviso si no hay barreño', () => {
+  const root = document.createElement('div');
+  const w = emptyWorld(5, 5);
+  const panel = mountCraftPanel(root, { world: w, open: createFlag(true) });
+  panel.update();
+  for (const r of ['mend', 'pad', 'unpickGarment', 'wash'])
+    expect(root.querySelector(`[data-testid="craft-add-${r}"]`)).not.toBeNull();
+  expect(root.querySelector('[data-testid="craft-stock"]')!.textContent).toContain('retales');
+  (root.querySelector('[data-testid="craft-add-wash"]') as HTMLButtonElement).click();
+  panel.update();
+  const bill = effectiveBillsOf(w)[0]!;
+  const mode = root.querySelector(`[data-testid="bill-${bill.id}-mode"]`) as HTMLSelectElement;
+  expect([...mode.options].map((o) => o.textContent)).toEqual(['siempre que haya', 'veces']);
+  expect(mode.value).toBe('always');
+  expect((root.querySelector(`[data-testid="bill-${bill.id}-target"]`) as HTMLElement).hidden).toBe(
+    true,
+  );
+  const noTub = root.querySelector('[data-testid="craft-no-tub"]') as HTMLElement;
+  expect(noTub.hidden).toBe(false);
+  expect(noTub.textContent).toBe('Hace falta un barreño');
+  w.furniture.push({ id: 90, kind: 'tub', pos: { x: 1, y: 1 }, water: 0 });
+  panel.update();
+  expect(noTub.hidden).toBe(true);
+});
+
+test('Construir: el barreño (4 tablas); en el mapa, su agua y la de las cisternas al pasar el ratón', () => {
+  const root = document.createElement('div');
+  mountBuildMenu(root, { tool: createTool() });
+  expect(root.querySelector('[data-testid="build-tub"]')!.textContent).toBe('Barreño · 4');
+  const w = emptyWorld(5, 5);
+  expect(furnitureLabel(w, { id: 1, kind: 'tub', pos: { x: 0, y: 0 }, water: 12 })).toBe(
+    'Barreño: 12 / 20 litros',
+  );
+  expect(furnitureLabel(w, { id: 2, kind: 'cistern', pos: { x: 0, y: 0 }, water: 150 })).toBe(
+    'Cisterna: 150 / 200 litros',
+  );
+  expect(furnitureLabel(w, { id: 3, kind: 'sink', pos: { x: 0, y: 0 } })).toBe(
+    'Fregadero (con agua corriente)',
+  );
+  w.waterCutAt = 0;
+  expect(furnitureLabel(w, { id: 3, kind: 'sink', pos: { x: 0, y: 0 } })).toBe(
+    'Fregadero (sin agua)',
+  );
+  expect(furnitureLabel(w, { id: 4, kind: 'table', pos: { x: 0, y: 0 } })).toBeNull();
+});
+
+test('arriba, el botón Atuendos', () => {
+  const root = document.createElement('div');
+  let opened = 0;
+  mountHud(root, {
+    seed: 1,
+    time: createTimeController(),
+    tool: createTool(),
+    narrator: 'balanced',
+    toggleOutfits: () => opened++,
+  });
+  const b = root.querySelector('[data-testid="hud-outfits"]') as HTMLButtonElement;
+  expect(b.hidden).toBe(false);
+  expect(b.textContent).toBe('Atuendos');
+  b.click();
+  expect(opened).toBe(1);
 });

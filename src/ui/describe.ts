@@ -2,16 +2,19 @@
 import { es } from '../i18n/es';
 import {
   BODY_HP,
+  CISTERN_LITERS,
   CLEAN_BANDAGE_HEAL,
   DIRTY_HOURS,
   LONELY_BELOW,
   MOOD_CRISIS,
   MOOD_EDGE,
   TICKS_PER_HOUR,
+  TUB_LITERS,
   WOUNDS,
 } from '../sim/balance';
 import { BODY_PARTS, painOf, partHp } from '../sim/body';
 import { layersOn, zoneBlock } from '../sim/clothes';
+import { mainsOn } from '../sim/water';
 import { gameTime } from '../sim/clock';
 import { ITEM_KINDS, type Inventory, type ItemKind } from '../sim/items';
 import type { LogEntry } from '../sim/log';
@@ -19,6 +22,7 @@ import type { MoodModifier } from '../sim/mood';
 import type {
   BodyPart,
   Building,
+  Furniture,
   Garment,
   MemoryId,
   Survivor,
@@ -75,6 +79,16 @@ function woundText(wd: Wound, tick: number): string {
   if (wd.bleeding) return name;
   const perDay = (wd.size * (clean ? CLEAN_BANDAGE_HEAL : 1)) / WOUNDS[wd.kind].healDays;
   return `${name} (${t.heals(Math.max(1, Math.ceil(wd.damage / perDay - 1e-9)))})`;
+}
+
+/** Lo que dice un mueble con agua al pasar el ratón (H5b), o `null`. */
+export function furnitureLabel(w: World, f: Furniture): string | null {
+  const t = es.furnitureLabels;
+  const l = Math.round(f.water ?? 0);
+  if (f.kind === 'tub') return t.tub(l, TUB_LITERS);
+  if (f.kind === 'cistern') return t.cistern(l, CISTERN_LITERS);
+  if (f.kind === 'sink') return mainsOn(w) ? t.sinkOn : t.sinkOff;
+  return null;
 }
 
 /** La terminación de un adjetivo para esa prenda, por su artículo: rota, roto, rotas, rotos. */

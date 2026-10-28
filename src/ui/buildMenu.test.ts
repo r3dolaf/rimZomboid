@@ -18,6 +18,7 @@ test('el menú Construir solo se ve con la herramienta y elige qué construir', 
     'Cama · 6',
     'Mesa · 4',
     'Hoguera · 3',
+    'Barreño · 4', // H5b
     'Muro · 2',
     'Puerta · 4',
     'Tapiar · 3',

@@ -1,6 +1,7 @@
 import { es } from '../i18n/es';
 import { issue } from '../sim/orders';
 import { SKILLS } from '../sim/skills';
+import { effectiveOutfits } from '../sim/outfits';
 import type { SkillId, Stance, Survivor, WorkType, World } from '../sim/types';
 import type { Flag } from './flag';
 import './panels.css';
@@ -45,7 +46,12 @@ export function mountWorkPanel(
 
   const table = document.createElement('table');
   const headRow = document.createElement('tr');
-  for (const text of ['', ...WORKS.map((k) => es.works[k]), es.skills.fight]) {
+  for (const text of [
+    '',
+    ...WORKS.map((k) => es.works[k]),
+    es.skills.fight,
+    es.outfitsUi.column, // H5b
+  ]) {
     const th = document.createElement('th');
     th.textContent = text;
     headRow.append(th);
@@ -64,9 +70,11 @@ export function mountWorkPanel(
       tr: HTMLTableRowElement;
       cells: HTMLButtonElement[];
       stance: HTMLSelectElement;
+      outfit: HTMLSelectElement;
       levels: Record<SkillId, HTMLSpanElement>;
     }
   >();
+  let outfitsShown = '';
   const levelSpan = (s: Survivor, k: SkillId) => {
     const span = document.createElement('span');
     span.className = 'level';
@@ -118,8 +126,19 @@ export function mountWorkPanel(
     levels.fight = levelSpan(s, 'fight');
     td.append(levels.fight, stance);
     tr.append(td);
+    // Atuendo (H5b §8).
+    const outfitTd = document.createElement('td');
+    const outfit = document.createElement('select');
+    outfit.dataset.testid = `work-${s.id}-outfit`;
+    outfit.title = `${s.name}: ${es.outfitsUi.column}`;
+    outfit.addEventListener('change', () =>
+      issue(opts.world, { type: 'setOutfit', survivorId: s.id, outfitId: Number(outfit.value) }),
+    );
+    outfitTd.append(outfit);
+    tr.append(outfitTd);
     tbody.append(tr);
-    rows.set(s.id, { tr, cells, stance, levels });
+    rows.set(s.id, { tr, cells, stance, outfit, levels });
+    outfitsShown = ''; // que la fila nueva tenga sus opciones
   };
 
   return {
@@ -136,8 +155,23 @@ export function mountWorkPanel(
       // El mejor de cada columna (si empatan, todos) va en negrita.
       const best = {} as Record<SkillId, number>;
       for (const k of SKILLS) best[k] = Math.max(...world.survivors.map((s) => s.skills[k].level));
+      for (const s of world.survivors) if (!rows.has(s.id)) addRow(s);
+      // Los atuendos (con las órdenes pendientes) en cada desplegable.
+      const outfits = effectiveOutfits(world);
+      const outfitsKey = JSON.stringify(outfits.map((o) => [o.id, o.name]));
+      if (outfitsKey !== outfitsShown) {
+        outfitsShown = outfitsKey;
+        for (const r of rows.values())
+          r.outfit.replaceChildren(
+            ...outfits.map((o) => {
+              const opt = document.createElement('option');
+              opt.value = String(o.id);
+              opt.textContent = o.name;
+              return opt;
+            }),
+          );
+      }
       for (const s of world.survivors) {
-        if (!rows.has(s.id)) addRow(s);
         const r = rows.get(s.id)!;
         for (const k of SKILLS) {
           const span = r.levels[k];
@@ -148,9 +182,18 @@ export function mountWorkPanel(
         r.cells.forEach((cell, i) => showPriority(cell, world, s, WORKS[i]!));
         const st = effectiveStance(world, s);
         if (r.stance.value !== st) r.stance.value = st;
+        const o = String(effectiveOutfit(world, s));
+        if (r.outfit.value !== o) r.outfit.value = o;
       }
     },
   };
+}
+
+/** Su atuendo con las órdenes pendientes ya aplicadas (H5b). */
+export function effectiveOutfit(w: World, s: Survivor): number {
+  let id = s.outfitId;
+  for (const o of w.orders) if (o.type === 'setOutfit' && o.survivorId === s.id) id = o.outfitId;
+  return id;
 }
 
 /** El permiso con las órdenes pendientes ya aplicadas (para verlo marcado aunque esté en pausa). */

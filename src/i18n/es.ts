@@ -73,6 +73,28 @@ export const es = {
     materials: 'Materiales',
     clothes: 'Ropa',
   },
+  /** Panel Atuendos (H5b §8). */
+  outfitsUi: {
+    title: 'Atuendos',
+    button: 'Atuendos',
+    hint: 'Qué ropa puede ponerse cada uno',
+    add: '+ Nuevo atuendo',
+    addHint: 'Un atuendo nuevo, con toda la ropa',
+    delete: 'Borrar',
+    deleteHint: 'Borrar este atuendo (sus colonos pasan al primero)',
+    name: 'Nombre',
+    dead: 'Acepta ropa de muertos',
+    groups: { head: 'Cabeza', torso: 'Torso y brazos', legs: 'Piernas' },
+    column: 'Atuendo',
+  },
+  craftNoTub: 'Hace falta un barreño',
+  /** Al pasar el ratón por el barreño, una cisterna o un fregadero (H5b). */
+  furnitureLabels: {
+    tub: (l: number, max: number) => `Barreño: ${l} / ${max} litros`,
+    cistern: (l: number, max: number) => `Cisterna: ${l} / ${max} litros`,
+    sinkOn: 'Fregadero (con agua corriente)',
+    sinkOff: 'Fregadero (sin agua)',
+  },
   /** Las piezas sueltas en una lista de cosas (H5b): "2 latas y 3 prendas". */
   pieceWord: ['prenda', 'prendas'] as [string, string],
   /** Recetas de Fabricar (H4d): nombre, lo que hace quien la trabaja, cómo queda en el registro. */

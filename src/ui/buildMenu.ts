@@ -8,6 +8,7 @@ const KINDS: readonly BuildKind[] = [
   'bed',
   'table',
   'campfire',
+  'tub', // H5b
   'woodWall',
   'woodDoor',
   'board',

@@ -14,6 +14,8 @@ import { emptyWorld } from '../testing/fixtures';
 import { Tile, type Survivor, type Weapon, type World } from '../types';
 import { findWork } from '../work';
 import { newZombie } from './spawn';
+import { zombieAttack } from './brain';
+import { newGarment } from '../clothes';
 
 function world(): World {
   const w = emptyWorld(20, 20);
@@ -188,4 +190,28 @@ test('equipa sin más la mejor arma que lleve encima (spec general §5.3)', () =
   s.carrying = { ...s.carrying, axe: 1 };
   equipFromPack(s);
   expect(s.equipped).toBe('knife'); // fijada: no la cambia
+});
+
+test('H5b: los golpes de zombi que acierta la ropa no hieren', () => {
+  const count = (dress: (w: World, s: Survivor) => void) => {
+    const w = world();
+    const s = w.survivors[0]!;
+    const z = newZombie(w, { x: 1, y: 0 });
+    w.zombies.push(z);
+    let wounds = 0;
+    for (let i = 0; i < 2000; i++) {
+      dress(w, s);
+      s.wounds = [];
+      s.action = { type: 'idle', ticksLeft: 0 };
+      zombieAttack(w, z, s);
+      wounds += s.wounds.length;
+    }
+    return wounds;
+  };
+  const naked = count((_, s) => (s.worn = []));
+  const armored = count((w, s) => {
+    s.worn = [newGarment(w, 'vest'), newGarment(w, 'leatherJacket'), newGarment(w, 'chaps')];
+    s.worn.push(newGarment(w, 'helmet'), newGarment(w, 'workPants'));
+  });
+  expect(armored).toBeLessThan(naked * 0.6);
 });

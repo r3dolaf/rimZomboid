@@ -24,6 +24,7 @@ import {
   ZOMBIE_THINK_TICKS,
   ZOMBIE_VISION,
 } from '../balance';
+import { blockHit } from '../clothes';
 import { addWound } from '../body';
 import { isZombieWalkable } from '../map/grid';
 import { makeNoise, visibleCampfire } from '../noise';
@@ -246,5 +247,7 @@ export function zombieAttack(w: World, z: Zombie, s: Survivor): void {
       : nextFloat(rng) < SCRATCH_CHANCE
         ? 'scratch'
         : 'cut';
+  // La ropa puede pararlo (H5b §3).
+  if (blockHit(w, s, part, kind)) return;
   addWound(w, s, part, kind);
 }

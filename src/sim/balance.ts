@@ -922,3 +922,8 @@ export const LOOT_GARMENTS: Partial<
   farm: { count: [1, 3], kinds: { workPants: 2, chaps: 1, coat: 2, beanie: 1 } },
   warehouse: { count: [1, 3], kinds: { workPants: 2, coat: 1, chaps: 1 } },
 };
+/** Al parar un golpe, probabilidad de que la prenda se agujeree ahí (H5b §3). */
+export const HOLE_CHANCE = { scratch: 0.25, cut: 0.25, bite: 0.5 } as const satisfies Record<
+  WoundKind,
+  number
+>;

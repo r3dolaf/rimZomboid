@@ -4,6 +4,7 @@ import type {
   BodyPart,
   BuildKind,
   DeathCause,
+  GarmentKind,
   MapSide,
   RecipeId,
   SkillId,
@@ -13,6 +14,8 @@ import type {
 
 /** Suceso del registro: solo datos; la interfaz los convierte en texto. */
 export type LogEvent =
+  // Ropa (H5b)
+  | { kind: 'clothesTorn'; survivorId: number; garment: GarmentKind; part: BodyPart }
   | { kind: 'found'; survivorId: number; houseId: number; items: Inventory }
   | { kind: 'emptyContainer'; survivorId: number; houseId: number }
   | { kind: 'houseEmptied'; houseId: number }

@@ -9,6 +9,7 @@ import type {
   BuildingKind,
   BuildKind,
   DeathCause,
+  GarmentKind,
   Decision,
   MemoryId,
   NarratorStyle,
@@ -210,6 +211,25 @@ export const es = {
     leftLeg: { name: 'Pierna izquierda', the: 'la pierna izquierda' },
     rightLeg: { name: 'Pierna derecha', the: 'la pierna derecha' },
   } satisfies Record<BodyPart, { name: string; the: string }>,
+  // Ropa (H5b)
+  garments: {
+    tshirt: { name: 'Camiseta', the: 'la camiseta' },
+    longSleeve: { name: 'Camiseta de manga larga', the: 'la camiseta de manga larga' },
+    shirt: { name: 'Camisa', the: 'la camisa' },
+    hoodie: { name: 'Sudadera', the: 'la sudadera' },
+    sweater: { name: 'Jersey de lana', the: 'el jersey de lana' },
+    denimJacket: { name: 'Chaqueta vaquera', the: 'la chaqueta vaquera' },
+    leatherJacket: { name: 'Chaqueta de cuero', the: 'la chaqueta de cuero' },
+    coat: { name: 'Abrigo', the: 'el abrigo' },
+    vest: { name: 'Chaleco policial', the: 'el chaleco policial' },
+    tracksuit: { name: 'Chándal', the: 'el chándal' },
+    jeans: { name: 'Vaqueros', the: 'los vaqueros', many: true },
+    workPants: { name: 'Pantalón de trabajo', the: 'el pantalón de trabajo' },
+    chaps: { name: 'Perneras de cuero', the: 'las perneras de cuero', many: true },
+    cap: { name: 'Gorra', the: 'la gorra' },
+    beanie: { name: 'Gorro de lana', the: 'el gorro de lana' },
+    helmet: { name: 'Casco de moto', the: 'el casco de moto' },
+  } satisfies Record<GarmentKind, { name: string; the: string; many?: boolean }>,
   woundVerb: {
     scratch: 'ha arañado',
     cut: 'le ha hecho un corte',
@@ -492,6 +512,11 @@ export const es = {
     siegeEnded: 'La horda se dispersa',
     wanderersSighted: 'Una horda errante cruza el mapa',
     rescued: (who: string, other: string) => `${who} ha rescatado a ${other}`,
+    clothesTorn: (who: string, garment: GarmentKind, part: BodyPart) => {
+      const g: { the: string; many?: boolean } = es.garments[garment];
+      const verb = g.many ? 'han roto' : 'ha roto';
+      return `A ${who} se le ${verb} ${g.the} por ${es.bodyParts[part].the}`;
+    },
     wounded: (who: string, part: BodyPart, wound: WoundKind) =>
       `Un zombi ${es.woundVerb[wound]} a ${who} en ${es.bodyParts[part].the}`,
     bandaged: (who: string, other: string) =>

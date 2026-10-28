@@ -3,6 +3,7 @@ import { expect, test } from 'vitest';
 import { CORPSE_ROT_TICKS, GARMENTS, TICKS_PER_DAY } from './balance';
 import {
   allPieces,
+  blockHit,
   clashes,
   destroyed,
   layersOn,
@@ -17,7 +18,7 @@ import { checkInvariants } from './invariants';
 import { weightOf } from './items';
 import { exitFor, newStranger, strangerSystem } from './systems/strangers';
 import { addBase, addSurvivor, emptyWorld, withoutZombies } from './testing/fixtures';
-import type { GarmentKind, World } from './types';
+import type { BodyPart, GarmentKind, WoundKind, World } from './types';
 import { createWorld } from './world';
 import { newZombie } from './zombies/spawn';
 
@@ -209,4 +210,100 @@ test('el cuerpo de un zombi que se pudre se lleva su ropa (se apunta en las cuen
   expect(w.containers.filter((c) => c.kind === 'corpse')).toEqual([]);
   expect(checkInvariants(w)).toEqual([]);
   expect(allPieces(w).some((p) => p.piece.id === jeans.id)).toBe(false);
+});
+
+// H5b §3: golpes, agujeros y sangre.
+function hits(
+  setup: (w: World) => void,
+  part: BodyPart,
+  kind: WoundKind,
+  n = 4000,
+): { blocked: number; torn: number; w: World } {
+  const w = w0();
+  const s = w.survivors[0]!;
+  let blocked = 0;
+  let torn = 0;
+  for (let i = 0; i < n; i++) {
+    s.worn = [];
+    setup(w);
+    if (blockHit(w, s, part, kind)) {
+      blocked++;
+      if (s.worn.some((x) => x.holes.includes(part))) torn++;
+    }
+  }
+  return { blocked: blocked / n, torn: torn / Math.max(1, blocked), w };
+}
+
+test('una prenda para el golpe con su protección; al parar, agujero con 25 % (arañazo, corte) o 50 % (mordisco)', () => {
+  const vest = (w: World) => w.survivors[0]!.worn.push(newGarment(w, 'vest'));
+  const scratch = hits(vest, 'torso', 'scratch');
+  expect(scratch.blocked).toBeCloseTo(0.7, 1);
+  expect(scratch.torn).toBeCloseTo(0.25, 1);
+  const cut = hits(vest, 'torso', 'cut');
+  expect(cut.blocked).toBeCloseTo(0.7, 1);
+  const bite = hits(vest, 'torso', 'bite');
+  expect(bite.blocked).toBeCloseTo(0.5, 1);
+  expect(bite.torn).toBeCloseTo(0.5, 1);
+  // Lo que no cubre no para.
+  expect(hits(vest, 'leftArm', 'scratch').blocked).toBe(0);
+});
+
+test('de fuera a dentro: la de fuera primero; con agujero, la de debajo; al agujerearse pierde el parche', () => {
+  const w = w0();
+  const s = w.survivors[0]!;
+  let outerTorn = 0;
+  let innerTorn = 0;
+  for (let i = 0; i < 2000; i++) {
+    const vest = newGarment(w, 'vest');
+    vest.pads.torso = 'leather'; // 95 %
+    const tee = newGarment(w, 'tshirt');
+    s.worn = [tee, vest];
+    blockHit(w, s, 'torso', 'bite');
+    if (vest.holes.length > 0) outerTorn++;
+    if (tee.holes.length > 0) innerTorn++;
+  }
+  expect(outerTorn).toBeGreaterThan(400);
+  expect(innerTorn).toBe(0); // la camiseta no para mordiscos
+  // Con la chaqueta agujereada en el torso, solo para la sudadera.
+  const holed = hits(
+    (x) => {
+      const jacket = newGarment(x, 'denimJacket');
+      jacket.holes.push('torso');
+      x.survivors[0]!.worn.push(jacket, newGarment(x, 'hoodie'));
+    },
+    'torso',
+    'scratch',
+  );
+  expect(holed.blocked).toBeCloseTo(0.25, 1);
+  // El parche se pierde con el agujero (el refuerzo se queda).
+  const jeans = newGarment(w, 'jeans');
+  jeans.patches.leftLeg = 'leather';
+  jeans.pads.leftLeg = 'cloth';
+  s.worn = [jeans];
+  for (let i = 0; i < 500 && jeans.holes.length === 0; i++) blockHit(w, s, 'leftLeg', 'bite');
+  expect(jeans.holes).toEqual(['leftLeg']);
+  expect(jeans.patches.leftLeg).toBeUndefined();
+  expect(jeans.pads.leftLeg).toBe('cloth');
+  expect(protection(jeans, 'leftLeg', 'scratch')).toBe(0);
+});
+
+test('si no la para nadie: herida, y las prendas de esa zona con sangre; se apunta lo roto', () => {
+  const w = w0();
+  const s = w.survivors[0]!;
+  const tee = s.worn.find((x) => x.kind === 'tshirt')!;
+  const jeans = s.worn.find((x) => x.kind === 'jeans')!;
+  let wounded = false;
+  for (let i = 0; i < 200 && !wounded; i++) wounded = !blockHit(w, s, 'torso', 'bite');
+  expect(wounded).toBe(true);
+  expect(tee.bloody).toBe(true);
+  expect(jeans.bloody).toBe(false);
+  for (let i = 0; i < 500 && jeans.holes.length === 0; i++) blockHit(w, s, 'rightLeg', 'scratch');
+  expect(w.log).toContainEqual(
+    expect.objectContaining({
+      kind: 'clothesTorn',
+      survivorId: s.id,
+      garment: 'jeans',
+      part: 'rightLeg',
+    }),
+  );
 });

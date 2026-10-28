@@ -1,6 +1,7 @@
 // Ropa (spec H5b §2–§5): prendas, capas, protección y lo que vale una prenda para alguien.
 import {
   GARMENTS,
+  HOLE_CHANCE,
   PAD_BONUS,
   PATCH_FACTOR,
   PROTECTION_MAX,
@@ -9,6 +10,7 @@ import {
   type GarmentSpec,
 } from './balance';
 import type { Inventory } from './items';
+import { logEvent } from './log';
 import { nextFloat, pick, type RngState } from './rng';
 import type {
   BodyPart,
@@ -83,6 +85,30 @@ export function layersOn(worn: readonly Garment[], part: BodyPart): Garment[] {
 
 /** Destrozada: con agujeros en todas las zonas que cubre. */
 export const destroyed = (g: Garment): boolean => coversOf(g).every((z) => g.holes.includes(z));
+
+/**
+ * Un golpe de zombi que acierta en `part` (H5b §3): de fuera a dentro, cada prenda sin agujero ahí
+ * puede pararlo con su protección (azar de los zombis). Si lo para, no hay herida (`true`) y la
+ * prenda puede quedar agujereada ahí (y pierde el parche). Si no lo para nadie, las prendas de esa
+ * zona se manchan de sangre (`false`: hay herida).
+ */
+export function blockHit(w: World, s: Survivor, part: BodyPart, kind: WoundKind): boolean {
+  const rng = w.zombieRng;
+  const layers = layersOn(s.worn, part);
+  for (const g of layers) {
+    const p = protection(g, part, kind);
+    if (p <= 0 || nextFloat(rng) >= p) continue;
+    if (nextFloat(rng) < HOLE_CHANCE[kind]) {
+      g.holes.push(part);
+      delete g.patches[part];
+      if (w.survivors.includes(s))
+        logEvent(w, { kind: 'clothesTorn', survivorId: s.id, garment: g.kind, part });
+    }
+    return true;
+  }
+  for (const g of layers) g.bloody = true;
+  return false;
+}
 
 /** La ropa del principio (H5b §2): camiseta, vaqueros o chándal y, la mitad, algo más. */
 export function starterClothes(w: PieceCounter, rng: RngState): Garment[] {

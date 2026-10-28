@@ -501,6 +501,9 @@ export function logText(e: LogEntry, w: World): string {
     case 'wounded':
       text = l.wounded(name(e.survivorId), e.part, e.wound);
       break;
+    case 'clothesTorn':
+      text = l.clothesTorn(name(e.survivorId), e.garment, e.part);
+      break;
     case 'bandaged':
       text = l.bandaged(name(e.survivorId), name(e.otherId));
       break;

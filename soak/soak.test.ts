@@ -123,7 +123,9 @@ test.each([1, 2, 3])(
         if (present.has(s.id))
           expect(moved.has(s.id), `día ${day}: ${s.name} no se ha movido`).toBe(true);
     }
-    if (DAYS >= 10) expect(w.survivors.length, 'han llegado y se han unido').toBeGreaterThan(3);
+    // Los que se han unido en toda la partida (al final pueden haber muerto de hambre: el pueblo
+    // se vacía y sin zombis acaba sin comida para tantos).
+    if (DAYS >= 10) expect(w.stats.joined.length, 'han llegado y se han unido').toBeGreaterThan(0);
   },
   240_000,
 );
@@ -329,10 +331,12 @@ test.each([1, 2, 3])(
 
 /** La suma de los niveles de todas las habilidades de los colonos de ahora. */
 function levels(w: World): number {
-  return w.survivors.reduce(
-    (n, s) => n + Object.values(s.skills).reduce((m, k) => m + k.level, 0),
-    0,
-  );
+  return w.survivors.reduce((n, s) => n + skillSum(s), 0);
+}
+
+/** La suma de los niveles de las habilidades de un colono. */
+function skillSum(s: Survivor): number {
+  return Object.values(s.skills).reduce((m, k) => m + k.level, 0);
 }
 
 const WALL_DAYS = Math.min(DAYS, 10);
@@ -490,7 +494,7 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
     clothSetup(w);
     const r = createRng(17);
     const weapons = allWeapons(w);
-    const levelsAtStart = levels(w);
+    const startLevels = new Map(w.survivors.map((s) => [s.id, skillSum(s)]));
     const wasDressing = new Map<number, boolean>();
     let ms = 0;
     for (let day = 1; day <= DAYS; day++) {
@@ -554,8 +558,14 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
     // H5: ¿cuánto se sobrevive? (Sin nadie, las habilidades ya no cuentan.)
     zombieTotals.survived.push(w.over ? gameTime(w.over.tick).day : DAYS);
     zombieTotals.dead += w.dead.length;
-    if (DAYS >= 10 && w.over === null)
-      expect(levels(w), 'las habilidades han subido').toBeGreaterThan(levelsAtStart);
+    // Los que siguen desde el principio han mejorado (los que llegan no cuentan: si muere alguien
+    // con niveles altos, la suma baja aunque se aprenda).
+    const still = w.survivors.filter((s) => startLevels.has(s.id));
+    if (DAYS >= 10 && still.length > 0)
+      expect(
+        still.reduce((n, s) => n + skillSum(s), 0),
+        'las habilidades han subido',
+      ).toBeGreaterThan(still.reduce((n, s) => n + startLevels.get(s.id)!, 0));
   }, 600_000);
 });
 

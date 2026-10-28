@@ -104,3 +104,9 @@ Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al p
 - El color de los motivos del ánimo en la ficha se deduce del texto (`−`), en vez de usar el signo del valor.
 - Los Dormilones pasan unas 12 h en la cama (se acuestan hacia las 18 h). Revisar al ajustar el equilibrio.
 - Plan H1: sus versiones de Tech Stack no coinciden con `package.json`; las válidas son las de `package.json`.
+
+**Para H6 (pulido), de H5b:**
+
+- Equilibrio (como en H5: 6 semillas, Equilibrado/normal, saqueando todo, con mesa y "vendas hasta 10", marcando los cuerpos, sin defender). Solo con la ropa del principio, la colonia cae los días 5–31 (la mitad, hacia el 18); saqueando y poniéndose ropa, los días 10–31 (hacia el 20); además cosiendo (remendar, reforzar y descoser "siempre que haya"), los días 9–28 (hacia el 17). En H5 era 10–20 (hacia el 13). La mayoría de las muertes siguen siendo por infección. Entre semillas cambia mucho más que entre variantes: con 6 partidas no se ve que coser alargue la vida.
+- Reforzar "siempre que haya" se pasa el día reforzando todo lo del almacén, aunque nadie se lo vaya a poner, y quita tiempo de saquear (en una semilla murieron de hambre). Quizá reforzar solo lo que lleva alguien, o lo que permite algún atuendo.
+- Los cuerpos de los zombis ya no dan tela (sale de descoser su ropa): hay menos vendas al principio.

@@ -196,7 +196,7 @@ export function stillWorthIt(s: Survivor, w: World): boolean {
     return waterStillWorth(s, w);
   if (what === 'build') return buildStillWorth(s, w);
   if (what === 'swapWeapon') return swapWeaponStillWorth(s, w);
-  if (what === 'dress') return s.action.type === 'dress' || dressStillWorth(s, w);
+  if (what === 'dress') return dressStillWorth(s);
   if (what === 'takeCrowbar' || what === 'pry') return pryStillWorth(s, w);
   if (what === 'fetchCraft' || what === 'craft') return craftStillWorth(s, w);
   const id = targetContainerId(s);

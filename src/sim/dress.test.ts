@@ -1,6 +1,6 @@
 // H5b §4: vestirse — ponerse lo claramente mejor que permita su atuendo y quitarse lo que no.
 import { expect, test } from 'vitest';
-import { DRESS_CHECK_TICKS, DRESS_TICKS } from './balance';
+import { DIRTY_HOURS, DRESS_CHECK_TICKS, DRESS_TICKS } from './balance';
 import { newGarment, outfitScore } from './clothes';
 import { checkInvariants } from './invariants';
 import { dressJob } from './jobs/dress';
@@ -125,4 +125,78 @@ test('sin nada que hacer, no mira la ropa en cada tick: como mucho una vez por h
   expect(findWork(s, w)).toBeNull(); // aún no vuelve a mirar
   w.tick = 1000 + DRESS_CHECK_TICKS;
   expect(findWork(s, w)).toMatchObject({ type: 'moveTo', then: { type: 'dress' } });
+});
+
+// Revisión final de H5b: quitarse lo sucio o con sangre si hay otra igual limpia; el hueco vacío.
+test('revisión: con dos prendas sucias y copias limpias en el almacén, se cambia (una a una cuenta)', () => {
+  const w = world();
+  const s = w.survivors[0]!;
+  for (const g of s.worn) g.dirtHours = DIRTY_HOURS;
+  stored(w, 'tshirt');
+  stored(w, 'jeans');
+  expect(dressJob(s, w)).not.toBeNull();
+  run(w, 600);
+  expect(s.worn.every((g) => g.dirtHours < DIRTY_HOURS)).toBe(true);
+  expect(w.storage.items.pieces.every((g) => g.dirtHours >= DIRTY_HOURS)).toBe(true); // las sucias, al almacén
+  expect(checkInvariants(w)).toEqual([]);
+});
+
+test('revisión: una chaqueta sucia o con sangre se cambia por otra igual limpia', () => {
+  for (const mark of ['dirty', 'bloody'] as const) {
+    const w = world();
+    const s = w.survivors[0]!;
+    const old = newGarment(w, 'denimJacket');
+    if (mark === 'dirty') old.dirtHours = DIRTY_HOURS;
+    else old.bloody = true;
+    s.worn.push(old);
+    const clean = stored(w, 'denimJacket');
+    expect(dressJob(s, w)).not.toBeNull();
+    run(w, 600);
+    expect(s.worn).toContain(clean);
+    expect(w.storage.items.pieces).toContain(old);
+    expect(dressJob(s, w)).toBeNull(); // y no vuelve
+  }
+});
+
+test('revisión: en un hueco vacío se pone cualquier cosa que sume (una gorra); la odiada, no', () => {
+  const w = world();
+  const s = w.survivors[0]!;
+  s.hates = 'beanie';
+  stored(w, 'beanie');
+  expect(dressJob(s, w)).toBeNull();
+  const cap = stored(w, 'cap');
+  run(w, 600);
+  expect(s.worn).toContain(cap);
+});
+
+test('revisión: yendo a vestirse no repasa toda la ropa del almacén en cada tick (rendimiento)', () => {
+  const w = emptyWorld(60, 12);
+  w.seen.fill(1);
+  w.grid.tiles.fill(Tile.Floor);
+  w.narrator.nextEventAt = 1e9;
+  w.storage.tiles = [{ x: 1, y: 1 }];
+  w.storage.items.food = 50;
+  const s = w.survivors[0]!;
+  s.pos = { x: 58.5, y: 10.5 };
+  for (const k of Object.keys(s.work) as (keyof typeof s.work)[]) s.work[k] = false;
+  s.needs = { hunger: 100, sleep: 100, mood: 60, social: 100 };
+  s.nextChatAt = 1e9;
+  const kinds: GarmentKind[] = ['shirt', 'hoodie', 'sweater', 'coat', 'cap', 'beanie', 'workPants'];
+  for (let i = 0; i < 800; i++) stored(w, kinds[i % kinds.length]!);
+  expect(findWork(s, w)).toMatchObject({ then: { type: 'dress' } });
+  for (let i = 0; i < 50 && s.action.type !== 'moveTo'; i++) step(w);
+  expect(s.action).toMatchObject({ type: 'moveTo', then: { type: 'dress' } });
+  // Lo que cuesta cada tick mientras va (sin contar el de llegar, que se cambia).
+  let ms = 0;
+  let ticks = 0;
+  for (let i = 0; i < 100 && s.action.type === 'moveTo'; i++) {
+    const t0 = performance.now();
+    step(w);
+    if (s.action.type === 'moveTo') {
+      ms += performance.now() - t0;
+      ticks++;
+    }
+  }
+  expect(ticks).toBeGreaterThan(20);
+  expect(ms / ticks, 'ms por tick yendo').toBeLessThan(0.3);
 });

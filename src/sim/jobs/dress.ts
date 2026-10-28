@@ -1,7 +1,7 @@
 // Vestirse (spec H5b §4): en el almacén, ponerse lo claramente mejor que permita su atuendo y
 // quitarse lo que ya no permita. Es de la capa de trabajo, como cambiar de arma.
 import { DRESS_MARGIN, DRESS_MAX_CHANGES, DRESS_MIN_GAIN, DRESS_TICKS } from '../balance';
-import { clashes, garmentValue, outfitScore } from '../clothes';
+import { clashes, moodPart, outfitScore, protectionPart } from '../clothes';
 import { allows, outfitOf } from '../outfits';
 import { pick } from '../rng';
 import type { Action, Garment, Survivor, World } from '../types';
@@ -18,19 +18,31 @@ function nextChange(s: Survivor, w: World): Change | null {
   const wrong = s.worn.filter((g) => !allows(outfit, g));
   if (wrong.length > 0) return { put: null, off: wrong };
   const now = outfitScore(s, s.worn);
+  const moodNow = moodPart(s, s.worn);
   let best: { change: Change; gain: number } | null = null;
   for (const g of w.storage.items.pieces) {
     if (!allows(outfit, g)) continue;
     const off = s.worn.filter((x) => clashes(x, g));
-    const rest = s.worn.filter((x) => !off.includes(x));
-    const gain = outfitScore(s, [...rest, g]) - now;
-    if (gain <= DRESS_MIN_GAIN) continue;
-    // "Claramente mejor" que lo de su hueco: un 20 % más.
-    const was = off.reduce((v, x) => v + garmentValue(s, x), 0);
-    if (was > 0 && garmentValue(s, g) <= (1 + DRESS_MARGIN) * was) continue;
+    const after = [...s.worn.filter((x) => !off.includes(x)), g];
+    const gain = outfitScore(s, after) - now;
+    // Un hueco vacío se llena con lo que sume algo (spec §4); si hay que quitarse algo, más.
+    if (gain <= (off.length === 0 ? 0 : DRESS_MIN_GAIN)) continue;
+    if (off.length > 0 && !clearlyBetter(s, g, off, moodPart(s, after) - moodNow)) continue;
     if (!best || gain > best.gain) best = { change: { put: g, off }, gain };
   }
   return best?.change ?? null;
+}
+
+/**
+ * "Claramente mejor" que lo que se quita (spec §4): protege un 20 % más (cada una sola, sin las
+ * otras capas), o protege lo mismo o más y le sienta mejor (limpia, sin sangre, sin romper, su
+ * favorita…). Sin lo segundo, nadie se quitaba la ropa sucia: la suciedad pesa poco al lado de la
+ * protección.
+ */
+function clearlyBetter(s: Survivor, g: Garment, off: Garment[], moodGain: number): boolean {
+  const mine = protectionPart(s, [g]);
+  const theirs = off.reduce((n, x) => n + protectionPart(s, [x]), 0);
+  return mine > (1 + DRESS_MARGIN) * theirs + 1e-9 || (mine >= theirs - 1e-9 && moodGain > 0);
 }
 
 /** ¿Tiene que ir al almacén a vestirse? */
@@ -42,8 +54,12 @@ export function dressJob(s: Survivor, w: World): Action | null {
   return { type: 'moveTo', target: pick(w.rng, w.storage.tiles), then: { type: 'dress' } };
 }
 
-export function dressStillWorth(s: Survivor, w: World): boolean {
-  return wantsDress(s, w);
+/**
+ * Mientras va, no vuelve a repasar toda la ropa del almacén en cada tick (con cientos de prendas
+ * costaba varios ms): al llegar ya mira qué ponerse, y si no hay nada, no se cambia.
+ */
+export function dressStillWorth(s: Survivor): boolean {
+  return !s.drafted;
 }
 
 /** En el almacén: se cambia (lo quitado se queda allí) y tarda 5 minutos por prenda. */

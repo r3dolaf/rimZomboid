@@ -160,18 +160,37 @@ export function clothesMood(s: Survivor, worn: readonly Garment[] = s.worn): Moo
     .filter((m) => m.value !== 0);
 }
 
-const sum = (mods: MoodModifier[]) => mods.reduce((n, m) => n + m.value, 0);
+/** Lo que protege lo puesto para alguien (al Práctico le pesa el doble). */
+export const protectionPart = (s: Survivor, worn: readonly Garment[]): number =>
+  protectionScore(worn) * (s.traits.includes('practical') ? 2 : 1);
 
-/** Lo que vale para alguien llevar eso (H5b §4): su protección (Práctico, el doble) y su ánimo. */
-export function outfitScore(s: Survivor, worn: readonly Garment[]): number {
-  const protect = protectionScore(worn) * (s.traits.includes('practical') ? 2 : 1);
-  return protect + sum(clothesMood(s, worn));
+/** Lo que dice de su ánimo cada prenda por sí sola: sucia, con sangre, rota, favorita… */
+export const garmentMood = (s: Survivor, g: Garment): number =>
+  marksOf(s, g).reduce((n, id) => n + CLOTHES_MOOD[id] * weight(s, id), 0);
+
+/**
+ * El ánimo de la ropa al elegirla: ir desnudo o medio desnudo, y lo de cada prenda por separado
+ * (en el ánimo de verdad cuenta una vez; aquí, una por prenda, para que cambiar una prenda sucia
+ * por otra limpia valga aunque lleve otra sucia).
+ */
+export function moodPart(s: Survivor, worn: readonly Garment[]): number {
+  const covers = (z: BodyPart) => worn.some((g) => coversOf(g).includes(z));
+  const torso = covers('torso');
+  const legs = covers('leftLeg') || covers('rightLeg');
+  const bare: ClothesMoodId | null =
+    !torso && !legs ? 'naked' : !torso || !legs ? 'halfNaked' : null;
+  const naked = bare ? CLOTHES_MOOD[bare] * weight(s, bare) : 0;
+  return worn.reduce((n, g) => n + garmentMood(s, g), naked);
 }
 
-/** Lo que vale una prenda sola para alguien (para comparar con lo que lleva en su hueco). */
+/** Lo que vale para alguien llevar eso (H5b §4): su protección y el ánimo de su ropa. */
+export function outfitScore(s: Survivor, worn: readonly Garment[]): number {
+  return protectionPart(s, worn) + moodPart(s, worn);
+}
+
+/** Lo que vale una prenda sola para alguien. */
 export function garmentValue(s: Survivor, g: Garment): number {
-  const protect = protectionScore([g]) * (s.traits.includes('practical') ? 2 : 1);
-  return protect + marksOf(s, g).reduce((n, id) => n + CLOTHES_MOOD[id] * weight(s, id), 0);
+  return protectionPart(s, [g]) + garmentMood(s, g);
 }
 
 /** Cada hora, la ropa puesta se ensucia (H5b §5). */

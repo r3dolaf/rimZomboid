@@ -36,6 +36,8 @@ function world(): World {
   s.skills.craft.level = 10; // no falla (los fallos, en su test)
   s.needs = { hunger: 100, sleep: 100, mood: 60, social: 100 };
   s.nextChatAt = 1e9;
+  // Que no se ponga la ropa que hay que coser (H5b: se vestiría con ella).
+  w.outfits[0]!.allowed = ['tshirt', 'jeans'];
   return w;
 }
 
@@ -97,11 +99,11 @@ test('Remendar: lleva la prenda a la mesa y tapa el agujero de la zona más golp
 test('Reforzar: la zona más golpeada sin agujero ni refuerzo; "Siempre que haya" para cuando no queda', () => {
   const w = world();
   w.storage.items.leather = 5;
-  const jeans = stored(w, newGarment(w, 'jeans'));
-  jeans.pads.leftLeg = 'cloth';
+  const pants = stored(w, newGarment(w, 'workPants'));
+  pants.pads.leftLeg = 'cloth';
   bill(w, 'pad');
   run(w, 600);
-  expect(jeans.pads).toEqual({ leftLeg: 'cloth', rightLeg: 'leather' });
+  expect(pants.pads).toEqual({ leftLeg: 'cloth', rightLeg: 'leather' });
   run(w, 1200);
   expect(w.storage.items.leather).toBe(4); // ya no queda dónde
   expect(w.survivors[0]!.action.type).not.toBe('craft');

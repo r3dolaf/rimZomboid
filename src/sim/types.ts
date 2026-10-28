@@ -255,7 +255,9 @@ export type Activity =
   | { type: 'rest' }
   | { type: 'takePainkiller' }
   | { type: 'fetchPainkiller'; patientId: number }
-  | { type: 'givePainkiller'; patientId: number };
+  | { type: 'givePainkiller'; patientId: number }
+  // Vestirse (H5b §4): en el almacén, ponerse lo mejor y quitarse lo que no toca.
+  | { type: 'dress' };
 
 export type Action =
   /** `wait`: esperando tras no encontrar camino (no se consulta al cerebro) o tras negarse a trabajar. */
@@ -297,7 +299,9 @@ export type Action =
   | { type: 'bandage'; patientId: number; woundId: number; ticksLeft: number }
   | { type: 'mercy'; patientId: number; ticksLeft: number }
   // Descansando por dolor (y, en H5 §7, por fiebre): acostado sin trabajar.
-  | { type: 'rest' };
+  | { type: 'rest' }
+  // Vistiéndose (H5b §4).
+  | { type: 'dress'; ticksLeft: number };
 
 export interface Survivor {
   id: number;

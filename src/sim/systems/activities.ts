@@ -106,6 +106,10 @@ export function activitiesSystem(w: World): void {
       if (a.ticksLeft > 0) continue;
       finishPry(w, s, a.door);
       s.action = { type: 'idle', ticksLeft: 0 };
+    } else if (a.type === 'dress') {
+      // Vistiéndose (H5b §4): ya se ha cambiado; tarda lo suyo.
+      if (--a.ticksLeft > 0) continue;
+      s.action = { type: 'idle', ticksLeft: 0 };
     } else if (a.type === 'crisis') {
       if (--a.ticksLeft > 0) continue;
       addMemory(s, 'vented', w.tick);

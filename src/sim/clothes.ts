@@ -1,6 +1,7 @@
 // Ropa (spec H5b §2–§5): prendas, capas, protección y lo que vale una prenda para alguien.
 import {
   GARMENTS,
+  HIT_WEIGHTS,
   HOLE_CHANCE,
   PAD_BONUS,
   PATCH_FACTOR,
@@ -83,6 +84,33 @@ export function layersOn(worn: readonly Garment[], part: BodyPart): Garment[] {
   return worn
     .filter((g) => coversOf(g).includes(part))
     .sort((a, b) => LAYER_RANK[GARMENTS[b.kind].layer] - LAYER_RANK[GARMENTS[a.kind].layer]);
+}
+
+/** Probabilidad de que lo puesto pare un golpe de ese tipo en esa zona (capa a capa). */
+export function zoneBlock(worn: readonly Garment[], part: BodyPart, kind: WoundKind): number {
+  let through = 1;
+  for (const g of worn) through *= 1 - protection(g, part, kind);
+  return 1 - through;
+}
+
+const ZONES = Object.keys(HIT_WEIGHTS) as BodyPart[];
+
+/** Lo que protege lo puesto: lo que para cada zona (arañazos y mordiscos) por sus golpes. */
+export function protectionScore(worn: readonly Garment[]): number {
+  let total = 0;
+  for (const z of ZONES)
+    total += (HIT_WEIGHTS[z] * (zoneBlock(worn, z, 'scratch') + zoneBlock(worn, z, 'bite'))) / 2;
+  return total;
+}
+
+/** Lo que vale para alguien llevar eso (H5b §4): su protección. */
+export function outfitScore(_s: Survivor, worn: readonly Garment[]): number {
+  return protectionScore(worn);
+}
+
+/** Lo que vale una prenda sola para alguien (para comparar con lo que lleva en su hueco). */
+export function garmentValue(s: Survivor, g: Garment): number {
+  return outfitScore(s, [g]);
 }
 
 /** Destrozada: con agujeros en todas las zonas que cubre. */

@@ -1012,3 +1012,11 @@ export const DEFAULT_OUTFITS: readonly {
 /** Nombre de un atuendo nuevo y lo más largo que puede ser un nombre. */
 export const NEW_OUTFIT_NAME = 'Atuendo';
 export const OUTFIT_NAME_MAX = 24;
+/** Vestirse (H5b §4): ponerse o quitarse una prenda, 5 minutos. */
+export const DRESS_TICKS = TICKS_PER_HOUR / 12;
+/** "Claramente mejor": sube el valor más de un 20 % de lo que aportaba lo que se quita… */
+export const DRESS_MARGIN = 0.2;
+/** …y, como poco, esto (para no ir al almacén por casi nada). */
+export const DRESS_MIN_GAIN = 0.5;
+/** Cambios de ropa en una visita al almacén, como mucho. */
+export const DRESS_MAX_CHANGES = 8;

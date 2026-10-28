@@ -306,7 +306,10 @@ test('H5b: las prendas de una casa saqueada acaban en el almacén', () => {
   expect(ids.length).toBeGreaterThan(0);
   issue(w, { type: 'designateHouse', houseId: house.id, on: true });
   for (let i = 0; i < 2 * TICKS_PER_DAY; i++) step(w);
-  const stored = w.storage.items.pieces.map((p) => p.id);
+  // En el almacén o ya puestas (se visten con lo mejor, H5b §4).
+  const stored = [...w.storage.items.pieces, ...w.survivors.flatMap((s) => s.worn)].map(
+    (p) => p.id,
+  );
   for (const id of ids) expect(stored).toContain(id);
   expect(checkInvariants(w)).toEqual([]);
 });

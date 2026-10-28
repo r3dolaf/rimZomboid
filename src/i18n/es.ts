@@ -710,6 +710,9 @@ export const es = {
     // Analgésicos y descanso (H5)
     goRest: 'Va a descansar',
     rest: 'Descansando',
+    // Vestirse (H5b)
+    goDress: 'Va a cambiarse de ropa',
+    dress: 'Cambiándose de ropa',
     takePainkiller: 'Va a tomarse un analgésico',
     fetchPainkiller: (who: string) => `Va a por un analgésico para ${who}`,
     givePainkiller: (who: string) => `Lleva un analgésico a ${who}`,

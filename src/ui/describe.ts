@@ -145,6 +145,8 @@ export function activityText(s: Survivor, w?: World): string {
       return a.patientId === s.id ? t.bandageSelf : t.bandage(name(a.patientId));
     case 'rest':
       return t.rest;
+    case 'dress':
+      return t.dress; // H5b
     case 'mercy':
       return t.mercy(name(a.patientId));
     case 'moveTo':
@@ -154,6 +156,7 @@ export function activityText(s: Survivor, w?: World): string {
       if (a.then?.type === 'bandage') return t.goBandage(name(a.then.patientId));
       if (a.then?.type === 'takeBandages') return t.goTakeBandages;
       if (a.then?.type === 'rest') return t.goRest;
+      if (a.then?.type === 'dress') return t.goDress;
       if (a.then?.type === 'takePainkiller') return t.takePainkiller;
       if (a.then?.type === 'fetchPainkiller') return t.fetchPainkiller(name(a.then.patientId));
       if (a.then?.type === 'givePainkiller') return t.givePainkiller(name(a.then.patientId));

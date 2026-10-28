@@ -12,6 +12,7 @@ import { deliverJob, haulJob, haulStillWorth } from './jobs/haul';
 import { healJob, healStillWorth } from './jobs/heal';
 import { hasCargo, stockJob } from './jobs/medical';
 import { swapWeaponStillWorth, weaponJob } from './jobs/weapons';
+import { dressJob, dressStillWorth } from './jobs/dress';
 import { isEmpty, ITEM_KINDS, pieceKg, weightOf } from './items';
 import { regionOf } from './path/astar';
 import { pick } from './rng';
@@ -107,6 +108,9 @@ export function findWork(s: Survivor, w: World): Action | null {
   if (stock) return stock;
   const arm = weaponJob(s, w);
   if (arm) return arm;
+  // H5b: vestirse con lo mejor que permita su atuendo.
+  const dress = dressJob(s, w);
+  if (dress) return dress;
   // Con poca comida, saquear va delante de todo, tenga la prioridad que tenga.
   if (loot && foodDays(w) < HUNGRY_LOOT_DAYS) {
     const a = pryJob(s, w) ?? lootJob(s, w);
@@ -143,6 +147,7 @@ const WORK_ACTIONS: ReadonlySet<string> = new Set([
   'deliver',
   'build',
   'swapWeapon',
+  'dress',
   'takeCrowbar',
   'pry',
   'fetchCraft',
@@ -166,7 +171,8 @@ export function stillWorthIt(s: Survivor, w: World): boolean {
   const a = s.action;
   const what = a.type === 'moveTo' ? a.then?.type : a.type;
   // Si le mandan descansar, deja lo que esté haciendo (descargar o cambiar de arma, no).
-  const finishing = what === 'unload' || what === 'storeAxe' || what === 'swapWeapon';
+  const finishing =
+    what === 'unload' || what === 'storeAxe' || what === 'swapWeapon' || what === 'dress';
   if (s.fever?.rest && !finishing && what !== 'dropOff') return false;
   if (
     what === 'rescue' ||
@@ -180,6 +186,7 @@ export function stillWorthIt(s: Survivor, w: World): boolean {
   if (what === 'pickUp' || what === 'fetchWood' || what === 'deliver') return haulStillWorth(s, w);
   if (what === 'build') return buildStillWorth(s, w);
   if (what === 'swapWeapon') return swapWeaponStillWorth(s, w);
+  if (what === 'dress') return s.action.type === 'dress' || dressStillWorth(s, w);
   if (what === 'takeCrowbar' || what === 'pry') return pryStillWorth(s, w);
   if (what === 'fetchCraft' || what === 'craft') return craftStillWorth(s, w);
   const id = targetContainerId(s);

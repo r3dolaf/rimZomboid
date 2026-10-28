@@ -237,12 +237,12 @@ function hits(
 test('una prenda para el golpe con su protección; al parar, agujero con 25 % (arañazo, corte) o 50 % (mordisco)', () => {
   const vest = (w: World) => w.survivors[0]!.worn.push(newGarment(w, 'vest'));
   const scratch = hits(vest, 'torso', 'scratch');
-  expect(scratch.blocked).toBeCloseTo(0.7, 1);
+  expect(scratch.blocked).toBeCloseTo(GARMENTS.vest.scratch, 1);
   expect(scratch.torn).toBeCloseTo(0.25, 1);
   const cut = hits(vest, 'torso', 'cut');
-  expect(cut.blocked).toBeCloseTo(0.7, 1);
+  expect(cut.blocked).toBeCloseTo(GARMENTS.vest.scratch, 1);
   const bite = hits(vest, 'torso', 'bite');
-  expect(bite.blocked).toBeCloseTo(0.5, 1);
+  expect(bite.blocked).toBeCloseTo(GARMENTS.vest.bite, 1);
   expect(bite.torn).toBeCloseTo(0.5, 1);
   // Lo que no cubre no para.
   expect(hits(vest, 'leftArm', 'scratch').blocked).toBe(0);

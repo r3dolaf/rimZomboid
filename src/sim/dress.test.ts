@@ -73,20 +73,22 @@ test('se pone lo claramente mejor del almacén y deja allí lo que choca; tarda 
 test('cambia lo que choca solo si lo nuevo es claramente mejor (un 20 % más)', () => {
   const w = world();
   const s = w.survivors[0]!;
-  stored(w, 'workPants'); // apenas mejor que los vaqueros
+  const hoodie = newGarment(w, 'hoodie');
+  s.worn.push(hoodie);
+  stored(w, 'sweater'); // apenas mejor que la sudadera
   expect(dressJob(s, w)).toBeNull();
   const chaps = stored(w, 'chaps'); // por encima de los vaqueros: no choca
   expect(dressJob(s, w)).not.toBeNull();
   for (let i = 0; i < 600 && !s.worn.includes(chaps); i++) step(w);
-  expect(s.worn.map((x) => x.kind)).toEqual(expect.arrayContaining(['jeans', 'chaps']));
-  expect(w.storage.items.pieces.map((x) => x.kind)).toEqual(['workPants']);
-  // Unos vaqueros rotos por las dos piernas sí se cambian.
-  const jeans = s.worn.find((x) => x.kind === 'jeans')!;
-  jeans.holes.push('leftLeg', 'rightLeg');
+  expect(s.worn.map((x) => x.kind)).toEqual(expect.arrayContaining(['jeans', 'chaps', 'hoodie']));
+  expect(w.storage.items.pieces.map((x) => x.kind)).toEqual(['sweater']);
+  // Una sudadera rota por todas partes sí se cambia.
+  hoodie.holes.push('torso', 'leftArm', 'rightArm');
+  w.tick += DRESS_CHECK_TICKS; // (lo mira como mucho una vez por hora)
   expect(dressJob(s, w)).not.toBeNull();
   run(w, 600);
-  expect(s.worn.map((x) => x.kind)).toContain('workPants');
-  expect(w.storage.items.pieces).toContain(jeans);
+  expect(s.worn.map((x) => x.kind)).toContain('sweater');
+  expect(w.storage.items.pieces).toContain(hoodie);
   expect(checkInvariants(w)).toEqual([]);
 });
 

@@ -1,5 +1,6 @@
 import {
   CLOTHES_SALT,
+  DEFAULT_OUTFITS,
   BANDAGES_CARRIED,
   BUILDINGS,
   CALM_DAYS_MAX,
@@ -19,6 +20,7 @@ import {
 } from './balance';
 import { baseLayout } from './base';
 import { dressStarter } from './clothes';
+import { defaultOutfits } from './outfits';
 import { emptyInventory } from './items';
 import { fillGarments, placeContainers } from './loot';
 import { revealFromSurvivors } from './vision';
@@ -108,6 +110,7 @@ export function createWorld(
     worn: [], // H5b: se viste abajo, con su propio azar
     likes: 'tshirt',
     hates: 'cap',
+    outfitId: 1, // Cualquiera
   }));
   // La ropa del principio y las preferencias (H5b), con su propio azar.
   const clothesRng = createRng((seed ^ CLOTHES_SALT) >>> 0);
@@ -215,6 +218,8 @@ export function createWorld(
     stats: { kills: 0, siegesRepelled: 0, looted: emptyInventory(), joined: [] },
     nextPieceId: pieces.nextPieceId,
     pieceLog: pieces.pieceLog,
+    outfits: defaultOutfits(),
+    nextOutfitId: DEFAULT_OUTFITS.length + 1,
   };
   // Zombis (H4b), con su propio azar: no cambian nada de lo anterior.
   placeStartZombies(world);

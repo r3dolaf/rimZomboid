@@ -207,6 +207,7 @@ export function newStranger(w: World, start: Point): Survivor {
     worn: [],
     likes: 'tshirt', // se sortean abajo con su ropa
     hates: 'cap',
+    outfitId: w.outfits[0]?.id ?? 1,
   };
   dressStarter(w, s, w.rng); // H5b: llegan vestidos
   s.needs.mood = moodTarget(s, w.tick, w.base.rect);
@@ -245,6 +246,7 @@ export function acceptStrangers(w: World): void {
     if (s.action.type !== 'downed') s.action = { type: 'idle', ticksLeft: 0 };
     s.path = [];
     s.work = defaultWork(s.traits);
+    s.outfitId = w.outfits[0]!.id; // H5b: el primer atuendo
     s.nextChatAt = w.tick + nextInt(w.rng, 0, CHAT_EVERY_MAX);
     // Primero una cama construida que esté libre (H4a); si no, uno de los sitios de serie.
     const spare = w.beds.find((b) => b.ownerId === null && b.medical !== true);

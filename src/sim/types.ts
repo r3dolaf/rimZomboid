@@ -359,6 +359,16 @@ export interface Survivor {
   /** Su prenda favorita y la que odia (H5b §5), distintas. */
   likes: GarmentKind;
   hates: GarmentKind;
+  /** Su atuendo (H5b §4). */
+  outfitId: number;
+}
+
+/** Un atuendo (H5b §4): las prendas que se puede poner y si acepta ropa de muertos. */
+export interface Outfit {
+  id: number;
+  name: string;
+  allowed: GarmentKind[];
+  dead: boolean;
 }
 
 /**
@@ -667,6 +677,8 @@ export interface World {
   nextPieceId: number;
   /** Cuentas de las piezas: las que se han hecho y las que han desaparecido. */
   pieceLog: { made: number; gone: number };
+  outfits: Outfit[];
+  nextOutfitId: number;
 }
 
 /** Uno que echaron y que vuelve en `at` por donde se fue (`pos`). */

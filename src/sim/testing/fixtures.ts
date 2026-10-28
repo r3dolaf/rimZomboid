@@ -1,6 +1,8 @@
 // Ayudas para los tests de la simulación.
 import { newGarment, piecesGone } from '../clothes';
+import { DEFAULT_OUTFITS } from '../balance';
 import { emptyInventory } from '../items';
+import { defaultOutfits } from '../outfits';
 import { createGrid, setTile } from '../map/grid';
 import { createRng } from '../rng';
 import { SKILLS } from '../skills';
@@ -100,6 +102,7 @@ export function emptyWorld(width: number, height: number): World {
         worn: [garment(1, 'tshirt'), garment(2, 'jeans')],
         likes: 'helmet',
         hates: 'chaps',
+        outfitId: 1,
       },
     ],
     beds: [{ id: 1, pos: { x: width - 1, y: 0 }, ownerId: 1 }],
@@ -149,6 +152,8 @@ export function emptyWorld(width: number, height: number): World {
     stats: { kills: 0, siegesRepelled: 0, looted: emptyInventory(), joined: [] },
     nextPieceId: 3,
     pieceLog: { made: 2, gone: 0 },
+    outfits: defaultOutfits(),
+    nextOutfitId: DEFAULT_OUTFITS.length + 1,
   };
 }
 

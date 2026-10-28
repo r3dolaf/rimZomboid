@@ -73,6 +73,8 @@ export function checkInvariants(w: World): string[] {
       )
         problems.push(`${who}: ${k}: práctica ${xp} no válida para el nivel ${level}`);
     }
+    if (!w.outfits.some((o) => o.id === s.outfitId))
+      problems.push(`${who}: su atuendo #${s.outfitId} no existe`);
     if (s.bedId !== null && !w.beds.some((b) => b.id === s.bedId && b.ownerId === s.id))
       problems.push(`${who}: su cama ${s.bedId} no existe o no es suya`);
     for (const [id, v] of Object.entries(s.opinions))
@@ -281,6 +283,10 @@ export function checkInvariants(w: World): string[] {
     problems.push(
       `la madera no cuadra: hay ${wood}, gastada ${log.spent}, perdida ${log.wasted}; repartida ${log.start}, talada ${log.chopped}, recuperada ${log.recovered}`,
     );
+  // Atuendos (H5b §4): al menos uno y con ids distintos.
+  if (w.outfits.length === 0) problems.push('no queda ningún atuendo');
+  if (new Set(w.outfits.map((o) => o.id)).size !== w.outfits.length)
+    problems.push('atuendos con el mismo id');
   checkPieces(problems, w);
   return problems;
 }

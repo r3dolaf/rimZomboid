@@ -4,7 +4,17 @@ import { cancelBlueprint, markTree, placeBlueprint } from './build';
 import { BILL_DEFAULT_TARGET, RECIPES } from './balance';
 import { applyDraftOrder } from './draft';
 import { setMedical } from './jobs/medical';
-import type { Bill, BuildKind, Container, RecipeId, Stance, WorkType, World } from './types';
+import { applyOutfitOrder } from './outfits';
+import type {
+  Bill,
+  BuildKind,
+  Container,
+  GarmentKind,
+  RecipeId,
+  Stance,
+  WorkType,
+  World,
+} from './types';
 
 /** Lo que pide el jugador. La interfaz solo cambia el mundo mediante órdenes. */
 export type Order =
@@ -35,7 +45,14 @@ export type Order =
   | { type: 'draftRescue'; survivorId: number; downedId: number }
   // Heridas (H5): dar un analgésico; marcar o desmarcar una cama de hospital.
   | { type: 'givePainkiller'; survivorId: number }
-  | { type: 'setMedical'; bedId: number; on: boolean };
+  | { type: 'setMedical'; bedId: number; on: boolean }
+  // Atuendos (H5b §4)
+  | { type: 'addOutfit' }
+  | { type: 'renameOutfit'; outfitId: number; name: string }
+  | { type: 'deleteOutfit'; outfitId: number }
+  | { type: 'setOutfitGarment'; outfitId: number; garment: GarmentKind; on: boolean }
+  | { type: 'setOutfitDead'; outfitId: number; on: boolean }
+  | { type: 'setOutfit'; survivorId: number; outfitId: number };
 
 /** Encola una orden; se aplica al principio del siguiente tick. */
 export function issue(w: World, order: Order): void {
@@ -175,6 +192,14 @@ export function ordersSystem(w: World): void {
       }
       case 'setMedical':
         setMedical(w, o.bedId, o.on);
+        break;
+      case 'addOutfit':
+      case 'renameOutfit':
+      case 'deleteOutfit':
+      case 'setOutfitGarment':
+      case 'setOutfitDead':
+      case 'setOutfit':
+        applyOutfitOrder(w, o);
         break;
     }
   }

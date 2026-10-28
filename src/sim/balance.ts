@@ -965,3 +965,50 @@ export const ZOMBIE_CLOTHES = {
   hat: { cap: 1, beanie: 1 },
   maxHoles: 2,
 } as const;
+/** Los atuendos de serie (H5b §4); `null`: todas las prendas. */
+export const DEFAULT_OUTFITS: readonly {
+  name: string;
+  allowed: readonly GarmentKind[] | null;
+  dead: boolean;
+}[] = [
+  { name: 'Cualquiera', allowed: null, dead: true },
+  {
+    name: 'Saqueo',
+    allowed: [
+      'tshirt',
+      'longSleeve',
+      'tracksuit',
+      'jeans',
+      'workPants',
+      'denimJacket',
+      'leatherJacket',
+      'vest',
+      'chaps',
+      'helmet',
+      'beanie',
+    ],
+    dead: false,
+  },
+  {
+    name: 'Base',
+    allowed: [
+      'tshirt',
+      'longSleeve',
+      'shirt',
+      'hoodie',
+      'sweater',
+      'denimJacket',
+      'leatherJacket',
+      'coat',
+      'tracksuit',
+      'jeans',
+      'workPants',
+      'cap',
+      'beanie',
+    ],
+    dead: false,
+  },
+];
+/** Nombre de un atuendo nuevo y lo más largo que puede ser un nombre. */
+export const NEW_OUTFIT_NAME = 'Atuendo';
+export const OUTFIT_NAME_MAX = 24;

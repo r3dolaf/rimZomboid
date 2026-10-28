@@ -2,6 +2,9 @@
 // y el barreño.
 import { expect, test } from 'vitest';
 import {
+  BOTTLE_LITERS,
+  BUCKET_LITERS,
+  BUILD,
   CISTERN_LITERS,
   LOOT,
   START_HOUR,
@@ -20,7 +23,11 @@ import { emptyInventory } from './items';
 import { fillBuilding } from './loot';
 import { getTile, isWalkable } from './map/grid';
 import { createRng } from './rng';
-import { Tile, type Container, type ContainerKind } from './types';
+import { issue } from './orders';
+import { step } from './step';
+import { emptyWorld } from './testing/fixtures';
+import { Tile, type Container, type ContainerKind, type World } from './types';
+import { findWork } from './work';
 import { isRaining, mainsOn, waterSystem } from './water';
 import { createWorld } from './world';
 import { indoors } from './zombies/spawn';
@@ -176,4 +183,92 @@ test('cada hora de lluvia: los cubos vacíos al aire libre se llenan; cisternas 
   waterSystem(w);
   expect(cistern.water).toBe(0); // ya no llueve
   expect(checkInvariants(w)).toEqual([]);
+});
+
+// H5b §6: el barreño y llenarlo (Transportar).
+function yard(): World {
+  const w = emptyWorld(14, 14);
+  w.seen.fill(1);
+  w.grid.tiles.fill(Tile.Floor); // suelo de la base (para pasear cuando no hay nada)
+  w.narrator.nextEventAt = 1e9;
+  w.storage.tiles = [{ x: 1, y: 1 }];
+  w.storage.items.food = 50;
+  w.furniture.push({ id: 70, kind: 'tub', pos: { x: 6, y: 6 }, water: 0 });
+  const s = w.survivors[0]!;
+  s.pos = { x: 2.5, y: 2.5 };
+  for (const k of Object.keys(s.work) as (keyof typeof s.work)[]) s.work[k] = k === 'haul';
+  s.needs = { hunger: 100, sleep: 100, mood: 60, social: 100 };
+  s.nextChatAt = 1e9;
+  w.outfits[0]!.allowed = ['tshirt', 'jeans'];
+  return w;
+}
+const tub = (w: World) => w.furniture.find((f) => f.kind === 'tub')!;
+const runFor = (w: World, n: number) => {
+  for (let i = 0; i < n; i++) step(w);
+};
+
+test('construir un barreño: 4 tablas; queda vacío', () => {
+  expect(BUILD.tub.wood).toBe(4);
+  const w = yard();
+  w.furniture = [];
+  const s = w.survivors[0]!;
+  s.work.build = true;
+  s.skills.build.level = 10; // no falla
+  w.storage.items.wood = 4;
+  issue(w, { type: 'placeBlueprint', kind: 'tub', x: 8, y: 8 });
+  runFor(w, 3 * TICKS_PER_HOUR);
+  expect(w.furniture).toEqual([
+    expect.objectContaining({ kind: 'tub', pos: { x: 8, y: 8 }, water: 0 }),
+  ]);
+});
+
+test('con un cubo de agua en el almacén, lo vacía en el barreño y el cubo vuelve vacío', () => {
+  const w = yard();
+  w.storage.items.waterBucket = 1;
+  runFor(w, 600);
+  expect(tub(w).water).toBe(BUCKET_LITERS);
+  expect(w.storage.items).toMatchObject({ waterBucket: 0, bucket: 1 });
+  expect(checkInvariants(w)).toEqual([]);
+});
+
+test('las botellas de agua del almacén también se vacían en él (y se tiran)', () => {
+  const w = yard();
+  w.storage.items.waterBottle = 3;
+  runFor(w, 600);
+  expect(tub(w).water).toBe(3 * BOTTLE_LITERS);
+  expect(w.storage.items.waterBottle).toBe(0);
+  expect(w.survivors[0]!.carrying.waterBottle).toBe(0);
+});
+
+test('con un cubo vacío, va a llenarlo a la fuente (fregadero con agua corriente o cisterna) hasta llenar el barreño', () => {
+  const w = yard();
+  w.storage.items.bucket = 1;
+  w.furniture.push({ id: 71, kind: 'sink', pos: { x: 11, y: 11 } });
+  runFor(w, 6 * TICKS_PER_HOUR);
+  expect(tub(w).water).toBe(TUB_LITERS);
+  expect(w.storage.items.bucket).toBe(1);
+  // Sin agua corriente, de la cisterna.
+  const v = yard();
+  v.storage.items.bucket = 1;
+  v.waterCutAt = 0;
+  v.furniture.push({ id: 71, kind: 'sink', pos: { x: 11, y: 11 } });
+  v.furniture.push({ id: 72, kind: 'cistern', pos: { x: 11, y: 2 }, water: 6 });
+  runFor(v, 3 * TICKS_PER_HOUR);
+  expect(tub(v).water).toBe(BUCKET_LITERS);
+  expect(v.furniture.find((f) => f.kind === 'cistern')!.water).toBe(2);
+  expect(checkInvariants(v)).toEqual([]);
+});
+
+test('no va si no hay agua (sin agua corriente, cisterna con menos de 4 litros) ni si no caben 4 litros', () => {
+  const w = yard();
+  w.storage.items.bucket = 1;
+  w.waterCutAt = 0;
+  w.furniture.push({ id: 71, kind: 'sink', pos: { x: 11, y: 11 } });
+  w.furniture.push({ id: 72, kind: 'cistern', pos: { x: 11, y: 2 }, water: 3 });
+  const s = w.survivors[0]!;
+  expect(findWork(s, w)).toBeNull();
+  const v = yard();
+  v.storage.items.waterBucket = 1;
+  tub(v).water = TUB_LITERS - 3;
+  expect(findWork(v.survivors[0]!, v)).toBeNull();
 });

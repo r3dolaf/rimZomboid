@@ -58,6 +58,7 @@ const GROUND_KINDS: ReadonlySet<BuildKind> = new Set([
   'campfire',
   'woodWall',
   'woodDoor',
+  'tub', // H5b
 ]);
 
 /** ¿Tiene cortinas esa ventana? (H4d) */

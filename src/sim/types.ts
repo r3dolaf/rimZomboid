@@ -261,7 +261,11 @@ export type Activity =
   | { type: 'fetchPainkiller'; patientId: number }
   | { type: 'givePainkiller'; patientId: number }
   // Vestirse (H5b §4): en el almacén, ponerse lo mejor y quitarse lo que no toca.
-  | { type: 'dress' };
+  | { type: 'dress' }
+  // Llenar el barreño (H5b §6): coger agua o un cubo en el almacén, llenarlo en una fuente y vaciarlo.
+  | { type: 'takeWater'; tubId: number }
+  | { type: 'fillBucket'; sourceId: number; tubId: number }
+  | { type: 'pourWater'; tubId: number };
 
 export type Action =
   /** `wait`: esperando tras no encontrar camino (no se consulta al cerebro) o tras negarse a trabajar. */
@@ -507,7 +511,9 @@ export type BuildKind =
   | 'takeDownCurtains'
   | 'hangCurtains'
   // Romper una ventana a propósito (H4d).
-  | 'smashWindow';
+  | 'smashWindow'
+  // El barreño (H5b §6).
+  | 'tub';
 
 /** Algo por construir: madera (y cortinas, H4d) entregadas y ticks trabajados. */
 export interface Blueprint {

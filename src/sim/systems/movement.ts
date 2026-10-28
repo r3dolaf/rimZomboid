@@ -23,6 +23,7 @@ import { startCraftActivity } from '../jobs/craft';
 import { startPryActivity } from '../jobs/pry';
 import { startSwapWeapon } from '../jobs/weapons';
 import { startDress } from '../jobs/dress';
+import { startWaterActivity } from '../jobs/water';
 import { logEvent } from '../log';
 import { makeNoise } from '../noise';
 import { loadFactor, practice, workSpeed } from '../skills';
@@ -128,6 +129,10 @@ function startActivity(s: Survivor, activity: Activity, w: World): Action {
       return startSwapWeapon(s, w);
     case 'dress':
       return startDress(s, w); // H5b
+    case 'takeWater':
+    case 'fillBucket':
+    case 'pourWater':
+      return startWaterActivity(s, w, activity);
     case 'takeCrowbar':
     case 'pry':
       return startPryActivity(s, w, activity);

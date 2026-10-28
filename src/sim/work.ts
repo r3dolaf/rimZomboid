@@ -13,6 +13,7 @@ import { healJob, healStillWorth } from './jobs/heal';
 import { hasCargo, stockJob } from './jobs/medical';
 import { swapWeaponStillWorth, weaponJob } from './jobs/weapons';
 import { dressJob, dressStillWorth } from './jobs/dress';
+import { waterJob, waterStillWorth } from './jobs/water';
 import { isEmpty, ITEM_KINDS, pieceKg, weightOf } from './items';
 import { regionOf } from './path/astar';
 import { pick } from './rng';
@@ -121,7 +122,7 @@ export function findWork(s: Survivor, w: World): Action | null {
     ['heal', () => healJob(s, w)], // H4e
     ['build', () => buildJob(s, w)],
     ['craft', () => craftJob(s, w)],
-    ['haul', () => haulJob(s, w)],
+    ['haul', () => haulJob(s, w) ?? waterJob(s, w)], // H5b: también llenar el barreño
     ['chop', () => chopJob(s, w)],
     // Saquear: antes, forzar las puertas atrancadas de las casas marcadas (H4d).
     ['loot', () => pryJob(s, w) ?? lootJob(s, w)],
@@ -148,6 +149,9 @@ const WORK_ACTIONS: ReadonlySet<string> = new Set([
   'build',
   'swapWeapon',
   'dress',
+  'takeWater',
+  'fillBucket',
+  'pourWater',
   'takeCrowbar',
   'pry',
   'fetchCraft',
@@ -184,6 +188,8 @@ export function stillWorthIt(s: Survivor, w: World): boolean {
     return healStillWorth(s, w);
   if (what === 'chop' || what === 'takeAxe' || what === 'storeAxe') return chopStillWorth(s, w);
   if (what === 'pickUp' || what === 'fetchWood' || what === 'deliver') return haulStillWorth(s, w);
+  if (what === 'takeWater' || what === 'fillBucket' || what === 'pourWater')
+    return waterStillWorth(s, w);
   if (what === 'build') return buildStillWorth(s, w);
   if (what === 'swapWeapon') return swapWeaponStillWorth(s, w);
   if (what === 'dress') return s.action.type === 'dress' || dressStillWorth(s, w);

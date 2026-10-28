@@ -157,6 +157,9 @@ export function activityText(s: Survivor, w?: World): string {
       if (a.then?.type === 'takeBandages') return t.goTakeBandages;
       if (a.then?.type === 'rest') return t.goRest;
       if (a.then?.type === 'dress') return t.goDress;
+      if (a.then?.type === 'takeWater') return t.goTakeWater;
+      if (a.then?.type === 'fillBucket') return t.goFillBucket;
+      if (a.then?.type === 'pourWater') return t.goPourWater;
       if (a.then?.type === 'takePainkiller') return t.takePainkiller;
       if (a.then?.type === 'fetchPainkiller') return t.fetchPainkiller(name(a.then.patientId));
       if (a.then?.type === 'givePainkiller') return t.givePainkiller(name(a.then.patientId));

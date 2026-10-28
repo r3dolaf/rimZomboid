@@ -413,6 +413,8 @@ export const BUILD = {
   hangCurtains: { wood: 0, ticks: 15 * (TICKS_PER_HOUR / 60) },
   // Romper una ventana a propósito (H4d), para entrar en una casa cerrada.
   smashWindow: { wood: 0, ticks: 2 * (TICKS_PER_HOUR / 60) },
+  // El barreño (H5b §6).
+  tub: { wood: 4, ticks: TICKS_PER_HOUR },
 } as const;
 /** Cortinas que necesita cada plano (H4d). */
 export const CURTAINS_COST: Partial<Record<BuildKind, number>> = { hangCurtains: 1 };

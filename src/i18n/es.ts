@@ -163,6 +163,7 @@ export const es = {
     takeDownCurtains: 'Descolgar cortinas',
     hangCurtains: 'Colgar cortinas',
     smashWindow: 'Romper ventana',
+    tub: 'Barreño', // H5b
   } satisfies Record<BuildKind, string>,
   buildOption: (name: string, wood: number | string) => `${name} · ${wood}`,
   repairWood: '1–3',
@@ -736,6 +737,10 @@ export const es = {
     // Vestirse (H5b)
     goDress: 'Va a cambiarse de ropa',
     dress: 'Cambiándose de ropa',
+    // Llenar el barreño (H5b)
+    goTakeWater: 'Va a por agua para el barreño',
+    goFillBucket: 'Va a llenar un cubo',
+    goPourWater: 'Lleva agua al barreño',
     takePainkiller: 'Va a tomarse un analgésico',
     fetchPainkiller: (who: string) => `Va a por un analgésico para ${who}`,
     givePainkiller: (who: string) => `Lleva un analgésico a ${who}`,
@@ -803,6 +808,7 @@ export const es = {
     takeDownCurtains: 'Se han descolgado unas cortinas',
     hangCurtains: 'Se han colgado unas cortinas',
     smashWindow: 'Se ha roto una ventana para entrar',
+    tub: 'Barreño construido',
   } satisfies Record<BuildKind, string>,
   /** Lo que intentaba quien falla al construir: "ha fallado al levantar el muro". */
   buildFail: {
@@ -819,6 +825,7 @@ export const es = {
     takeDownCurtains: 'descolgar las cortinas',
     hangCurtains: 'colgar las cortinas',
     smashWindow: 'romper la ventana',
+    tub: 'construir el barreño',
   } satisfies Record<BuildKind, string>,
   /** Lo que hace quien trabaja en cada plano. */
   building: {
@@ -835,6 +842,7 @@ export const es = {
     takeDownCurtains: 'Descolgando unas cortinas',
     hangCurtains: 'Colgando unas cortinas',
     smashWindow: 'Rompiendo una ventana',
+    tub: 'Construyendo un barreño',
   } satisfies Record<BuildKind, string>,
   /** Cada plano, para las frases ("Llevando madera a una cama"). */
   builds: {
@@ -851,6 +859,7 @@ export const es = {
     takeDownCurtains: 'unas cortinas',
     hangCurtains: 'una ventana sin cortinas',
     smashWindow: 'una ventana',
+    tub: 'un barreño',
   } satisfies Record<BuildKind, string>,
 
   /** Iconos sobre la cabeza en el mapa. */

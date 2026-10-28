@@ -39,12 +39,14 @@ test('botín por tipo (spec §4): rangos y, para lo de "a veces", la probabilida
     knife: { chance: 0.25 },
     bat: { chance: 0.15 },
     painkillers: { chance: 1 / 3 }, // H5
+    waterBottle: { chance: 0.5 }, // H5b
   });
   expect(LOOT.supermarket).toEqual({
     food: [40, 60],
     bandage: [1, 3],
     knife: [1, 1],
     painkillers: [0, 2],
+    waterBottle: [6, 12],
   });
   expect(LOOT.pharmacy).toEqual({
     food: [0, 4],
@@ -61,6 +63,7 @@ test('botín por tipo (spec §4): rangos y, para lo de "a veces", la probabilida
     crowbar: [2, 2],
     machete: [1, 1],
     knife: [1, 1],
+    bucket: [2, 3], // H5b
   });
   expect(LOOT.police).toEqual({
     food: [2, 6],
@@ -77,7 +80,13 @@ test('botín por tipo (spec §4): rangos y, para lo de "a veces", la probabilida
     denim: [3, 6], // H5b
     leather: [2, 4],
   });
-  expect(LOOT.gas).toEqual({ food: [8, 16], bandage: [0, 2], bat: [1, 1], painkillers: [0, 2] });
+  expect(LOOT.gas).toEqual({
+    food: [8, 16],
+    bandage: [0, 2],
+    bat: [1, 1],
+    painkillers: [0, 2],
+    waterBottle: [2, 6], // H5b
+  });
   expect(LOOT.farm).toEqual({
     food: [8, 16],
     bandage: [0, 2],
@@ -85,6 +94,7 @@ test('botín por tipo (spec §4): rangos y, para lo de "a veces", la probabilida
     cloth: [1, 3],
     axe: [1, 1],
     machete: [1, 1],
+    bucket: [1, 2], // H5b
   });
   expect(LOOT.warehouse).toEqual({
     food: [2, 6],
@@ -93,6 +103,7 @@ test('botín por tipo (spec §4): rangos y, para lo de "a veces", la probabilida
     cloth: [5, 10],
     crowbar: [1, 1],
     axe: [1, 1],
+    bucket: [1, 2], // H5b
   });
 });
 

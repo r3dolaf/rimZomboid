@@ -639,7 +639,7 @@ export class GameScene extends Phaser.Scene {
         g.fillRect(x + 1, y + 3, TILE_PX - 2, TILE_PX - 6);
         g.fillStyle(TABLE_COLOR);
         g.fillRect(x + 2, y + 4, TILE_PX - 4, TILE_PX - 8);
-      } else {
+      } else if (f.kind === 'campfire') {
         const [cx, cy] = [x + TILE_PX / 2, y + TILE_PX / 2];
         g.fillStyle(CAMPFIRE_STONE);
         g.fillCircle(cx, cy, 6);

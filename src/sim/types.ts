@@ -520,10 +520,15 @@ export interface Blueprint {
   curtains?: number;
 }
 
+/**
+ * Muebles: la mesa y la hoguera (H4a); el barreño (H5b), que se construye, y los fregaderos y las
+ * cisternas de los edificios. `water`: los litros que tiene (barreño y cisterna).
+ */
 export interface Furniture {
   id: number;
-  kind: 'table' | 'campfire';
+  kind: 'table' | 'campfire' | 'tub' | 'sink' | 'cistern';
   pos: Point;
+  water?: number;
 }
 
 /** Almacén de la base. */
@@ -687,6 +692,8 @@ export interface World {
   pieceLog: { made: number; gone: number };
   outfits: Outfit[];
   nextOutfitId: number;
+  /** Tick en que se corta el agua corriente (H5b §6). */
+  waterCutAt: number;
 }
 
 /** Uno que echaron y que vuelve en `at` por donde se fue (`pos`). */

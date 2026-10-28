@@ -233,6 +233,11 @@ function take(
   return out;
 }
 
+/** Las casillas de suelo junto a una pared (para los fregaderos y las cisternas, H5b). */
+export function wallSpots(grid: Grid, b: Building): Point[] {
+  return spotsOf(grid, b).wall;
+}
+
 /** Los muebles de saqueo del edificio, según su tipo (la base no tiene). */
 export function furnish(grid: Grid, rng: RngState, b: Building): Furnishing[] {
   if (b.kind === 'base') return [];

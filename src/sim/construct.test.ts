@@ -112,7 +112,8 @@ test('mesa y hoguera son muebles; cama sin nadie que la necesite queda libre', (
   readyBlueprint(w, 'campfire', p2);
   readyBlueprint(w, 'bed', p3);
   expect(runUntil(w, () => w.blueprints.length === 0, 6 * TICKS_PER_HOUR)).toBe(true);
-  expect(w.furniture.map((f) => f.kind).sort()).toEqual(['campfire', 'table']);
+  const built = w.furniture.filter((f) => f.kind !== 'sink' && f.kind !== 'cistern'); // H5b
+  expect(built.map((f) => f.kind).sort()).toEqual(['campfire', 'table']);
   expect(w.beds.find((x) => at(p3)(x.pos))?.ownerId).toBeNull();
   expect(checkInvariants(w)).toEqual([]);
 });

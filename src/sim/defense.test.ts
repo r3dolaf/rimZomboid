@@ -43,7 +43,8 @@ test('al empezar: sin montones, planos, muebles ni marcas; cada uno con su cuchi
   const w = createWorld(5);
   expect(w.piles).toEqual([]);
   expect(w.blueprints).toEqual([]);
-  expect(w.furniture).toEqual([]);
+  // (Los fregaderos y las cisternas de los edificios, H5b, no se construyen.)
+  expect(w.furniture.filter((f) => f.kind !== 'sink' && f.kind !== 'cistern')).toEqual([]);
   expect(w.chopMarks).toEqual([]);
   for (const s of w.survivors) {
     expect(s.equipped).toBe('knife'); // H4b: sin arma caían enseguida

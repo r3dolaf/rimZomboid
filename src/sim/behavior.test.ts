@@ -131,7 +131,7 @@ test('si el sueño llega a 0, se desploma donde esté, aunque vaya andando', () 
 });
 
 test('con ánimo por debajo de 10 entra en crisis 4 h y después se desahoga', () => {
-  const w = createWorld(3);
+  const w = withoutZombies(createWorld(3)); // (un zombi la sacaría de la crisis)
   w.tick = at(9);
   w.survivors.forEach(rested);
   const s = w.survivors[0]!;

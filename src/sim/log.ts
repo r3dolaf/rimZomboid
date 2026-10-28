@@ -16,6 +16,7 @@ import type {
 export type LogEvent =
   // Ropa (H5b)
   | { kind: 'clothesTorn'; survivorId: number; garment: GarmentKind; part: BodyPart }
+  | { kind: 'waterCut' }
   | { kind: 'found'; survivorId: number; houseId: number; items: Inventory }
   | { kind: 'emptyContainer'; survivorId: number; houseId: number }
   | { kind: 'houseEmptied'; houseId: number }

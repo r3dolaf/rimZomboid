@@ -544,6 +544,7 @@ export const es = {
     siegeEnded: 'La horda se dispersa',
     wanderersSighted: 'Una horda errante cruza el mapa',
     rescued: (who: string, other: string) => `${who} ha rescatado a ${other}`,
+    waterCut: 'Se ha cortado el agua',
     clothesTorn: (who: string, garment: GarmentKind, part: BodyPart) => {
       const g: { the: string; many?: boolean } = es.garments[garment];
       const verb = g.many ? 'han roto' : 'ha roto';

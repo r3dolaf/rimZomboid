@@ -21,6 +21,7 @@ import {
 import { baseLayout } from './base';
 import { dressStarter } from './clothes';
 import { defaultOutfits } from './outfits';
+import { placeFixtures, rollWaterCut } from './water';
 import { emptyInventory } from './items';
 import { fillGarments, placeContainers } from './loot';
 import { revealFromSurvivors } from './vision';
@@ -138,6 +139,10 @@ export function createWorld(
   // Después de los supervivientes, para no cambiar partidas anteriores con la misma semilla.
   const containers = placeContainers(houses, furniture, rng);
   fillGarments(pieces, houses, containers, clothesRng); // H5b: la ropa, con su azar
+  // H5b: fregaderos y cisternas, y cuándo se corta el agua (con el mismo azar).
+  const firstId = Math.max(survivors.length, ...containers.map((c) => c.id)) + 1;
+  const fixtures = placeFixtures(grid, houses, containers, clothesRng, firstId);
+  const waterCutAt = rollWaterCut(clothesRng);
 
   // Relaciones (H3b), también después para no cambiar partidas anteriores.
   for (const s of survivors) {
@@ -170,7 +175,7 @@ export function createWorld(
     orders: [],
     log: [],
     // Por encima de los muebles (H5): un cuerpo con el id de un mueble no se podía marcar.
-    nextId: Math.max(survivors.length, ...containers.map((c) => c.id)) + 1,
+    nextId: firstId + fixtures.length,
     stranger: null,
     narrator: {
       style,
@@ -183,7 +188,7 @@ export function createWorld(
     stormUntil: 0,
     piles: [],
     blueprints: [],
-    furniture: [],
+    furniture: fixtures,
     chopMarks: [],
     woodLog: {
       start: containers.reduce((acc, c) => acc + c.items.wood, 0),
@@ -220,6 +225,7 @@ export function createWorld(
     pieceLog: pieces.pieceLog,
     outfits: defaultOutfits(),
     nextOutfitId: DEFAULT_OUTFITS.length + 1,
+    waterCutAt,
   };
   // Zombis (H4b), con su propio azar: no cambian nada de lo anterior.
   placeStartZombies(world);

@@ -17,6 +17,7 @@ import { socialSystem } from './systems/social';
 import { strangerSystem } from './systems/strangers';
 import type { World } from './types';
 import { visionSystem } from './vision';
+import { waterSystem } from './water';
 import { zombieSystem } from './zombies/system';
 import { reservationsSystem } from './work';
 
@@ -29,6 +30,7 @@ export function step(w: World): void {
   deathSystem(w); // H5
   furnitureSystem(w);
   clothesSystem(w); // H5b: la ropa puesta se ensucia
+  waterSystem(w); // H5b: el corte del agua y la lluvia
   moodSystem(w);
   socialSystem(w);
   narratorSystem(w);

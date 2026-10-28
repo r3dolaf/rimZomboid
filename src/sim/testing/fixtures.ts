@@ -154,6 +154,7 @@ export function emptyWorld(width: number, height: number): World {
     pieceLog: { made: 2, gone: 0 },
     outfits: defaultOutfits(),
     nextOutfitId: DEFAULT_OUTFITS.length + 1,
+    waterCutAt: Number.MAX_SAFE_INTEGER, // con agua corriente salvo que el test la corte
   };
 }
 

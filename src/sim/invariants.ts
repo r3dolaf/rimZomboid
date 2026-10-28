@@ -2,11 +2,13 @@ import {
   BODY_HP,
   BUILD,
   BUILDINGS,
+  CISTERN_LITERS,
   CURTAINS_COST,
   OPINION_LIMIT,
   RECIPES,
   RESISTANCE,
   SKILL_MAX,
+  TUB_LITERS,
   ZOMBIE_HEALTH,
 } from './balance';
 import { allPieces, clashes, coversOf, wornLists } from './clothes';
@@ -283,6 +285,14 @@ export function checkInvariants(w: World): string[] {
     problems.push(
       `la madera no cuadra: hay ${wood}, gastada ${log.spent}, perdida ${log.wasted}; repartida ${log.start}, talada ${log.chopped}, recuperada ${log.recovered}`,
     );
+  // Agua (H5b §6): entre 0 y lo que cabe.
+  for (const f of w.furniture) {
+    const max = f.kind === 'tub' ? TUB_LITERS : f.kind === 'cistern' ? CISTERN_LITERS : null;
+    if (max === null) continue;
+    const l = f.water ?? 0;
+    if (!Number.isFinite(l) || l < 0 || l > max + 1e-9)
+      problems.push(`${f.kind} #${f.id}: agua ${l} fuera de 0–${max}`);
+  }
   // Atuendos (H5b §4): al menos uno y con ids distintos.
   if (w.outfits.length === 0) problems.push('no queda ningún atuendo');
   if (new Set(w.outfits.map((o) => o.id)).size !== w.outfits.length)

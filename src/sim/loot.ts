@@ -21,6 +21,8 @@ const ITEMS: readonly LootItem[] = [
   'painkillers', // H5: el último, para no cambiar el reparto de lo de antes más que lo justo
   'denim', // H5b
   'leather',
+  'waterBottle',
+  'bucket',
 ];
 
 /** El mueble de cada cosa (spec H4f §4). */
@@ -39,6 +41,8 @@ const HOME: Record<LootItem, readonly ContainerKind[]> = {
   painkillers: ['medicine'],
   denim: ['wardrobe'],
   leather: ['wardrobe'],
+  waterBottle: ['fridge'],
+  bucket: ['crate'],
 };
 
 /** Los muebles de la ropa (H5b §2); también las estanterías y los mostradores. */

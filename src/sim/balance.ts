@@ -633,6 +633,8 @@ export type LootItem =
   | 'painkillers'
   | 'denim'
   | 'leather'
+  | 'waterBottle'
+  | 'bucket'
   | Weapon;
 
 /** El botín de cada tipo de edificio (spec H4f §4). */
@@ -647,8 +649,15 @@ export const LOOT: Record<LootKind, Partial<Record<LootItem, LootAmount>>> = {
     knife: { chance: 0.25 },
     bat: { chance: 0.15 },
     painkillers: { chance: 1 / 3 },
+    waterBottle: { chance: 0.5 }, // H5b
   },
-  supermarket: { food: [40, 60], bandage: [1, 3], knife: [1, 1], painkillers: [0, 2] },
+  supermarket: {
+    food: [40, 60],
+    bandage: [1, 3],
+    knife: [1, 1],
+    painkillers: [0, 2],
+    waterBottle: [6, 12],
+  },
   pharmacy: { food: [0, 4], bandage: [12, 18], needle: [1, 1], painkillers: [6, 10] },
   hardware: {
     bandage: [0, 2],
@@ -659,6 +668,7 @@ export const LOOT: Record<LootKind, Partial<Record<LootItem, LootAmount>>> = {
     crowbar: [2, 2],
     machete: [1, 1],
     knife: [1, 1],
+    bucket: [2, 3],
   },
   police: {
     food: [2, 6],
@@ -669,7 +679,7 @@ export const LOOT: Record<LootKind, Partial<Record<LootItem, LootAmount>>> = {
     painkillers: [1, 2],
   },
   clothes: { cloth: [20, 30], thread: [6, 6], needle: [3, 3], denim: [3, 6], leather: [2, 4] },
-  gas: { food: [8, 16], bandage: [0, 2], bat: [1, 1], painkillers: [0, 2] },
+  gas: { food: [8, 16], bandage: [0, 2], bat: [1, 1], painkillers: [0, 2], waterBottle: [2, 6] },
   farm: {
     food: [8, 16],
     bandage: [0, 2],
@@ -677,6 +687,7 @@ export const LOOT: Record<LootKind, Partial<Record<LootItem, LootAmount>>> = {
     cloth: [1, 3],
     axe: [1, 1],
     machete: [1, 1],
+    bucket: [1, 2],
   },
   warehouse: {
     food: [2, 6],
@@ -685,6 +696,7 @@ export const LOOT: Record<LootKind, Partial<Record<LootItem, LootAmount>>> = {
     cloth: [5, 10],
     crowbar: [1, 1],
     axe: [1, 1],
+    bucket: [1, 2],
   },
 };
 
@@ -1033,3 +1045,14 @@ export const CLOTHES_MOOD = {
   favoriteGarment: 4,
   hatedGarment: -4,
 } as const;
+// Agua (H5b §6)
+export const BUCKET_LITERS = 4;
+export const BOTTLE_LITERS = 1;
+export const CISTERN_LITERS = 200;
+export const TUB_LITERS = 20;
+/** El agua corriente se corta un día al azar entre estos (con su hora). */
+export const WATER_CUT_DAY_MIN = 7;
+export const WATER_CUT_DAY_MAX = 14;
+/** Qué edificios tienen fregadero y cuáles cisterna (uno de cada). */
+export const SINK_IN: readonly LootKind[] = ['house', 'supermarket', 'gas', 'farm'];
+export const CISTERN_IN: readonly LootKind[] = ['farm', 'gas', 'warehouse'];

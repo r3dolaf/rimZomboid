@@ -405,6 +405,11 @@ const zombieTotals = {
   // H5: muertos y hasta qué día se llega en cada partida
   dead: 0,
   survived: [] as number[],
+  // H5b: ropa rota por golpes parados, cambios de ropa, costura y lavado
+  torn: 0,
+  dressed: 0,
+  sewn: 0,
+  washed: 0,
 };
 
 /**
@@ -447,6 +452,20 @@ function clothSetup(w: World): void {
   issue(w, { type: 'setBill', billId: id, target: 10 });
   issue(w, { type: 'setBill', billId: id + 1, mode: 'count', target: 2 });
   issue(w, { type: 'setBill', billId: id + 2, mode: 'count', target: 1 });
+  // H5b: remendar, reforzar, descoser y lavar ("siempre que haya") y un barreño fuera de la base,
+  // junto a la puerta (con su madera).
+  for (const recipe of ['mend', 'pad', 'unpickGarment', 'wash'] as const)
+    issue(w, { type: 'addBill', recipe });
+  w.storage.items.wood += 4;
+  w.woodLog.start += 4;
+  const d = w.base.door;
+  const outside = [
+    { x: d.x + 2, y: d.y + 2 },
+    { x: d.x - 2, y: d.y + 2 },
+    { x: d.x + 2, y: d.y - 2 },
+    { x: d.x - 2, y: d.y - 2 },
+  ].find((p) => !contains(r, p) && canPlace(w, 'tub', p));
+  if (outside) issue(w, { type: 'placeBlueprint', kind: 'tub', ...outside });
   for (const i of w.curtains) {
     const p = { x: i % w.grid.width, y: Math.floor(i / w.grid.width) };
     if (contains(r, p) && canPlace(w, 'curtains', p))
@@ -469,6 +488,7 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
     const r = createRng(17);
     const weapons = allWeapons(w);
     const levelsAtStart = levels(w);
+    const wasDressing = new Map<number, boolean>();
     let ms = 0;
     for (let day = 1; day <= DAYS; day++) {
       const present = new Set(w.survivors.map((s) => s.id));
@@ -497,11 +517,16 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
           if (e.kind === 'wanderersSighted') zombieTotals.wanderers++;
           if (e.kind === 'rescued' || e.kind === 'bandaged') zombieTotals.healed++;
           if (e.kind === 'strangersFled') zombieTotals.strangersFled++;
+          if (e.kind === 'clothesTorn') zombieTotals.torn++;
+          if (e.kind === 'crafted' && e.recipe === 'wash') zombieTotals.washed++;
+          else if (e.kind === 'crafted' && e.garment) zombieTotals.sewn++;
         }
         for (const s of w.survivors) {
           const b = before.get(s.id);
           if (lying(s) || (b && (b.x !== s.pos.x || b.y !== s.pos.y))) moved.add(s.id);
           if (s.action.type === 'downed') down.set(s.id, (down.get(s.id) ?? 0) + 1);
+          if (s.action.type === 'dress' && wasDressing.get(s.id) !== true) zombieTotals.dressed++;
+          wasDressing.set(s.id, s.action.type === 'dress');
         }
       }
       const store = w.storage.tiles[0]!;
@@ -578,5 +603,9 @@ test('con zombis se pelea, alguien cae, algo se rompe, se fabrica y se registran
   // H4e: llegan asedios, se rescata o se venda a alguien.
   expect(zombieTotals.sieges, 'asedios').toBeGreaterThan(0);
   expect(zombieTotals.healed, 'rescates y vendajes').toBeGreaterThan(0);
+  // H5b: la ropa para golpes (y se rompe), se cambian de ropa y se cose.
+  expect(zombieTotals.torn, 'ropa rota al parar golpes').toBeGreaterThan(0);
+  expect(zombieTotals.dressed, 'cambios de ropa').toBeGreaterThan(0);
+  expect(zombieTotals.sewn, 'ropa cosida').toBeGreaterThan(0);
   console.log('H4e, en las 3 partidas con zombis:', zombieTotals);
 });

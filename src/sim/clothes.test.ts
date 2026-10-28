@@ -84,7 +84,7 @@ test('capas de una zona, de fuera a dentro; destrozada con agujeros en todo lo q
   expect(destroyed(g(w, 'helmet'))).toBe(false);
 });
 
-test('los colonos empiezan con camiseta y vaqueros o chándal, la mitad con algo más; no pesa', () => {
+test('los colonos empiezan con camiseta y vaqueros o chándal, la mitad con chaqueta vaquera; no pesa', () => {
   let extra = 0;
   let people = 0;
   for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
@@ -97,7 +97,7 @@ test('los colonos empiezan con camiseta y vaqueros o chándal, la mitad con algo
       expect(kinds.length === 2 || kinds.length === 3).toBe(true);
       if (kinds.length === 3) {
         extra++;
-        expect(['hoodie', 'shirt', 'cap']).toContain(kinds[2]);
+        expect(kinds[2]).toBe('denimJacket'); // ajuste tras la partida larga (§10)
       }
       expect(s.likes).not.toBe(s.hates);
       expect(GARMENTS[s.likes]).toBeDefined();

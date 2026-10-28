@@ -930,9 +930,12 @@ export const PAD_BONUS = { cloth: 0.1, denim: 0.15, leather: 0.25 } as const sat
 export const PROTECTION_MAX = 0.95;
 /** Azar propio de la ropa (lo del principio, el botín de ropa, el agua): semilla ^ esto. */
 export const CLOTHES_SALT = 0x0c107e5;
-/** La ropa del principio: camiseta, vaqueros o chándal y, a veces, algo más (H5b §2). */
+/**
+ * La ropa del principio: camiseta, vaqueros o chándal y, la mitad, una chaqueta vaquera (H5b §2;
+ * ajuste tras la partida larga, §10: antes sudadera, camisa o gorra).
+ */
 export const START_EXTRA_CHANCE = 0.5;
-export const START_EXTRAS = ['hoodie', 'shirt', 'cap'] as const satisfies readonly GarmentKind[];
+export const START_EXTRAS = ['denimJacket'] as const satisfies readonly GarmentKind[];
 /**
  * La ropa del botín (H5b §2): cuántas prendas y cuáles (pesos) por tipo de edificio. Van a los
  * armarios, taquillas y cajas (y a estanterías y mostradores, que tienen de todo).

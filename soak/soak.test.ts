@@ -316,8 +316,11 @@ test.each([1, 2, 3])(
         w.grid.tiles.includes(Tile.BoardedWindow) || w.woodLog.recovered > 0,
         'se ha tapiado',
       ).toBe(true);
-      // H4c: practicando se mejora, y los fallos al construir no se comen la madera.
-      expect(levels(w), 'las habilidades han subido').toBeGreaterThan(levelsAtStart);
+      // H4c: practicando se mejora, y los fallos al construir no se comen la madera. (Si queda
+      // alguien: contestando al azar se puede echar a todos, y los muros al azar pueden dejar a
+      // alguien encerrado sin llegar al almacén; con otra semilla, en H5b pasó las dos cosas.)
+      if (w.survivors.length > 0)
+        expect(levels(w), 'las habilidades han subido').toBeGreaterThan(levelsAtStart);
       expect(w.woodLog.wasted, 'madera perdida al fallar').toBeLessThan(w.woodLog.spent / 2);
     }
   },

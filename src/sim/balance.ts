@@ -326,8 +326,13 @@ export interface Recipe {
   ticks: number;
   /** Sobre prendas (H5b §3): cuánto material gasta (el mejor que haya: cuero, vaquero, tela). */
   material?: number;
-  /** Sobre qué prenda del almacén trabaja: con agujeros, que se pueda reforzar o destrozada. */
-  piece?: 'holed' | 'paddable' | 'destroyed';
+  /** Sobre qué prenda del almacén trabaja: con agujeros, que se pueda reforzar, destrozada o sucia. */
+  piece?: 'holed' | 'paddable' | 'destroyed' | 'dirty';
+  /** Dónde se hace (H5b): en la mesa (lo normal) o en el barreño, con estos litros de agua. */
+  station?: 'table' | 'tub';
+  water?: number;
+  /** No falla nunca (lavar). */
+  safe?: boolean;
 }
 export const RECIPES: Record<RecipeId, Recipe> = {
   bandages: {
@@ -371,6 +376,17 @@ export const RECIPES: Record<RecipeId, Recipe> = {
     output: {},
     ticks: 0.25 * TICKS_PER_HOUR,
     piece: 'destroyed',
+  },
+  // H5b §6: lavar una prenda sucia o con sangre en el barreño (2 litros; no falla).
+  wash: {
+    input: {},
+    tool: null,
+    output: {},
+    ticks: 0.25 * TICKS_PER_HOUR,
+    piece: 'dirty',
+    station: 'tub',
+    water: 2,
+    safe: true,
   },
 };
 export const BILL_DEFAULT_TARGET = 5; // un pedido nuevo: "hasta tener 5"

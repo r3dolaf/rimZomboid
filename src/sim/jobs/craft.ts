@@ -1,5 +1,12 @@
 // Fabricar (spec H4d §4): pedidos en la mesa — coger los materiales, trabajarlos y llevar lo hecho.
-import { GARMENTS, HIT_WEIGHTS, ITEM_WEIGHT_KG, RECIPES, type Recipe } from '../balance';
+import {
+  DIRTY_HOURS,
+  GARMENTS,
+  HIT_WEIGHTS,
+  ITEM_WEIGHT_KG,
+  RECIPES,
+  type Recipe,
+} from '../balance';
 import { coversOf, destroyed, piecesGone } from '../clothes';
 import { emptyInventory, pieceKg, weightOf, type ItemKind } from '../items';
 import { logEvent } from '../log';
@@ -70,6 +77,7 @@ export const padZone = (g: Garment): BodyPart | null =>
 function fits(r: Recipe, g: Garment): boolean {
   if (r.piece === 'holed') return g.holes.length > 0;
   if (r.piece === 'paddable') return padZone(g) !== null;
+  if (r.piece === 'dirty') return g.dirtHours >= DIRTY_HOURS || g.bloody;
   return destroyed(g) && Object.keys(GARMENTS[g.kind].unpick).length > 0;
 }
 
@@ -94,15 +102,20 @@ export function billWanted(w: World, b: Bill): boolean {
   });
 }
 
-/** La mesa más cercana a la que puede llegar, con dónde ponerse. */
+/** ¿Sirve ese mueble para la receta? (La mesa; el barreño, con agua bastante, H5b.) */
+const isStation = (r: Recipe, f: Furniture) =>
+  f.kind === (r.station ?? 'table') && (f.water ?? 0) >= (r.water ?? 0);
+
+/** La mesa (o el barreño) más cercana a la que puede llegar, con dónde ponerse. */
 function nearestTable(
   s: Survivor,
   w: World,
+  r: Recipe,
 ): { table: Furniture; stand: { x: number; y: number } } | null {
   const at = tileOf(s.pos);
   let best: { table: Furniture; stand: { x: number; y: number }; d: number } | null = null;
   for (const f of w.furniture) {
-    if (f.kind !== 'table') continue;
+    if (!isStation(r, f)) continue;
     const d = (f.pos.x - at.x) ** 2 + (f.pos.y - at.y) ** 2;
     if (best && d >= best.d) continue;
     const stand = standOnOrBeside(w, s, f.pos);
@@ -113,11 +126,10 @@ function nearestTable(
 
 /** El primer pedido de la lista que toca y que se puede hacer: va al almacén a por los materiales. */
 export function craftJob(s: Survivor, w: World): Action | null {
-  if (w.bills.length === 0 || !nearestTable(s, w)) return null;
   for (const b of w.bills) {
     const r = RECIPES[b.recipe];
     if (!billWanted(w, b) || !hasInputs(r, w.storage.items) || !hasTool(s, w, r)) continue;
-    if (!hasPiece(w, r)) continue;
+    if (!hasPiece(w, r) || !nearestTable(s, w, r)) continue;
     return {
       type: 'moveTo',
       target: pick(w.rng, w.storage.tiles),
@@ -140,14 +152,14 @@ export function craftStillWorth(s: Survivor, w: World): boolean {
       hasInputs(r, w.storage.items) &&
       hasTool(s, w, r) &&
       hasPiece(w, r) &&
-      nearestTable(s, w) !== null
+      nearestTable(s, w, r) !== null
     );
   }
   if (a.then?.type === 'craft') {
     const { tableId, pieceId } = a.then;
     return (
       !!b &&
-      w.furniture.some((f) => f.id === tableId) &&
+      w.furniture.some((f) => f.id === tableId && isStation(RECIPES[b.recipe], f)) &&
       hasInputs(RECIPES[b.recipe], s.carrying) &&
       (pieceId === undefined || s.carrying.pieces.some((p) => p.id === pieceId))
     );
@@ -168,7 +180,7 @@ export function startCraftActivity(
   if (!b) return idle;
   const r = RECIPES[b.recipe];
   if (activity.type === 'fetchCraft') {
-    const t = nearestTable(s, w);
+    const t = nearestTable(s, w, r);
     if (!t || !hasInputs(r, w.storage.items) || !hasTool(s, w, r)) return idle;
     // Sobre prendas (H5b): la prenda y el mejor material que haya.
     const g = pieceFor(w, r);
@@ -206,7 +218,7 @@ export function startCraftActivity(
       },
     };
   }
-  const table = w.furniture.find((f) => f.id === activity.tableId);
+  const table = w.furniture.find((f) => f.id === activity.tableId && isStation(r, f));
   if (!table || !atOrBeside(s, table.pos) || !hasInputs(r, s.carrying) || !hasTool(s, w, r))
     return idle;
   const { pieceId, material } = activity;
@@ -244,7 +256,7 @@ export function unloadAfterCraft(s: Survivor, w: World): Action {
 export function finishCraft(
   w: World,
   s: Survivor,
-  a: { billId: number; recipe: RecipeId; pieceId?: number; material?: Material },
+  a: { billId: number; recipe: RecipeId; pieceId?: number; material?: Material; tableId?: number },
 ): void {
   const r = RECIPES[a.recipe];
   if (!hasInputs(r, s.carrying)) return;
@@ -258,8 +270,13 @@ export function finishCraft(
     used.push([mat, r.material]);
   }
   const garment = g ? { garment: g.kind } : {};
+  // En el barreño (H5b): su agua; si ya no queda bastante, no se hace.
+  const tub = r.water !== undefined ? w.furniture.find((f) => f.id === a.tableId) : undefined;
+  if (r.water !== undefined && (!tub || (tub.water ?? 0) < r.water)) return;
   for (const [k, n] of used) s.carrying[k] -= n;
-  if (nextFloat(w.rng) < buildFailChance(s.skills.craft.level, s.traits.includes('clumsy'))) {
+  if (tub) tub.water = (tub.water ?? 0) - r.water!;
+  const chance = r.safe ? 0 : buildFailChance(s.skills.craft.level, s.traits.includes('clumsy'));
+  if (chance > 0 && nextFloat(w.rng) < chance) {
     const lost = emptyInventory();
     for (const [k, n] of used) {
       lost[k] = Math.ceil(n / 2);
@@ -291,6 +308,9 @@ function workOnGarment(
   } else if (recipe === 'pad' && material) {
     const z = padZone(g);
     if (z !== null) g.pads[z] = material;
+  } else if (recipe === 'wash') {
+    g.dirtHours = 0;
+    g.bloody = false;
   } else if (recipe === 'unpickGarment') {
     s.carrying.pieces = s.carrying.pieces.filter((p) => p !== g);
     for (const [k, n] of entries(GARMENTS[g.kind].unpick)) s.carrying[k] += n;

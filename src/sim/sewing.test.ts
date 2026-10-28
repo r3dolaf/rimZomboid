@@ -1,9 +1,9 @@
 // H5b §3: coser — remendar, reforzar y descoser ropa en la mesa, sobre prendas del almacén.
 import { expect, test } from 'vitest';
-import { RECIPES } from './balance';
+import { DIRTY_HOURS, RECIPES, TICKS_PER_HOUR } from './balance';
 import { newGarment } from './clothes';
 import { checkInvariants } from './invariants';
-import { finishCraft } from './jobs/craft';
+import { craftJob, finishCraft } from './jobs/craft';
 import { issue, ordersSystem } from './orders';
 import { step } from './step';
 import { emptyWorld } from './testing/fixtures';
@@ -164,4 +164,42 @@ test('si se quita el pedido a medias, la prenda vuelve al almacén', () => {
   run(w, 600);
   expect(w.storage.items.pieces).toContain(shirt);
   expect(checkInvariants(w)).toEqual([]);
+});
+
+// H5b §6: lavar ropa en el barreño.
+test('Lavar ropa: en el barreño, 2 litros y un cuarto de hora por prenda; quita suciedad y sangre; no falla', () => {
+  const w = world();
+  w.furniture = [{ id: 81, kind: 'tub', pos: { x: 8, y: 8 }, water: 5 }]; // sin mesa
+  const s = w.survivors[0]!;
+  s.skills.craft.level = 0;
+  s.traits = ['clumsy'];
+  const a = stored(w, newGarment(w, 'shirt'));
+  a.dirtHours = DIRTY_HOURS;
+  const b = stored(w, newGarment(w, 'coat'));
+  b.bloody = true;
+  const c = stored(w, newGarment(w, 'hoodie')); // limpia
+  expect(RECIPES.wash).toMatchObject({ station: 'tub', water: 2, ticks: TICKS_PER_HOUR / 4 });
+  bill(w, 'wash');
+  run(w, 3 * TICKS_PER_HOUR);
+  expect(a).toMatchObject({ dirtHours: 0, bloody: false });
+  expect(b).toMatchObject({ dirtHours: 0, bloody: false });
+  expect(w.furniture[0]!.water).toBe(1);
+  expect(w.storage.items.pieces).toEqual(expect.arrayContaining([a, b, c]));
+  expect(w.log.filter((e) => e.kind === 'craftFailed')).toEqual([]);
+  expect(w.log).toContainEqual(
+    expect.objectContaining({ kind: 'crafted', recipe: 'wash', garment: 'shirt' }),
+  );
+  expect(checkInvariants(w)).toEqual([]);
+});
+
+test('sin agua en el barreño, no lava (espera)', () => {
+  const w = world();
+  w.furniture.push({ id: 81, kind: 'tub', pos: { x: 8, y: 8 }, water: 1 });
+  const g = stored(w, newGarment(w, 'shirt'));
+  g.bloody = true;
+  bill(w, 'wash');
+  expect(craftJob(w.survivors[0]!, w)).toBeNull();
+  run(w, TICKS_PER_HOUR);
+  expect(g.bloody).toBe(true);
+  expect(w.storage.items.pieces).toContain(g);
 });

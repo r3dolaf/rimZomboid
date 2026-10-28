@@ -719,7 +719,9 @@ export type RecipeId =
   // Sobre prendas (H5b §3)
   | 'mend'
   | 'pad'
-  | 'unpickGarment';
+  | 'unpickGarment'
+  // En el barreño (H5b §6)
+  | 'wash';
 
 /**
  * Un pedido: `count`, hacer N veces (`done` lleva la cuenta); `until`, hasta tener N en el almacén;

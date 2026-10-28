@@ -93,6 +93,12 @@ export const es = {
       done: 'ha descosido una prenda',
       fail: 'descoser la ropa',
     },
+    wash: {
+      name: 'Lavar ropa',
+      doing: 'Lavando ropa',
+      done: 'ha lavado una prenda',
+      fail: 'lavar la ropa',
+    },
   } satisfies Record<RecipeId, { name: string; doing: string; done: string; fail: string }>,
   /** Materiales que se pierden al fallar (sin plural): "−2 de tela". */
   materials: {
@@ -117,12 +123,14 @@ export const es = {
     mend: 'una prenda con agujeros, 1 uso de hilo, 1 tela, retal o tira y una aguja',
     pad: 'una prenda, 1 uso de hilo, 1 tela, retal o tira y una aguja',
     unpickGarment: 'una prenda destrozada y un cuchillo',
+    wash: 'una prenda sucia o con sangre y 2 litros de agua en el barreño',
   } satisfies Record<RecipeId, string>,
   /** En el registro, con la prenda (H5b): "Ana ha remendado la chaqueta vaquera". */
   garmentDone: {
     mend: (the: string) => `ha remendado ${the}`,
     pad: (the: string) => `ha reforzado ${the}`,
     unpickGarment: (the: string) => `ha descosido ${the}`,
+    wash: (the: string) => `ha lavado ${the}`,
   } as Partial<Record<RecipeId, (the: string) => string>>,
   billModes: { until: 'hasta tener', count: 'veces', always: 'siempre que haya' },
   billDone: (n: number, total: number) => `hechos ${n}/${total}`,

@@ -1,6 +1,6 @@
 // H5b §2: prendas, capas y zonas; gente vestida; la ropa no se pierde ni se duplica.
 import { expect, test } from 'vitest';
-import { CORPSE_ROT_TICKS, GARMENTS, TICKS_PER_DAY } from './balance';
+import { CORPSE_ROT_TICKS, DIRTY_HOURS, GARMENTS, TICKS_PER_DAY } from './balance';
 import {
   allPieces,
   blockHit,
@@ -12,7 +12,7 @@ import {
   wearable,
 } from './clothes';
 import { colonistHit } from './combat';
-import { corpsesSystem } from './corpses';
+import { corpsesSystem, leaveCorpse } from './corpses';
 import { banish, deathSystem, killSurvivor } from './death';
 import { checkInvariants } from './invariants';
 import { weightOf } from './items';
@@ -193,7 +193,7 @@ test('el que echan infectado vuelve como zombi con su ropa; muerto, su cuerpo la
 
 test('el cuerpo de un zombi que se pudre se lleva su ropa (se apunta en las cuentas)', () => {
   const w = base();
-  const z = newZombie(w, { x: 20, y: 20 });
+  const z = newZombie(w, { x: 20, y: 20 }, false);
   const jeans = newGarment(w, 'jeans');
   z.worn.push(jeans);
   w.zombies.push(z);
@@ -306,4 +306,63 @@ test('si no la para nadie: herida, y las prendas de esa zona con sangre; se apun
       part: 'rightLeg',
     }),
   );
+});
+
+// H5b §7: zombis vestidos y sus cuerpos.
+test('los zombis van vestidos: 2–4 prendas (arriba, pantalón y a veces chaqueta o gorra), sucias, con sangre, 0–2 agujeros', () => {
+  const w = w0();
+  const counts = new Set<number>();
+  let jackets = 0;
+  for (let i = 0; i < 300; i++) {
+    const z = newZombie(w, { x: 1, y: 1 });
+    counts.add(z.worn.length);
+    expect(z.worn.length).toBeGreaterThanOrEqual(2);
+    expect(z.worn.length).toBeLessThanOrEqual(4);
+    const kinds = z.worn.map((x) => x.kind);
+    expect(['tshirt', 'shirt']).toContain(kinds[0]);
+    expect(['jeans', 'tracksuit', 'workPants']).toContain(kinds[1]);
+    if (kinds.some((k) => k === 'denimJacket' || k === 'leatherJacket' || k === 'coat')) jackets++;
+    for (const x of z.worn) {
+      expect(x).toMatchObject({ bloody: true, from: 'zombie' });
+      expect(x.dirtHours).toBeGreaterThanOrEqual(DIRTY_HOURS);
+      expect(x.holes.length).toBeLessThanOrEqual(2);
+      for (const h of x.holes) expect(GARMENTS[x.kind].covers).toContain(h);
+    }
+    for (let a = 0; a < z.worn.length; a++)
+      for (let b = a + 1; b < z.worn.length; b++)
+        expect(clashes(z.worn[a]!, z.worn[b]!)).toBe(false);
+  }
+  expect([...counts].sort()).toEqual([2, 3, 4]);
+  expect(jackets).toBeGreaterThan(30);
+});
+
+test('el cuerpo de un zombi guarda su ropa y ya no lleva tela', () => {
+  const w = base();
+  for (let i = 0; i < 40; i++) {
+    const z = newZombie(w, { x: 20, y: 20 });
+    w.zombies.push(z);
+    const kinds = z.worn.map((x) => x.kind);
+    leaveCorpse(w, z);
+    w.zombies = w.zombies.filter((x) => x !== z);
+    const c = w.containers.at(-1)!;
+    expect(c.items.cloth).toBe(0);
+    expect(c.items.pieces.map((x) => x.kind)).toEqual(kinds);
+  }
+  expect(checkInvariants(w)).toEqual([]);
+});
+
+test('un colono que se levanta sigue llevando su ropa; lo demás, al suelo', () => {
+  const w = base();
+  const ana = w.survivors[0]!;
+  const kinds = ana.worn.map((x) => x.kind);
+  ana.carrying.pieces.push(newGarment(w, 'coat'));
+  ana.infection = { at: w.tick, deathAt: w.tick + 1 };
+  killSurvivor(w, ana, 'infection');
+  const body = w.containers.find((c) => c.name === ana.name)!;
+  w.tick = body.risesAt!;
+  deathSystem(w);
+  const z = w.zombies.find((x) => x.name === ana.name)!;
+  expect(z.worn.map((x) => x.kind)).toEqual(kinds);
+  expect(w.piles.flatMap((p) => p.items.pieces.map((x) => x.kind))).toEqual(['coat']);
+  expect(checkInvariants(w)).toEqual([]);
 });

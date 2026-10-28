@@ -1,4 +1,5 @@
 // Cuántos zombis hay y dónde aparecen (spec H4b §2.3).
+import { zombieClothes } from '../clothes';
 import {
   START_HOUR,
   TICKS_PER_DAY,
@@ -36,8 +37,8 @@ export function firstEdgeArrival(): number {
 }
 
 /** Un zombi nuevo, vagando, en el centro de la casilla `t`. */
-export function newZombie(w: World, t: Point): Zombie {
-  return {
+export function newZombie(w: World, t: Point, dressed = true): Zombie {
+  const z: Zombie = {
     id: w.nextZombieId++,
     pos: { x: t.x + 0.5, y: t.y + 0.5 },
     path: [],
@@ -51,6 +52,9 @@ export function newZombie(w: World, t: Point): Zombie {
     hordeId: null,
     worn: [],
   };
+  // Vestido (H5b §7), salvo el que fue una persona (lleva su ropa).
+  if (dressed) z.worn = zombieClothes(w);
+  return z;
 }
 
 /** Casillas (en línea recta o en diagonal) entre `p` y la base: 0 si está dentro. */

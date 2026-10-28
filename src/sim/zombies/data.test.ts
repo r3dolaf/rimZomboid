@@ -95,7 +95,15 @@ test('los zombis usan su propio azar: lo dem√°s del mundo no cambia con la opci√
   const few = createWorld(9, 'balanced', 'few');
   const many = createWorld(9, 'balanced', 'many');
   const strip = (w: ReturnType<typeof createWorld>) =>
-    JSON.stringify({ ...w, zombies: [], zombieRng: null, zombieLevel: null, nextZombieId: 0 });
+    JSON.stringify({
+      ...w,
+      zombies: [],
+      zombieRng: null,
+      zombieLevel: null,
+      nextZombieId: 0,
+      nextPieceId: 0, // H5b: la ropa de los zombis
+      pieceLog: null,
+    });
   expect(strip(few)).toBe(strip(many));
   expect(JSON.stringify(createWorld(9, 'balanced', 'many'))).toBe(JSON.stringify(many));
 });

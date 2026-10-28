@@ -5,6 +5,7 @@ import { REFUSE_CHANCE, TICKS_PER_DAY } from './balance';
 import { brains } from './brain';
 import { foodDays } from './colony';
 import { checkInvariants } from './invariants';
+import { newGarment } from './clothes';
 import { hasCargo } from './jobs/medical';
 import { emptyInventory, isEmpty } from './items';
 import { moodModifiers } from './mood';
@@ -308,4 +309,12 @@ test('H5b: las prendas de una casa saqueada acaban en el almacén', () => {
   const stored = w.storage.items.pieces.map((p) => p.id);
   for (const id of ids) expect(stored).toContain(id);
   expect(checkInvariants(w)).toEqual([]);
+});
+
+test('H5b: quien solo lleva una prenda encima tiene carga (la descarga en el almacén)', () => {
+  const w = createWorld(3);
+  const s = w.survivors[0]!;
+  expect(hasCargo(s)).toBe(false);
+  s.carrying.pieces.push(newGarment(w, 'cap'));
+  expect(hasCargo(s)).toBe(true);
 });

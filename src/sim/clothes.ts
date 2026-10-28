@@ -5,13 +5,15 @@ import {
   PAD_BONUS,
   PATCH_FACTOR,
   PROTECTION_MAX,
+  DIRTY_HOURS,
   START_EXTRA_CHANCE,
   START_EXTRAS,
+  ZOMBIE_CLOTHES,
   type GarmentSpec,
 } from './balance';
 import type { Inventory } from './items';
 import { logEvent } from './log';
-import { nextFloat, pick, type RngState } from './rng';
+import { nextFloat, nextInt, pick, weightedPick, type RngState } from './rng';
 import type {
   BodyPart,
   Garment,
@@ -118,6 +120,29 @@ export function starterClothes(w: PieceCounter, rng: RngState): Garment[] {
   ];
   if (nextFloat(rng) < START_EXTRA_CHANCE) worn.push(newGarment(w, pick(rng, START_EXTRAS)));
   return worn;
+}
+
+/**
+ * La ropa de un zombi (H5b §7), con el azar de los zombis: camiseta o camisa, pantalón y, a veces,
+ * chaqueta y gorra; sucia, con sangre y con 0–2 agujeros cada una.
+ */
+export function zombieClothes(w: World): Garment[] {
+  const rng = w.zombieRng;
+  const z = ZOMBIE_CLOTHES;
+  const kinds: GarmentKind[] = [weightedPick(rng, { ...z.top }), weightedPick(rng, { ...z.legs })];
+  if (nextFloat(rng) < z.jacketChance) kinds.push(weightedPick(rng, { ...z.jacket }));
+  if (nextFloat(rng) < z.hatChance) kinds.push(weightedPick(rng, { ...z.hat }));
+  return kinds.map((kind) => {
+    const g = newGarment(w, kind);
+    g.dirtHours = DIRTY_HOURS;
+    g.bloody = true;
+    g.from = 'zombie';
+    const zones = [...coversOf(g)];
+    const n = nextInt(rng, 0, Math.min(z.maxHoles, zones.length));
+    for (let i = 0; i < n; i++)
+      g.holes.push(zones.splice(nextInt(rng, 0, zones.length - 1), 1)[0]!);
+    return g;
+  });
 }
 
 /** Una prenda favorita y una odiada, distintas, al azar. */

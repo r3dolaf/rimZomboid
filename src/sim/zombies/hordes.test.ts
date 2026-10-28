@@ -15,6 +15,7 @@ import {
   WANDERERS_SIZE,
   ZOMBIE_MAX,
 } from '../balance';
+import { piecesGone } from '../clothes';
 import { dayStart } from '../clock';
 import { siegeEvent } from '../events/siege';
 import { strangersEvent } from '../events/strangers';
@@ -277,7 +278,7 @@ test('fin al día: la horda se va por donde vino (como unos errantes) y sale del
   const before = w.zombies.length;
   arrivalsSystem(w);
   expect(w.zombies.length).toBe(before + 1);
-  w.zombies.pop();
+  piecesGone(w, w.zombies.pop()!.worn);
   runZ(w, 3000);
   expect(w.zombies.filter((z) => z.hordeId === h.id)).toHaveLength(0);
   expect(w.hordes).toHaveLength(0);

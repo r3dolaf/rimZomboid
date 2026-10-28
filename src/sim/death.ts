@@ -18,6 +18,7 @@ import {
   TURNED_RETURN_TICKS,
 } from './balance';
 import { armFactor, canWalk } from './body';
+import { wearable } from './clothes';
 import { gameTime } from './clock';
 import { seenByColony } from './danger';
 import { addDecision } from './decisions';
@@ -217,7 +218,7 @@ function returningSystem(w: World): void {
     if (r.kind === 'stranger' && (w.stranger !== null || w.over !== null)) continue;
     w.returning = w.returning.filter((x) => x !== r);
     if (r.kind === 'zombie') {
-      const z = newZombie(w, r.pos);
+      const z = newZombie(w, r.pos, false);
       z.name = r.name;
       z.turnedFrom = r.survivorId;
       z.worn = r.worn;
@@ -331,8 +332,11 @@ function rise(w: World, c: Container): void {
     searcher.action = { type: 'idle', ticksLeft: 0 };
     searcher.path = [];
   }
+  // Se levanta con la ropa que llevaba (H5b §7); lo demás se queda en el suelo.
+  const z = newZombie(w, c.pos, false);
+  for (const g of c.items.pieces) if (g.from === 'colonist' && wearable(z.worn, g)) z.worn.push(g);
+  c.items.pieces = c.items.pieces.filter((g) => !z.worn.includes(g));
   dropPile(w, c.pos, c.items);
-  const z = newZombie(w, c.pos);
   if (c.name !== undefined) z.name = c.name;
   w.zombies.push(z);
   logEvent(w, { kind: 'rose', name: c.name ?? '?' });

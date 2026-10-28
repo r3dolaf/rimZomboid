@@ -43,7 +43,7 @@ function kill(w: World, x: number, y: number): Container {
 const WEAPONS = ['knife', 'bat', 'axe', 'crowbar', 'machete'] as const;
 const weapons = (c: Container) => WEAPONS.reduce((n, k) => n + c.items[k], 0);
 
-test('al matar a un zombi queda su cuerpo en su casilla: siempre 1–2 telas, sin marcar', () => {
+test('al matar a un zombi queda su cuerpo en su casilla: con su ropa (H5b: ya sin telas), sin marcar', () => {
   const w = world();
   const c = kill(w, 4, 6);
   expect(c).toMatchObject({
@@ -54,8 +54,8 @@ test('al matar a un zombi queda su cuerpo en su casilla: siempre 1–2 telas, si
     designated: false,
     reservedBy: null,
   });
-  expect(c.items.cloth).toBeGreaterThanOrEqual(1);
-  expect(c.items.cloth).toBeLessThanOrEqual(2);
+  expect(c.items.cloth).toBe(0);
+  expect(c.items.pieces.length).toBeGreaterThanOrEqual(2);
   expect(c.until).toBe(w.tick + CORPSE_ROT_TICKS);
   expect(checkInvariants(w)).toEqual([]);
 });

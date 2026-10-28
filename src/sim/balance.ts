@@ -348,8 +348,6 @@ export const RECIPES: Record<RecipeId, Recipe> = {
 export const BILL_DEFAULT_TARGET = 5; // un pedido nuevo: "hasta tener 5"
 
 // Cuerpos de zombi (H4d): lo que llevan (con el azar de los zombis) y cuándo desaparecen.
-export const CORPSE_CLOTH_MIN = 1;
-export const CORPSE_CLOTH_MAX = 2;
 export const CORPSE_WEAPON_CHANCE = 0.1;
 /** Qué arma, si lleva (pesos). */
 export const CORPSE_WEAPONS = { knife: 35, bat: 25, crowbar: 15, machete: 15, axe: 10 } as const;
@@ -927,3 +925,15 @@ export const HOLE_CHANCE = { scratch: 0.25, cut: 0.25, bite: 0.5 } as const sati
   WoundKind,
   number
 >;
+/** Horas puesta para que una prenda esté sucia (H5b §5). */
+export const DIRTY_HOURS = 72;
+/** La ropa de los zombis (H5b §7): arriba, pantalón y, a veces, chaqueta y gorra (pesos). */
+export const ZOMBIE_CLOTHES = {
+  top: { tshirt: 1, shirt: 1 },
+  legs: { jeans: 3, tracksuit: 2, workPants: 1 },
+  jacketChance: 0.3,
+  jacket: { denimJacket: 3, leatherJacket: 1, coat: 2 },
+  hatChance: 0.2,
+  hat: { cap: 1, beanie: 1 },
+  maxHoles: 2,
+} as const;

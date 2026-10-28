@@ -1,7 +1,5 @@
 // Cuerpos de zombi (spec H4d §7): un mueble de saqueo más, que se pudre o desaparece.
 import {
-  CORPSE_CLOTH_MAX,
-  CORPSE_CLOTH_MIN,
   CORPSE_EMPTY_TICKS,
   CORPSE_ROT_TICKS,
   CORPSE_SMALL_CHANCE,
@@ -12,17 +10,19 @@ import { piecesGone } from './clothes';
 import { emptyInventory, isEmpty } from './items';
 import { WEAPONS } from './jobs/weapons';
 import { dropPile } from './piles';
-import { nextFloat, nextInt, weightedPick } from './rng';
+import { nextFloat, weightedPick } from './rng';
 import type { Container, World, Zombie } from './types';
 import { tileOf } from './world';
 
 const weaponsIn = (c: Container) => WEAPONS.reduce((n, k) => n + c.items[k], 0);
 
-/** El cuerpo que deja un zombi al morir, con lo que lleva (azar de los zombis). */
+/**
+ * El cuerpo que deja un zombi al morir, con lo que lleva (azar de los zombis) y su ropa (H5b: la
+ * tela ya no sale de los cuerpos, sale de descoser su ropa).
+ */
 export function leaveCorpse(w: World, z: Zombie): void {
   const rng = w.zombieRng;
   const items = emptyInventory();
-  items.cloth = nextInt(rng, CORPSE_CLOTH_MIN, CORPSE_CLOTH_MAX);
   if (nextFloat(rng) < CORPSE_WEAPON_CHANCE) items[weightedPick(rng, { ...CORPSE_WEAPONS })]++;
   if (nextFloat(rng) < CORPSE_SMALL_CHANCE) items[nextFloat(rng) < 0.5 ? 'bandage' : 'food']++;
   // Su ropa (H5b §7), de un zombi (la de un colono que se levantó sigue siendo de un colono).

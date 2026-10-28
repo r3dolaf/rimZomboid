@@ -115,8 +115,11 @@ export function restDecision(s: Survivor, w: World): Action | null | undefined {
 
 /** ¿Lleva algo que descargar? Todo cuenta salvo sus BANDAGES_CARRIED vendas. */
 export function hasCargo(s: Survivor): boolean {
-  return ITEM_KINDS.some((k) =>
-    k === 'bandage' ? s.carrying.bandage > BANDAGES_CARRIED : s.carrying[k] > 0,
+  return (
+    s.carrying.pieces.length > 0 || // H5b: las prendas también
+    ITEM_KINDS.some((k) =>
+      k === 'bandage' ? s.carrying.bandage > BANDAGES_CARRIED : s.carrying[k] > 0,
+    )
   );
 }
 

@@ -1,6 +1,6 @@
 // H5b §4: vestirse — ponerse lo claramente mejor que permita su atuendo y quitarse lo que no.
 import { expect, test } from 'vitest';
-import { DRESS_TICKS } from './balance';
+import { DRESS_CHECK_TICKS, DRESS_TICKS } from './balance';
 import { newGarment, outfitScore } from './clothes';
 import { checkInvariants } from './invariants';
 import { dressJob } from './jobs/dress';
@@ -112,4 +112,17 @@ test('en modo combate no se viste', () => {
   stored(w, 'denimJacket');
   s.drafted = true;
   expect(dressJob(s, w)).toBeNull();
+});
+
+test('sin nada que hacer, no mira la ropa en cada tick: como mucho una vez por hora (rendimiento)', () => {
+  const w = world();
+  const s = w.survivors[0]!;
+  w.tick = 1000;
+  expect(findWork(s, w)).toBeNull();
+  expect(s.dressCheckAt).toBe(1000 + DRESS_CHECK_TICKS);
+  stored(w, 'denimJacket');
+  w.tick = 1000 + DRESS_CHECK_TICKS - 1;
+  expect(findWork(s, w)).toBeNull(); // aún no vuelve a mirar
+  w.tick = 1000 + DRESS_CHECK_TICKS;
+  expect(findWork(s, w)).toMatchObject({ type: 'moveTo', then: { type: 'dress' } });
 });

@@ -112,6 +112,7 @@ export function createWorld(
     likes: 'tshirt',
     hates: 'cap',
     outfitId: 1, // Cualquiera
+    dressCheckAt: 0,
   }));
   // La ropa del principio y las preferencias (H5b), con su propio azar.
   const clothesRng = createRng((seed ^ CLOTHES_SALT) >>> 0);

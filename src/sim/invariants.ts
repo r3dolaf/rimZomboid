@@ -11,7 +11,7 @@ import {
   TUB_LITERS,
   ZOMBIE_HEALTH,
 } from './balance';
-import { allPieces, clashes, coversOf, wornLists } from './clothes';
+import { clashes, coversOf, forEachPieceList } from './clothes';
 import { ITEM_KINDS, weightOf, type Inventory } from './items';
 import { inBounds, isWalkable, isZombieWalkable } from './map/grid';
 import { capacityKg, SKILLS, xpToNext } from './skills';
@@ -303,36 +303,39 @@ export function checkInvariants(w: World): string[] {
 
 /** Piezas (H5b §1): cada una en un solo sitio, con id válido, y ninguna perdida. */
 function checkPieces(problems: string[], w: World): void {
-  const seen = new Map<number, string>();
-  const all = allPieces(w);
-  for (const { where, piece } of all) {
-    const before = seen.get(piece.id);
-    if (before !== undefined)
-      problems.push(`pieza #${piece.id} en dos sitios: ${before} y ${where}`);
-    seen.set(piece.id, where);
-    if (!Number.isInteger(piece.id) || piece.id < 1 || piece.id >= w.nextPieceId)
-      problems.push(`pieza #${piece.id} (${where}): id no válido`);
-  }
-  // Prendas: agujeros, parches y refuerzos solo en lo que cubre; parche y agujero no a la vez.
-  for (const { where, piece: g } of all) {
-    const covers = coversOf(g);
-    const marks = [...g.holes, ...Object.keys(g.patches), ...Object.keys(g.pads)] as BodyPart[];
-    for (const z of marks)
-      if (!covers.includes(z))
-        problems.push(`prenda #${g.id} (${where}): marca en ${z}, que no cubre`);
-    for (const z of g.holes)
-      if (g.patches[z]) problems.push(`prenda #${g.id} (${where}): agujero y parche en ${z}`);
-    if (new Set(g.holes).size !== g.holes.length)
-      problems.push(`prenda #${g.id} (${where}): agujeros repetidos`);
-  }
-  // Nada que choque puesto a la vez.
-  for (const [where, worn] of wornLists(w))
-    for (let i = 0; i < worn.length; i++)
-      for (let j = i + 1; j < worn.length; j++)
-        if (clashes(worn[i]!, worn[j]!))
-          problems.push(`${where}: #${worn[i]!.id} y #${worn[j]!.id} chocan`);
+  const seen = new Map<number, () => string>();
+  let count = 0;
+  forEachPieceList(w, (list, where, worn) => {
+    for (const g of list) {
+      count++;
+      const before = seen.get(g.id);
+      if (before !== undefined)
+        problems.push(`pieza #${g.id} en dos sitios: ${before()} y ${where()}`);
+      seen.set(g.id, where);
+      if (!Number.isInteger(g.id) || g.id < 1 || g.id >= w.nextPieceId)
+        problems.push(`pieza #${g.id} (${where()}): id no válido`);
+      // Agujeros, parches y refuerzos solo en lo que cubre; parche y agujero no a la vez.
+      const covers = coversOf(g);
+      for (const z of g.holes) {
+        if (!covers.includes(z))
+          problems.push(`prenda #${g.id} (${where()}): marca en ${z}, que no cubre`);
+        if (g.patches[z]) problems.push(`prenda #${g.id} (${where()}): agujero y parche en ${z}`);
+      }
+      for (const z of [...Object.keys(g.patches), ...Object.keys(g.pads)] as BodyPart[])
+        if (!covers.includes(z))
+          problems.push(`prenda #${g.id} (${where()}): marca en ${z}, que no cubre`);
+      if (g.holes.length > 1 && new Set(g.holes).size !== g.holes.length)
+        problems.push(`prenda #${g.id} (${where()}): agujeros repetidos`);
+    }
+    // Nada que choque puesto a la vez.
+    if (worn)
+      for (let i = 0; i < list.length; i++)
+        for (let j = i + 1; j < list.length; j++)
+          if (clashes(list[i]!, list[j]!))
+            problems.push(`${where()}: #${list[i]!.id} y #${list[j]!.id} chocan`);
+  });
   const alive = w.pieceLog.made - w.pieceLog.gone;
-  if (all.length !== alive) problems.push(`piezas: hay ${all.length} y las cuentas dicen ${alive}`);
+  if (count !== alive) problems.push(`piezas: hay ${count} y las cuentas dicen ${alive}`);
 }
 
 function checkInventory(problems: string[], where: string, inv: Inventory): void {

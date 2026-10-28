@@ -1,6 +1,6 @@
 // Trabajos (spec H4a §3): cuál toca por orden de criticidad, si sigue teniendo sentido, y el
 // saqueo (elegir contenedor, reservar, descargar en el almacén).
-import { HUNGRY_LOOT_DAYS, ITEM_WEIGHT_KG } from './balance';
+import { DRESS_CHECK_TICKS, HUNGRY_LOOT_DAYS, ITEM_WEIGHT_KG } from './balance';
 import { armFactor } from './body';
 import { capacityKg } from './skills';
 import { foodDays } from './colony';
@@ -109,9 +109,13 @@ export function findWork(s: Survivor, w: World): Action | null {
   if (stock) return stock;
   const arm = weaponJob(s, w);
   if (arm) return arm;
-  // H5b: vestirse con lo mejor que permita su atuendo.
-  const dress = dressJob(s, w);
-  if (dress) return dress;
+  // H5b: vestirse con lo mejor que permita su atuendo. Lo mira como mucho una vez por hora: si
+  // no, quien no tiene nada que hacer repasaría toda la ropa del almacén en cada tick.
+  if (w.tick >= s.dressCheckAt) {
+    const dress = dressJob(s, w);
+    if (dress) return dress;
+    s.dressCheckAt = w.tick + DRESS_CHECK_TICKS;
+  }
   // Con poca comida, saquear va delante de todo, tenga la prioridad que tenga.
   if (loot && foodDays(w) < HUNGRY_LOOT_DAYS) {
     const a = pryJob(s, w) ?? lootJob(s, w);

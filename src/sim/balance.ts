@@ -1079,3 +1079,5 @@ export const RAIN_HOURS_MIN = 3;
 export const RAIN_HOURS_MAX = 6;
 export const RAIN_CISTERN_LITERS = 5;
 export const RAIN_TUB_LITERS = 2;
+/** Cada cuánto, como mucho, mira si cambiarse de ropa (rendimiento: el almacén puede tener mucha). */
+export const DRESS_CHECK_TICKS = TICKS_PER_HOUR;

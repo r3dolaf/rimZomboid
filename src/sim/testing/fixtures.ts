@@ -103,6 +103,7 @@ export function emptyWorld(width: number, height: number): World {
         likes: 'helmet',
         hates: 'chaps',
         outfitId: 1,
+        dressCheckAt: 0,
       },
     ],
     beds: [{ id: 1, pos: { x: width - 1, y: 0 }, ownerId: 1 }],

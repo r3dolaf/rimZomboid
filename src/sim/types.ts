@@ -373,6 +373,8 @@ export interface Survivor {
   hates: GarmentKind;
   /** Su atuendo (H5b §4). */
   outfitId: number;
+  /** Tick desde el que vuelve a mirar si cambiarse de ropa (como mucho una vez por hora). */
+  dressCheckAt: number;
 }
 
 /** Un atuendo (H5b §4): las prendas que se puede poner y si acepta ropa de muertos. */

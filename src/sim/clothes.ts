@@ -14,7 +14,6 @@ import {
   ZOMBIE_CLOTHES,
   type GarmentSpec,
 } from './balance';
-import type { Inventory } from './items';
 import { logEvent } from './log';
 import type { MoodModifier } from './mood';
 import { nextFloat, nextInt, pick, weightedPick, type RngState } from './rng';
@@ -263,16 +262,6 @@ export function piecesGone(w: World, pieces: readonly Piece[]): void {
   w.pieceLog.gone += pieces.length;
 }
 
-/** Todos los inventarios del mundo con su nombre (para las invariantes y las cuentas). */
-function inventories(w: World): [string, Inventory][] {
-  return [
-    ['almacén', w.storage.items],
-    ...people(w).map((s): [string, Inventory] => [`carga de ${s.name}`, s.carrying]),
-    ...w.containers.map((c): [string, Inventory] => [`contenedor #${c.id}`, c.items]),
-    ...w.piles.map((p): [string, Inventory] => [`montón #${p.id}`, p.items]),
-  ];
-}
-
 /** Las personas que están en el mundo (colonos, desconocidos, los que se van y los que vuelven). */
 function people(w: World): Survivor[] {
   return [
@@ -283,21 +272,34 @@ function people(w: World): Survivor[] {
   ];
 }
 
-/** Lo que lleva puesto cada uno (personas, zombis y los que vuelven como zombis). */
-export function wornLists(w: World): [string, Garment[]][] {
-  return [
-    ...people(w).map((s): [string, Garment[]] => [`ropa de ${s.name}`, s.worn]),
-    ...w.zombies.map((z): [string, Garment[]] => [`ropa del zombi #${z.id}`, z.worn]),
-    ...w.returning.flatMap((r): [string, Garment[]][] =>
-      r.kind === 'zombie' ? [[`ropa de ${r.name} (vuelve)`, r.worn]] : [],
-    ),
-  ];
-}
-
 /** Todas las piezas del mundo y dónde están. */
 export function allPieces(w: World): { where: string; piece: Piece }[] {
-  return [
-    ...inventories(w).flatMap(([where, inv]) => inv.pieces.map((piece) => ({ where, piece }))),
-    ...wornLists(w).flatMap(([where, worn]) => worn.map((piece) => ({ where, piece }))),
-  ];
+  const out: { where: string; piece: Piece }[] = [];
+  forEachPieceList(w, (list, where) => {
+    for (const piece of list) out.push({ where: where(), piece });
+  });
+  return out;
+}
+
+/**
+ * Cada lista de piezas del mundo (inventarios y ropa puesta) con su sitio, que se calcula solo si
+ * hace falta: las invariantes lo recorren en cada tick de la partida larga. `worn`: es ropa puesta.
+ */
+export function forEachPieceList(
+  w: World,
+  fn: (list: readonly Piece[], where: () => string, worn: boolean) => void,
+): void {
+  const each = (list: readonly Piece[], where: () => string, worn = false) => {
+    if (list.length > 0) fn(list, where, worn);
+  };
+  each(w.storage.items.pieces, () => 'almacén');
+  for (const s of people(w)) {
+    each(s.carrying.pieces, () => `carga de ${s.name}`);
+    each(s.worn, () => `ropa de ${s.name}`, true);
+  }
+  for (const z of w.zombies) each(z.worn, () => `ropa del zombi #${z.id}`, true);
+  for (const r of w.returning)
+    if (r.kind === 'zombie') each(r.worn, () => `ropa de ${r.name} (vuelve)`, true);
+  for (const c of w.containers) each(c.items.pieces, () => `contenedor #${c.id}`);
+  for (const p of w.piles) each(p.items.pieces, () => `montón #${p.id}`);
 }

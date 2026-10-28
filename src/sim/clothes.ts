@@ -1,5 +1,6 @@
 // Ropa (spec H5b §2–§5): prendas, capas, protección y lo que vale una prenda para alguien.
 import {
+  CLOTHES_MOOD,
   GARMENTS,
   HIT_WEIGHTS,
   HOLE_CHANCE,
@@ -9,11 +10,13 @@ import {
   DIRTY_HOURS,
   START_EXTRA_CHANCE,
   START_EXTRAS,
+  TICKS_PER_HOUR,
   ZOMBIE_CLOTHES,
   type GarmentSpec,
 } from './balance';
 import type { Inventory } from './items';
 import { logEvent } from './log';
+import type { MoodModifier } from './mood';
 import { nextFloat, nextInt, pick, weightedPick, type RngState } from './rng';
 import type {
   BodyPart,
@@ -103,14 +106,80 @@ export function protectionScore(worn: readonly Garment[]): number {
   return total;
 }
 
-/** Lo que vale para alguien llevar eso (H5b §4): su protección. */
-export function outfitScore(_s: Survivor, worn: readonly Garment[]): number {
-  return protectionScore(worn);
+export type ClothesMoodId = keyof typeof CLOTHES_MOOD;
+
+const dirty = (g: Garment) => g.dirtHours >= DIRTY_HOURS;
+
+/** Lo que dice cada prenda de por sí (rota, sucia, con sangre, de muertos, favorita, odiada). */
+function marksOf(s: Survivor, g: Garment): ClothesMoodId[] {
+  const out: ClothesMoodId[] = [];
+  if (g.holes.length > 0) out.push('tornClothes');
+  if (dirty(g)) out.push('dirtyClothes');
+  if (g.bloody) out.push('bloodyClothes');
+  if (g.from === 'colonist') out.push('deadClothes');
+  if (g.from === 'zombie') out.push('zombieClothes');
+  if (g.kind === s.likes) out.push('favoriteGarment');
+  if (g.kind === s.hates) out.push('hatedGarment');
+  return out;
+}
+
+/** Lo que no le importa a un Práctico (H5b §5). */
+const PRACTICAL_IGNORES: readonly ClothesMoodId[] = [
+  'tornClothes',
+  'dirtyClothes',
+  'bloodyClothes',
+  'deadClothes',
+  'zombieClothes',
+];
+
+/** Cuánto le cuenta un motivo de la ropa según sus rasgos (0: no le afecta). */
+function weight(s: Survivor, id: ClothesMoodId): number {
+  if (s.traits.includes('slob')) return id === 'naked' || id === 'halfNaked' ? 1 : 0;
+  if (s.traits.includes('practical') && PRACTICAL_IGNORES.includes(id)) return 0;
+  return s.traits.includes('vain') ? 2 : 1;
+}
+
+/**
+ * La ropa en el ánimo (H5b §5): medio desnudo o desnudo; rota, sucia, con sangre, de un muerto o
+ * de un zombi (una vez cada cosa, lleve las que lleve); bien vestido; su favorita y la odiada.
+ */
+export function clothesMood(s: Survivor, worn: readonly Garment[] = s.worn): MoodModifier[] {
+  const covers = (z: BodyPart) => worn.some((g) => coversOf(g).includes(z));
+  const torso = covers('torso');
+  const legs = covers('leftLeg') || covers('rightLeg');
+  const ids: ClothesMoodId[] = [];
+  if (!torso && !legs) ids.push('naked');
+  else if (!torso || !legs) ids.push('halfNaked');
+  const marks = new Set(worn.flatMap((g) => marksOf(s, g)));
+  const bad = PRACTICAL_IGNORES.filter((id) => marks.has(id) && weight(s, id) > 0);
+  if (torso && legs && bad.length === 0) ids.push('wellDressed');
+  ids.push(...bad);
+  if (marks.has('favoriteGarment')) ids.push('favoriteGarment');
+  if (marks.has('hatedGarment')) ids.push('hatedGarment');
+  return ids
+    .map((id) => ({ id, value: CLOTHES_MOOD[id] * weight(s, id) }))
+    .filter((m) => m.value !== 0);
+}
+
+const sum = (mods: MoodModifier[]) => mods.reduce((n, m) => n + m.value, 0);
+
+/** Lo que vale para alguien llevar eso (H5b §4): su protección (Práctico, el doble) y su ánimo. */
+export function outfitScore(s: Survivor, worn: readonly Garment[]): number {
+  const protect = protectionScore(worn) * (s.traits.includes('practical') ? 2 : 1);
+  return protect + sum(clothesMood(s, worn));
 }
 
 /** Lo que vale una prenda sola para alguien (para comparar con lo que lleva en su hueco). */
 export function garmentValue(s: Survivor, g: Garment): number {
-  return outfitScore(s, [g]);
+  const protect = protectionScore([g]) * (s.traits.includes('practical') ? 2 : 1);
+  return protect + marksOf(s, g).reduce((n, id) => n + CLOTHES_MOOD[id] * weight(s, id), 0);
+}
+
+/** Cada hora, la ropa puesta se ensucia (H5b §5). */
+export function clothesSystem(w: World): void {
+  if (w.tick % TICKS_PER_HOUR !== 0) return;
+  for (const s of [...w.survivors, ...(w.stranger?.survivors ?? [])])
+    for (const g of s.worn) g.dirtHours++;
 }
 
 /** Destrozada: con agujeros en todas las zonas que cubre. */

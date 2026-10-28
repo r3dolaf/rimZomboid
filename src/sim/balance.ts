@@ -1020,3 +1020,16 @@ export const DRESS_MARGIN = 0.2;
 export const DRESS_MIN_GAIN = 0.5;
 /** Cambios de ropa en una visita al almacén, como mucho. */
 export const DRESS_MAX_CHANGES = 8;
+/** La ropa en el ánimo (H5b §5). */
+export const CLOTHES_MOOD = {
+  halfNaked: -5,
+  naked: -10,
+  tornClothes: -3,
+  dirtyClothes: -2,
+  bloodyClothes: -4,
+  deadClothes: -3,
+  zombieClothes: -5,
+  wellDressed: 3,
+  favoriteGarment: 4,
+  hatedGarment: -4,
+} as const;

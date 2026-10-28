@@ -17,6 +17,7 @@ import {
   TIRED_BELOW,
   TIRED_MOOD,
 } from './balance';
+import { clothesMood, type ClothesMoodId } from './clothes';
 import { contains } from './geom';
 import type { Memory, MemoryId, Rect, Survivor } from './types';
 
@@ -31,6 +32,7 @@ export type MoodModifierId =
   | 'pessimist'
   | 'scaredOutside'
   | 'hurt'
+  | ClothesMoodId
   | MemoryId;
 
 /** Un motivo del ánimo. Los recuerdos llevan su tick de caducidad y con quién fueron. */
@@ -60,6 +62,7 @@ export function moodModifiers(s: Survivor, tick: number, base?: Rect): MoodModif
   if (s.traits.includes('pessimist')) mods.push({ id: 'pessimist', value: PESSIMIST_MOOD });
   if (base && s.traits.includes('coward') && !contains(base, tileOf(s.pos)))
     mods.push({ id: 'scaredOutside', value: SCARED_OUTSIDE_MOOD });
+  mods.push(...clothesMood(s)); // H5b §5
   for (const m of s.memories)
     if (m.expiresAt > tick && (m.value ?? MEMORY_EFFECTS[m.id].value) !== 0) {
       const mod: MoodModifier = {

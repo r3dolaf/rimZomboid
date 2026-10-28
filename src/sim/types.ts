@@ -88,7 +88,11 @@ export type TraitId =
   | 'slowLearner'
   | 'pleasant'
   | 'unpleasant'
-  | 'keenEye';
+  | 'keenEye'
+  // Estilo (H5b §5)
+  | 'vain'
+  | 'slob'
+  | 'practical';
 
 /** Partes del cuerpo (H5 §2.1). */
 export type BodyPart = 'head' | 'torso' | 'leftArm' | 'rightArm' | 'leftLeg' | 'rightLeg';

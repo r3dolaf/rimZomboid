@@ -45,8 +45,8 @@ test('lista los motivos del ánimo con su valor y el ánimo actual → objetivo'
   const items = [...sheetEl(root).querySelectorAll('[data-testid="modifier"]')].map(
     (li) => li.textContent,
   );
-  expect(items).toEqual(['Hambriento −10', 'Comió +5 (quedan 6 h)']);
-  expect(sheetEl(root).querySelector('[data-testid="mood"]')!.textContent).toBe('52 → 45');
+  expect(items).toEqual(['Hambriento −10', 'Bien vestido +3', 'Comió +5 (quedan 6 h)']);
+  expect(sheetEl(root).querySelector('[data-testid="mood"]')!.textContent).toBe('52 → 48');
   root.remove();
 });
 

@@ -611,6 +611,16 @@ export const es = {
     pleasant: { name: 'Agradable', desc: '+2 en Social.' },
     unpleasant: { name: 'Desagradable', desc: '−2 en Social.' },
     keenEye: { name: 'Buen ojo', desc: '+2 en Saquear.' },
+    // Estilo (H5b)
+    vain: {
+      name: 'Presumido',
+      desc: 'La ropa le cuenta el doble en el ánimo, lo bueno y lo malo.',
+    },
+    slob: { name: 'Desaliñado', desc: 'La ropa no le importa, salvo ir desnudo.' },
+    practical: {
+      name: 'Práctico',
+      desc: 'No le importa la ropa rota, sucia, con sangre ni de muertos; elige por la protección.',
+    },
   } satisfies Record<TraitId, { name: string; desc: string }>,
 
   modifiers: {
@@ -623,6 +633,17 @@ export const es = {
     optimist: 'Optimista',
     pessimist: 'Pesimista',
     scaredOutside: 'Asustado fuera',
+    // Ropa (H5b)
+    halfNaked: 'Medio desnudo',
+    naked: 'Desnudo',
+    tornClothes: 'Ropa rota',
+    dirtyClothes: 'Ropa sucia',
+    bloodyClothes: 'Ropa con sangre',
+    deadClothes: 'Ropa de un muerto',
+    zombieClothes: 'Ropa de un zombi',
+    wellDressed: 'Bien vestido',
+    favoriteGarment: 'Lleva su prenda favorita',
+    hatedGarment: 'Lleva una prenda que odia',
     sleptInBed: 'Durmió en una cama',
     sleptOnFloor: 'Durmió en el suelo',
     ate: 'Comió',

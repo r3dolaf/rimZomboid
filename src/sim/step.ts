@@ -1,3 +1,4 @@
+import { clothesSystem } from './clothes';
 import { corpsesSystem } from './corpses';
 import { combatSystem } from './combat';
 import { deathSystem } from './death';
@@ -27,6 +28,7 @@ export function step(w: World): void {
   healthSystem(w);
   deathSystem(w); // H5
   furnitureSystem(w);
+  clothesSystem(w); // H5b: la ropa puesta se ensucia
   moodSystem(w);
   socialSystem(w);
   narratorSystem(w);

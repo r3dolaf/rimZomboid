@@ -73,6 +73,10 @@ test('nueve rasgos nuevos, en parejas que no se dan juntas', () => {
     'pleasant',
     'unpleasant',
     'keenEye',
+    // Estilo (H5b)
+    'vain',
+    'slob',
+    'practical',
   ]);
   expect(INCOMPATIBLE).toEqual([
     ['brave', 'coward'],
@@ -81,6 +85,7 @@ test('nueve rasgos nuevos, en parejas que no se dan juntas', () => {
     ['strong', 'weak'],
     ['fastLearner', 'slowLearner'],
     ['pleasant', 'unpleasant'],
+    ['vain', 'slob'], // H5b
   ]);
 });
 

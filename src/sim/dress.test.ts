@@ -42,8 +42,7 @@ test('valor de lo puesto: más protección, más valor; las capas suman como al 
   const tee = newGarment(w, 'tshirt');
   const jacket = newGarment(w, 'denimJacket');
   const hoodie = newGarment(w, 'hoodie');
-  expect(outfitScore(s, [])).toBe(0);
-  expect(outfitScore(s, [tee])).toBeGreaterThan(0);
+  expect(outfitScore(s, [tee])).toBeGreaterThan(outfitScore(s, [])); // y ya no va desnuda
   expect(outfitScore(s, [jacket])).toBeGreaterThan(outfitScore(s, [hoodie]));
   expect(outfitScore(s, [jacket, hoodie])).toBeGreaterThan(outfitScore(s, [jacket]));
   const holed = newGarment(w, 'denimJacket');

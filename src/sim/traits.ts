@@ -18,6 +18,10 @@ export const TRAITS: readonly TraitId[] = [
   'pleasant',
   'unpleasant',
   'keenEye',
+  // Estilo (H5b)
+  'vain',
+  'slob',
+  'practical',
 ];
 
 /** Parejas que no pueden darse juntas. */
@@ -28,6 +32,7 @@ export const INCOMPATIBLE: readonly (readonly [TraitId, TraitId])[] = [
   ['strong', 'weak'],
   ['fastLearner', 'slowLearner'],
   ['pleasant', 'unpleasant'],
+  ['vain', 'slob'],
 ];
 
 function compatible(a: TraitId, b: TraitId): boolean {

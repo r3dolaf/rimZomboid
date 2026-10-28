@@ -941,7 +941,7 @@ export const LOOT_GARMENTS: Partial<
   Record<LootKind, { count: [number, number]; kinds: Partial<Record<GarmentKind, number>> }>
 > = {
   house: {
-    count: [0, 3],
+    count: [1, 3],
     kinds: {
       tshirt: 3,
       longSleeve: 2,
@@ -950,8 +950,8 @@ export const LOOT_GARMENTS: Partial<
       sweater: 2,
       jeans: 3,
       tracksuit: 2,
-      coat: 1,
-      denimJacket: 1,
+      coat: 2,
+      denimJacket: 3,
       cap: 1,
       beanie: 1,
     },
@@ -964,19 +964,19 @@ export const LOOT_GARMENTS: Partial<
       shirt: 3,
       hoodie: 2,
       sweater: 2,
-      denimJacket: 2,
-      leatherJacket: 1,
-      coat: 1,
+      denimJacket: 4,
+      leatherJacket: 3,
+      coat: 2,
       tracksuit: 2,
       jeans: 3,
       cap: 2,
       beanie: 2,
     },
   },
-  police: { count: [2, 4], kinds: { vest: 3, helmet: 2 } },
-  hardware: { count: [1, 3], kinds: { workPants: 3, chaps: 1, coat: 1 } },
-  farm: { count: [1, 3], kinds: { workPants: 2, chaps: 1, coat: 2, beanie: 1 } },
-  warehouse: { count: [1, 3], kinds: { workPants: 2, coat: 1, chaps: 1 } },
+  police: { count: [4, 6], kinds: { vest: 3, helmet: 2 } },
+  hardware: { count: [2, 4], kinds: { workPants: 3, chaps: 1, coat: 1 } },
+  farm: { count: [2, 4], kinds: { workPants: 2, chaps: 1, coat: 2, beanie: 1 } },
+  warehouse: { count: [2, 4], kinds: { workPants: 2, coat: 1, chaps: 1 } },
 };
 /** Al parar un golpe, probabilidad de que la prenda se agujeree ahí (H5b §3). */
 export const HOLE_CHANCE = { scratch: 0.25, cut: 0.25, bite: 0.5 } as const satisfies Record<

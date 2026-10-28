@@ -145,7 +145,7 @@ export function checkInvariants(w: World): string[] {
     for (const id of d.survivorIds)
       if (!ids.has(id) && !strangerIds.has(id))
         problems.push(`decisión ${d.id} (${d.kind}): el superviviente #${id} no existe`);
-  for (const v of [w.narrator.nextEventAt, w.narrator.phaseEndsAt, w.stormUntil])
+  for (const v of [w.narrator.nextEventAt, w.narrator.phaseEndsAt, w.stormUntil, w.rainUntil])
     if (!Number.isFinite(v)) problems.push(`narrador: tick no válido (${v})`);
   for (const s of w.stranger?.survivors ?? []) {
     const who = `desconocido ${s.name} (#${s.id})`;

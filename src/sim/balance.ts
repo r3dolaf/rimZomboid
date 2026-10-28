@@ -1056,3 +1056,8 @@ export const WATER_CUT_DAY_MAX = 14;
 /** Qué edificios tienen fregadero y cuáles cisterna (uno de cada). */
 export const SINK_IN: readonly LootKind[] = ['house', 'supermarket', 'gas', 'farm'];
 export const CISTERN_IN: readonly LootKind[] = ['farm', 'gas', 'warehouse'];
+/** La lluvia (H5b §6): cuánto dura y lo que llena cada hora. */
+export const RAIN_HOURS_MIN = 3;
+export const RAIN_HOURS_MAX = 6;
+export const RAIN_CISTERN_LITERS = 5;
+export const RAIN_TUB_LITERS = 2;

@@ -7,6 +7,7 @@ import { gossipEvent } from './gossip';
 import { griefEvent } from './grief';
 import { jealousyEvent } from './jealousy';
 import { storyNightEvent } from './storyNight';
+import { rainEvent } from './rain';
 import { siegeEvent } from './siege';
 import { stormEvent } from './storm';
 import { strangersEvent } from './strangers';
@@ -30,4 +31,5 @@ export const CATALOG: readonly GameEvent[] = [
   fluEvent,
   siegeEvent,
   wanderersEvent,
+  rainEvent, // H5b
 ];

@@ -587,7 +587,9 @@ export type EventId =
   | 'flu'
   // Hordas (H4e)
   | 'siege'
-  | 'wanderers';
+  | 'wanderers'
+  // Lluvia (H5b)
+  | 'rain';
 
 /** El narrador (spec H3c §2): cuándo y de qué tono pasan cosas. */
 export interface Narrator {
@@ -694,6 +696,8 @@ export interface World {
   nextOutfitId: number;
   /** Tick en que se corta el agua corriente (H5b §6). */
   waterCutAt: number;
+  /** Llueve mientras el tick sea menor que este (también con tormenta). */
+  rainUntil: number;
 }
 
 /** Uno que echaron y que vuelve en `at` por donde se fue (`pos`). */

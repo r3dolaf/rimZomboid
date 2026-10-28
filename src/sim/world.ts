@@ -186,6 +186,7 @@ export function createWorld(
     },
     decisions: [],
     stormUntil: 0,
+    rainUntil: 0, // H5b
     piles: [],
     blueprints: [],
     furniture: fixtures,

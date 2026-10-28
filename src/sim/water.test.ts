@@ -1,17 +1,29 @@
 // H5b §6: agua — cubos y botellas en el botín, fregaderos y cisternas, el corte del agua, la lluvia
 // y el barreño.
 import { expect, test } from 'vitest';
-import { CISTERN_LITERS, LOOT, START_HOUR, TICKS_PER_DAY, TICKS_PER_HOUR } from './balance';
+import {
+  CISTERN_LITERS,
+  LOOT,
+  START_HOUR,
+  TICKS_PER_DAY,
+  TICKS_PER_HOUR,
+  TUB_LITERS,
+} from './balance';
+import { CATALOG } from './events/catalog';
+import { rainEvent } from './events/rain';
+import { stormEvent } from './events/storm';
+import { dropPile } from './piles';
 import { gameTime } from './clock';
 import { contains } from './geom';
 import { checkInvariants } from './invariants';
 import { emptyInventory } from './items';
 import { fillBuilding } from './loot';
-import { getTile } from './map/grid';
+import { getTile, isWalkable } from './map/grid';
 import { createRng } from './rng';
 import { Tile, type Container, type ContainerKind } from './types';
-import { mainsOn, waterSystem } from './water';
+import { isRaining, mainsOn, waterSystem } from './water';
 import { createWorld } from './world';
+import { indoors } from './zombies/spawn';
 
 function furniture(kinds: readonly ContainerKind[]): Container[] {
   return kinds.map((kind, i) => ({
@@ -101,5 +113,67 @@ test('invariantes: el agua, entre 0 y lo que cabe', () => {
   w.furniture.push({ id: 900, kind: 'tub', pos: { x: 1, y: 1 }, water: 25 });
   expect(checkInvariants(w).some((p) => p.includes('agua'))).toBe(true);
   w.furniture.at(-1)!.water = 20;
+  expect(checkInvariants(w)).toEqual([]);
+});
+
+// H5b §6: la lluvia.
+test('Llueve: suceso bueno de 3–6 h, cada 2 días como poco; la tormenta también llueve', () => {
+  const w = createWorld(3);
+  expect(rainEvent).toMatchObject({ id: 'rain', tone: 'good', cooldownDays: 2 });
+  expect(CATALOG).toContain(rainEvent);
+  expect(rainEvent.canHappen(w)).toBe(true);
+  rainEvent.happen(w);
+  expect(isRaining(w)).toBe(true);
+  expect(w.rainUntil - w.tick).toBeGreaterThanOrEqual(3 * TICKS_PER_HOUR);
+  expect(w.rainUntil - w.tick).toBeLessThanOrEqual(6 * TICKS_PER_HOUR);
+  expect(w.log.at(-1)).toMatchObject({ kind: 'rain' });
+  expect(rainEvent.canHappen(w)).toBe(false);
+  const v = createWorld(3);
+  stormEvent.happen(v);
+  expect(v.rainUntil).toBe(v.stormUntil);
+});
+
+test('cada hora de lluvia: los cubos vacíos al aire libre se llenan; cisternas +5 (hasta 200); el barreño fuera +2 (hasta 20)', () => {
+  const w = createWorld(3);
+  // Una casilla al aire libre (fuera de todo edificio) y otra dentro de la base.
+  const inside = w.storage.tiles[0]!;
+  let outside = { x: 0, y: 0 };
+  for (let r = 2; r < 30 && outside.x === 0; r++)
+    for (const [dx, dy] of [
+      [0, r],
+      [r, 0],
+      [0, -r],
+      [-r, 0],
+    ] as const) {
+      const t = { x: w.base.door.x + dx, y: w.base.door.y + dy };
+      if (isWalkable(w.grid, t.x, t.y) && !indoors(w, t.x, t.y)) {
+        outside = t;
+        break;
+      }
+    }
+  dropPile(w, outside, { ...emptyInventory(), bucket: 2, food: 1 });
+  dropPile(w, inside, { ...emptyInventory(), bucket: 1 });
+  const cistern = w.furniture.find((f) => f.kind === 'cistern')!;
+  cistern.water = 198;
+  w.furniture.push({ id: w.nextId++, kind: 'tub', pos: outside, water: 19 });
+  w.furniture.push({ id: w.nextId++, kind: 'tub', pos: inside, water: 0 });
+  w.tick = 10 * TICKS_PER_HOUR - 1;
+  w.rainUntil = w.tick + 3 * TICKS_PER_HOUR;
+  waterSystem(w);
+  expect(w.piles.find((p) => p.pos.x === outside.x && p.pos.y === outside.y)!.items).toMatchObject({
+    bucket: 2,
+  }); // aún no ha pasado la hora
+  w.tick++;
+  waterSystem(w);
+  const pileOut = w.piles.find((p) => p.pos.x === outside.x && p.pos.y === outside.y)!;
+  expect(pileOut.items).toMatchObject({ bucket: 0, waterBucket: 2, food: 1 });
+  expect(w.piles.find((p) => p.pos.x === inside.x && p.pos.y === inside.y)!.items.bucket).toBe(1);
+  expect(cistern.water).toBe(CISTERN_LITERS);
+  expect(w.furniture.at(-2)!.water).toBe(TUB_LITERS);
+  expect(w.furniture.at(-1)!.water).toBe(0);
+  w.tick = w.rainUntil + TICKS_PER_HOUR - (w.rainUntil % TICKS_PER_HOUR);
+  cistern.water = 0;
+  waterSystem(w);
+  expect(cistern.water).toBe(0); // ya no llueve
   expect(checkInvariants(w)).toEqual([]);
 });

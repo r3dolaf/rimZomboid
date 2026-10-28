@@ -122,6 +122,7 @@ export function emptyWorld(width: number, height: number): World {
     },
     decisions: [],
     stormUntil: 0,
+    rainUntil: 0, // H5b
     piles: [],
     blueprints: [],
     furniture: [],

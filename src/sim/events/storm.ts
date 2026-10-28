@@ -14,6 +14,7 @@ export const stormEvent: GameEvent = {
   happen(w) {
     w.stormUntil =
       w.tick + nextInt(w.rng, STORM_HOURS_MIN * TICKS_PER_HOUR, STORM_HOURS_MAX * TICKS_PER_HOUR);
+    w.rainUntil = Math.max(w.rainUntil, w.stormUntil); // H5b: también llueve
     for (const s of w.survivors) addMemory(s, 'storm', w.tick);
     logEvent(w, { kind: 'storm' });
   },

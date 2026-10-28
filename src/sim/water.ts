@@ -3,10 +3,13 @@
 import {
   CISTERN_IN,
   CISTERN_LITERS,
+  RAIN_CISTERN_LITERS,
+  RAIN_TUB_LITERS,
   SINK_IN,
   START_HOUR,
   TICKS_PER_DAY,
   TICKS_PER_HOUR,
+  TUB_LITERS,
   WATER_CUT_DAY_MAX,
   WATER_CUT_DAY_MIN,
 } from './balance';
@@ -14,6 +17,7 @@ import { logEvent } from './log';
 import { wallSpots } from './map/recipes';
 import { nextInt, type RngState } from './rng';
 import type { Building, Container, Furniture, Grid, World } from './types';
+import { indoors } from './zombies/spawn';
 
 /** ¿Sigue habiendo agua corriente? */
 export const mainsOn = (w: World): boolean => w.tick < w.waterCutAt;
@@ -59,7 +63,25 @@ export function placeFixtures(
   return out;
 }
 
-/** Al cortarse el agua corriente, se avisa. */
+/** ¿Llueve? (Con tormenta, también.) */
+export const isRaining = (w: World): boolean => w.tick < w.rainUntil;
+
+/**
+ * Al cortarse el agua corriente, se avisa. Cada hora de lluvia: los cubos vacíos de los montones
+ * al aire libre se llenan, las cisternas suben y el barreño de fuera también.
+ */
 export function waterSystem(w: World): void {
   if (w.tick === w.waterCutAt) logEvent(w, { kind: 'waterCut' });
+  if (!isRaining(w) || w.tick % TICKS_PER_HOUR !== 0) return;
+  for (const p of w.piles) {
+    if (p.items.bucket === 0 || indoors(w, p.pos.x, p.pos.y)) continue;
+    p.items.waterBucket += p.items.bucket;
+    p.items.bucket = 0;
+  }
+  for (const f of w.furniture) {
+    if (f.kind === 'cistern')
+      f.water = Math.min(CISTERN_LITERS, (f.water ?? 0) + RAIN_CISTERN_LITERS);
+    else if (f.kind === 'tub' && !indoors(w, f.pos.x, f.pos.y))
+      f.water = Math.min(TUB_LITERS, (f.water ?? 0) + RAIN_TUB_LITERS);
+  }
 }

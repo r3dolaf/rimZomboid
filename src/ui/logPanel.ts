@@ -178,7 +178,8 @@ export function mountLog(root: HTMLElement, opts: { world: World }): { update():
     });
     filters.append(b);
   }
-  panel.append(head, filters, list);
+  // Los filtros, abajo y siempre a la vista (junto a los sucesos más recientes).
+  panel.append(head, list, filters);
   root.append(panel);
 
   let collapsed = loadCollapsed();

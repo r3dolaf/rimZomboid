@@ -229,3 +229,14 @@ test('filtros: un botón por categoría; apagarlo oculta sus sucesos y se recuer
   expect(items()).toHaveLength(2);
   localStorage.removeItem('rimzomboid.logFilters');
 });
+
+test('los filtros van abajo del registro, después de la lista (siempre a mano)', () => {
+  const root = document.createElement('div');
+  mountLog(root, { world: createWorld(2) });
+  const panel = root.querySelector('[data-testid="log"]')!;
+  expect([...panel.children].map((c) => c.tagName.toLowerCase() + '.' + c.className)).toEqual([
+    'header.',
+    'ol.',
+    'div.log-filters',
+  ]);
+});

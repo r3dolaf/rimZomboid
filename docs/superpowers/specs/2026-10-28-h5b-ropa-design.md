@@ -35,17 +35,17 @@ Que vestir bien a los colonos importe y que la tela, el hilo y la aguja tengan u
 | Camisa                  | torso y brazos | media    | 15 %    | 5 %      | 0,3 kg | 2 telas              |
 | Sudadera                | torso y brazos | media    | 25 %    | 10 %     | 0,6 kg | 2 telas              |
 | Jersey de lana          | torso y brazos | media    | 30 %    | 10 %     | 0,7 kg | 2 telas              |
-| Chaqueta vaquera        | torso y brazos | exterior | 45 %    | 25 %     | 1,2 kg | 3 retales de vaquero |
-| Chaqueta de cuero       | torso y brazos | exterior | 60 %    | 35 %     | 1,5 kg | 3 tiras de cuero     |
-| Abrigo                  | torso y brazos | exterior | 40 %    | 20 %     | 1,5 kg | 3 telas              |
-| Chaleco policial        | torso          | exterior | 70 %    | 50 %     | 2,5 kg | 2 telas              |
+| Chaqueta vaquera        | torso y brazos | exterior | 60 %    | 35 %     | 1,2 kg | 3 retales de vaquero |
+| Chaqueta de cuero       | torso y brazos | exterior | 75 %    | 50 %     | 1,5 kg | 3 tiras de cuero     |
+| Abrigo                  | torso y brazos | exterior | 55 %    | 30 %     | 1,5 kg | 3 telas              |
+| Chaleco policial        | torso          | exterior | 85 %    | 65 %     | 2,5 kg | 2 telas              |
 | Chándal                 | piernas        | interior | 15 %    | 5 %      | 0,5 kg | 2 telas              |
 | Vaqueros                | piernas        | interior | 35 %    | 15 %     | 0,8 kg | 2 retales de vaquero |
-| Pantalón de trabajo     | piernas        | interior | 40 %    | 20 %     | 0,9 kg | 2 telas              |
-| Perneras de cuero       | piernas        | exterior | 55 %    | 35 %     | 1,5 kg | 2 tiras de cuero     |
+| Pantalón de trabajo     | piernas        | interior | 50 %    | 30 %     | 0,9 kg | 2 telas              |
+| Perneras de cuero       | piernas        | exterior | 70 %    | 50 %     | 1,5 kg | 2 tiras de cuero     |
 | Gorra                   | cabeza         | —        | 10 %    | 0 %      | 0,1 kg | 1 tela               |
 | Gorro de lana           | cabeza         | —        | 15 %    | 5 %      | 0,2 kg | 1 tela               |
-| Casco de moto           | cabeza         | —        | 60 %    | 50 %     | 1,5 kg | —                    |
+| Casco de moto           | cabeza         | —        | 80 %    | 65 %     | 1,5 kg | —                    |
 
 - **Dónde salen:** los colonos empiezan con camiseta y pantalón (vaqueros o chándal) y, la mitad, con algo más (sudadera, camisa o gorra); en los armarios de las casas; mucho en la tienda de ropa; chalecos y cascos en la comisaría; ropa de trabajo (pantalón de trabajo, perneras, abrigo) en la ferretería, la nave y la granja. Lo del botín sale limpio y sin agujeros.
 
@@ -122,3 +122,13 @@ Que vestir bien a los colonos importe y que la tela, el hilo y la aguja tengan u
 - **Navegador:** pestaña Ropa, panel Atuendos, Almacén con ropa, barreño.
 - **Equilibrio:** con la ropa del principio la colonia aguanta como en H5 (1–2 semanas saqueando todo sin defenderse); con buena ropa y cosiendo, bastante más. Se mide con la partida larga y se ajusta.
 - **Rendimiento:** por debajo de 1 ms por tick de media.
+
+## 10. Ajuste tras la partida larga
+
+Medido como en H5 §13 (Equilibrado, zombis normales, saqueando todo sin defenderse, con mesa y "vendas hasta 10", marcando los cuerpos; 12 semillas, 30 días). Con las cifras de arriba antes del ajuste, la colonia caía hacia el día 20 tanto con la ropa del principio como saqueando ropa: la protección media que llevaban solo subía de 11 a 23 y las heridas bajaban un 20 %. Vestidos con lo mejor desde el día 1 (chaqueta de cuero, perneras, casco), caía hacia el día 26 y la mitad llegaba al día 30: la buena ropa sirve, pero se encontraba poca. El usuario pidió que se note. Cambios:
+
+- La ropa buena protege más (la tabla de §2 ya lo recoge): chaqueta vaquera 60/35, de cuero 75/50, abrigo 55/30, chaleco 85/65, pantalón de trabajo 50/30, perneras 70/50, casco 80/65. La básica (camiseta, manga larga, camisa, sudadera, jersey, chándal, vaqueros, gorra, gorro), igual.
+- Más ropa buena en el botín: 1–3 prendas por casa (antes 0–3), con más chaquetas vaqueras y abrigos; en la tienda de ropa, más chaquetas y abrigos; 4–6 en la comisaría (antes 2–4); 2–4 de trabajo en ferretería, granja y nave (antes 1–3).
+- Se probó que la mitad de los colonos empezara con chaqueta vaquera: casi todas las colonias pasaban el mes. Se dejó como en §2 (sudadera, camisa o gorra).
+
+Resultado: saqueando y poniéndose ropa, cae hacia el día 19 y un tercio llega al día 30; quien encuentra buena ropa pronto aguanta bastante más. Casi todas las muertes siguen siendo por infección de arañazos, y las primeras llegan antes de encontrar la buena ropa.

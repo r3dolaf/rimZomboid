@@ -107,7 +107,7 @@ Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al p
 
 **Para H6 (pulido), de H5b:**
 
-- Equilibrio (como en H5: 6 semillas, Equilibrado/normal, saqueando todo, con mesa y "vendas hasta 10", marcando los cuerpos, sin defender), tras la revisión final. Solo con la ropa del principio, la colonia cae los días 17–31 (la mitad, hacia el 20); saqueando y poniéndose ropa, los días 8–31 (hacia el 17); además cosiendo (remendar, reforzar y descoser "siempre que haya"), los días 6–31 (hacia el 21). En H5 era 10–20 (hacia el 13). Casi todas las muertes siguen siendo por infección (de arañazos). Entre semillas cambia mucho más que entre variantes: con 6 partidas no se ve que la buena ropa ni coser alarguen la vida.
+- Equilibrio (spec H5b §10, 12 semillas como en H5): tras el ajuste (ropa buena más fuerte y más abundante en el botín), saqueando y poniéndose ropa la colonia cae hacia el día 19 y un tercio llega al día 30; vestidos con lo mejor desde el día 1, hacia el 26 y la mitad llega al 30. Casi todas las muertes siguen siendo por infección de arañazos, y las primeras llegan antes de encontrar la buena ropa. Con chaqueta vaquera al empezar casi todas pasaban el mes (se descartó).
 - Reforzar empieza en "siempre que haya" y se pasa el día reforzando todo lo del almacén, aunque nadie se lo vaya a poner, y quita tiempo de saquear. Quizá reforzar solo lo que lleva alguien o permite algún atuendo, o empezar en "veces".
 - Los cuerpos de los zombis ya no dan tela (sale de descoser su ropa): hay menos vendas al principio.
 - La ropa se acumula sin límite en el almacén (cada zombi muerto deja 2–4 prendas): falta poder tirarla o prohibirla.

@@ -1,4 +1,4 @@
-import { spend } from '../bags';
+import { spend, takeInto } from '../bags';
 import {
   BANDAGES_CARRIED,
   CHOP_NOISE_TICKS,
@@ -18,8 +18,8 @@ import { finishCraft, unloadAfterCraft } from '../jobs/craft';
 import { logEvent } from '../log';
 import { makeNoise } from '../noise';
 import { addMemory } from '../mood';
-import { addInto, addStacks, isEmpty, snapshot, takeUpTo } from '../items';
-import { capacityKg, practice } from '../skills';
+import { addInto, addStacks, isEmpty, snapshot } from '../items';
+import { practice } from '../skills';
 import { Tile, type Survivor, type World } from '../types';
 
 /** Avanzan y terminan las actividades: comer, dormir, crisis, registrar, descargar, pelear y consolar. */
@@ -137,7 +137,7 @@ function finishSearch(w: World, s: Survivor, containerId: number): void {
   const c = w.containers.find((x) => x.id === containerId);
   if (!c) return;
   const wasEmpty = isEmpty(c.items);
-  const taken = takeUpTo(c.items, s.carrying, capacityKg(s));
+  const taken = takeInto(w, s, c.items, 'loot'); // también en sus bolsas (H5b2)
   c.searched = true;
   c.reservedBy = null;
   addStacks(w.stats.looted, taken); // para el resumen final (H5 §9)

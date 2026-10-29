@@ -4,9 +4,17 @@ import { pick } from '../rng';
 import { doorsToPry } from './pry';
 import type { Action, Survivor, Weapon, World } from '../types';
 
-const RANK: Record<Weapon, number> = { knife: 1, bat: 2, axe: 3, crowbar: 4, machete: 5 };
+/** La hachuela (H5b2 §4) cuenta como la palanca. */
+const RANK: Record<Weapon, number> = {
+  knife: 1,
+  bat: 2,
+  axe: 3,
+  hatchet: 4,
+  crowbar: 4,
+  machete: 5,
+};
 /** De mejor a peor (spec H4d §2). */
-export const WEAPONS: readonly Weapon[] = ['machete', 'crowbar', 'axe', 'bat', 'knife'];
+export const WEAPONS: readonly Weapon[] = ['machete', 'crowbar', 'hatchet', 'axe', 'bat', 'knife'];
 const rank = (x: Weapon | null) => (x ? RANK[x] : 0);
 
 /** ¿Puede talar? (permiso, sin gripe con descanso y sin otra arma fijada) */

@@ -127,6 +127,7 @@ test('desaparecen: registrado y vacío, al cabo de un día; si no, se pudre a lo
     bucket: 0,
     waterBucket: 0,
     waterBottle: 0,
+    hatchet: 0,
     pieces: [],
   };
   a.searched = true;

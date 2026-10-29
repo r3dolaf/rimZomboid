@@ -127,6 +127,7 @@ test('desconocidos: nombres, rasgos y lo que llevan; Aceptar da la orden', () =>
     bucket: 0,
     waterBucket: 0,
     waterBottle: 0,
+    hatchet: 0,
     pieces: [],
   };
   notices.update();

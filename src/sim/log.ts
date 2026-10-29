@@ -1,6 +1,7 @@
 import { LOG_MAX } from './balance';
 import type { Inventory } from './items';
 import type {
+  BagKind,
   BodyPart,
   BuildKind,
   DeathCause,
@@ -14,6 +15,10 @@ import type {
 
 /** Suceso del registro: solo datos; la interfaz los convierte en texto. */
 export type LogEvent =
+  // Bolsas (H5b2): se pone una que encuentra; suelta la de la mano; recoge la suya.
+  | { kind: 'bagFound'; survivorId: number; bag: BagKind }
+  | { kind: 'bagDropped'; survivorId: number; bag: BagKind }
+  | { kind: 'bagRecovered'; survivorId: number; bag: BagKind }
   // Ropa (H5b)
   | { kind: 'clothesTorn'; survivorId: number; garment: GarmentKind; part: BodyPart }
   | { kind: 'waterCut' }

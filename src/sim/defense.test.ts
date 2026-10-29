@@ -92,6 +92,7 @@ test('invariantes: planos con madera de más, montones raros, marcas que no son 
       bucket: 0,
       waterBucket: 0,
       waterBottle: 0,
+      hatchet: 0,
       pieces: [],
     },
   });

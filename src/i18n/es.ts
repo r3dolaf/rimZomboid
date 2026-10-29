@@ -4,6 +4,7 @@ import type { MoodModifierId } from '../sim/mood';
 import type { ItemKind } from '../sim/items';
 import type { RelationLabel } from '../sim/social';
 import type {
+  BagKind,
   BodyPart,
   BubbleKind,
   BuildingKind,
@@ -314,6 +315,14 @@ export const es = {
     beanie: { name: 'Gorro de lana', the: 'el gorro de lana' },
     helmet: { name: 'Casco de moto', the: 'el casco de moto' },
   } satisfies Record<GarmentKind, { name: string; the: string; many?: boolean }>,
+  // Bolsas (H5b2): todas en femenino («una», «la»).
+  bags: {
+    fannyPack: 'riñonera',
+    clothBag: 'bolsa de tela',
+    schoolBag: 'mochila escolar',
+    duffel: 'bolsa de deporte',
+    hikingPack: 'mochila de excursión',
+  } satisfies Record<BagKind, string>,
   woundVerb: {
     scratch: 'ha arañado',
     cut: 'le ha hecho un corte',
@@ -517,6 +526,7 @@ export const es = {
     bucket: ['cubo vacío', 'cubos vacíos'],
     waterBucket: ['cubo de agua', 'cubos de agua'],
     waterBottle: ['botella de agua', 'botellas de agua'],
+    hatchet: ['hachuela', 'hachuelas'], // H5b2
   } satisfies Record<ItemKind, [string, string]>,
   log: {
     found: (who: string, what: string, where: string) => `${who} ha encontrado ${what} en ${where}`,
@@ -600,6 +610,10 @@ export const es = {
     rescued: (who: string, other: string) => `${who} ha rescatado a ${other}`,
     waterCut: 'Se ha cortado el agua',
     rain: 'Llueve',
+    bagFound: (who: string, bag: BagKind) =>
+      `${who} ha encontrado una ${es.bags[bag]} y se la ha puesto`,
+    bagDropped: (who: string, bag: BagKind) => `${who} ha soltado la ${es.bags[bag]}`,
+    bagRecovered: (who: string, bag: BagKind) => `${who} ha recogido su ${es.bags[bag]}`,
     clothesTorn: (who: string, garment: GarmentKind, part: BodyPart) => {
       const g: { the: string; many?: boolean } = es.garments[garment];
       const verb = g.many ? 'han roto' : 'ha roto';

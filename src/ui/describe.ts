@@ -591,6 +591,15 @@ export function logText(e: LogEntry, w: World): string {
     case 'clothesTorn':
       text = l.clothesTorn(name(e.survivorId), e.garment, e.part);
       break;
+    case 'bagFound':
+      text = l.bagFound(name(e.survivorId), e.bag);
+      break;
+    case 'bagDropped':
+      text = l.bagDropped(name(e.survivorId), e.bag);
+      break;
+    case 'bagRecovered':
+      text = l.bagRecovered(name(e.survivorId), e.bag);
+      break;
     case 'waterCut':
       text = l.waterCut;
       break;

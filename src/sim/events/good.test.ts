@@ -236,6 +236,7 @@ test('alijo en una casa ya saqueada: una despensa escondida que vuelve a estar p
       bucket: 0,
       waterBucket: 0,
       waterBottle: 0,
+      hatchet: 0,
       pieces: [],
     }; // la madera no se toca: tiene que cuadrar
   }

@@ -437,7 +437,7 @@ export interface Stranger {
 }
 
 /** Armas que se llevan en la mano, de mejor a peor (spec H4b §6.2). */
-export type Weapon = 'machete' | 'crowbar' | 'axe' | 'bat' | 'knife';
+export type Weapon = 'machete' | 'crowbar' | 'hatchet' | 'axe' | 'bat' | 'knife';
 
 /** Pelear, Huir o Decidir (spec H4b §7). */
 export type Stance = 'fight' | 'flee' | 'decide';

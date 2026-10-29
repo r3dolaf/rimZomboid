@@ -1,4 +1,5 @@
 // Transportar (spec H4a §3.3): madera a los planos y montones al almacén.
+import { takeInto } from '../bags';
 import { BUILD, CURTAINS_COST } from '../balance';
 import { isRepairPlan } from '../build';
 import { emptyInventory, isEmpty, takeUpTo, type Inventory } from '../items';
@@ -131,7 +132,7 @@ export function startHaulActivity(
   if (activity.type === 'pickUp') {
     const p = w.piles.find((x) => x.id === activity.pileId);
     if (!p || !atOrBeside(s, p.pos)) return idle;
-    const taken = takeUpTo(p.items, s.carrying, capacityKg(s));
+    const taken = takeInto(w, s, p.items, 'haul'); // una bolsa, en la mano (H5b2 §5)
     prunePiles(w);
     if (isEmpty(taken)) return idle;
     return next(s, pick(w.rng, w.storage.tiles), { type: 'unload' }, w);

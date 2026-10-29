@@ -1,6 +1,7 @@
 // Trabajos (spec H4a §3): cuál toca por orden de criticidad, si sigue teniendo sentido, y el
 // saqueo (elegir contenedor, reservar, descargar en el almacén).
-import { DRESS_CHECK_TICKS, HUNGRY_LOOT_DAYS, ITEM_WEIGHT_KG } from './balance';
+import { BAGS, DRESS_CHECK_TICKS, HUNGRY_LOOT_DAYS, ITEM_WEIGHT_KG } from './balance';
+import { bagRoom, isBag, wornBags } from './bags';
 import { armFactor } from './body';
 import { capacityKg } from './skills';
 import { foodDays } from './colony';
@@ -44,11 +45,20 @@ const LIGHTEST_KG = Math.min(...ITEM_KINDS.map((k) => ITEM_WEIGHT_KG[k]));
  * va casi lleno volvería una y otra vez a un contenedor del que no puede coger nada.
  */
 function canTakeSomething(c: Container, s: Survivor): boolean {
-  const room = capacityKg(s) - weightOf(s.carrying) + 1e-9;
+  // En las manos o en alguna de sus bolsas (H5b2).
+  const hands = capacityKg(s) - weightOf(s.carrying) + 1e-9;
+  const room = Math.max(hands, ...wornBags(s).map((b) => bagRoom(b) + 1e-9));
   if (!c.searched) return room >= LIGHTEST_KG;
   return (
     ITEM_KINDS.some((k) => c.items[k] > 0 && ITEM_WEIGHT_KG[k] <= room) ||
-    c.items.pieces.some((p) => pieceKg(p) <= room)
+    c.items.pieces.some((p) =>
+      // Una bolsa: ponérsela, cogerla entera o vaciarla allí (H5b2 §3).
+      isBag(p)
+        ? BAGS[p.kind].slots.some((slot) => s.bags[slot] === null) ||
+          pieceKg(p) <= hands ||
+          !isEmpty(p.items)
+        : pieceKg(p) <= room,
+    )
   );
 }
 

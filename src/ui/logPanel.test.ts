@@ -26,6 +26,7 @@ test('formatItems: plurales y lista legible', () => {
       bucket: 0,
       waterBucket: 0,
       waterBottle: 0,
+      hatchet: 0,
       pieces: [],
     }),
   ).toBe('4 latas, 1 venda y 2 bates');
@@ -49,6 +50,7 @@ test('formatItems: plurales y lista legible', () => {
       bucket: 0,
       waterBucket: 0,
       waterBottle: 0,
+      hatchet: 0,
       pieces: [],
     }),
   ).toBe('1 lata y 1 cuchillo');
@@ -72,6 +74,7 @@ test('formatItems: plurales y lista legible', () => {
       bucket: 0,
       waterBucket: 0,
       waterBottle: 0,
+      hatchet: 0,
       pieces: [],
     }),
   ).toBe('nada');
@@ -104,6 +107,7 @@ test('cada suceso se convierte en una frase con día y hora', () => {
       bucket: 0,
       waterBucket: 0,
       waterBottle: 0,
+      hatchet: 0,
       pieces: [],
     },
   });

@@ -22,7 +22,9 @@ export type ItemKind =
   | 'leather'
   | 'bucket'
   | 'waterBucket'
-  | 'waterBottle';
+  | 'waterBottle'
+  // H5b2
+  | 'hatchet';
 
 /** Orden en el que se cogen las cosas al registrar un contenedor. */
 export const ITEM_KINDS: readonly ItemKind[] = [
@@ -44,6 +46,7 @@ export const ITEM_KINDS: readonly ItemKind[] = [
   'bucket',
   'waterBucket',
   'waterBottle',
+  'hatchet',
 ];
 
 /**
@@ -73,6 +76,7 @@ export function emptyInventory(): Inventory {
     bucket: 0,
     waterBucket: 0,
     waterBottle: 0,
+    hatchet: 0,
     pieces: [],
   };
 }

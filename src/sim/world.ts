@@ -24,7 +24,7 @@ import { dressStarter } from './clothes';
 import { defaultOutfits } from './outfits';
 import { placeFixtures, rollWaterCut } from './water';
 import { emptyInventory } from './items';
-import { fillGarments, placeContainers } from './loot';
+import { fillBags, fillGarments, placeContainers } from './loot';
 import { revealFromSurvivors } from './vision';
 import { generateMap } from './map/generate';
 import { getTile, setTile } from './map/grid';
@@ -142,6 +142,7 @@ export function createWorld(
   // Después de los supervivientes, para no cambiar partidas anteriores con la misma semilla.
   const containers = placeContainers(houses, furniture, rng);
   fillGarments(pieces, houses, containers, clothesRng); // H5b: la ropa, con su azar
+  fillBags(pieces, houses, containers, clothesRng); // H5b2: y las bolsas, después
   // H5b: fregaderos y cisternas, y cuándo se corta el agua (con el mismo azar).
   const firstId = Math.max(survivors.length, ...containers.map((c) => c.id)) + 1;
   const fixtures = placeFixtures(grid, houses, containers, clothesRng, firstId);

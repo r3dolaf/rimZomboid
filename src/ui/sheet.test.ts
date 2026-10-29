@@ -105,6 +105,7 @@ test('muestra lo que lleva encima y su peso', () => {
     bucket: 0,
     waterBucket: 0,
     waterBottle: 0,
+    hatchet: 0,
     pieces: [],
   };
   s.skills.haul.level = 5;

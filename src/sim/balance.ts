@@ -137,6 +137,7 @@ export const ITEM_WEIGHT_KG = {
   bucket: 1,
   waterBucket: 5,
   waterBottle: 1,
+  hatchet: 1, // H5b2
 } as const;
 export const START_WEAPON = 'knife' as const; // H4b: sin arma, caían enseguida
 
@@ -603,6 +604,7 @@ export const WEAPON_STATS = {
   axe: { damage: 40, ticks: 20 },
   crowbar: { damage: 30, ticks: 15 }, // H4d
   machete: { damage: 35, ticks: 15 },
+  hatchet: { damage: 30, ticks: 15 }, // H5b2: de una mano, también tala
 } as const;
 
 export const HEAD_HIT_CHANCE = 1 / 6; // de los golpes que aciertan; hacen el doble
@@ -691,6 +693,7 @@ export const LOOT: Record<LootKind, Partial<Record<LootItem, LootAmount>>> = {
     machete: [1, 1],
     knife: [1, 1],
     bucket: [2, 3],
+    hatchet: [2, 2], // H5b2: donde el hacha, igual de a menudo
   },
   police: {
     food: [2, 6],
@@ -710,6 +713,7 @@ export const LOOT: Record<LootKind, Partial<Record<LootItem, LootAmount>>> = {
     axe: [1, 1],
     machete: [1, 1],
     bucket: [1, 2],
+    hatchet: [1, 1],
   },
   warehouse: {
     food: [2, 6],
@@ -719,6 +723,7 @@ export const LOOT: Record<LootKind, Partial<Record<LootItem, LootAmount>>> = {
     crowbar: [1, 1],
     axe: [1, 1],
     bucket: [1, 2],
+    hatchet: [1, 1],
   },
 };
 
@@ -1099,4 +1104,15 @@ export const BAGS: Record<BagKind, BagSpec> = {
   schoolBag: { slots: ['back'], capacity: 6, factor: 0.7, kg: 0.5 },
   duffel: { slots: ['back', 'hand'], capacity: 8, factor: 0.7, kg: 1 },
   hikingPack: { slots: ['back'], capacity: 12, factor: 0.6, kg: 1.5 },
+};
+
+/** Bolsas en el botín (H5b2 §6): cuántas por edificio y cuáles; vacías, donde la ropa. */
+export const LOOT_BAGS: Partial<
+  Record<LootKind, { count: [number, number]; kinds: Partial<Record<BagKind, number>> }>
+> = {
+  house: { count: [0, 1], kinds: { fannyPack: 1, schoolBag: 1 } },
+  clothes: { count: [2, 4], kinds: { fannyPack: 1, schoolBag: 1, duffel: 1, hikingPack: 1 } },
+  hardware: { count: [0, 2], kinds: { hikingPack: 1, duffel: 1 } },
+  farm: { count: [0, 2], kinds: { hikingPack: 1, duffel: 1 } },
+  warehouse: { count: [0, 2], kinds: { hikingPack: 1, duffel: 1 } },
 };

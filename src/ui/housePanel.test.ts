@@ -37,6 +37,7 @@ test('muestra la casa seleccionada con sus contenedores y se cierra con la ✕',
     bucket: 0,
     waterBucket: 0,
     waterBottle: 0,
+    hatchet: 0,
     pieces: [],
   };
   cs[1]!.designated = true;

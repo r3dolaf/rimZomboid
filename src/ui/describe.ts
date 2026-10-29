@@ -784,6 +784,8 @@ export function bagsView(
   slots: {
     slot: BagSlot;
     name: string;
+    /** Fijado (también vacío: así se puede soltar). */
+    pinned: boolean;
     bag: {
       id: number;
       name: string;
@@ -803,6 +805,7 @@ export function bagsView(
       return {
         slot,
         name: es.bagsUi.slots[slot],
+        pinned: pinned.includes(slot),
         bag: b && {
           id: b.id,
           name: bagName(b.kind),

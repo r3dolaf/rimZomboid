@@ -155,3 +155,15 @@ test('Fabricar: la bolsa de tela; mapa: una bolsa en el suelo dice qué es y cu�
   expect(pileLabel({ ...pile, items: { ...emptyInventory(), wood: 2 } })).toBeNull();
   root.remove();
 });
+
+test('revisión: un hueco fijado y vacío enseña «Fijada» para poder soltarlo', () => {
+  const { root, w, s, sheet } = sheetWorld();
+  s.bagsPinned = ['hand'];
+  sheet.update();
+  const pin = root.querySelector('[data-testid="bag-pin-hand"]') as HTMLButtonElement;
+  expect(pin.textContent).toBe('Fijada');
+  pin.click();
+  ordersSystem(w);
+  expect(s.bagsPinned).toEqual([]);
+  root.remove();
+});

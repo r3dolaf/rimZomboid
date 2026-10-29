@@ -109,3 +109,19 @@ test('Transportar lleva al almacén la bolsa del suelo (en la mano) y la deja al
   expect(w.storage.items.food).toBe(54);
   expect(checkInvariants(w)).toEqual([]);
 });
+
+test('revisión: si su bolsa fijada de la mano se la lleva otro, el hueco deja de estar fijado', () => {
+  const { w, s } = world();
+  const hand = newBag(w, 'duffel');
+  s.bags.hand = hand;
+  s.bagsPinned = ['hand'];
+  knockDown(w, s);
+  // Se la lleva otro al almacén.
+  const pile = w.piles.find((p) => p.items.pieces.includes(hand))!;
+  pile.items.pieces = [];
+  w.storage.items.pieces.push(hand);
+  s.action = { type: 'idle', ticksLeft: 0 };
+  expect(findWork(s, w)).not.toMatchObject({ then: { type: 'pickUpBag' } });
+  expect(s.bagsPinned).toEqual([]);
+  expect(findWork(s, w)).toMatchObject({ then: { type: 'bags' } }); // y vuelve a por ella
+});

@@ -95,7 +95,9 @@ export function recoverBagJob(s: Survivor, w: World): Action | null {
   if (s.droppedBag === null) return null;
   const pile = pileWith(w, s.droppedBag);
   if (!pile) {
+    // Se la ha llevado otro: el hueco deja de estar fijado (si no, no volvería a llevar ninguna).
     s.droppedBag = null;
+    s.bagsPinned = s.bagsPinned.filter((x) => x !== 'hand');
     return null;
   }
   if (s.bags.hand !== null || s.drafted || !canWalk(s)) return null;

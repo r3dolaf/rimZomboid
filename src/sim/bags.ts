@@ -310,7 +310,10 @@ export function applyBagListOrder(w: World, o: BagListOrder): void {
   if (!validN(o.n) || !ITEM_KINDS.includes(o.item)) return;
   if (o.type === 'setBagList') {
     const b = findBag(w, o.pieceId);
-    if (b) setCount(b.list, o.item, o.n);
+    if (!b) return;
+    setCount(b.list, o.item, o.n);
+    // Guardada, suelta lo que ya no pide su lista (si no, quedaría encerrado en ella).
+    if (w.storage.items.pieces.includes(b)) settleBag(w, b);
     return;
   }
   const s = w.survivors.find((x) => x.id === o.survivorId);

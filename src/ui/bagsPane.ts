@@ -86,18 +86,19 @@ function render(v: View): DocumentFragment {
     row.dataset.testid = `bags-${x.slot}`;
     const head = el('div');
     head.append(el('strong', `${x.name}: `));
+    const pin = el('button', x.pinned ? u.pinned : u.pin, x.pinned ? 'selected' : '');
+    pin.type = 'button';
+    pin.dataset.pin = x.slot;
+    pin.dataset.testid = `bag-pin-${x.slot}`;
     if (!x.bag) {
-      head.append(el('span', u.nothing, 'muted'));
+      // Vacío: «Nada»; si está fijado, el botón para soltarlo.
+      head.append(el('span', `${u.nothing} `, 'muted'));
+      if (x.pinned) head.append(pin);
       row.append(head);
       f.append(row);
       continue;
     }
-    head.append(el('span', `${x.bag.name} · ${x.bag.load} `));
-    const pin = el('button', x.bag.pinned ? u.pinned : u.pin, x.bag.pinned ? 'selected' : '');
-    pin.type = 'button';
-    pin.dataset.pin = x.slot;
-    pin.dataset.testid = `bag-pin-${x.slot}`;
-    head.append(pin);
+    head.append(el('span', `${x.bag.name} · ${x.bag.load} `), pin);
     row.append(head, el('p', u.inside(x.bag.contents), 'muted'), el('p', u.list));
     row.append(listEditor(x.bag.list, String(x.bag.id), `bag-${x.bag.id}`));
     f.append(row);

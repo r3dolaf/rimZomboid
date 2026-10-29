@@ -140,3 +140,16 @@ test('si en el almacén no queda comida, lleva antes la de sus bolsas (salvo la 
   b.items.food = 3; // 2 de más
   expect(findWork(s, w)).toMatchObject({ then: { type: 'unload' } });
 });
+
+test('revisión: al bajar la lista de una bolsa guardada, lo que sobra vuelve al almacén', () => {
+  const { w } = ana();
+  const b = newBag(w, 'hikingPack');
+  b.list = { food: 10 };
+  b.items.food = 10;
+  w.storage.items.pieces.push(b);
+  issue(w, { type: 'setBagList', pieceId: b.id, item: 'food', n: 4 });
+  ordersSystem(w);
+  expect(b.items.food).toBe(4);
+  expect(w.storage.items.food).toBe(6);
+  expect(checkInvariants(w)).toEqual([]);
+});

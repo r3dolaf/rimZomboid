@@ -2,6 +2,8 @@
 // Las de antes de H4b, sin zombis (prueban lo suyo); las de H4b, al final, con zombis.
 import { describe, expect, test } from 'vitest';
 import { FAINT_UNTIL, TICKS_PER_DAY, TICKS_PER_HOUR } from '../src/sim/balance';
+import { isBag, wornBags } from '../src/sim/bags';
+import { forEachPieceList } from '../src/sim/clothes';
 import { gameTime } from '../src/sim/clock';
 import { checkInvariants } from '../src/sim/invariants';
 import { step } from '../src/sim/step';
@@ -388,6 +390,10 @@ function allWeapons(w: World): number {
     n += w.piles.reduce((a, p) => a + p.items[k], 0);
     n += people.reduce((a, s) => a + s.carrying[k] + (s.equipped === k ? 1 : 0), 0);
   }
+  // H5b2: y las de dentro de las bolsas, estén donde estén.
+  forEachPieceList(w, (list) => {
+    for (const p of list) if (isBag(p)) for (const k of kinds) n += p.items[k];
+  });
   return n;
 }
 
@@ -416,6 +422,11 @@ const zombieTotals = {
   dressed: 0,
   sewn: 0,
   washed: 0,
+  // H5b2: bolsas encontradas (y puestas), soltadas, recogidas y puestas al final
+  bagsFound: 0,
+  bagsDropped: 0,
+  bagsRecovered: 0,
+  bagsWorn: 0,
 };
 
 /**
@@ -557,6 +568,10 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
     // H5: ¿cuánto se sobrevive? (Sin nadie, las habilidades ya no cuentan.)
     zombieTotals.survived.push(w.over ? gameTime(w.over.tick).day : DAYS);
     zombieTotals.dead += w.dead.length;
+    zombieTotals.bagsFound += w.bagLog.found;
+    zombieTotals.bagsDropped += w.bagLog.dropped;
+    zombieTotals.bagsRecovered += w.bagLog.recovered;
+    zombieTotals.bagsWorn += w.survivors.reduce((n, s) => n + wornBags(s).length, 0);
     // Los que siguen desde el principio han mejorado (los que llegan no cuentan: si muere alguien
     // con niveles altos, la suma baja aunque se aprenda).
     const still = w.survivors.filter((s) => startLevels.has(s.id));
@@ -619,5 +634,7 @@ test('con zombis se pelea, alguien cae, algo se rompe, se fabrica y se registran
   expect(zombieTotals.torn, 'ropa rota al parar golpes').toBeGreaterThan(0);
   expect(zombieTotals.dressed, 'cambios de ropa').toBeGreaterThan(0);
   expect(zombieTotals.sewn, 'ropa cosida').toBeGreaterThan(0);
+  // H5b2: se encuentran bolsas y se las ponen.
+  expect(zombieTotals.bagsFound, 'bolsas encontradas').toBeGreaterThan(0);
   console.log('H4e, en las 3 partidas con zombis:', zombieTotals);
 });

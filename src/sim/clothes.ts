@@ -11,6 +11,7 @@ import {
   START_EXTRA_CHANCE,
   START_EXTRAS,
   TICKS_PER_HOUR,
+  WEAPON_STATS,
   ZOMBIE_CLOTHES,
   type GarmentSpec,
 } from './balance';
@@ -25,6 +26,7 @@ import type {
   Layer,
   Piece,
   Survivor,
+  Weapon,
   World,
   WoundKind,
 } from './types';
@@ -280,13 +282,17 @@ export function dressStarter(w: PieceCounter, s: Survivor, rng: RngState): void 
 /** Se va del mundo (por el borde del mapa) con todo lo que lleva: se apunta en las cuentas. */
 export function piecesGone(w: World, pieces: readonly Piece[]): void {
   w.pieceLog.gone += pieces.length;
-  // Con lo de dentro (H5b2): sus piezas y su madera, que se pierde.
+  // Con lo de dentro (H5b2): sus piezas, su madera y sus armas, que se pierden.
   for (const p of pieces)
     if (isBag(p)) {
       w.woodLog.wasted += p.items.wood;
+      for (const k of WEAPON_KINDS) w.weaponLog.rotted += p.items[k];
       piecesGone(w, p.items.pieces);
     }
 }
+
+/** Las armas (como montones), para apuntar las que se van dentro de una bolsa. */
+const WEAPON_KINDS = Object.keys(WEAPON_STATS).filter((k) => k !== 'none') as Weapon[];
 
 /** Las personas que están en el mundo (colonos, desconocidos, los que se van y los que vuelven). */
 function people(w: World): Survivor[] {

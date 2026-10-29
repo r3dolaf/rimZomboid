@@ -114,3 +114,13 @@ test('partida larga: la madera dentro de una bolsa cuenta, y si la bolsa se va d
   piecesGone(w, [b]); // p. ej., se pudre en el cuerpo de un zombi
   expect(checkInvariants(w)).toEqual([]);
 });
+
+test('las armas que se van del mundo dentro de una bolsa se apuntan (como las que se pudren)', () => {
+  const w = emptyWorld(5, 5);
+  const b = newBag(w, 'duffel');
+  b.items.machete = 1;
+  b.items.knife = 2;
+  const before = w.weaponLog.rotted;
+  piecesGone(w, [b]);
+  expect(w.weaponLog.rotted).toBe(before + 3);
+});

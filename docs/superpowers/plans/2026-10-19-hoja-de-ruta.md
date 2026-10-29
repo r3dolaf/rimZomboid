@@ -113,3 +113,9 @@ Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al p
 - La ropa se acumula sin límite en el almacén (cada zombi muerto deja 2–4 prendas): falta poder tirarla o prohibirla.
 - Pequeños de la revisión final: el registro de "ha registrado el cuerpo" guarda las prendas cogidas sin copiarlas (al revés que "ha encontrado"); descoser ropa no falla nunca (la spec dice que al fallar se pierde la prenda); el zombi que fue colono puede ponerse una prenda de muerto que llevaba encima antes que la suya; los desplegables de atuendo (ficha y Trabajos) quedan en blanco en pausa si se borra su atuendo; la invariante de los pedidos ya no detecta un modo desconocido en recetas que no son de ropa.
 - La partida larga tarda ~40 min (antes ~22): las invariantes de piezas cuestan ~0,1 ms por tick.
+
+**Para H6 (pulido), de H5b2:**
+
+- Equilibrio (spec H5b2 §9): con mochilas la colonia aguanta un poco más que en H5b (media día 23 frente a 21; 4 de 12 llegan al 30). Las bolsas de la mano se sueltan a menudo al huir y quien la soltó vuelve a por ella lo primero, aunque el montón quede cerca de zombis.
+- En la base, quien tiene hambre o sangra usa antes lo reservado de su mochila que lo del almacén (y luego va a rellenarla).
+- Pequeños de la revisión final: ir a registrar un mueble con una bolsa cuyo contenido no cabe (un viaje en balde); en el registro, una bolsa encontrada cuenta como «1 prenda» y lo de dentro de una bolsa que se pone no suma a lo saqueado; las bolsas en las manos de un echado entran al almacén sin soltar lo que no pide su lista; `canTakeSomething` y `packJob` se pueden aligerar; el tope de 99 de las listas y el reparto riñonera/escolar de los desconocidos, a `balance.ts`; la etiqueta de una bolsa en el suelo cuenta los usos de hilo como cosas; la partida larga solo exige bolsas encontradas.

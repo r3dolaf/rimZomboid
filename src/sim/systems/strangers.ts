@@ -10,6 +10,7 @@ import {
   STRANGER_NEED_MAX,
   STRANGER_NEED_MIN,
 } from '../balance';
+import { bagFields } from '../bags';
 import { baseLayout } from '../base';
 import { freeFloor } from '../build';
 import { dressStarter, piecesGone } from '../clothes';
@@ -209,6 +210,7 @@ export function newStranger(w: World, start: Point): Survivor {
     hates: 'cap',
     outfitId: w.outfits[0]?.id ?? 1,
     dressCheckAt: 0,
+    ...bagFields(),
   };
   dressStarter(w, s, w.rng); // H5b: llegan vestidos
   s.needs.mood = moodTarget(s, w.tick, w.base.rect);

@@ -1,5 +1,5 @@
 // Tipos de datos de la simulación. Solo datos simples, para poder guardarlos con JSON.
-import type { Inventory } from './items';
+import type { Inventory, ItemKind } from './items';
 import type { LogEntry } from './log';
 import type { Order } from './orders';
 import type { RngState } from './rng';
@@ -136,8 +136,24 @@ export interface Garment {
   from: 'colonist' | 'zombie' | null;
 }
 
-/** Lo que se guarda suelto, con su estado (H5b §1). En H5b2, también las mochilas. */
-export type Piece = Garment;
+/** Mochilas y bolsas (H5b2 §1). */
+export type BagKind = 'fannyPack' | 'clothBag' | 'schoolBag' | 'duffel' | 'hikingPack';
+/** Dónde se lleva una bolsa: cintura, espalda o mano. */
+export type BagSlot = 'waist' | 'back' | 'hand';
+
+/**
+ * Una bolsa (H5b2 §1, §3): lo que lleva dentro (montones y prendas, nunca otras bolsas) y su lista,
+ * qué cosas y cuántas guarda (lo que no se descarga y se rellena).
+ */
+export interface Bag {
+  id: number;
+  kind: BagKind;
+  items: Inventory;
+  list: Partial<Record<ItemKind, number>>;
+}
+
+/** Lo que se guarda suelto, con su estado (H5b §1): prendas y bolsas (H5b2). */
+export type Piece = Garment | Bag;
 
 /** Una herida (H5 §2.2): `damage` baja al curarse (de `size` a 0); `cleanUntil`, venda limpia. */
 export interface Wound {
@@ -375,6 +391,14 @@ export interface Survivor {
   outfitId: number;
   /** Tick desde el que vuelve a mirar si cambiarse de ropa (como mucho una vez por hora). */
   dressCheckAt: number;
+  /** Las bolsas que lleva puestas, una por hueco (H5b2 §1). */
+  bags: Record<BagSlot, Bag | null>;
+  /** «Llevar siempre» (H5b2 §3): lo que no descarga y va a buscar si le falta. */
+  keep: Partial<Record<ItemKind, number>>;
+  /** Huecos con la bolsa fijada desde la ficha: no se la quita ni la cambia. */
+  bagsPinned: BagSlot[];
+  /** Su bolsa de la mano, si la soltó (para ir a por ella); `null` si no. */
+  droppedBag: number | null;
 }
 
 /** Un atuendo (H5b §4): las prendas que se puede poner y si acepta ropa de muertos. */
@@ -446,6 +470,8 @@ export interface Zombie {
   turnedFrom?: number;
   /** La ropa que lleva (H5b §7). */
   worn: Garment[];
+  /** Las bolsas que lleva (H5b2 §5, §6), con lo de dentro. */
+  bags: Bag[];
 }
 
 /** Lado del mapa: 0 norte (y = 0), 1 sur, 2 oeste (x = 0), 3 este. */
@@ -706,11 +732,21 @@ export interface World {
   waterCutAt: number;
   /** Llueve mientras el tick sea menor que este (también con tormenta). */
   rainUntil: number;
+  /** Bolsas (H5b2): las que se han puesto al encontrarlas, las soltadas y las recogidas. */
+  bagLog: { found: number; dropped: number; recovered: number };
 }
 
 /** Uno que echaron y que vuelve en `at` por donde se fue (`pos`). */
 export type Returning =
-  | { kind: 'zombie'; at: number; pos: Point; name: string; survivorId: number; worn: Garment[] }
+  | {
+      kind: 'zombie';
+      at: number;
+      pos: Point;
+      name: string;
+      survivorId: number;
+      worn: Garment[];
+      bags: Bag[];
+    }
   | { kind: 'stranger'; at: number; pos: Point; survivor: Survivor };
 
 /** Recetas de Fabricar (H4d). */

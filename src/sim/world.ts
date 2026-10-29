@@ -18,6 +18,7 @@ import {
   SURVIVOR_COUNT,
   TICKS_PER_DAY,
 } from './balance';
+import { bagFields } from './bags';
 import { baseLayout } from './base';
 import { dressStarter } from './clothes';
 import { defaultOutfits } from './outfits';
@@ -113,6 +114,7 @@ export function createWorld(
     hates: 'cap',
     outfitId: 1, // Cualquiera
     dressCheckAt: 0,
+    ...bagFields(), // H5b2: nadie empieza con bolsa
   }));
   // La ropa del principio y las preferencias (H5b), con su propio azar.
   const clothesRng = createRng((seed ^ CLOTHES_SALT) >>> 0);
@@ -188,6 +190,7 @@ export function createWorld(
     decisions: [],
     stormUntil: 0,
     rainUntil: 0, // H5b
+    bagLog: { found: 0, dropped: 0, recovered: 0 }, // H5b2
     piles: [],
     blueprints: [],
     furniture: fixtures,

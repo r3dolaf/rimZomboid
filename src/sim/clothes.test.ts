@@ -1,4 +1,5 @@
 // H5b §2: prendas, capas y zonas; gente vestida; la ropa no se pierde ni se duplica.
+import { garments } from './bags';
 import { expect, test } from 'vitest';
 import { CORPSE_ROT_TICKS, DIRTY_HOURS, GARMENTS, TICKS_PER_DAY } from './balance';
 import {
@@ -142,7 +143,7 @@ test('el cuerpo de quien muere guarda su ropa, de un muerto', () => {
   killSurvivor(w, ana, 'blood');
   const body = w.containers.find((c) => c.name === ana.name)!;
   expect(body.items.pieces.map((x) => x.id)).toEqual(ids);
-  for (const x of body.items.pieces) expect(x.from).toBe('colonist');
+  for (const x of garments(body.items.pieces)) expect(x.from).toBe('colonist');
   expect(checkInvariants(w)).toEqual([]);
 });
 
@@ -204,7 +205,7 @@ test('el cuerpo de un zombi que se pudre se lleva su ropa (se apunta en las cuen
   for (let i = 0; i < 50 && w.zombies.includes(z); i++) colonistHit(w, s, z);
   const corpse = w.containers.find((c) => c.kind === 'corpse')!;
   expect(corpse.items.pieces.map((x) => x.kind)).toContain('jeans');
-  expect(corpse.items.pieces.every((x) => x.from === 'zombie')).toBe(true);
+  expect(garments(corpse.items.pieces).every((x) => x.from === 'zombie')).toBe(true);
   w.tick += CORPSE_ROT_TICKS + 1;
   corpsesSystem(w);
   expect(w.containers.filter((c) => c.kind === 'corpse')).toEqual([]);

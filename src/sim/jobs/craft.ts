@@ -7,6 +7,7 @@ import {
   RECIPES,
   type Recipe,
 } from '../balance';
+import { garments } from '../bags';
 import { coversOf, destroyed, piecesGone } from '../clothes';
 import { emptyInventory, pieceKg, weightOf, type ItemKind } from '../items';
 import { logEvent } from '../log';
@@ -84,7 +85,7 @@ function fits(r: Recipe, g: Garment): boolean {
 /** La primera prenda del almacén que le sirve a la receta (H5b), o `null`. */
 export function pieceFor(w: World, r: Recipe): Garment | null {
   if (r.piece === undefined) return null;
-  return w.storage.items.pieces.find((g) => fits(r, g)) ?? null;
+  return garments(w.storage.items.pieces).find((g) => fits(r, g)) ?? null;
 }
 
 /** ¿Hay sobre qué trabajar? (Las que no son sobre prendas, siempre.) */
@@ -261,7 +262,7 @@ export function finishCraft(
   const r = RECIPES[a.recipe];
   if (!hasInputs(r, s.carrying)) return;
   // Sobre prendas (H5b §3): la que lleva y el material que se llevó.
-  const g = s.carrying.pieces.find((p) => p.id === a.pieceId);
+  const g = garments(s.carrying.pieces).find((p) => p.id === a.pieceId);
   if (r.piece !== undefined && !g) return;
   const used = entries(r.input);
   if (r.material !== undefined) {

@@ -51,6 +51,7 @@ export function newZombie(w: World, t: Point, dressed = true): Zombie {
     waitUntil: 0,
     hordeId: null,
     worn: [],
+    bags: [],
   };
   // Vestido (H5b §7), salvo el que fue una persona (lleva su ropa).
   if (dressed) z.worn = zombieClothes(w);

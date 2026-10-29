@@ -2,6 +2,8 @@
 import type { ItemKind } from './items';
 import {
   Tile,
+  type BagKind,
+  type BagSlot,
   type BodyPart,
   type BuildKind,
   type GarmentKind,
@@ -588,6 +590,8 @@ export const BANDAGE_TICKS = 0.5 * TICKS_PER_HOUR; // vendar, con Sanar 5
 export const BANDAGE_RANGE = 1.5; // casillas: más lejos, el herido se ha ido
 /** Vendas (H5 §4): las que lleva cada uno encima; horas que la venda está limpia. */
 export const BANDAGES_CARRIED = 2;
+/** «Llevar siempre» al empezar (H5b2 §3): la regla de las vendas de H5. */
+export const KEEP_DEFAULT: Partial<Record<ItemKind, number>> = { bandage: BANDAGES_CARRIED };
 export const BANDAGE_CLEAN_HOURS = 24;
 export const HURT_BELOW = 50; // "Herido" por debajo de esto
 export const HURT_MOOD = -10;
@@ -1081,3 +1085,18 @@ export const RAIN_CISTERN_LITERS = 5;
 export const RAIN_TUB_LITERS = 2;
 /** Cada cuánto, como mucho, mira si cambiarse de ropa (rendimiento: el almacén puede tener mucha). */
 export const DRESS_CHECK_TICKS = TICKS_PER_HOUR;
+
+// Mochilas (H5b2 §1): huecos, capacidad (kg reales), lo que pesa lo de dentro al andar y la bolsa vacía.
+export interface BagSpec {
+  slots: readonly BagSlot[];
+  capacity: number;
+  factor: number;
+  kg: number;
+}
+export const BAGS: Record<BagKind, BagSpec> = {
+  fannyPack: { slots: ['waist'], capacity: 2, factor: 0.8, kg: 0.2 },
+  clothBag: { slots: ['back', 'hand'], capacity: 4, factor: 0.8, kg: 0.3 },
+  schoolBag: { slots: ['back'], capacity: 6, factor: 0.7, kg: 0.5 },
+  duffel: { slots: ['back', 'hand'], capacity: 8, factor: 0.7, kg: 1 },
+  hikingPack: { slots: ['back'], capacity: 12, factor: 0.6, kg: 1.5 },
+};

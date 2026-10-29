@@ -1,4 +1,5 @@
 // Ayudas para los tests de la simulación.
+import { bagFields } from '../bags';
 import { newGarment, piecesGone } from '../clothes';
 import { DEFAULT_OUTFITS } from '../balance';
 import { emptyInventory } from '../items';
@@ -104,6 +105,7 @@ export function emptyWorld(width: number, height: number): World {
         hates: 'chaps',
         outfitId: 1,
         dressCheckAt: 0,
+        ...bagFields(),
       },
     ],
     beds: [{ id: 1, pos: { x: width - 1, y: 0 }, ownerId: 1 }],
@@ -124,6 +126,7 @@ export function emptyWorld(width: number, height: number): World {
     decisions: [],
     stormUntil: 0,
     rainUntil: 0, // H5b
+    bagLog: { found: 0, dropped: 0, recovered: 0 },
     piles: [],
     blueprints: [],
     furniture: [],

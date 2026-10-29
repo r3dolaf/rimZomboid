@@ -1,6 +1,7 @@
 // Vestirse (spec H5b §4): en el almacén, ponerse lo claramente mejor que permita su atuendo y
 // quitarse lo que ya no permita. Es de la capa de trabajo, como cambiar de arma.
 import { DRESS_MARGIN, DRESS_MAX_CHANGES, DRESS_MIN_GAIN, DRESS_TICKS } from '../balance';
+import { garments } from '../bags';
 import { clashes, moodPart, outfitScore, protectionPart } from '../clothes';
 import { allows, outfitOf } from '../outfits';
 import { pick } from '../rng';
@@ -20,7 +21,7 @@ function nextChange(s: Survivor, w: World): Change | null {
   const now = outfitScore(s, s.worn);
   const moodNow = moodPart(s, s.worn);
   let best: { change: Change; gain: number } | null = null;
-  for (const g of w.storage.items.pieces) {
+  for (const g of garments(w.storage.items.pieces)) {
     if (!allows(outfit, g)) continue;
     const off = s.worn.filter((x) => clashes(x, g));
     const after = [...s.worn.filter((x) => !off.includes(x)), g];

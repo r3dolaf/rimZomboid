@@ -1,4 +1,5 @@
 import { es } from '../i18n/es';
+import { garments } from '../sim/bags';
 import { ITEM_KINDS } from '../sim/items';
 import { garmentText } from './describe';
 import type { World } from '../sim/types';
@@ -62,7 +63,7 @@ export function mountStoragePanel(
         const text = String(opts.world.storage.items[k]);
         if (n.textContent !== text) n.textContent = text;
       }
-      const texts = opts.world.storage.items.pieces.map(garmentText);
+      const texts = garments(opts.world.storage.items.pieces).map(garmentText);
       const key = JSON.stringify(texts);
       if (key === clothesShown) return;
       clothesShown = key;

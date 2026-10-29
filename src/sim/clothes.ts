@@ -14,6 +14,7 @@ import {
   ZOMBIE_CLOTHES,
   type GarmentSpec,
 } from './balance';
+import { isBag, wornBags } from './bags';
 import { logEvent } from './log';
 import type { MoodModifier } from './mood';
 import { nextFloat, nextInt, pick, weightedPick, type RngState } from './rng';
@@ -279,6 +280,7 @@ export function dressStarter(w: PieceCounter, s: Survivor, rng: RngState): void 
 /** Se va del mundo (por el borde del mapa) con todo lo que lleva: se apunta en las cuentas. */
 export function piecesGone(w: World, pieces: readonly Piece[]): void {
   w.pieceLog.gone += pieces.length;
+  for (const p of pieces) if (isBag(p)) piecesGone(w, p.items.pieces); // con lo de dentro (H5b2)
 }
 
 /** Las personas que están en el mundo (colonos, desconocidos, los que se van y los que vuelven). */
@@ -308,17 +310,27 @@ export function forEachPieceList(
   w: World,
   fn: (list: readonly Piece[], where: () => string, worn: boolean) => void,
 ): void {
-  const each = (list: readonly Piece[], where: () => string, worn = false) => {
+  // Lo de dentro de cada bolsa (H5b2), también.
+  const each = (list: readonly Piece[], where: () => string, worn = false): void => {
     if (list.length > 0) fn(list, where, worn);
+    for (const p of list)
+      if (isBag(p)) each(p.items.pieces, () => `dentro de la bolsa #${p.id} (${where()})`);
   };
   each(w.storage.items.pieces, () => 'almacén');
   for (const s of people(w)) {
     each(s.carrying.pieces, () => `carga de ${s.name}`);
     each(s.worn, () => `ropa de ${s.name}`, true);
+    each(wornBags(s), () => `bolsas de ${s.name}`);
   }
-  for (const z of w.zombies) each(z.worn, () => `ropa del zombi #${z.id}`, true);
+  for (const z of w.zombies) {
+    each(z.worn, () => `ropa del zombi #${z.id}`, true);
+    each(z.bags, () => `bolsas del zombi #${z.id}`);
+  }
   for (const r of w.returning)
-    if (r.kind === 'zombie') each(r.worn, () => `ropa de ${r.name} (vuelve)`, true);
+    if (r.kind === 'zombie') {
+      each(r.worn, () => `ropa de ${r.name} (vuelve)`, true);
+      each(r.bags, () => `bolsas de ${r.name} (vuelve)`);
+    }
   for (const c of w.containers) each(c.items.pieces, () => `contenedor #${c.id}`);
   for (const p of w.piles) each(p.items.pieces, () => `montón #${p.id}`);
 }

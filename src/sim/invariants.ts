@@ -10,14 +10,24 @@ import {
   SKILL_MAX,
   TUB_LITERS,
   ZOMBIE_HEALTH,
+  BAGS,
 } from './balance';
+import { BAG_SLOTS, bagsIn, isBag } from './bags';
 import { clashes, coversOf, forEachPieceList } from './clothes';
 import { ITEM_KINDS, weightOf, type Inventory } from './items';
 import { inBounds, isWalkable, isZombieWalkable } from './map/grid';
 import { capacityKg, SKILLS, xpToNext } from './skills';
 import { targetContainerId } from './work';
 import { contains, intersects } from './geom';
-import { Tile, type BodyPart, type BuildingKind, type World } from './types';
+import {
+  Tile,
+  type Bag,
+  type BodyPart,
+  type BuildingKind,
+  type Garment,
+  type Survivor,
+  type World,
+} from './types';
 import { tileOf } from './world';
 import { zombieMax } from './zombies/spawn';
 
@@ -59,6 +69,7 @@ export function checkInvariants(w: World): string[] {
         `${who}: en modo combate y ${s.action.type === 'sleep' ? 'durmiendo' : 'derribado'}`,
       );
     checkInventory(problems, `${who}: carga`, s.carrying);
+    checkBagsOf(problems, s, who);
     if (weightOf(s.carrying) > capacityKg(s) + 1e-9)
       problems.push(`${who}: carga ${weightOf(s.carrying)} kg > ${capacityKg(s)}`);
     for (const [k, p] of Object.entries(s.priorities))
@@ -156,6 +167,7 @@ export function checkInvariants(w: World): string[] {
         problems.push(`${who}: ${k} fuera de 0–100 (${v})`);
     }
     checkInventory(problems, `${who}: carga`, s.carrying);
+    checkBagsOf(problems, s, who);
     const t = tileOf(s.pos);
     if (!isWalkable(w.grid, t.x, t.y)) problems.push(`${who}: en una casilla no transitable`);
   }
@@ -314,6 +326,10 @@ function checkPieces(problems: string[], w: World): void {
       seen.set(g.id, where);
       if (!Number.isInteger(g.id) || g.id < 1 || g.id >= w.nextPieceId)
         problems.push(`pieza #${g.id} (${where()}): id no válido`);
+      if (isBag(g)) {
+        checkBag(problems, g, where);
+        continue;
+      }
       // Agujeros, parches y refuerzos solo en lo que cubre; parche y agujero no a la vez.
       const covers = coversOf(g);
       for (const z of g.holes) {
@@ -331,11 +347,36 @@ function checkPieces(problems: string[], w: World): void {
     if (worn)
       for (let i = 0; i < list.length; i++)
         for (let j = i + 1; j < list.length; j++)
-          if (clashes(list[i]!, list[j]!))
+          if (clashes(list[i] as Garment, list[j] as Garment))
             problems.push(`${where()}: #${list[i]!.id} y #${list[j]!.id} chocan`);
   });
   const alive = w.pieceLog.made - w.pieceLog.gone;
   if (count !== alive) problems.push(`piezas: hay ${count} y las cuentas dicen ${alive}`);
+}
+
+/** Una bolsa (H5b2 §1): nada pasa de su capacidad, ninguna bolsa dentro y su lista válida. */
+function checkBag(problems: string[], b: Bag, where: () => string): void {
+  const kg = weightOf(b.items);
+  if (kg > BAGS[b.kind].capacity + 1e-9)
+    problems.push(`bolsa #${b.id} (${where()}): ${kg} kg, pasa de su capacidad`);
+  if (bagsIn(b.items.pieces).length > 0)
+    problems.push(`bolsa #${b.id} (${where()}): hay una bolsa dentro de otra`);
+  if (!validCounts(b.list)) problems.push(`bolsa #${b.id} (${where()}): lista no válida`);
+  checkInventory(problems, `bolsa #${b.id}`, b.items);
+}
+
+/** Cantidades de una lista: enteras y positivas. */
+const validCounts = (list: Partial<Record<string, number>>) =>
+  Object.values(list).every((n) => n === undefined || (Number.isInteger(n) && n > 0));
+
+/** Las bolsas puestas de alguien (H5b2 §1): cada una en un hueco que le vale; su «Llevar siempre». */
+function checkBagsOf(problems: string[], s: Survivor, who: string): void {
+  for (const slot of BAG_SLOTS) {
+    const b = s.bags[slot];
+    if (b && !BAGS[b.kind].slots.includes(slot))
+      problems.push(`${who}: ${b.kind} puesta en ${slot}, que no le vale`);
+  }
+  if (!validCounts(s.keep)) problems.push(`${who}: «Llevar siempre» no válido`);
 }
 
 function checkInventory(problems: string[], where: string, inv: Inventory): void {

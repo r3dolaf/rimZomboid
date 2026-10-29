@@ -1,5 +1,5 @@
-import { GARMENTS, ITEM_WEIGHT_KG } from './balance';
-import type { Piece } from './types';
+import { BAGS, GARMENTS, ITEM_WEIGHT_KG } from './balance';
+import type { Bag, Piece } from './types';
 
 export type ItemKind =
   | 'food'
@@ -77,8 +77,12 @@ export function emptyInventory(): Inventory {
   };
 }
 
-/** Lo que pesa una pieza suelta. */
-export const pieceKg = (p: Piece): number => GARMENTS[p.kind].kg;
+/** ¿Es una bolsa (H5b2)? Las prendas no llevan nada dentro. */
+export const isBag = (p: Piece): p is Bag => 'items' in p;
+
+/** Lo que pesa una pieza suelta: una bolsa, vacía más lo de dentro. */
+export const pieceKg = (p: Piece): number =>
+  isBag(p) ? BAGS[p.kind].kg + weightOf(p.items) : GARMENTS[p.kind].kg;
 
 export function weightOf(inv: Inventory): number {
   const stacks = ITEM_KINDS.reduce((kg, k) => kg + inv[k] * ITEM_WEIGHT_KG[k], 0);

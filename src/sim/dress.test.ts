@@ -1,6 +1,7 @@
 // H5b §4: vestirse — ponerse lo claramente mejor que permita su atuendo y quitarse lo que no.
 import { expect, test } from 'vitest';
 import { DIRTY_HOURS, DRESS_CHECK_TICKS, DRESS_TICKS } from './balance';
+import { garments } from './bags';
 import { newGarment, outfitScore } from './clothes';
 import { checkInvariants } from './invariants';
 import { dressJob } from './jobs/dress';
@@ -139,7 +140,7 @@ test('revisión: con dos prendas sucias y copias limpias en el almacén, se camb
   expect(dressJob(s, w)).not.toBeNull();
   run(w, 600);
   expect(s.worn.every((g) => g.dirtHours < DIRTY_HOURS)).toBe(true);
-  expect(w.storage.items.pieces.every((g) => g.dirtHours >= DIRTY_HOURS)).toBe(true); // las sucias, al almacén
+  expect(garments(w.storage.items.pieces).every((g) => g.dirtHours >= DIRTY_HOURS)).toBe(true); // las sucias, al almacén
   expect(checkInvariants(w)).toEqual([]);
 });
 

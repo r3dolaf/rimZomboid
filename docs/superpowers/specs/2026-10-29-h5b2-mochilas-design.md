@@ -99,3 +99,9 @@ Que lo que lleva cada colono sea una decisión de juego, como en Project Zomboid
 - **Navegador:** la pestaña «Bolsas», editar una lista, las bolsas en el Almacén y en Atuendos.
 - **Partida larga:** se cuentan bolsas encontradas, puestas, soltadas y recogidas, y se comprueba que se usan.
 - **Equilibrio:** se compara con H5b cuánto aguantan las colonias: las mochilas deben ayudar sin hacerlo demasiado fácil.
+
+## 9. Equilibrio tras la partida larga
+
+- Con la misma sonda que en H5b (12 semillas, saqueando todo el pueblo, 30 días): en H5b la colonia caía de media hacia el día 21 y 4 de 12 llegaban al día 30; con mochilas, hacia el día 23 y también 4 de 12. Con las bolsas prohibidas en todos los atuendos, hacia el día 23 y 6 de 12. Las mochilas ayudan un poco, sin hacerlo demasiado fácil: no se tocan las cifras.
+- Casi todas las muertes siguen siendo por infección de arañazos. Las bolsas de la mano se sueltan a menudo al huir (10–40 por partida) y se recogen casi todas.
+- Se arregló al medir: con las bolsas prohibidas, cogían antes una bolsa (que no podían ponerse) que la comida y pasaban hambre; ahora las bolsas que no se ponen se cogen al final, como la ropa. Y sin comida en el almacén, ahora también llevan la de sus bolsas.

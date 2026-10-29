@@ -1,7 +1,7 @@
 // La pestaña Bolsas de la ficha (H5b2 §7): bolsas puestas, fijarlas, sus listas, lo de las manos y
 // «Llevar siempre». Cambia el mundo solo con órdenes; muestra lo pedido aunque esté en pausa.
 import { es } from '../i18n/es';
-import { effectiveKeep, effectiveList, effectivePinned } from '../sim/bags';
+import { effectiveKeep, effectiveList, effectivePinned, findBag } from '../sim/bags';
 import { ITEM_KINDS, type ItemKind } from '../sim/items';
 import { issue } from '../sim/orders';
 import type { BagSlot, Survivor, World } from '../sim/types';
@@ -19,46 +19,7 @@ export function mountBagsPane(opts: { world: World; survivor: () => Survivor | u
   pane.dataset.testid = 'sheet-pane-bags';
   let shown = '';
 
-  /** Lo que pide una lista (de una bolsa o «Llevar siempre») ahora mismo, con lo pendiente. */
-  const current = (s: Survivor, bagId: number | null, item: ItemKind): number => {
-    if (bagId === null) return effectiveKeep(opts.world, s)[item] ?? 0;
-    const b = Object.values(s.bags).find((x) => x?.id === bagId);
-    return b ? (effectiveList(opts.world, b)[item] ?? 0) : 0;
-  };
-  const setCount = (s: Survivor, bagId: number | null, item: ItemKind, n: number) => {
-    const v = Math.max(0, Math.min(99, n));
-    issue(
-      opts.world,
-      bagId === null
-        ? { type: 'setKeep', survivorId: s.id, item, n: v }
-        : { type: 'setBagList', pieceId: bagId, item, n: v },
-    );
-  };
-  const bagIdOf = (el: HTMLElement) => (el.dataset.bag === 'keep' ? null : Number(el.dataset.bag));
-
-  pane.addEventListener('click', (ev) => {
-    const s = opts.survivor();
-    const el = (ev.target as HTMLElement).closest('button');
-    if (!s || !el) return;
-    if (el.dataset.pin) {
-      const slot = el.dataset.pin as BagSlot;
-      const on = !effectivePinned(opts.world, s).includes(slot);
-      issue(opts.world, { type: 'pinBag', survivorId: s.id, slot, on });
-    } else if (el.dataset.item) {
-      const item = el.dataset.item as ItemKind;
-      const bagId = bagIdOf(el);
-      setCount(s, bagId, item, current(s, bagId, item) + Number(el.dataset.delta));
-    }
-    el.blur();
-  });
-  pane.addEventListener('change', (ev) => {
-    const s = opts.survivor();
-    const el = ev.target as HTMLSelectElement;
-    if (!s || el.tagName !== 'SELECT' || !el.value) return;
-    const item = el.value as ItemKind;
-    const bagId = bagIdOf(el);
-    if (current(s, bagId, item) === 0) setCount(s, bagId, item, 1);
-  });
+  attachListHandlers(pane, opts.world, opts.survivor);
 
   return {
     pane,
@@ -80,7 +41,7 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, text?: string, cls?: 
 };
 
 /** Una lista con + y − por cosa y un desplegable para añadir; `bag`: su id o `keep`. */
-function listEditor(rows: Row[], bag: string, testid: string): HTMLElement {
+export function listEditor(rows: Row[], bag: string, testid: string): HTMLElement {
   const box = el('div', undefined, 'bag-list');
   box.dataset.testid = `${testid}-list`;
   for (const r of rows) {
@@ -143,4 +104,51 @@ function render(v: View): DocumentFragment {
   }
   f.append(el('p', v.hands), el('h3', u.keep), listEditor(v.keep, 'keep', 'keep'));
   return f;
+}
+
+/**
+ * Los botones + y −, «Fijar» y los desplegables de añadir de las listas dentro de `root` (las de
+ * las bolsas, puestas o guardadas, y la de «Llevar siempre» de `survivor`).
+ */
+export function attachListHandlers(
+  root: HTMLElement,
+  world: World,
+  survivor: () => Survivor | undefined,
+): void {
+  /** Lo que pide la lista ahora mismo, con lo pendiente. */
+  const current = (bagId: number | null, item: ItemKind): number => {
+    const s = survivor();
+    if (bagId === null) return s ? (effectiveKeep(world, s)[item] ?? 0) : 0;
+    const b = findBag(world, bagId);
+    return b ? (effectiveList(world, b)[item] ?? 0) : 0;
+  };
+  const setCount = (bagId: number | null, item: ItemKind, n: number) => {
+    const v = Math.max(0, Math.min(99, n));
+    const s = survivor();
+    if (bagId !== null) issue(world, { type: 'setBagList', pieceId: bagId, item, n: v });
+    else if (s) issue(world, { type: 'setKeep', survivorId: s.id, item, n: v });
+  };
+  const bagIdOf = (el: HTMLElement) => (el.dataset.bag === 'keep' ? null : Number(el.dataset.bag));
+  root.addEventListener('click', (ev) => {
+    const el = (ev.target as HTMLElement).closest('button');
+    if (!el) return;
+    const s = survivor();
+    if (el.dataset.pin && s) {
+      const slot = el.dataset.pin as BagSlot;
+      const on = !effectivePinned(world, s).includes(slot);
+      issue(world, { type: 'pinBag', survivorId: s.id, slot, on });
+    } else if (el.dataset.item) {
+      const item = el.dataset.item as ItemKind;
+      const bagId = bagIdOf(el);
+      setCount(bagId, item, current(bagId, item) + Number(el.dataset.delta));
+    } else return;
+    el.blur();
+  });
+  root.addEventListener('change', (ev) => {
+    const el = ev.target as HTMLSelectElement;
+    if (el.tagName !== 'SELECT' || el.dataset.bag === undefined || !el.value) return;
+    const item = el.value as ItemKind;
+    const bagId = bagIdOf(el);
+    if (current(bagId, item) === 0) setCount(bagId, item, 1);
+  });
 }

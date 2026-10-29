@@ -6,7 +6,12 @@ import { newGarment } from '../sim/clothes';
 import type { LogEntry } from '../sim/log';
 import { ordersSystem } from '../sim/orders';
 import { emptyWorld } from '../sim/testing/fixtures';
-import { bagsView, logText } from './describe';
+import { bagsView, logText, pileLabel } from './describe';
+import { emptyInventory } from '../sim/items';
+import { mountCraftPanel } from './craftPanel';
+import { createFlag } from './flag';
+import { mountOutfitsPanel } from './outfitsPanel';
+import { mountStoragePanel } from './storagePanel';
 import { LOG_CATEGORY } from './logPanel';
 import { createSelection } from './selection';
 import { mountSheet } from './sheet';
@@ -91,4 +96,62 @@ test('registro: encontrar, soltar y recoger una bolsa', () => {
     `${s.name} ha recogido su bolsa de deporte`,
   );
   expect([LOG_CATEGORY.bagFound, LOG_CATEGORY.bagDropped]).toEqual(['loot', 'combat']);
+});
+
+test('Almacén: sección Bolsas con lo de dentro y su lista, que se edita ahí', () => {
+  const root = document.createElement('div');
+  document.body.append(root);
+  const w = emptyWorld(10, 10);
+  const b = newBag(w, 'hikingPack');
+  b.items.food = 3;
+  b.list = { food: 3 };
+  w.storage.items.pieces.push(b);
+  const panel = mountStoragePanel(root, { world: w, open: createFlag(true) });
+  panel.update();
+  const bags = root.querySelector('[data-testid="storage-bags"]') as HTMLElement;
+  expect(bags.textContent).toContain('Mochila de excursión');
+  expect(bags.textContent).toContain('3 latas');
+  (bags.querySelector(`[data-testid="bag-${b.id}-plus-food"]`) as HTMLButtonElement).click();
+  ordersSystem(w);
+  expect(b.list).toEqual({ food: 4 });
+  root.remove();
+});
+
+test('Atuendos: una casilla por bolsa y «Bolsa en la mano»', () => {
+  const root = document.createElement('div');
+  document.body.append(root);
+  const w = emptyWorld(10, 10);
+  const panel = mountOutfitsPanel(root, { world: w, open: createFlag(true) });
+  panel.update();
+  const duffel = root.querySelector('[data-testid="outfit-bag-duffel"]') as HTMLInputElement;
+  const hand = root.querySelector('[data-testid="outfit-handbag"]') as HTMLInputElement;
+  expect(duffel.checked).toBe(true);
+  expect(hand.checked).toBe(true);
+  duffel.click();
+  hand.click();
+  ordersSystem(w);
+  expect(w.outfits[0]!.bags).not.toContain('duffel');
+  expect(w.outfits[0]!.handBag).toBe(false);
+  panel.update();
+  expect(duffel.checked).toBe(false);
+  root.remove();
+});
+
+test('Fabricar: la bolsa de tela; mapa: una bolsa en el suelo dice qué es y cuántas cosas lleva', () => {
+  const root = document.createElement('div');
+  document.body.append(root);
+  const w = emptyWorld(10, 10);
+  mountCraftPanel(root, { world: w, open: createFlag(true) }).update();
+  const add = root.querySelector('[data-testid="craft-add-sewBag"]') as HTMLButtonElement;
+  expect(add.textContent).toBe('+ Bolsa de tela');
+  const b = newBag(w, 'schoolBag');
+  b.items.food = 3;
+  b.items.pieces.push(newGarment(w, 'cap'));
+  const pile = { id: 1, pos: { x: 1, y: 1 }, items: { ...emptyInventory(), pieces: [b] } };
+  expect(pileLabel(pile)).toBe('Mochila escolar (4 cosas)');
+  b.items.food = 0;
+  b.items.pieces = [];
+  expect(pileLabel(pile)).toBe('Mochila escolar (vacía)');
+  expect(pileLabel({ ...pile, items: { ...emptyInventory(), wood: 2 } })).toBeNull();
+  root.remove();
 });

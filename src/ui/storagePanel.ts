@@ -1,7 +1,8 @@
 import { es } from '../i18n/es';
-import { garments } from '../sim/bags';
+import { bagsIn, effectiveList, garments } from '../sim/bags';
+import { attachListHandlers, listEditor } from './bagsPane';
 import { ITEM_KINDS } from '../sim/items';
-import { garmentText } from './describe';
+import { bagName, formatItems, garmentText, listRows } from './describe';
 import type { World } from '../sim/types';
 import type { Flag } from './flag';
 import './panels.css';
@@ -52,7 +53,15 @@ export function mountStoragePanel(
   clothes.className = 'clothes';
   clothes.dataset.testid = 'storage-clothes';
   let clothesShown = '';
-  panel.append(head, materials, list, clothesTitle, clothes);
+  // Las bolsas guardadas (H5b2 §7): lo de dentro y su lista, que se edita aquí.
+  const bagsTitle = document.createElement('h3');
+  bagsTitle.textContent = es.storageBags.title;
+  const bags = document.createElement('div');
+  bags.className = 'bags';
+  bags.dataset.testid = 'storage-bags';
+  attachListHandlers(bags, opts.world, () => undefined);
+  let bagsShown = '';
+  panel.append(head, materials, list, clothesTitle, clothes, bagsTitle, bags);
   root.append(panel);
 
   return {
@@ -62,6 +71,33 @@ export function mountStoragePanel(
       for (const { k, n } of counts) {
         const text = String(opts.world.storage.items[k]);
         if (n.textContent !== text) n.textContent = text;
+      }
+      const stored = bagsIn(opts.world.storage.items.pieces).map((b) => ({
+        id: b.id,
+        name: bagName(b.kind),
+        inside: formatItems(b.items),
+        list: effectiveList(opts.world, b),
+      }));
+      const bagsKey = JSON.stringify(stored);
+      if (bagsKey !== bagsShown) {
+        bagsShown = bagsKey;
+        bags.replaceChildren(
+          ...(stored.length > 0 ? stored : [null]).map((b) => {
+            const box = document.createElement('div');
+            box.className = 'bag-slot';
+            if (!b) {
+              box.textContent = es.clothesUi.nothing;
+              box.classList.add('muted');
+              return box;
+            }
+            const title = document.createElement('strong');
+            title.textContent = `${b.name}: `;
+            const inside = document.createElement('span');
+            inside.textContent = b.inside;
+            box.append(title, inside, listEditor(listRows(b.list), String(b.id), `bag-${b.id}`));
+            return box;
+          }),
+        );
       }
       const texts = garments(opts.world.storage.items.pieces).map(garmentText);
       const key = JSON.stringify(texts);

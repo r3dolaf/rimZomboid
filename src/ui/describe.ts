@@ -18,7 +18,7 @@ import { layersOn, zoneBlock } from '../sim/clothes';
 import { mainsOn } from '../sim/water';
 import { gameTime } from '../sim/clock';
 import { ITEM_KINDS, weightOf, type Inventory, type ItemKind } from '../sim/items';
-import { BAG_SLOTS, effectiveKeep, effectiveList, effectivePinned } from '../sim/bags';
+import { BAG_SLOTS, bagsIn, effectiveKeep, effectiveList, effectivePinned } from '../sim/bags';
 import type { LogEntry } from '../sim/log';
 import type { MoodModifier } from '../sim/mood';
 import type {
@@ -29,6 +29,7 @@ import type {
   Furniture,
   Garment,
   MemoryId,
+  Pile,
   Survivor,
   Tone,
   World,
@@ -764,7 +765,8 @@ export const bagName = (kind: BagKind): string =>
   es.bags[kind].charAt(0).toUpperCase() + es.bags[kind].slice(1);
 
 type ListRow = { item: ItemKind; n: number; name: string };
-const listRows = (list: Partial<Record<ItemKind, number>>): ListRow[] =>
+/** Las filas de una lista (de una bolsa o «Llevar siempre»), en el orden de los objetos. */
+export const listRows = (list: Partial<Record<ItemKind, number>>): ListRow[] =>
   ITEM_KINDS.filter((k) => (list[k] ?? 0) > 0).map((k) => ({
     item: k,
     n: list[k]!,
@@ -814,4 +816,12 @@ export function bagsView(
     hands: es.bagsUi.hands(formatItems(s.carrying), kgText(weightOf(s.carrying))),
     keep: listRows(effectiveKeep(w, s)),
   };
+}
+
+/** Una bolsa en el suelo (H5b2 §7): «Mochila escolar (4 cosas)»; `null` si el montón no tiene. */
+export function pileLabel(p: Pile): string | null {
+  const b = bagsIn(p.items.pieces)[0];
+  if (!b) return null;
+  const n = ITEM_KINDS.reduce((acc, k) => acc + b.items[k], 0) + b.items.pieces.length;
+  return es.bagsUi.onFloor(bagName(b.kind), n);
 }

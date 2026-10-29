@@ -38,7 +38,8 @@ import {
   type World,
   type Zombie,
 } from '../sim/types';
-import { buildingTitle, furnitureLabel, zombieLabel } from '../ui/describe';
+import { buildingTitle, furnitureLabel, pileLabel, zombieLabel } from '../ui/describe';
+import { pileAt } from '../sim/piles';
 import { mainsOn } from '../sim/water';
 import { visibleTiles } from '../sim/vision';
 import type { Selection } from '../ui/selection';
@@ -431,15 +432,17 @@ export class GameScene extends Phaser.Scene {
       }
   }
 
-  /** Al pasar el ratón por el barreño, una cisterna o un fregadero vistos: su agua (H5b). */
+  /**
+   * Al pasar el ratón por el barreño, una cisterna o un fregadero vistos: su agua (H5b); por una
+   * bolsa en el suelo, qué es y cuántas cosas lleva (H5b2).
+   */
   private drawWaterLabel(): void {
     const w = this.world;
     const h = this.hover;
-    const f =
-      h && w.seen[h.y * w.grid.width + h.x] === 1
-        ? w.furniture.find((x) => x.pos.x === h.x && x.pos.y === h.y)
-        : undefined;
-    const text = f ? furnitureLabel(w, f) : null;
+    const seenHere = h !== null && w.seen[h.y * w.grid.width + h.x] === 1;
+    const f = seenHere ? w.furniture.find((x) => x.pos.x === h.x && x.pos.y === h.y) : undefined;
+    const pile = seenHere && !f ? pileAt(w, h.x, h.y) : undefined;
+    const text = f ? furnitureLabel(w, f) : pile ? pileLabel(pile) : null;
     if (text === null) {
       this.waterLabel?.setVisible(false);
       return;

@@ -63,6 +63,7 @@ export const es = {
     bags: 'Bolsas',
   },
   // Bolsas (H5b2 §7)
+  storageBags: { title: 'Bolsas' },
   bagsUi: {
     slots: { waist: 'Cintura', back: 'Espalda', hand: 'Mano' } satisfies Record<BagSlot, string>,
     nothing: 'Nada',
@@ -75,6 +76,9 @@ export const es = {
     add: 'Añadir…',
     hands: (what: string, kg: string) => `En las manos: ${what} · ${kg} kg`,
     count: (n: number, name: string) => `${n} ${name}`,
+    /** En el mapa: «Mochila escolar (4 cosas)». */
+    onFloor: (name: string, n: number) =>
+      `${name} (${n === 0 ? 'vacía' : n === 1 ? '1 cosa' : `${n} cosas`})`,
   },
   /** La ropa en pantalla (H5b §8). */
   clothesUi: {
@@ -108,6 +112,8 @@ export const es = {
     dead: 'Acepta ropa de muertos',
     groups: { head: 'Cabeza', torso: 'Torso y brazos', legs: 'Piernas' },
     column: 'Atuendo',
+    bags: 'Bolsas',
+    handBag: 'Bolsa en la mano',
   },
   craftNoTub: 'Hace falta un barreño',
   /** Al pasar el ratón por el barreño, una cisterna o un fregadero (H5b). */

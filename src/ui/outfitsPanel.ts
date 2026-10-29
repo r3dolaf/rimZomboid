@@ -1,9 +1,11 @@
+import { BAG_KINDS } from '../sim/bags';
+import { bagName } from './describe';
 import { es } from '../i18n/es';
 import { GARMENTS } from '../sim/balance';
 import { GARMENT_KINDS } from '../sim/clothes';
 import { issue } from '../sim/orders';
 import { effectiveOutfits } from '../sim/outfits';
-import type { BodyPart, GarmentKind, Outfit, World } from '../sim/types';
+import type { BagKind, BodyPart, GarmentKind, Outfit, World } from '../sim/types';
 import type { Flag } from './flag';
 import './panels.css';
 
@@ -111,7 +113,37 @@ export function mountOutfitsPanel(
     }
     return box;
   });
-  panel.append(head, tabs, nameRow, del, deadRow, ...groups);
+  // Las bolsas (H5b2 §7): una casilla por tipo y «Bolsa en la mano».
+  const bagBox = document.createElement('div');
+  bagBox.className = 'outfit-group';
+  const bagTitle = document.createElement('h3');
+  bagTitle.textContent = t.bags;
+  bagBox.append(bagTitle);
+  const bagBoxes = new Map<BagKind, HTMLInputElement>();
+  for (const k of BAG_KINDS) {
+    const label = document.createElement('label');
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.dataset.testid = `outfit-bag-${k}`;
+    input.addEventListener('change', () => {
+      if (selected !== null)
+        issue(opts.world, { type: 'setOutfitBag', outfitId: selected, bag: k, on: input.checked });
+    });
+    label.append(input, document.createTextNode(` ${bagName(k)}`));
+    bagBox.append(label);
+    bagBoxes.set(k, input);
+  }
+  const handRow = document.createElement('label');
+  const hand = document.createElement('input');
+  hand.type = 'checkbox';
+  hand.dataset.testid = 'outfit-handbag';
+  hand.addEventListener('change', () => {
+    if (selected !== null)
+      issue(opts.world, { type: 'setOutfitHandBag', outfitId: selected, on: hand.checked });
+  });
+  handRow.append(hand, document.createTextNode(` ${t.handBag}`));
+  bagBox.append(handRow);
+  panel.append(head, tabs, nameRow, del, deadRow, ...groups, bagBox);
   root.append(panel);
 
   let selected: number | null = null;
@@ -158,6 +190,8 @@ export function mountOutfitsPanel(
       del.disabled = outfits.length <= 1;
       dead.checked = o.dead;
       for (const [k, input] of boxes) input.checked = o.allowed.includes(k);
+      for (const [k, input] of bagBoxes) input.checked = o.bags.includes(k);
+      hand.checked = o.handBag;
     },
   };
 }

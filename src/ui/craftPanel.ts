@@ -15,6 +15,7 @@ const RECIPE_IDS: readonly RecipeId[] = [
   'pad',
   'unpickGarment',
   'wash',
+  'sewBag', // H5b2
 ];
 
 /** Lo que se enseña del almacén (spec H4d §8; H5b, los retales y las tiras). */

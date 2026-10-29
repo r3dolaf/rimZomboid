@@ -1,4 +1,5 @@
 // Saqueo (H3): buscar contenedores, registrarlos, cargar y descargar en el almacén.
+import { has, wornBags } from './bags';
 import { expect, test } from 'vitest';
 import { withoutZombies, withSkills } from './testing/fixtures';
 import { REFUSE_CHANCE, TICKS_PER_DAY } from './balance';
@@ -46,9 +47,10 @@ test('marcar la casa más cercana: la vacían y sus objetos acaban en el almacé
   }
   expect(w.log.some((e) => e.kind === 'houseEmptied' && e.houseId === house.id)).toBe(true);
   expect(w.log.some((e) => e.kind === 'found')).toBe(true);
-  // H5: cada uno se queda con hasta 2 vendas encima; lo demás, al almacén.
+  // H5: cada uno se queda con hasta 2 vendas encima (en las manos o en su bolsa, H5b2); lo
+  // demás, al almacén.
   for (const s of w.survivors) expect(hasCargo(s)).toBe(false);
-  const carried = w.survivors.reduce((n, s) => n + s.carrying.bandage, 0);
+  const carried = w.survivors.reduce((n, s) => n + has(s, 'bandage'), 0);
   const used = w.log.filter((e) => e.kind === 'bandaged').length; // si alguien se ha vendado
   expect(w.storage.items.bandage + carried + used).toBe(bandages);
   // Las armas, en el almacén o ya en la mano de alguien (spec H4b §6.2), más el cuchillo con que
@@ -306,10 +308,11 @@ test('H5b: las prendas de una casa saqueada acaban en el almacén', () => {
   expect(ids.length).toBeGreaterThan(0);
   issue(w, { type: 'designateHouse', houseId: house.id, on: true });
   for (let i = 0; i < 2 * TICKS_PER_DAY; i++) step(w);
-  // En el almacén o ya puestas (se visten con lo mejor, H5b §4).
-  const stored = [...w.storage.items.pieces, ...w.survivors.flatMap((s) => s.worn)].map(
-    (p) => p.id,
-  );
+  // En el almacén o ya puestas (se visten con lo mejor, H5b §4; las bolsas, al encontrarlas).
+  const stored = [
+    ...w.storage.items.pieces,
+    ...w.survivors.flatMap((s) => [...s.worn, ...wornBags(s)]),
+  ].map((p) => p.id);
   for (const id of ids) expect(stored).toContain(id);
   expect(checkInvariants(w)).toEqual([]);
 });

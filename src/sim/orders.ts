@@ -1,3 +1,4 @@
+import { applyBagListOrder, type BagListOrder } from './bags';
 import { isEmpty } from './items';
 import { resolveDecision } from './events/resolve';
 import { cancelBlueprint, markTree, placeBlueprint } from './build';
@@ -52,7 +53,9 @@ export type Order =
   | { type: 'deleteOutfit'; outfitId: number }
   | { type: 'setOutfitGarment'; outfitId: number; garment: GarmentKind; on: boolean }
   | { type: 'setOutfitDead'; outfitId: number; on: boolean }
-  | { type: 'setOutfit'; survivorId: number; outfitId: number };
+  | { type: 'setOutfit'; survivorId: number; outfitId: number }
+  // Listas de las bolsas y «Llevar siempre» (H5b2 §3)
+  | BagListOrder;
 
 /** Encola una orden; se aplica al principio del siguiente tick. */
 export function issue(w: World, order: Order): void {
@@ -200,6 +203,10 @@ export function ordersSystem(w: World): void {
       case 'setOutfitDead':
       case 'setOutfit':
         applyOutfitOrder(w, o);
+        break;
+      case 'setBagList':
+      case 'setKeep':
+        applyBagListOrder(w, o);
         break;
     }
   }

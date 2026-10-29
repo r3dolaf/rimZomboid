@@ -1,11 +1,5 @@
-import { spend, takeInto } from '../bags';
-import {
-  BANDAGES_CARRIED,
-  CHOP_NOISE_TICKS,
-  EAT_RESTORE,
-  NOISE,
-  PRY_NOISE_TICKS,
-} from '../balance';
+import { spend, takeInto, unloadAt } from '../bags';
+import { CHOP_NOISE_TICKS, EAT_RESTORE, NOISE, PRY_NOISE_TICKS } from '../balance';
 import { setTile } from '../map/grid';
 import { isNight } from '../clock';
 import { finishConsoling } from '../consoling';
@@ -18,7 +12,7 @@ import { finishCraft, unloadAfterCraft } from '../jobs/craft';
 import { logEvent } from '../log';
 import { makeNoise } from '../noise';
 import { addMemory } from '../mood';
-import { addInto, addStacks, isEmpty, snapshot } from '../items';
+import { addStacks, isEmpty, snapshot } from '../items';
 import { practice } from '../skills';
 import { Tile, type Survivor, type World } from '../types';
 
@@ -61,11 +55,8 @@ export function activitiesSystem(w: World): void {
       mercyStep(w, s); // H5 §7.4
     } else if (a.type === 'unload') {
       if (--a.ticksLeft > 0) continue;
-      // Se queda con sus vendas (H5 §4).
-      const keep = Math.min(s.carrying.bandage, BANDAGES_CARRIED);
-      s.carrying.bandage -= keep;
-      addInto(w.storage.items, s.carrying);
-      s.carrying.bandage = keep;
+      // Con las listas de sus bolsas y su «Llevar siempre» (H5b2 §3; las vendas de H5).
+      unloadAt(w, s);
       s.action = { type: 'idle', ticksLeft: 0 };
     } else if (a.type === 'fight') {
       // Termina a su tiempo o en cuanto el otro deja de pelear con él (p. ej., se desploma).

@@ -194,3 +194,121 @@ export function takeInto(w: World, s: Survivor, from: Inventory, mode: 'loot' | 
   }
   return taken;
 }
+
+/** Una bolsa que entra en el almacén suelta en él lo que no está en su lista (§3). */
+export function settleBag(w: World, b: Bag): void {
+  const store = w.storage.items;
+  for (const k of ITEM_KINDS) {
+    const out = b.items[k] - reserved(b, k);
+    b.items[k] -= out;
+    store[k] += out;
+  }
+  store.pieces.push(...b.items.pieces);
+  b.items.pieces = [];
+}
+
+/**
+ * Descarga en el almacén (§3): de cada bolsa puesta, todo menos lo reservado; de las manos, todo.
+ * Con lo que sale llena primero lo que les falta a las listas de sus bolsas, luego se queda con su
+ * «Llevar siempre» (en una bolsa si cabe, si no en las manos) y lo demás va al almacén. Las bolsas
+ * que lleva en las manos, y las puestas que su atuendo no permite (sin fijar), se quedan allí.
+ */
+export function unloadAt(w: World, s: Survivor): void {
+  const pool = emptyInventory();
+  for (const b of wornBags(s)) {
+    for (const k of ITEM_KINDS) {
+      const out = b.items[k] - reserved(b, k);
+      b.items[k] -= out;
+      pool[k] += out;
+    }
+    pool.pieces.push(...b.items.pieces);
+    b.items.pieces = [];
+  }
+  addInto(pool, s.carrying);
+  for (const slot of BAG_SLOTS) {
+    const b = s.bags[slot];
+    if (!b || s.bagsPinned.includes(slot) || bagAllowed(w, s, b.kind, slot)) continue;
+    s.bags[slot] = null;
+    pool.pieces.push(b);
+  }
+  // Lo que les falta a las listas.
+  for (const b of wornBags(s))
+    for (const k of ITEM_KINDS) {
+      const kg = ITEM_WEIGHT_KG[k];
+      while (pool[k] > 0 && b.items[k] < (b.list[k] ?? 0) && bagRoom(b) + 1e-9 >= kg) {
+        pool[k]--;
+        b.items[k]++;
+      }
+    }
+  // Su «Llevar siempre».
+  for (const k of ITEM_KINDS) {
+    let n = Math.min(s.keep[k] ?? 0, pool[k]);
+    for (; n > 0; n--) {
+      const to = placeFor(s, k);
+      if (!to) break;
+      to[k]++;
+      pool[k]--;
+    }
+  }
+  const store = w.storage.items;
+  for (const b of bagsIn(pool.pieces)) {
+    pool.pieces = pool.pieces.filter((x) => x !== b);
+    store.pieces.push(b);
+    settleBag(w, b);
+  }
+  addInto(store, pool);
+}
+
+/** ¿Tiene algo que descargar? Prendas, o más de lo suyo que su «Llevar siempre» (§3). */
+export function unloadable(s: Survivor): boolean {
+  if (s.carrying.pieces.length > 0 || wornBags(s).some((b) => b.items.pieces.length > 0))
+    return true;
+  return ITEM_KINDS.some((k) => personal(s, k) > (s.keep[k] ?? 0));
+}
+
+/** Una bolsa de un colono (puesta) o del almacén, por su id. */
+export function findBag(w: World, id: number): Bag | undefined {
+  for (const s of w.survivors) for (const b of wornBags(s)) if (b.id === id) return b;
+  return bagsIn(w.storage.items.pieces).find((b) => b.id === id);
+}
+
+/** Cantidad válida para una lista (0 la quita). */
+const validN = (n: number) => Number.isInteger(n) && n >= 0 && n <= 99;
+
+/** Pone `n` de `item` en una lista (0 la quita). */
+function setCount(list: Partial<Record<ItemKind, number>>, item: ItemKind, n: number): void {
+  if (n === 0) delete list[item];
+  else list[item] = n;
+}
+
+export type BagListOrder =
+  | { type: 'setBagList'; pieceId: number; item: ItemKind; n: number }
+  | { type: 'setKeep'; survivorId: number; item: ItemKind; n: number };
+
+/** Aplica una orden de listas (§3); las que no valen no hacen nada. */
+export function applyBagListOrder(w: World, o: BagListOrder): void {
+  if (!validN(o.n) || !ITEM_KINDS.includes(o.item)) return;
+  if (o.type === 'setBagList') {
+    const b = findBag(w, o.pieceId);
+    if (b) setCount(b.list, o.item, o.n);
+    return;
+  }
+  const s = w.survivors.find((x) => x.id === o.survivorId);
+  if (s) setCount(s.keep, o.item, o.n);
+}
+
+/** La lista de una bolsa con las órdenes pendientes ya aplicadas (copia). */
+export function effectiveList(w: World, b: Bag): Partial<Record<ItemKind, number>> {
+  const list = { ...b.list };
+  for (const o of w.orders)
+    if (o.type === 'setBagList' && o.pieceId === b.id && validN(o.n)) setCount(list, o.item, o.n);
+  return list;
+}
+
+/** Su «Llevar siempre» con las órdenes pendientes ya aplicadas (copia). */
+export function effectiveKeep(w: World, s: Survivor): Partial<Record<ItemKind, number>> {
+  const keep = { ...s.keep };
+  for (const o of w.orders)
+    if (o.type === 'setKeep' && o.survivorId === s.id && validN(o.n)) setCount(keep, o.item, o.n);
+  return keep;
+}

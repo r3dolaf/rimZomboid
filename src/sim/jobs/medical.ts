@@ -1,7 +1,7 @@
 // Vendas (spec H5 §4): cada uno lleva hasta 2; se venda lo que le sangra; Sanar venda a los demás
 // (y al derribado antes de cargarlo); a 1 día la venda está sucia y se cambia. Analgésicos,
 // descanso y camas de hospital (§5 y §6).
-import { has, spend } from '../bags';
+import { has, spend, unloadable } from '../bags';
 import {
   BANDAGE_CLEAN_HOURS,
   BANDAGE_RANGE,
@@ -17,7 +17,7 @@ import {
 import { baseFloor } from '../base';
 import { armFactor, canWalk } from '../body';
 import { contains } from '../geom';
-import { ITEM_KINDS, weightOf, type ItemKind } from '../items';
+import { weightOf, type ItemKind } from '../items';
 import { logEvent } from '../log';
 import { findPath, regionOf } from '../path/astar';
 import { pick } from '../rng';
@@ -114,14 +114,9 @@ export function restDecision(s: Survivor, w: World): Action | null | undefined {
   return { type: 'moveTo', target: restSpot(s, w), then: { type: 'rest' } };
 }
 
-/** ¿Lleva algo que descargar? Todo cuenta salvo sus BANDAGES_CARRIED vendas. */
+/** ¿Lleva algo que descargar? Todo cuenta salvo lo de sus listas y su «Llevar siempre» (H5b2). */
 export function hasCargo(s: Survivor): boolean {
-  return (
-    s.carrying.pieces.length > 0 || // H5b: las prendas también
-    ITEM_KINDS.some((k) =>
-      k === 'bandage' ? s.carrying.bandage > BANDAGES_CARRIED : s.carrying[k] > 0,
-    )
-  );
+  return unloadable(s);
 }
 
 /** ¿Llega al almacén desde donde está? */

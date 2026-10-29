@@ -40,6 +40,8 @@ test('botín por tipo (spec §4): rangos y, para lo de "a veces", la probabilida
     bat: { chance: 0.15 },
     painkillers: { chance: 1 / 3 }, // H5
     waterBottle: { chance: 0.5 }, // H5b
+    roadMap: { chance: 0.1 }, // H5c1
+    note: { chance: 0.05 },
   });
   expect(LOOT.supermarket).toEqual({
     food: [40, 60],
@@ -87,6 +89,7 @@ test('botín por tipo (spec §4): rangos y, para lo de "a veces", la probabilida
     bat: [1, 1],
     painkillers: [0, 2],
     waterBottle: [2, 6], // H5b
+    roadMap: { chance: 0.5 }, // H5c1
   });
   expect(LOOT.farm).toEqual({
     food: [8, 16],

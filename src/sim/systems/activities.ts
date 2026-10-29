@@ -1,3 +1,4 @@
+import { readFindings } from '../sites';
 import { spend, takeInto, unloadAt } from '../bags';
 import { CHOP_NOISE_TICKS, EAT_RESTORE, NOISE, PRY_NOISE_TICKS } from '../balance';
 import { setTile } from '../map/grid';
@@ -57,6 +58,7 @@ export function activitiesSystem(w: World): void {
       if (--a.ticksLeft > 0) continue;
       // Con las listas de sus bolsas y su «Llevar siempre» (H5b2 §3; las vendas de H5).
       unloadAt(w, s);
+      readFindings(w); // H5c1: mapas y notas que llegan al almacén
       s.action = { type: 'idle', ticksLeft: 0 };
     } else if (a.type === 'fight') {
       // Termina a su tiempo o en cuanto el otro deja de pelear con él (p. ej., se desploma).

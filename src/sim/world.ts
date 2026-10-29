@@ -1,5 +1,6 @@
 import {
   CLOTHES_SALT,
+  EXPEDITION_SALT,
   DEFAULT_OUTFITS,
   BANDAGES_CARRIED,
   BUILDINGS,
@@ -24,7 +25,7 @@ import { dressStarter } from './clothes';
 import { defaultOutfits } from './outfits';
 import { placeFixtures, rollWaterCut } from './water';
 import { emptyInventory } from './items';
-import { fillBags, fillGarments, fillHatchets, placeContainers } from './loot';
+import { fillBags, fillFindings, fillGarments, fillHatchets, placeContainers } from './loot';
 import { revealFromSurvivors } from './vision';
 import { generateMap } from './map/generate';
 import { getTile, setTile } from './map/grid';
@@ -36,6 +37,7 @@ import { rollSkills, skillRng } from './skills';
 import { rollTraits } from './traits';
 import {
   Tile,
+  type Expedition,
   type Bed,
   type NarratorStyle,
   type Point,
@@ -55,6 +57,11 @@ export function tileOf(p: Point): Point {
 
 /** Salt del azar de los zombis: se deriva de la semilla, pero va aparte. */
 export const ZOMBIE_RNG_SALT = 0x2f6b9d1;
+
+/** Las expediciones al empezar (H5c1): sin sitios conocidos, con su propio azar. */
+export function newExpedition(seed: number): Expedition {
+  return { sites: [], travels: [], nextSiteId: 1, rng: createRng((seed ^ EXPEDITION_SALT) >>> 0) };
+}
 
 export function createWorld(
   seed: number,
@@ -149,6 +156,7 @@ export function createWorld(
   // H5b2: las bolsas y las hachuelas, con el mismo azar y al final (no cambia lo de antes).
   fillBags(pieces, houses, containers, clothesRng);
   fillHatchets(houses, containers, clothesRng);
+  fillFindings(houses, containers, clothesRng); // H5c1: mapas de carreteras y notas
 
   // Relaciones (H3b), también después para no cambiar partidas anteriores.
   for (const s of survivors) {
@@ -201,6 +209,7 @@ export function createWorld(
       pieceLog: pieces.pieceLog,
       outfits: defaultOutfits(),
       nextOutfitId: DEFAULT_OUTFITS.length + 1,
+      expedition: newExpedition(seed),
     },
     mapId: 0,
     siteMaps: [],

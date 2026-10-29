@@ -1,5 +1,6 @@
 // Varios mapas a la vez (spec H5c1 §1): la base guarda los mapas de los sitios y todos avanzan
 // juntos; un sitio sin nadie se queda quieto hasta que vuelva alguien.
+import { sitesDailySystem } from './sites';
 import { step } from './step';
 import type { Survivor, World } from './types';
 
@@ -26,4 +27,5 @@ export function allColonists(base: World): { s: Survivor; where: number }[] {
 /** Un tick de todo el juego: la base y los sitios con gente. */
 export function stepGame(base: World): void {
   for (const w of activeMaps(base)) step(w);
+  sitesDailySystem(base); // H5c1: avisos de sitios
 }

@@ -1,4 +1,5 @@
 // Ayudas para los tests de la simulación.
+import { newExpedition } from '../world';
 import { bagFields, wornBags } from '../bags';
 import { newGarment, piecesGone } from '../clothes';
 import { DEFAULT_OUTFITS } from '../balance';
@@ -129,6 +130,7 @@ export function emptyWorld(width: number, height: number): World {
       pieceLog: { made: 2, gone: 0 },
       outfits: defaultOutfits(),
       nextOutfitId: DEFAULT_OUTFITS.length + 1,
+      expedition: newExpedition(1),
     },
     mapId: 0,
     siteMaps: [],

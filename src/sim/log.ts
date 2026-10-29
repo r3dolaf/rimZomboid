@@ -1,6 +1,7 @@
 import { LOG_MAX } from './balance';
 import type { Inventory } from './items';
 import type {
+  SiteInfo,
   BagKind,
   BodyPart,
   BuildKind,
@@ -15,6 +16,13 @@ import type {
 
 /** Suceso del registro: solo datos; la interfaz los convierte en texto. */
 export type LogEvent =
+  // Expediciones (H5c1): un sitio nuevo y cómo se supo (quién lo encontró, si fue explorando).
+  | {
+      kind: 'siteFound';
+      site: Pick<SiteInfo, 'kind' | 'special' | 'side' | 'hours'>;
+      how: SiteHow;
+      survivorId?: number;
+    }
   // Bolsas (H5b2): se pone una que encuentra; suelta la de la mano; recoge la suya.
   | { kind: 'bagFound'; survivorId: number; bag: BagKind }
   | { kind: 'bagDropped'; survivorId: number; bag: BagKind }
@@ -119,6 +127,9 @@ export type LogEvent =
   | { kind: 'sawTurned'; name: string }
   | { kind: 'killedForNothing'; name: string }
   | { kind: 'colonyFell' };
+
+/** Cómo se descubre un sitio (H5c1 §3). */
+export type SiteHow = 'explore' | 'roadMap' | 'note' | 'smoke' | 'radio';
 
 /** Un suceso con su tick y, si pasó en un sitio (H5c1), su mapa. */
 export type LogEntry = LogEvent & { tick: number; mapId?: number };

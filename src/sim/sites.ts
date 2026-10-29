@@ -4,16 +4,40 @@ import {
   BUILDINGS,
   CLOTHES_SALT,
   INITIAL_REVEAL,
+  KNOWN_SITES_MAX,
+  NOTE_SURVIVORS,
+  RADIO_SURVIVORS,
+  SITE_HOURS,
+  SITE_RADIO_SHARE,
+  SITE_RUMOR_PER_DAY,
+  SPECIAL_SHARE,
+  SURVIVORS_WAIT_DAYS,
+  TICKS_PER_DAY,
   SITE_ZOMBIE_CLEAR,
   SITE_ZOMBIES,
 } from './balance';
 import { placeBlueprint } from './build';
 import { emptyInventory } from './items';
-import { fillBags, fillBuilding, fillGarments, fillHatchets, placeContainers } from './loot';
+import {
+  fillBags,
+  fillBuilding,
+  fillFindings,
+  fillGarments,
+  fillHatchets,
+  placeContainers,
+} from './loot';
 import { isWalkable, setTile } from './map/grid';
 import { generateSite } from './map/site';
-import { createRng, nextFloat, nextInt } from './rng';
-import { Tile, type SiteInfo, type World } from './types';
+import { createRng, nextFloat, nextInt, pick } from './rng';
+import { logEvent, type SiteHow } from './log';
+import {
+  Tile,
+  type MapSide,
+  type SiteInfo,
+  type SiteKind,
+  type SiteSpecial,
+  type World,
+} from './types';
 import { ZOMBIE_RNG_SALT } from './world';
 import { newZombie } from './zombies/spawn';
 
@@ -42,6 +66,7 @@ export function siteMap(base: World, info: SiteInfo): World {
   fillGarments(base.common, g.houses, containers, clothesRng);
   fillBags(base.common, g.houses, containers, clothesRng);
   fillHatchets(g.houses, containers, clothesRng);
+  fillFindings(g.houses, containers, clothesRng);
   for (const c of containers) c.designated = true; // al llegar, todo marcado para saquear
   base.common.woodLog.start += containers.reduce((n, c) => n + c.items.wood, 0);
   for (const h of g.houses)
@@ -117,4 +142,77 @@ export function siteMap(base: World, info: SiteInfo): World {
   }
   base.siteMaps.push({ siteId: info.id, world: w });
   return w;
+}
+
+const SITE_KINDS: readonly SiteKind[] = ['house', 'farm', 'gas', 'warehouse', 'village'];
+const SPECIALS: readonly SiteSpecial[] = ['survivors', 'stash', 'dangerous'];
+
+/**
+ * Descubre un sitio (§3): tipo, lado y horas al azar (o el lado y lo especial que se pidan) con el
+ * azar de las expediciones; `null` si ya se conocen 10. Avisa en el registro.
+ */
+export function discoverSite(
+  w: World,
+  opts: { how: SiteHow; side?: MapSide; special?: SiteSpecial | null; survivorId?: number },
+): SiteInfo | null {
+  const ex = w.common.expedition;
+  if (ex.sites.filter((x) => x.state === 'known').length >= KNOWN_SITES_MAX) return null;
+  const rng = ex.rng;
+  const kind = pick(rng, SITE_KINDS);
+  const side = opts.side ?? (nextInt(rng, 0, 3) as MapSide);
+  const hours = nextInt(rng, SITE_HOURS[0], SITE_HOURS[1]);
+  const special =
+    opts.special !== undefined
+      ? opts.special
+      : nextFloat(rng) < SPECIAL_SHARE
+        ? pick(rng, SPECIALS)
+        : null;
+  const [d0, d1] = SURVIVORS_WAIT_DAYS;
+  const info: SiteInfo = {
+    id: ex.nextSiteId++,
+    kind,
+    special,
+    side,
+    hours,
+    state: 'known',
+    visited: false,
+    specialUntil:
+      special === 'survivors'
+        ? w.tick + nextInt(rng, d0 * TICKS_PER_DAY, d1 * TICKS_PER_DAY)
+        : null,
+    leftAt: null,
+  };
+  ex.sites.push(info);
+  const site = { kind, special, side, hours };
+  logEvent(
+    w,
+    opts.survivorId === undefined
+      ? { kind: 'siteFound', site, how: opts.how }
+      : { kind: 'siteFound', site, how: opts.how, survivorId: opts.survivorId },
+  );
+  return info;
+}
+
+/** Mapas de carreteras y notas que han llegado al almacén (o al campamento): cada uno, un sitio. */
+export function readFindings(w: World): void {
+  const store = w.storage.items;
+  while (store.roadMap > 0 && discoverSite(w, { how: 'roadMap' })) store.roadMap--;
+  while (store.note > 0) {
+    const help = nextFloat(w.common.expedition.rng) < NOTE_SURVIVORS;
+    if (!discoverSite(w, help ? { how: 'note', special: 'survivors' } : { how: 'note' })) break;
+    store.note--;
+  }
+}
+
+/** Cada día, a veces, el narrador avisa de un sitio: humo a lo lejos o una llamada por radio. */
+export function sitesDailySystem(base: World): void {
+  if (base.tick % TICKS_PER_DAY !== 0 || base.common.over) return;
+  const rng = base.common.expedition.rng;
+  if (nextFloat(rng) >= SITE_RUMOR_PER_DAY) return;
+  if (nextFloat(rng) < SITE_RADIO_SHARE)
+    discoverSite(
+      base,
+      nextFloat(rng) < RADIO_SURVIVORS ? { how: 'radio', special: 'survivors' } : { how: 'radio' },
+    );
+  else discoverSite(base, { how: 'smoke' });
 }

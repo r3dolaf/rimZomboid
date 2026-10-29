@@ -35,6 +35,7 @@ export const LOG_CATEGORY: Record<LogEvent['kind'], LogCategory> = {
   zombieKilled: 'combat',
   clothesTorn: 'combat', // H5b
   bagFound: 'loot', // H5b2
+  siteFound: 'colony', // H5c1
   bagDropped: 'combat',
   bagRecovered: 'colony',
   waterCut: 'colony',

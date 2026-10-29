@@ -681,6 +681,27 @@ export interface SiteInfo {
 }
 
 /**
+ * Un viaje (H5c1 §4): ida a un sitio, vuelta a la base o explorar hacia un lado; quiénes van (con
+ * todo lo suyo) y las horas de luz que les faltan.
+ */
+export interface Travel {
+  id: number;
+  kind: 'go' | 'back' | 'explore';
+  siteId: number | null;
+  side: MapSide;
+  members: Survivor[];
+  hoursLeft: number;
+}
+
+/** Las expediciones (H5c1): sitios conocidos, viajes en curso y su propio azar. */
+export interface Expedition {
+  sites: SiteInfo[];
+  travels: Travel[];
+  nextSiteId: number;
+  rng: RngState;
+}
+
+/**
  * Lo común a todos los mapas (H5c1 §1): registro, atuendos, numeración, cuentas, estadísticas,
  * muertos, fin de partida y tiempo. Solo datos (nunca un mundo dentro: así no hay ciclos).
  */
@@ -712,6 +733,8 @@ export interface Common {
   rainUntil: number;
   /** Bolsas (H5b2): las que se han puesto al encontrarlas, las soltadas y las recogidas. */
   bagLog: { found: number; dropped: number; recovered: number };
+  /** Sitios conocidos y viajes (H5c1). */
+  expedition: Expedition;
 }
 
 export interface World {

@@ -40,6 +40,8 @@ test('objetos nuevos: tela, cortinas, hilo (por usos), aguja, palanca y machete,
     'waterBucket',
     'waterBottle',
     'hatchet', // H5b2
+    'roadMap', // H5c1
+    'note',
   ]);
   expect(ITEM_WEIGHT_KG).toMatchObject({
     cloth: 0.2,

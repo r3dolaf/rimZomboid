@@ -30,6 +30,7 @@ import type {
   Garment,
   MemoryId,
   Pile,
+  SiteInfo,
   Survivor,
   Tone,
   World,
@@ -596,6 +597,13 @@ export function logText(e: LogEntry, w: World): string {
     case 'clothesTorn':
       text = l.clothesTorn(name(e.survivorId), e.garment, e.part);
       break;
+    case 'siteFound':
+      text = l.siteFound(
+        e.how,
+        siteText(e.site),
+        e.survivorId === undefined ? undefined : name(e.survivorId),
+      );
+      break;
     case 'bagFound':
       text = l.bagFound(name(e.survivorId), e.bag);
       break;
@@ -827,4 +835,10 @@ export function pileLabel(p: Pile): string | null {
   if (!b) return null;
   const n = ITEM_KINDS.reduce((acc, k) => acc + b.items[k], 0) + b.items.pieces.length;
   return es.bagsUi.onFloor(bagName(b.kind), n);
+}
+
+/** Un sitio en una frase: «una granja hacia el norte, a 4 horas» (o lo especial, si lo es). */
+export function siteText(site: Pick<SiteInfo, 'kind' | 'special' | 'side' | 'hours'>): string {
+  const what = site.special ? es.sites.specials[site.special] : es.sites.kinds[site.kind];
+  return `${what} hacia ${es.sites.sides[site.side]}, a ${site.hours} horas`;
 }

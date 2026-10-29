@@ -1,5 +1,6 @@
 // Cuerpos de zombi (spec H4d §7): un mueble de saqueo más, que se pudre o desaparece.
 import {
+  ZOMBIE_NOTE_CHANCE,
   CORPSE_EMPTY_TICKS,
   CORPSE_ROT_TICKS,
   CORPSE_SMALL_CHANCE,
@@ -30,6 +31,8 @@ export function leaveCorpse(w: World, z: Zombie): void {
   items.pieces.push(...z.worn);
   z.worn = [];
   items.pieces.push(...z.bags); // H5b2
+  // Una nota (H5c1 §3), con el azar de las expediciones: no cambia lo de los zombis.
+  if (nextFloat(w.common.expedition.rng) < ZOMBIE_NOTE_CHANCE) items.note++;
   z.bags = [];
   const c: Container = {
     id: w.common.nextId++,

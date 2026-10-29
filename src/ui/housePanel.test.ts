@@ -38,6 +38,8 @@ test('muestra la casa seleccionada con sus contenedores y se cierra con la ✕',
     waterBucket: 0,
     waterBottle: 0,
     hatchet: 0,
+    roadMap: 0,
+    note: 0,
     pieces: [],
   };
   cs[1]!.designated = true;

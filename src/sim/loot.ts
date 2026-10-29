@@ -61,6 +61,8 @@ const HOME: Record<LootItem, readonly ContainerKind[]> = {
   waterBottle: ['fridge'],
   bucket: ['crate'],
   hatchet: ['crate'],
+  roadMap: ['counter'], // H5c1
+  note: ['wardrobe'],
 };
 
 /** Los muebles de la ropa (H5b §2); también las estanterías y los mostradores. */
@@ -212,5 +214,19 @@ export function fillHatchets(houses: Building[], containers: Container[], rng: R
     const n = cs.length > 0 ? roll(rng, LOOT[h.kind].hatchet) : 0;
     const pool = placesFor(cs, 'hatchet');
     for (let k = 0; k < n; k++) pool[nextInt(rng, 0, pool.length - 1)]!.items.hatchet++;
+  }
+}
+
+/** Mapas de carreteras y notas (H5c1 §3), con el azar de la ropa: no cambian el resto del botín. */
+export function fillFindings(houses: Building[], containers: Container[], rng: RngState): void {
+  for (const h of houses) {
+    if (h.kind === 'base') continue;
+    const cs = containers.filter((c) => c.houseId === h.id);
+    if (cs.length === 0) continue;
+    for (const item of ['roadMap', 'note'] as const) {
+      const n = roll(rng, LOOT[h.kind][item]);
+      const pool = placesFor(cs, item);
+      for (let k = 0; k < n; k++) pool[nextInt(rng, 0, pool.length - 1)]!.items[item]++;
+    }
   }
 }

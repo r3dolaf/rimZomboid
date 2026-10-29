@@ -4,6 +4,8 @@ import type { MoodModifierId } from '../sim/mood';
 import type { ItemKind } from '../sim/items';
 import type { RelationLabel } from '../sim/social';
 import type {
+  SiteKind,
+  SiteSpecial,
   BagKind,
   BagSlot,
   BodyPart,
@@ -349,6 +351,22 @@ export const es = {
     beanie: { name: 'Gorro de lana', the: 'el gorro de lana' },
     helmet: { name: 'Casco de moto', the: 'el casco de moto' },
   } satisfies Record<GarmentKind, { name: string; the: string; many?: boolean }>,
+  // Expediciones (H5c1): los sitios y los lados.
+  sites: {
+    kinds: {
+      house: 'una casa aislada',
+      farm: 'una granja',
+      gas: 'una gasolinera',
+      warehouse: 'una nave',
+      village: 'un pueblecito',
+    } satisfies Record<SiteKind, string>,
+    specials: {
+      survivors: 'supervivientes que piden ayuda',
+      stash: 'un alijo',
+      dangerous: 'un sitio peligroso',
+    } satisfies Record<SiteSpecial, string>,
+    sides: ['el norte', 'el sur', 'el oeste', 'el este'] as const,
+  },
   // Bolsas (H5b2): todas en femenino («una», «la»).
   bags: {
     fannyPack: 'riñonera',
@@ -561,6 +579,8 @@ export const es = {
     waterBucket: ['cubo de agua', 'cubos de agua'],
     waterBottle: ['botella de agua', 'botellas de agua'],
     hatchet: ['hachuela', 'hachuelas'], // H5b2
+    roadMap: ['mapa de carreteras', 'mapas de carreteras'], // H5c1
+    note: ['nota', 'notas'],
   } satisfies Record<ItemKind, [string, string]>,
   log: {
     found: (who: string, what: string, where: string) => `${who} ha encontrado ${what} en ${where}`,
@@ -644,6 +664,15 @@ export const es = {
     rescued: (who: string, other: string) => `${who} ha rescatado a ${other}`,
     waterCut: 'Se ha cortado el agua',
     rain: 'Llueve',
+    /** «una granja hacia el norte, a 4 horas» (con lo especial delante, si lo es). */
+    siteFound: (how: string, what: string, who?: string) =>
+      ({
+        explore: `${who} ha encontrado ${what}`,
+        roadMap: `Un mapa de carreteras marca ${what}`,
+        note: `Una nota habla de ${what}`,
+        smoke: `Se ve humo: ${what}`,
+        radio: `Una llamada por radio: ${what}`,
+      })[how] ?? what,
     bagFound: (who: string, bag: BagKind) =>
       `${who} ha encontrado una ${es.bags[bag]} y se la ha puesto`,
     bagDropped: (who: string, bag: BagKind) => `${who} ha soltado la ${es.bags[bag]}`,

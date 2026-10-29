@@ -140,6 +140,8 @@ export const ITEM_WEIGHT_KG = {
   waterBucket: 5,
   waterBottle: 1,
   hatchet: 1, // H5b2
+  roadMap: 0.05, // H5c1
+  note: 0.05,
 } as const;
 export const START_WEAPON = 'knife' as const; // H4b: sin arma, caían enseguida
 
@@ -671,6 +673,8 @@ export type LootItem =
   | 'leather'
   | 'waterBottle'
   | 'bucket'
+  | 'roadMap' // H5c1
+  | 'note'
   | Weapon;
 
 /** El botín de cada tipo de edificio (spec H4f §4). */
@@ -686,6 +690,8 @@ export const LOOT: Record<LootKind, Partial<Record<LootItem, LootAmount>>> = {
     bat: { chance: 0.15 },
     painkillers: { chance: 1 / 3 },
     waterBottle: { chance: 0.5 }, // H5b
+    roadMap: { chance: 0.1 }, // H5c1
+    note: { chance: 0.05 },
   },
   supermarket: {
     food: [40, 60],
@@ -716,7 +722,14 @@ export const LOOT: Record<LootKind, Partial<Record<LootItem, LootAmount>>> = {
     painkillers: [1, 2],
   },
   clothes: { cloth: [20, 30], thread: [6, 6], needle: [3, 3], denim: [3, 6], leather: [2, 4] },
-  gas: { food: [8, 16], bandage: [0, 2], bat: [1, 1], painkillers: [0, 2], waterBottle: [2, 6] },
+  gas: {
+    food: [8, 16],
+    bandage: [0, 2],
+    bat: [1, 1],
+    painkillers: [0, 2],
+    waterBottle: [2, 6],
+    roadMap: { chance: 0.5 }, // H5c1
+  },
   farm: {
     food: [8, 16],
     bandage: [0, 2],
@@ -1184,3 +1197,18 @@ export const SITE_ZOMBIES: Record<SiteKind | SiteSpecial, number> = {
 };
 /** Los zombis de un sitio no se acercan tanto a la entrada (casillas desde el borde). */
 export const SITE_ZOMBIE_CLEAR = 15;
+
+// Descubrir sitios (H5c1 §3): notas en los zombis, humo o radio de vez en cuando, especiales.
+export const ZOMBIE_NOTE_CHANCE = 0.03;
+export const SITE_RUMOR_PER_DAY = 0.15;
+/** De los avisos del narrador, cuántos son por radio (y de ellos, supervivientes). */
+export const SITE_RADIO_SHARE = 0.4;
+export const RADIO_SURVIVORS = 0.7;
+/** Una nota pide ayuda (supervivientes) la mitad de las veces. */
+export const NOTE_SURVIVORS = 0.5;
+/** De los sitios nuevos, cuántos son especiales. */
+export const SPECIAL_SHARE = 0.25;
+/** Los supervivientes esperan de 2 a 3 días. */
+export const SURVIVORS_WAIT_DAYS: [number, number] = [2, 3];
+/** Salt del azar de las expediciones (no cambia nada de lo de antes). */
+export const EXPEDITION_SALT = 0x51f15e;

@@ -127,7 +127,7 @@ test('si en el almacén no queda comida, lleva antes la de sus bolsas (salvo la 
   s.carrying.bandage = 2;
   s.carrying.thread = 1; // algo que descargar
   w.containers.push({
-    id: w.nextId++,
+    id: w.common.nextId++,
     houseId: 1,
     pos: { x: 3, y: 3 },
     kind: 'shelf',

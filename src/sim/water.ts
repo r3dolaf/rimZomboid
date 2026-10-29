@@ -64,7 +64,7 @@ export function placeFixtures(
 }
 
 /** ¿Llueve? (Con tormenta, también.) */
-export const isRaining = (w: World): boolean => w.tick < w.rainUntil;
+export const isRaining = (w: World): boolean => w.tick < w.common.rainUntil;
 
 /**
  * Al cortarse el agua corriente, se avisa. Cada hora de lluvia: los cubos vacíos de los montones

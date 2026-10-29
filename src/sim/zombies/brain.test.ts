@@ -212,7 +212,7 @@ test('rompe la ventana para llegar a quien ve dentro y entra', () => {
   run(w, 400);
   expect(getTile(w.grid, 11, 8)).toBe(Tile.BrokenWindow);
   expect(dist(z.pos, s.pos)).toBeLessThanOrEqual(1.5);
-  expect(w.log.some((e) => e.kind === 'broken' && e.what === 'window')).toBe(true);
+  expect(w.common.log.some((e) => e.kind === 'broken' && e.what === 'window')).toBe(true);
   expect(checkInvariants(w)).toEqual([]);
 });
 

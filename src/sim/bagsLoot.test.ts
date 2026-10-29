@@ -15,7 +15,7 @@ import { createWorld } from './world';
 
 function box(w: World, items = emptyInventory()): Container {
   const c: Container = {
-    id: w.nextId++,
+    id: w.common.nextId++,
     houseId: 1,
     pos: { x: 2, y: 2 },
     kind: 'wardrobe',
@@ -42,8 +42,12 @@ test('al saquear se pone la bolsa que encuentra y mete en ella lo demás', () =>
   expect(bag.items.pieces).toEqual([cap]);
   expect(taken.food).toBe(3);
   expect(taken.pieces).toEqual(expect.arrayContaining([bag, cap]));
-  expect(w.bagLog.found).toBe(1);
-  expect(w.log.at(-1)).toMatchObject({ kind: 'bagFound', survivorId: s.id, bag: 'schoolBag' });
+  expect(w.common.bagLog.found).toBe(1);
+  expect(w.common.log.at(-1)).toMatchObject({
+    kind: 'bagFound',
+    survivorId: s.id,
+    bag: 'schoolBag',
+  });
 });
 
 test('lo que pide la lista de una bolsa va a esa bolsa; lo demás, a la de más sitio', () => {
@@ -88,7 +92,7 @@ test('Transportar lleva en la mano la bolsa de un montón (sin mirar el atuendo)
   from.pieces.push(duffel);
   takeInto(w, s, from, 'haul');
   expect(s.bags.hand).toBe(duffel);
-  expect(w.bagLog.found).toBe(0);
+  expect(w.common.bagLog.found).toBe(0);
 });
 
 test('registrar un mueble usa las bolsas: lo que no cabe en las manos va a la mochila', () => {
@@ -152,7 +156,7 @@ test('no vuelve a por una bolsa que su atuendo no le deja ponerse y no le cabe e
   s.outfitId = 3; // Base: sin bolsa en la mano
   s.bags.back = newBag(w, 'hikingPack');
   s.bags.back.items.wood = 12; // llena
-  w.woodLog.start += 12;
+  w.common.woodLog.start += 12;
   s.carrying.thread = Math.ceil(capacityKg(s) / 0.01); // manos llenas
   const c = box(w);
   c.items.pieces.push(newBag(w, 'duffel')); // vacía: solo cabría en la mano
@@ -164,7 +168,7 @@ test('una bolsa que no puede ponerse se coge al final, como la ropa: antes la co
   const w = emptyWorld(10, 10);
   const s = w.survivors[0]!;
   s.carrying.bandage = 0;
-  for (const o of w.outfits) o.bags = []; // ninguna bolsa en su atuendo
+  for (const o of w.common.outfits) o.bags = []; // ninguna bolsa en su atuendo
   const from = { ...emptyInventory(), food: 40 };
   from.pieces.push(newBag(w, 'duffel'));
   takeInto(w, s, from, 'loot');

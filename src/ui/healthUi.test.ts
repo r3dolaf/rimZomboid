@@ -178,7 +178,7 @@ test('nombres de quien ya no está (muertos, idos) y de los zombis que lo tienen
   const w = world();
   const s = w.survivors[0]!;
   expect(personName(w, s.id)).toBe(s.name);
-  w.dead.push({ id: 77, name: 'Lola', day: 2, cause: 'blood' });
+  w.common.dead.push({ id: 77, name: 'Lola', day: 2, cause: 'blood' });
   expect(personName(w, 77)).toBe('Lola');
   expect(personName(w, 999)).toBe('?');
   expect(zombieLabel({ name: 'Lola' })).toBe('Lola (zombi)');
@@ -213,7 +213,7 @@ test('avisos nuevos: rojos (muerte, se levanta, mordisco, lo visto), que no paus
   ])
     expect(kinds).toContain(k);
   // El registro: muertes con su causa y nombres de los que ya no están.
-  w.dead.push({ id: 77, name: 'Lola', day: 2, cause: 'blood' });
+  w.common.dead.push({ id: 77, name: 'Lola', day: 2, cause: 'blood' });
   expect(logText(e({ kind: 'bandaged', survivorId: s.id, otherId: 77 }), w)).toBe(
     `${s.name} ha vendado a Lola`,
   );

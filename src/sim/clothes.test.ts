@@ -157,7 +157,7 @@ test('los desconocidos que se van del mapa se llevan su ropa (se apunta en las c
   expect(checkInvariants(w)).toEqual([]);
   strangerSystem(w);
   expect(w.stranger).toBeNull();
-  expect(w.pieceLog.gone).toBe(s.worn.length + wornBags(s).length); // (y su bolsa, H5b2)
+  expect(w.common.pieceLog.gone).toBe(s.worn.length + wornBags(s).length); // (y su bolsa, H5b2)
   expect(checkInvariants(w)).toEqual([]);
 });
 
@@ -299,7 +299,7 @@ test('si no la para nadie: herida, y las prendas de esa zona con sangre; se apun
   expect(tee.bloody).toBe(true);
   expect(jeans.bloody).toBe(false);
   for (let i = 0; i < 500 && jeans.holes.length === 0; i++) blockHit(w, s, 'rightLeg', 'scratch');
-  expect(w.log).toContainEqual(
+  expect(w.common.log).toContainEqual(
     expect.objectContaining({
       kind: 'clothesTorn',
       survivorId: s.id,

@@ -24,7 +24,7 @@ export function needsSystem(w: World): void {
     if (s.action.type === 'sleep') {
       const factor =
         (s.action.inBed ? 1 : FLOOR_SLEEP_FACTOR) *
-        (w.tick < w.stormUntil ? STORM_SLEEP_FACTOR : 1);
+        (w.tick < w.common.stormUntil ? STORM_SLEEP_FACTOR : 1);
       n.sleep = clamp(n.sleep + SLEEP_GAIN_PER_TICK * factor);
     } else {
       const sleepMult = s.traits.includes('sleepyhead') ? SLEEPYHEAD_SLEEP_MULT : 1;

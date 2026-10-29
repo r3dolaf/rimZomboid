@@ -57,7 +57,7 @@ function scene(): World {
       reservedBy: null,
     },
   ];
-  w.woodLog.start = 0;
+  w.common.woodLog.start = 0;
   w.storage.tiles = [{ x: 1, y: 4 }];
   const s = w.survivors[0]!;
   s.pos = { x: 1.5, y: 4.5 };
@@ -107,9 +107,9 @@ test('con una palanca en el almacén: la coge, va a la puerta, la fuerza (30 min
   expect(s.equipped).toBe('crowbar');
   expect(heard).toBe(true);
   expect(s.skills.loot.xp).toBeGreaterThanOrEqual(PRY_TICKS - 1);
-  expect(w.log.some((e) => e.kind === 'forced' && e.survivorId === s.id && e.houseId === 1)).toBe(
-    true,
-  );
+  expect(
+    w.common.log.some((e) => e.kind === 'forced' && e.survivorId === s.id && e.houseId === 1),
+  ).toBe(true);
   expect(regionOf(w.grid, 8, 4)).toBe(regionOf(w.grid, 1, 4));
   expect(checkInvariants(w)).toEqual([]);
 });

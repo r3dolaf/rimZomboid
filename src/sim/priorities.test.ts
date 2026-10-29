@@ -21,7 +21,7 @@ function world(): World {
     wood: BUILD.table.wood,
     progress: 0,
   });
-  w.woodLog.chopped += BUILD.table.wood;
+  w.common.woodLog.chopped += BUILD.table.wood;
   setTile(w.grid, 9, 9, Tile.Tree);
   w.chopMarks = [9 * 12 + 9];
   w.storage.items.food = 50; // sin hambre

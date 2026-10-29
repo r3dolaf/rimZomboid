@@ -65,7 +65,7 @@ test('al empezar: sin montones, planos, muebles ni marcas; cada uno con su cuchi
 test('invariantes: planos con madera de más, montones raros, marcas que no son árboles', () => {
   const w = createWorld(5);
   const floor = w.storage.tiles[0]!;
-  w.woodLog.chopped = 6; // la madera del plano, como si se hubiera talado
+  w.common.woodLog.chopped = 6; // la madera del plano, como si se hubiera talado
   w.blueprints.push({ id: 90, kind: 'bed', pos: { ...floor }, wood: 7, progress: 0 });
   expect(checkInvariants(w).length).toBeGreaterThan(0);
   w.blueprints[0]!.wood = 6;

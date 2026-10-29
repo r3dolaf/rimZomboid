@@ -85,7 +85,7 @@ test('construir hace ruido de radio 6', () => {
   const s = w.survivors[0]!;
   s.pos = { x: 5.5, y: 6.5 };
   w.blueprints.push({ id: 7, kind: 'table', pos: { x: 5, y: 5 }, wood: 4, progress: 0 });
-  w.woodLog.start = 4;
+  w.common.woodLog.start = 4;
   const inside = zombieAt(w, 5, 5 + NOISE.build - 1);
   const outside = zombieAt(w, 5, 5 + NOISE.build + 2);
   for (let i = 0; i < BUILD.table.ticks / 2; i++) workOnBlueprint(w, s, 7);

@@ -111,23 +111,23 @@ test('cada suceso se convierte en una frase con día y hora', () => {
       pieces: [],
     },
   });
-  expect(formatLogEntry(w.log.at(-1)!, w)).toBe(
+  expect(formatLogEntry(w.common.log.at(-1)!, w)).toBe(
     `Día 1, 10:14 · ${s.name} ha encontrado 4 latas y 1 venda en ${buildingThe(w, 3)}`,
   );
   logEvent(w, { kind: 'houseEmptied', houseId: 3 });
-  expect(formatLogEntry(w.log.at(-1)!, w)).toBe(
+  expect(formatLogEntry(w.common.log.at(-1)!, w)).toBe(
     `Día 1, 10:14 · Se ha vaciado ${buildingThe(w, 3)}`,
   );
   logEvent(w, { kind: 'refused', survivorId: s.id });
-  expect(formatLogEntry(w.log.at(-1)!, w)).toContain(`${s.name} se niega a trabajar`);
+  expect(formatLogEntry(w.common.log.at(-1)!, w)).toContain(`${s.name} se niega a trabajar`);
   logEvent(w, { kind: 'outOfFood' });
-  expect(formatLogEntry(w.log.at(-1)!, w)).toContain('El almacén se ha quedado sin comida');
+  expect(formatLogEntry(w.common.log.at(-1)!, w)).toContain('El almacén se ha quedado sin comida');
 });
 
 test('sucesos de relaciones y de recién llegados', () => {
   const w = createWorld(2);
   const [a, b] = w.survivors;
-  const last = () => formatLogEntry(w.log.at(-1)!, w);
+  const last = () => formatLogEntry(w.common.log.at(-1)!, w);
   logEvent(w, { kind: 'couple', survivorId: a!.id, otherId: b!.id });
   expect(last()).toContain(`${a!.name} y ${b!.name} ahora son pareja`);
   logEvent(w, { kind: 'consoled', survivorId: a!.id, otherId: b!.id });
@@ -153,7 +153,7 @@ test('el panel muestra los sucesos, el más reciente abajo', () => {
 test('textos de los sucesos sociales del narrador', () => {
   const w = createWorld(2);
   const [a, b, c] = w.survivors;
-  const last = () => formatLogEntry(w.log.at(-1)!, w);
+  const last = () => formatLogEntry(w.common.log.at(-1)!, w);
   logEvent(w, { kind: 'theft', suspectId: a!.id, cans: 2 });
   expect(last()).toContain(`Faltan 2 latas del almacén y todos miran a ${a!.name}`);
   logEvent(w, { kind: 'theftPunished', suspectId: a!.id, guilty: false });

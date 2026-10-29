@@ -35,7 +35,7 @@ test('romper: cada golpe quita resistencia y, al llegar a 0, la casilla cambia',
   expect(getTile(w.grid, 4, 4)).toBe(Tile.BrokenDoor);
   expect(w.damage).toEqual({});
   expect(w.grid.version).toBeGreaterThan(v);
-  expect(w.log.at(-1)).toMatchObject({ kind: 'broken', what: 'door', x: 4, y: 4 });
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'broken', what: 'door', x: 4, y: 4 });
 });
 
 test('qué deja cada cosa al romperse; lo demás no se rompe', () => {
@@ -67,7 +67,7 @@ test('al romperse, los planos que ya no tienen sentido se cancelan (y su madera 
   damageTile(w, 2, 2, 5);
   w.blueprints.push({ id: 50, kind: 'repair', pos: { x: 2, y: 2 }, wood: 1, progress: 0 });
   w.blueprints.push({ id: 51, kind: 'board', pos: { x: 5, y: 5 }, wood: 2, progress: 0 });
-  w.woodLog.start = 3;
+  w.common.woodLog.start = 3;
   damageTile(w, 2, 2, 10_000);
   damageTile(w, 5, 5, 10_000);
   expect(w.blueprints.map((b) => b.id)).toEqual([51]); // tapiar una ventana rota sigue valiendo
@@ -139,9 +139,15 @@ test('dónde se puede poner cada plano de reparar', () => {
 });
 
 function readyPlan(w: World, kind: BuildKind, pos: Point) {
-  const b = { id: w.nextId++, kind, pos, wood: BUILD[kind].wood, progress: BUILD[kind].ticks };
+  const b = {
+    id: w.common.nextId++,
+    kind,
+    pos,
+    wood: BUILD[kind].wood,
+    progress: BUILD[kind].ticks,
+  };
   w.blueprints.push(b);
-  w.woodLog.chopped += b.wood;
+  w.common.woodLog.chopped += b.wood;
   return b;
 }
 
@@ -196,8 +202,8 @@ test('reparar va antes: el constructor y el que acarrea eligen antes un plano de
   // Acarrear: dos planos sin madera, el de reparar más lejos.
   w.blueprints = [];
   w.storage.items.wood = 5;
-  w.woodLog.start = 5 + w.woodLog.chopped;
-  w.woodLog.chopped = 0;
+  w.common.woodLog.start = 5 + w.common.woodLog.chopped;
+  w.common.woodLog.chopped = 0;
   w.blueprints.push({ id: 90, kind: 'table', pos: { x: 3, y: 3 }, wood: 0, progress: 0 });
   w.blueprints.push({ id: 91, kind: 'fixDoor', pos: { x: 12, y: 12 }, wood: 0, progress: 0 });
   const haul = haulJob(addSurvivor(w, { x: 1, y: 2 }), w);

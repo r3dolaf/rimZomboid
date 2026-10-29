@@ -85,11 +85,11 @@ test('infección: fiebre a las 12 h, náuseas a las 24, muy grave 6 h antes de m
   expect(ana.fever).toMatchObject({ cause: 'infection', stage: 'fever', rest: false });
   expect(w.decisions).toEqual([expect.objectContaining({ kind: 'fever', survivorIds: [ana.id] })]);
   expect(w.decisions[0]!.worse).toBeUndefined();
-  expect(w.log.some((e) => e.kind === 'fever' && e.survivorId === ana.id)).toBe(true);
+  expect(w.common.log.some((e) => e.kind === 'fever' && e.survivorId === ana.id)).toBe(true);
   until(w, start + 24 * H + 1);
   expect(ana.fever?.stage).toBe('nausea');
   expect(w.decisions).toEqual([expect.objectContaining({ kind: 'fever', worse: true })]);
-  expect(w.log.some((e) => e.kind === 'feverWorse' && e.survivorId === ana.id)).toBe(true);
+  expect(w.common.log.some((e) => e.kind === 'feverWorse' && e.survivorId === ana.id)).toBe(true);
   until(w, start + 44 * H + 1, () => (ana.needs.hunger = 100));
   expect(ana.fever?.stage).toBe('grave');
   expect(ana.action.type).toBe('downed');
@@ -97,7 +97,7 @@ test('infección: fiebre a las 12 h, náuseas a las 24, muy grave 6 h antes de m
   expect(ana.action.type).toBe('downed'); // ya no se levanta
   until(w, start + 50 * H + 1, () => (ana.needs.hunger = 100));
   expect(w.survivors).not.toContain(ana);
-  expect(w.dead[0]).toMatchObject({ name: 'Ana', cause: 'infection' });
+  expect(w.common.dead[0]).toMatchObject({ name: 'Ana', cause: 'infection' });
   expect(w.containers.find((c) => c.name === 'Ana')?.risesAt).toBeDefined();
   expect(checkInvariants(w)).toEqual([]);
 });
@@ -108,13 +108,13 @@ test('gripe (narrador): la misma fiebre, el mismo aviso y lo mismo en el registr
   fluEvent.happen(w);
   expect(ana.fever).toMatchObject({ cause: 'flu', stage: 'fever', rest: false, since: w.tick });
   expect(w.decisions).toEqual([expect.objectContaining({ kind: 'fever', survivorIds: [ana.id] })]);
-  expect(w.log.at(-1)).toEqual({ tick: w.tick, kind: 'fever', survivorId: ana.id });
+  expect(w.common.log.at(-1)).toEqual({ tick: w.tick, kind: 'fever', survivorId: ana.id });
   expect(fluEvent.canHappen(w)).toBe(false);
   // Y la infección, a las 12 h, igual.
   const x = world();
   x.ana.infection = { at: x.w.tick - 12 * H, deathAt: x.w.tick + 40 * H };
   illnessSystem(x.w);
-  expect(x.w.log.at(-1)).toEqual({ tick: x.w.tick, kind: 'fever', survivorId: x.ana.id });
+  expect(x.w.common.log.at(-1)).toEqual({ tick: x.w.tick, kind: 'fever', survivorId: x.ana.id });
   expect(moodModifiers(x.ana, x.w.tick)).toEqual(moodModifiers(ana, w.tick));
   expect(x.w.decisions.map((d) => [d.kind, d.worse])).toEqual(
     w.decisions.map((d) => [d.kind, d.worse]),
@@ -141,7 +141,7 @@ test('gripe descansando todo el tiempo (y sin mala suerte): sin náuseas y se cu
   expect(ana.fever?.stage).toBe('fever');
   until(w, start + 48 * H + 1, each);
   expect(ana.fever).toBeNull();
-  expect(w.log.some((e) => e.kind === 'feverGone' && e.survivorId === ana.id)).toBe(true);
+  expect(w.common.log.some((e) => e.kind === 'feverGone' && e.survivorId === ana.id)).toBe(true);
 });
 
 test('gripe descansando pero con mala suerte: náuseas a las 12 h igualmente', () => {
@@ -202,7 +202,7 @@ test('aviso de fiebre: si nadie contesta, al día Que descanse; hasta entonces, 
   w.tick = w.decisions[0]!.expiresAt;
   expireDecisions(w);
   expect(ana.fever?.rest).toBe(true);
-  expect(w.log.at(-1)).toMatchObject({ kind: 'feverRest', survivorId: ana.id });
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'feverRest', survivorId: ana.id });
   expect(brains.ai.decide(ana, w)).toMatchObject({ type: 'moveTo', then: { type: 'rest' } });
 });
 
@@ -215,7 +215,7 @@ test('Que descanse: no trabaja y se acuesta hasta que se le pase la fiebre', () 
   expect(ana.fever?.rest).toBe(true);
   for (const c of w.containers) c.designated = true;
   w.blueprints.push({ id: 70, kind: 'campfire', pos: { x: 6, y: 6 }, wood: 3, progress: 0 });
-  w.woodLog.start = 3;
+  w.common.woodLog.start = 3;
   expect(findWork(ana, w)).toBeNull();
   ana.action = { type: 'rest' };
   expect(brains.ai.decide(ana, w)).toBeNull(); // sigue
@@ -267,7 +267,7 @@ test('Que se vaya: deja lo suyo en el almacén y se marcha a pie por la carreter
   expect(w.leaving).toEqual([ana]);
   expect(ana.action).toMatchObject({ type: 'moveTo', target: { x: 0, y: 12 } });
   expect(w.beds[0]!.ownerId).toBe(bea.id); // su cama, para otro
-  expect(w.log.some((e) => e.kind === 'banished' && e.name === 'Ana')).toBe(true);
+  expect(w.common.log.some((e) => e.kind === 'banished' && e.name === 'Ana')).toBe(true);
   const grief = (s: Survivor) => moodModifiers(s, w.tick).filter((m) => m.otherId === ana.id);
   expect(grief(cris)).toEqual([
     { id: 'banished', value: -10, expiresAt: w.tick + 72 * H, otherId: ana.id },
@@ -305,7 +305,7 @@ test('si era gripe, a los 2–4 días vuelve y pide entrar, con la opinión por 
   expect(w.decisions).toEqual([
     expect.objectContaining({ kind: 'stranger', survivorIds: [back.id] }),
   ]);
-  expect(w.log.some((e) => e.kind === 'returned' && e.name === 'Ana')).toBe(true);
+  expect(w.common.log.some((e) => e.kind === 'returned' && e.name === 'Ana')).toBe(true);
   expect(checkInvariants(w)).toEqual([]);
 });
 
@@ -332,9 +332,9 @@ test('si estaba infectado, al día siguiente su zombi llega por donde salió y v
     expect(moodModifiers(s, w.tick).filter((m) => m.id === 'sawTurned')).toEqual([
       expect.objectContaining({ value: -15, otherId: ana.id }),
     ]);
-  expect(w.log.filter((e) => e.kind === 'sawTurned')).toHaveLength(1);
+  expect(w.common.log.filter((e) => e.kind === 'sawTurned')).toHaveLength(1);
   step(w);
-  expect(w.log.filter((e) => e.kind === 'sawTurned')).toHaveLength(1); // una sola vez
+  expect(w.common.log.filter((e) => e.kind === 'sawTurned')).toHaveLength(1); // una sola vez
 });
 
 test('Acabar con su sufrimiento: va el más cercano que puede, tarda media hora y el cuerpo no se levanta', () => {
@@ -357,7 +357,7 @@ test('Acabar con su sufrimiento: va el más cercano que puede, tarda media hora 
   }
   expect(w.survivors).not.toContain(ana);
   expect(Math.abs(ticks - MERCY_TICKS)).toBeLessThanOrEqual(1);
-  expect(w.dead[0]).toMatchObject({ name: 'Ana', cause: 'mercy' });
+  expect(w.common.dead[0]).toMatchObject({ name: 'Ana', cause: 'mercy' });
   expect(w.containers.find((c) => c.name === 'Ana')?.risesAt).toBeUndefined();
   expect(moodModifiers(bea, w.tick).map((m) => [m.id, m.value])).toContainEqual(['hadToKill', -15]);
   expect(moodModifiers(cris, w.tick).map((m) => m.id)).not.toContain('hadToKill');
@@ -376,7 +376,7 @@ test('si era gripe: "Matamos a Ana por nada" (−25, 5 días) y el registro lo d
     expect(moodModifiers(s, w.tick).filter((m) => m.id === 'killedForNothing')).toEqual([
       expect.objectContaining({ value: -25, otherId: ana.id }),
     ]);
-  expect(w.log.some((e) => e.kind === 'killedForNothing' && e.name === 'Ana')).toBe(true);
+  expect(w.common.log.some((e) => e.kind === 'killedForNothing' && e.name === 'Ana')).toBe(true);
 });
 
 test('si no hay nadie que pueda, espera', () => {

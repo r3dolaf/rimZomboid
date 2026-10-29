@@ -61,8 +61,8 @@ test('y los golpean: a 0 de Salud caen (al registro, sin aviso de colono) y se l
   const z = zombieAt(w, Math.floor(s.pos.x) + 1, Math.floor(s.pos.y));
   for (let i = 0; i < 200 && s.health > 0; i++) zombieAttack(w, z, s);
   expect(s.action.type).toBe('downed');
-  expect(w.log.some((e) => e.kind === 'strangerDowned' && e.names[0] === s.name)).toBe(true);
-  expect(w.log.some((e) => e.kind === 'downed')).toBe(false);
+  expect(w.common.log.some((e) => e.kind === 'strangerDowned' && e.names[0] === s.name)).toBe(true);
+  expect(w.common.log.some((e) => e.kind === 'downed')).toBe(false);
   expect(checkInvariants(w)).toEqual([]);
   w.zombies = [];
   w.tick += DOWNED_TICKS;
@@ -89,7 +89,7 @@ test('con muchos, huyen juntos: su aviso se quita y se van corriendo a la carret
   const s = ss[0]!;
   for (let i = 0; i < 5; i++) zombieAt(w, Math.floor(s.pos.x) + 3 + i, Math.floor(s.pos.y) + 2);
   strangerSystem(w);
-  expect(w.log.some((e) => e.kind === 'strangersFled' && e.names.length === 2)).toBe(true);
+  expect(w.common.log.some((e) => e.kind === 'strangersFled' && e.names.length === 2)).toBe(true);
   expect(w.decisions).toHaveLength(0);
   expect(w.stranger!.leaving).toBe(true);
   for (const x of ss) expect(x.action).toMatchObject({ type: 'moveTo', run: true });

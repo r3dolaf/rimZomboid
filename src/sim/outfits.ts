@@ -3,7 +3,7 @@ import { DEFAULT_OUTFITS, NEW_OUTFIT_NAME, OUTFIT_NAME_MAX } from './balance';
 import { BAG_KINDS } from './bags';
 import { GARMENT_KINDS } from './clothes';
 import type { Order } from './orders';
-import type { Garment, Outfit, Survivor, World } from './types';
+import type { Common, Garment, Outfit, Survivor, World } from './types';
 
 /** Los atuendos de serie, con ids 1, 2, 3… */
 export function defaultOutfits(): Outfit[] {
@@ -20,7 +20,7 @@ export function defaultOutfits(): Outfit[] {
 
 /** Su atuendo (o el primero, si el suyo ya no existe). */
 export function outfitOf(w: World, s: Survivor): Outfit {
-  return w.outfits.find((o) => o.id === s.outfitId) ?? w.outfits[0]!;
+  return w.common.outfits.find((o) => o.id === s.outfitId) ?? w.common.outfits[0]!;
 }
 
 /** ¿Le deja su atuendo ponerse esa prenda? (La de un muerto, solo si acepta ropa de muertos.) */
@@ -54,13 +54,16 @@ export const isOutfitOrder = (o: Order): o is OutfitOrder =>
   o.type === 'setOutfitHandBag';
 
 /** Lo que tocan las órdenes de atuendos (el mundo, o una copia para la interfaz). */
-type OutfitState = { outfits: Outfit[]; nextOutfitId: number; survivors: Survivor[] };
+type OutfitState = {
+  common: Pick<Common, 'outfits' | 'nextOutfitId'>;
+  survivors: Survivor[];
+};
 
 /** Aplica una orden de atuendos. */
 export function applyOutfitOrder(w: OutfitState, o: OutfitOrder): void {
   if (o.type === 'addOutfit') {
-    const id = w.nextOutfitId++;
-    w.outfits.push({
+    const id = w.common.nextOutfitId++;
+    w.common.outfits.push({
       id,
       name: `${NEW_OUTFIT_NAME} ${id}`,
       allowed: [...GARMENT_KINDS],
@@ -72,10 +75,10 @@ export function applyOutfitOrder(w: OutfitState, o: OutfitOrder): void {
   }
   if (o.type === 'setOutfit') {
     const s = w.survivors.find((x) => x.id === o.survivorId);
-    if (s && w.outfits.some((x) => x.id === o.outfitId)) s.outfitId = o.outfitId;
+    if (s && w.common.outfits.some((x) => x.id === o.outfitId)) s.outfitId = o.outfitId;
     return;
   }
-  const outfit = w.outfits.find((x) => x.id === o.outfitId);
+  const outfit = w.common.outfits.find((x) => x.id === o.outfitId);
   if (!outfit) return;
   switch (o.type) {
     case 'renameOutfit': {
@@ -84,9 +87,10 @@ export function applyOutfitOrder(w: OutfitState, o: OutfitOrder): void {
       break;
     }
     case 'deleteOutfit': {
-      if (w.outfits.length <= 1) break;
-      w.outfits = w.outfits.filter((x) => x !== outfit);
-      for (const s of w.survivors) if (s.outfitId === outfit.id) s.outfitId = w.outfits[0]!.id;
+      if (w.common.outfits.length <= 1) break;
+      w.common.outfits = w.common.outfits.filter((x) => x !== outfit);
+      for (const s of w.survivors)
+        if (s.outfitId === outfit.id) s.outfitId = w.common.outfits[0]!.id;
       break;
     }
     case 'setOutfitGarment': {
@@ -115,10 +119,9 @@ export function applyOutfitOrder(w: OutfitState, o: OutfitOrder): void {
 /** Los atuendos con las órdenes pendientes ya aplicadas (copia: el mundo no cambia). */
 export function effectiveOutfits(w: World): Outfit[] {
   const copy: OutfitState = {
-    outfits: structuredClone(w.outfits),
-    nextOutfitId: w.nextOutfitId,
+    common: { outfits: structuredClone(w.common.outfits), nextOutfitId: w.common.nextOutfitId },
     survivors: w.survivors.map((s) => ({ ...s })),
   };
   for (const o of w.orders) if (isOutfitOrder(o)) applyOutfitOrder(copy, o);
-  return copy.outfits;
+  return copy.common.outfits;
 }

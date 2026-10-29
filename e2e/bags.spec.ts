@@ -9,8 +9,11 @@ interface DebugBag {
 }
 interface Debug {
   world: {
-    nextPieceId: number;
-    pieceLog: { made: number; gone: number };
+    common: {
+      nextPieceId: number;
+      pieceLog: { made: number; gone: number };
+      outfits: { bags: string[]; handBag: boolean }[];
+    };
     survivors: {
       id: number;
       bags: Record<'waist' | 'back' | 'hand', DebugBag | null>;
@@ -18,7 +21,6 @@ interface Debug {
       keep: Record<string, number>;
     }[];
     storage: { items: { pieces: unknown[] } };
-    outfits: { bags: string[]; handBag: boolean }[];
   };
 }
 
@@ -62,8 +64,8 @@ async function giveBag(page: Page, kind: string, where: 'back' | 'storage'): Pro
         'hatchet',
       ])
         items[k] = 0;
-      const bag: DebugBag = { id: w.nextPieceId++, kind: kind!, items, list: {} };
-      w.pieceLog.made++;
+      const bag: DebugBag = { id: w.common.nextPieceId++, kind: kind!, items, list: {} };
+      w.common.pieceLog.made++;
       if (where === 'back') w.survivors[0]!.bags.back = bag;
       else w.storage.items.pieces.push(bag);
       return bag.id;
@@ -120,7 +122,9 @@ test('bolsas guardadas en el Almacén y casillas de bolsas en Atuendos', async (
   await expect(panel.getByTestId('outfit-handbag')).not.toBeChecked();
   await panel.getByTestId('outfit-bag-hikingPack').uncheck();
   await page.locator('[data-speed="1"]').click();
-  await expect.poll(async () => (await world(page)).outfits[2]!.bags).not.toContain('hikingPack');
+  await expect
+    .poll(async () => (await world(page)).common.outfits[2]!.bags)
+    .not.toContain('hikingPack');
   await page.keyboard.press('Escape');
   expect(errores).toEqual([]);
 });

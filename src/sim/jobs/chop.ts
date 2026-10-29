@@ -121,6 +121,6 @@ export function finishChop(w: World, tree: number): void {
   if (getTile(w.grid, x, y) !== Tile.Tree) return;
   setTile(w.grid, x, y, Tile.Grass);
   const wood = nextInt(w.rng, CHOP_WOOD_MIN, CHOP_WOOD_MAX);
-  w.woodLog.chopped += wood;
+  w.common.woodLog.chopped += wood;
   dropPile(w, { x, y }, { ...emptyInventory(), wood });
 }

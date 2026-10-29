@@ -60,7 +60,7 @@ test('noche de historias sin problemas: +8 y +3 de opinión entre todos', () => 
     expect(has(s, 'storyNight')).toBe(true);
     for (const o of w.survivors) if (o !== s) expect(opinionOf(s, o.id)).toBe(3);
   }
-  expect(w.log.at(-1)).toMatchObject({ kind: 'storyNight', arguedIds: null });
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'storyNight', arguedIds: null });
 });
 
 test('con rivales, un 40 % acaba en discusión entre ellos; los demás sí lo celebran', () => {
@@ -70,7 +70,7 @@ test('con rivales, un 40 % acaba en discusión entre ellos; los demás sí lo ce
     a.opinions[b.id] = -50;
     w.rng = { s: i * 7919 + 1 };
     storyNightEvent.happen(w);
-    const e = w.log.at(-1)!;
+    const e = w.common.log.at(-1)!;
     if (e.kind !== 'storyNight' || e.arguedIds === null) continue;
     ruined++;
     expect(new Set(e.arguedIds)).toEqual(new Set([a.id, b.id]));
@@ -92,7 +92,7 @@ test('con alguien al límite, discute con quien peor le cae', () => {
     a.opinions[c.id] = -5;
     w.rng = { s: i * 31 + 7 };
     storyNightEvent.happen(w);
-    const e = w.log.at(-1)!;
+    const e = w.common.log.at(-1)!;
     if (e.kind === 'storyNight' && e.arguedIds)
       expect(new Set(e.arguedIds)).toEqual(new Set([a.id, c.id]));
     void b;
@@ -111,7 +111,7 @@ test('cumpleaños: a quien no lo ha tenido; pide decisión', () => {
   birthdayEvent.happen(w);
   expect(c.celebrated).toBe(true);
   expect(w.decisions[0]).toMatchObject({ kind: 'birthday', survivorIds: [c.id] });
-  expect(w.log.at(-1)).toMatchObject({ kind: 'birthday', survivorId: c.id });
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'birthday', survivorId: c.id });
   expect(birthdayEvent.canHappen(w)).toBe(false);
 });
 
@@ -134,7 +134,7 @@ test('Celebrarlo con 2 latas: −2 latas, "Cumpleaños feliz", "Fiesta" y +5', (
     expect(has(o, 'party')).toBe(true);
     expect(opinionOf(o, c.id)).toBe(5);
   }
-  expect(w.log.at(-1)).toMatchObject({ kind: 'birthdayParty', survivorId: c.id });
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'birthdayParty', survivorId: c.id });
 });
 
 test('un rival puede amargarlo (30 %): "Le amargaron el cumpleaños" y −15 al rival', () => {
@@ -151,7 +151,11 @@ test('un rival puede amargarlo (30 %): "Le amargaron el cumpleaños" y −15 al 
     expect(has(c, 'happyBirthday')).toBe(false);
     expect(has(c, 'ruinedBirthday', a.id)).toBe(true);
     expect(opinionOf(c, a.id)).toBe(-15);
-    expect(w.log.at(-1)).toMatchObject({ kind: 'birthdayRuined', survivorId: c.id, otherId: a.id });
+    expect(w.common.log.at(-1)).toMatchObject({
+      kind: 'birthdayRuined',
+      survivorId: c.id,
+      otherId: a.id,
+    });
   }
   expect(ruined).toBeGreaterThan(110);
   expect(ruined).toBeLessThan(190);
@@ -180,7 +184,7 @@ test('No hay para fiestas (o sin 2 latas, o si caduca): "Nadie celebró su cumpl
     step(w);
     expect(has(c, 'forgottenBirthday')).toBe(true);
     expect(w.storage.items.food).toBe(how === 'sinComida' ? 1 : 5);
-    expect(w.log.at(-1)).toMatchObject({ kind: 'birthdaySkipped', survivorId: c.id });
+    expect(w.common.log.at(-1)).toMatchObject({ kind: 'birthdaySkipped', survivorId: c.id });
   }
 });
 
@@ -193,7 +197,7 @@ test('alijo: 3–6 latas en un mueble sin registrar y se ve el interior de la ca
   expect(cacheEvent.canHappen(w)).toBe(true);
   const before = w.containers.map((c) => c.items.food);
   cacheEvent.happen(w);
-  const e = w.log.at(-1)!;
+  const e = w.common.log.at(-1)!;
   expect(e.kind).toBe('cache');
   if (e.kind !== 'cache') return;
   const changed = w.containers.filter((c, i) => c.items.food !== before[i]);

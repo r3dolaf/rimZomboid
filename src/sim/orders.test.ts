@@ -87,9 +87,9 @@ test('el registro guarda el tick y como mucho LOG_MAX entradas', () => {
   const w = createWorld(2);
   w.tick = 77;
   logEvent(w, { kind: 'outOfFood' });
-  expect(w.log.at(-1)).toEqual({ tick: 77, kind: 'outOfFood' });
+  expect(w.common.log.at(-1)).toEqual({ tick: 77, kind: 'outOfFood' });
   for (let i = 0; i < LOG_MAX + 10; i++) logEvent(w, { kind: 'outOfFood' });
-  expect(w.log).toHaveLength(LOG_MAX);
+  expect(w.common.log).toHaveLength(LOG_MAX);
 });
 
 test('se registran el desplome, la crisis, el desahogo y el almacén sin comida', () => {
@@ -97,16 +97,16 @@ test('se registran el desplome, la crisis, el desahogo y el almacén sin comida'
   const [a, b, c] = w.survivors;
   a!.needs.sleep = 0;
   decisionsSystem(w);
-  expect(w.log.at(-1)).toMatchObject({ kind: 'collapsed', survivorId: a!.id });
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'collapsed', survivorId: a!.id });
 
   b!.action = { type: 'crisis', ticksLeft: 1 };
   activitiesSystem(w);
-  expect(w.log.at(-1)).toMatchObject({ kind: 'vented', survivorId: b!.id });
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'vented', survivorId: b!.id });
 
   w.storage.items.food = 1;
   c!.action = { type: 'eat', ticksLeft: 1 };
   activitiesSystem(w);
-  expect(w.log.at(-1)).toMatchObject({ kind: 'outOfFood' });
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'outOfFood' });
 });
 
 test('se registra el comienzo de una crisis', () => {
@@ -115,5 +115,5 @@ test('se registra el comienzo de una crisis', () => {
   s.action = { type: 'moveTo', target: { x: 0, y: 0 }, then: { type: 'crisis' } };
   s.path = [];
   step(w);
-  expect(w.log.some((e) => e.kind === 'crisis' && e.survivorId === s.id)).toBe(true);
+  expect(w.common.log.some((e) => e.kind === 'crisis' && e.survivorId === s.id)).toBe(true);
 });

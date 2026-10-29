@@ -101,8 +101,7 @@ test('los zombis usan su propio azar: lo dem√°s del mundo no cambia con la opci√
       zombieRng: null,
       zombieLevel: null,
       nextZombieId: 0,
-      nextPieceId: 0, // H5b: la ropa de los zombis
-      pieceLog: null,
+      common: { ...w.common, nextPieceId: 0, pieceLog: null }, // H5b: la ropa de los zombis
     });
   expect(strip(few)).toBe(strip(many));
   expect(JSON.stringify(createWorld(9, 'balanced', 'many'))).toBe(JSON.stringify(many));

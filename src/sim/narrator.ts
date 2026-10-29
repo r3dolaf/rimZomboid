@@ -47,7 +47,7 @@ export function wellbeing(w: World): number {
 
 /** Decisiones caducadas, fases del Equilibrado, el siguiente suceso y, si toca, el suceso. */
 export function narratorSystem(w: World, catalog: readonly GameEvent[] = CATALOG): void {
-  if (w.over) return; // H5 §9: sin nadie, no pasa nada más
+  if (w.common.over) return; // H5 §9: sin nadie, no pasa nada más
   expireDecisions(w);
   const n = w.narrator;
   if (n.style === 'balanced') {

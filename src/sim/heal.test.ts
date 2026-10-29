@@ -96,7 +96,9 @@ test('lo lleva a su cama, despacio y con él; al dejarlo, "en cama" y al registr
   expect(tileOf(ana.pos)).toEqual(w.beds[0]!.pos);
   expect(bea.carryingId).toBeNull();
   expect(
-    w.log.some((e) => e.kind === 'rescued' && e.survivorId === bea.id && e.otherId === ana.id),
+    w.common.log.some(
+      (e) => e.kind === 'rescued' && e.survivorId === bea.id && e.otherId === ana.id,
+    ),
   ).toBe(true);
   expect(bea.skills.heal.xp + bea.skills.heal.level).toBeGreaterThan(5);
 });

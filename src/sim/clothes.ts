@@ -21,6 +21,7 @@ import type { MoodModifier } from './mood';
 import { nextFloat, nextInt, pick, weightedPick, type RngState } from './rng';
 import type {
   BodyPart,
+  Common,
   Garment,
   GarmentKind,
   Layer,
@@ -36,14 +37,20 @@ export const GARMENT_KINDS = Object.keys(GARMENTS) as GarmentKind[];
 
 const LAYER_RANK: Record<Layer, number> = { inner: 0, middle: 1, outer: 2 };
 
-/** Lo que lleva la cuenta de las piezas (el mundo, o el contador mientras se crea). */
-export type PieceCounter = Pick<World, 'nextPieceId' | 'pieceLog'>;
+/** Lo que lleva la cuenta de las piezas: un mundo (su caja común) o la caja misma. */
+export type PieceCounter =
+  Pick<Common, 'nextPieceId' | 'pieceLog'> | { common: Pick<Common, 'nextPieceId' | 'pieceLog'> };
+
+/** La cuenta de las piezas de un mundo o de una caja. */
+export const counterOf = (w: PieceCounter): Pick<Common, 'nextPieceId' | 'pieceLog'> =>
+  'common' in w ? w.common : w;
 
 /** Una prenda nueva, limpia y sin agujeros (se apunta en las cuentas de las piezas). */
 export function newGarment(w: PieceCounter, kind: GarmentKind): Garment {
-  w.pieceLog.made++;
+  const c = counterOf(w);
+  c.pieceLog.made++;
   return {
-    id: w.nextPieceId++,
+    id: c.nextPieceId++,
     kind,
     holes: [],
     patches: {},
@@ -281,12 +288,12 @@ export function dressStarter(w: PieceCounter, s: Survivor, rng: RngState): void 
 
 /** Se va del mundo (por el borde del mapa) con todo lo que lleva: se apunta en las cuentas. */
 export function piecesGone(w: World, pieces: readonly Piece[]): void {
-  w.pieceLog.gone += pieces.length;
+  w.common.pieceLog.gone += pieces.length;
   // Con lo de dentro (H5b2): sus piezas, su madera y sus armas, que se pierden.
   for (const p of pieces)
     if (isBag(p)) {
-      w.woodLog.wasted += p.items.wood;
-      for (const k of WEAPON_KINDS) w.weaponLog.rotted += p.items[k];
+      w.common.woodLog.wasted += p.items.wood;
+      for (const k of WEAPON_KINDS) w.common.weaponLog.rotted += p.items[k];
       piecesGone(w, p.items.pieces);
     }
 }

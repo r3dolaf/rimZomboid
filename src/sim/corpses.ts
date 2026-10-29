@@ -32,7 +32,7 @@ export function leaveCorpse(w: World, z: Zombie): void {
   items.pieces.push(...z.bags); // H5b2
   z.bags = [];
   const c: Container = {
-    id: w.nextId++,
+    id: w.common.nextId++,
     houseId: -1,
     pos: tileOf(z.pos),
     kind: 'corpse',
@@ -42,7 +42,7 @@ export function leaveCorpse(w: World, z: Zombie): void {
     reservedBy: null,
     until: w.tick + CORPSE_ROT_TICKS,
   };
-  w.weaponLog.fromCorpses += weaponsIn(c);
+  w.common.weaponLog.fromCorpses += weaponsIn(c);
   w.containers.push(c);
 }
 
@@ -64,7 +64,7 @@ export function corpsesSystem(w: World): void {
     // El de una persona (H5) deja en el suelo lo que llevaba; lo del zombi se pudre con él.
     if (c.name !== undefined) dropPile(w, c.pos, c.items);
     else {
-      w.weaponLog.rotted += weaponsIn(c);
+      w.common.weaponLog.rotted += weaponsIn(c);
       piecesGone(w, c.items.pieces); // H5b: su ropa se pudre con él
     }
   }

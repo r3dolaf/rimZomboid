@@ -18,7 +18,7 @@ export function dropPile(w: World, pos: Point, items: Inventory): void {
   if (!spot) throw new Error('dropPile: no queda ninguna casilla transitable en el mapa');
   let pile = pileAt(w, spot.x, spot.y);
   if (!pile) {
-    pile = { id: w.nextId++, pos: spot, items: emptyInventory() };
+    pile = { id: w.common.nextId++, pos: spot, items: emptyInventory() };
     w.piles.push(pile);
   }
   addInto(pile.items, items);

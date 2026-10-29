@@ -107,11 +107,11 @@ test('el agua corriente se corta un día entre el 7 y el 14, con aviso', () => {
   w.tick = w.waterCutAt - 1;
   expect(mainsOn(w)).toBe(true);
   waterSystem(w);
-  expect(w.log.some((e) => e.kind === 'waterCut')).toBe(false);
+  expect(w.common.log.some((e) => e.kind === 'waterCut')).toBe(false);
   w.tick++;
   waterSystem(w);
   expect(mainsOn(w)).toBe(false);
-  expect(w.log.filter((e) => e.kind === 'waterCut')).toHaveLength(1);
+  expect(w.common.log.filter((e) => e.kind === 'waterCut')).toHaveLength(1);
   expect(START_HOUR * TICKS_PER_HOUR).toBeLessThan(TICKS_PER_DAY); // (el día 1 empieza a las 8)
 });
 
@@ -131,13 +131,13 @@ test('Llueve: suceso bueno de 3–6 h, cada 2 días como poco; la tormenta tambi
   expect(rainEvent.canHappen(w)).toBe(true);
   rainEvent.happen(w);
   expect(isRaining(w)).toBe(true);
-  expect(w.rainUntil - w.tick).toBeGreaterThanOrEqual(3 * TICKS_PER_HOUR);
-  expect(w.rainUntil - w.tick).toBeLessThanOrEqual(6 * TICKS_PER_HOUR);
-  expect(w.log.at(-1)).toMatchObject({ kind: 'rain' });
+  expect(w.common.rainUntil - w.tick).toBeGreaterThanOrEqual(3 * TICKS_PER_HOUR);
+  expect(w.common.rainUntil - w.tick).toBeLessThanOrEqual(6 * TICKS_PER_HOUR);
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'rain' });
   expect(rainEvent.canHappen(w)).toBe(false);
   const v = createWorld(3);
   stormEvent.happen(v);
-  expect(v.rainUntil).toBe(v.stormUntil);
+  expect(v.common.rainUntil).toBe(v.common.stormUntil);
 });
 
 test('cada hora de lluvia: los cubos vacíos al aire libre se llenan; cisternas +5 (hasta 200); el barreño fuera +2 (hasta 20)', () => {
@@ -162,10 +162,10 @@ test('cada hora de lluvia: los cubos vacíos al aire libre se llenan; cisternas 
   dropPile(w, inside, { ...emptyInventory(), bucket: 1 });
   const cistern = w.furniture.find((f) => f.kind === 'cistern')!;
   cistern.water = 198;
-  w.furniture.push({ id: w.nextId++, kind: 'tub', pos: outside, water: 19 });
-  w.furniture.push({ id: w.nextId++, kind: 'tub', pos: inside, water: 0 });
+  w.furniture.push({ id: w.common.nextId++, kind: 'tub', pos: outside, water: 19 });
+  w.furniture.push({ id: w.common.nextId++, kind: 'tub', pos: inside, water: 0 });
   w.tick = 10 * TICKS_PER_HOUR - 1;
-  w.rainUntil = w.tick + 3 * TICKS_PER_HOUR;
+  w.common.rainUntil = w.tick + 3 * TICKS_PER_HOUR;
   waterSystem(w);
   expect(w.piles.find((p) => p.pos.x === outside.x && p.pos.y === outside.y)!.items).toMatchObject({
     bucket: 2,
@@ -178,7 +178,7 @@ test('cada hora de lluvia: los cubos vacíos al aire libre se llenan; cisternas 
   expect(cistern.water).toBe(CISTERN_LITERS);
   expect(w.furniture.at(-2)!.water).toBe(TUB_LITERS);
   expect(w.furniture.at(-1)!.water).toBe(0);
-  w.tick = w.rainUntil + TICKS_PER_HOUR - (w.rainUntil % TICKS_PER_HOUR);
+  w.tick = w.common.rainUntil + TICKS_PER_HOUR - (w.common.rainUntil % TICKS_PER_HOUR);
   cistern.water = 0;
   waterSystem(w);
   expect(cistern.water).toBe(0); // ya no llueve
@@ -199,7 +199,7 @@ function yard(): World {
   for (const k of Object.keys(s.work) as (keyof typeof s.work)[]) s.work[k] = k === 'haul';
   s.needs = { hunger: 100, sleep: 100, mood: 60, social: 100 };
   s.nextChatAt = 1e9;
-  w.outfits[0]!.allowed = ['tshirt', 'jeans'];
+  w.common.outfits[0]!.allowed = ['tshirt', 'jeans'];
   return w;
 }
 const tub = (w: World) => w.furniture.find((f) => f.kind === 'tub')!;

@@ -157,7 +157,7 @@ export function freeNames(w: World): string[] {
 export function newStranger(w: World, start: Point): Survivor {
   const door = doorOutside(w);
   const s: Survivor = {
-    id: w.nextId++,
+    id: w.common.nextId++,
     name: pick(w.rng, freeNames(w)),
     pos: { x: start.x + 0.5, y: start.y + 0.5 },
     brain: 'ai',
@@ -209,7 +209,7 @@ export function newStranger(w: World, start: Point): Survivor {
     worn: [],
     likes: 'tshirt', // se sortean abajo con su ropa
     hates: 'cap',
-    outfitId: w.outfits[0]?.id ?? 1,
+    outfitId: w.common.outfits[0]?.id ?? 1,
     dressCheckAt: 0,
     ...bagFields(),
   };
@@ -255,7 +255,7 @@ export function acceptStrangers(w: World): void {
     if (s.action.type !== 'downed') s.action = { type: 'idle', ticksLeft: 0 };
     s.path = [];
     s.work = defaultWork(s.traits);
-    s.outfitId = w.outfits[0]!.id; // H5b: el primer atuendo
+    s.outfitId = w.common.outfits[0]!.id; // H5b: el primer atuendo
     s.nextChatAt = w.tick + nextInt(w.rng, 0, CHAT_EVERY_MAX);
     // Primero una cama construida que esté libre (H4a); si no, uno de los sitios de serie.
     const spare = w.beds.find((b) => b.ownerId === null && b.medical !== true);
@@ -271,6 +271,6 @@ export function acceptStrangers(w: World): void {
     w.survivors.push(s);
   }
   w.stranger = null;
-  w.stats.joined.push(...st.survivors.map((s) => s.name));
+  w.common.stats.joined.push(...st.survivors.map((s) => s.name));
   logEvent(w, { kind: 'strangerAccepted', names: st.survivors.map((s) => s.name) });
 }

@@ -204,7 +204,7 @@ export function mountLog(root: HTMLElement, opts: { world: World }): { update():
   let shownKey = '';
   return {
     update() {
-      const log = opts.world.log;
+      const log = opts.world.common.log;
       const last = log.at(-1);
       const key = `${log.length}:${last?.tick ?? -1}:${last?.kind ?? ''}`;
       if (key === shownKey) return;

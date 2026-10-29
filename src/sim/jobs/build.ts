@@ -98,7 +98,7 @@ function failBuild(w: World, b: Blueprint, builder: Survivor): void {
   const lost = Math.ceil(BUILD[b.kind].wood / 2);
   b.wood -= lost;
   b.progress = 0;
-  w.woodLog.wasted += lost;
+  w.common.woodLog.wasted += lost;
   logEvent(w, { kind: 'buildFailed', survivorId: builder.id, what: b.kind, wood: lost });
 }
 
@@ -115,7 +115,7 @@ function someoneOn(w: World, p: { x: number; y: number }): boolean {
 /** El plano se convierte en lo que es (spec H4a §4.1). */
 export function finishBuild(w: World, b: Blueprint, builder: Survivor): void {
   w.blueprints = w.blueprints.filter((x) => x !== b);
-  w.woodLog.spent += BUILD[b.kind].wood;
+  w.common.woodLog.spent += BUILD[b.kind].wood;
   const { x, y } = b.pos;
   switch (b.kind) {
     case 'bed': {
@@ -127,10 +127,10 @@ export function finishBuild(w: World, b: Blueprint, builder: Survivor): void {
     }
     case 'table':
     case 'campfire':
-      w.furniture.push({ id: w.nextId++, kind: b.kind, pos: { x, y } });
+      w.furniture.push({ id: w.common.nextId++, kind: b.kind, pos: { x, y } });
       break;
     case 'tub': // H5b: vacío
-      w.furniture.push({ id: w.nextId++, kind: 'tub', pos: { x, y }, water: 0 });
+      w.furniture.push({ id: w.common.nextId++, kind: 'tub', pos: { x, y }, water: 0 });
       break;
     case 'woodWall':
       setTile(w.grid, x, y, Tile.WoodWall);
@@ -145,7 +145,7 @@ export function finishBuild(w: World, b: Blueprint, builder: Survivor): void {
     case 'unboard':
       setTile(w.grid, x, y, Tile.Window);
       repairTile(w, x, y);
-      w.woodLog.recovered += UNBOARD_WOOD;
+      w.common.woodLog.recovered += UNBOARD_WOOD;
       dropPile(w, tileOf(builder.pos), { ...emptyInventory(), wood: UNBOARD_WOOD });
       break;
     case 'repair':

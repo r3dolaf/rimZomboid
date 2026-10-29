@@ -3,10 +3,12 @@ import { expect, test, type Page } from '@playwright/test';
 
 interface Debug {
   world: {
-    nextPieceId: number;
-    pieceLog: { made: number; gone: number };
+    common: {
+      nextPieceId: number;
+      pieceLog: { made: number; gone: number };
+      outfits: { id: number; name: string }[];
+    };
     survivors: { id: number; outfitId: number; worn: { kind: string }[] }[];
-    outfits: { id: number; name: string }[];
     storage: { items: { pieces: unknown[] } };
   };
 }
@@ -62,7 +64,7 @@ test('panel Atuendos: crear uno, renombrarlo y quitarle una prenda', async ({ pa
   await panel.getByTestId('outfit-garment-cap').uncheck();
   await page.locator('[data-speed="1"]').click();
   await expect
-    .poll(async () => (await world(page)).outfits.map((o) => o.name))
+    .poll(async () => (await world(page)).common.outfits.map((o) => o.name))
     .toEqual(['Cualquiera', 'Saqueo', 'Base', 'Noche']);
   await page.keyboard.press('Escape');
   await expect(panel).toBeHidden();
@@ -76,7 +78,7 @@ test('Almacén con Materiales y Ropa; el barreño en el menú de Construir', asy
   await page.evaluate(() => {
     const { world: w } = (window as unknown as { rimzomboid: Debug }).rimzomboid;
     w.storage.items.pieces.push({
-      id: w.nextPieceId++,
+      id: w.common.nextPieceId++,
       kind: 'leatherJacket',
       holes: ['leftArm'],
       patches: {},
@@ -85,7 +87,7 @@ test('Almacén con Materiales y Ropa; el barreño en el menú de Construir', asy
       bloody: false,
       from: null,
     });
-    w.pieceLog.made++;
+    w.common.pieceLog.made++;
   });
   await page.getByTestId('hud-storage').click();
   const storage = page.getByTestId('storage-panel');

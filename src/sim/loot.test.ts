@@ -130,7 +130,7 @@ test('en todo el mapa, de media: ~155 latas, ~33 vendas, ~78 tablas, ~53 telas, 
   for (let seed = 1; seed <= n; seed++) {
     const w = createWorld(seed);
     for (const item of ITEMS) total[item] += amount(w.containers, item);
-    expect(w.woodLog.start).toBe(w.containers.reduce((s, c) => s + c.items.wood, 0));
+    expect(w.common.woodLog.start).toBe(w.containers.reduce((s, c) => s + c.items.wood, 0));
   }
   const avg = (k: LootItem) => total[k] / n;
   const within = (k: LootItem, lo: number, hi: number) => {

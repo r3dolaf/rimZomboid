@@ -64,7 +64,11 @@ test('se pueden dar: desde el día 3, con sitio y sin otro esperando', () => {
   expect(strangersEvent.canHappen(w)).toBe(false);
   const full = world();
   while (full.survivors.length < COLONY_MAX)
-    full.survivors.push({ ...structuredClone(full.survivors[0]!), id: full.nextId++, bedId: null });
+    full.survivors.push({
+      ...structuredClone(full.survivors[0]!),
+      id: full.common.nextId++,
+      bedId: null,
+    });
   expect(strangersEvent.canHappen(full)).toBe(false);
 });
 
@@ -82,7 +86,7 @@ test('aparece en una carretera del borde, con lo suyo, con una decisión y en el
     expect(s!.carrying.bandage).toBeLessThanOrEqual(1);
     expect(s!.bedId).toBeNull();
     expect(decision(w)).toMatchObject({ survivorIds: [s!.id], expiresAt: w.tick + TICKS_PER_DAY });
-    expect(w.log.at(-1)).toMatchObject({ kind: 'strangerArrived', names: [s!.name] });
+    expect(w.common.log.at(-1)).toMatchObject({ kind: 'strangerArrived', names: [s!.name] });
     expect(checkInvariants(w)).toEqual([]);
   }
 });
@@ -108,7 +112,7 @@ test('a veces llegan dos, ya en pareja; si solo cabe uno, llega uno', () => {
   while (seven.survivors.length < COLONY_MAX - 1)
     seven.survivors.push({
       ...structuredClone(seven.survivors[0]!),
-      id: seven.nextId++,
+      id: seven.common.nextId++,
       bedId: null,
     });
   for (let i = 0; i < 200; i++) {
@@ -143,7 +147,7 @@ test('Aceptar (opción 0): todos pasan a la colonia con cama mientras quede', ()
     const bed = w.beds.find((b) => b.id === s.bedId)!;
     expect(bed.pos).toEqual(slots[3 + i]);
   });
-  expect(w.log.at(-1)).toMatchObject({ kind: 'strangerAccepted' });
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'strangerAccepted' });
   expect(checkInvariants(w)).toEqual([]);
 });
 
@@ -171,7 +175,7 @@ test('Rechazar (opción 1): se van al borde y desaparecen', () => {
   step(w);
   expect(w.stranger?.leaving).toBe(true);
   expect(w.decisions).toEqual([]);
-  expect(w.log.at(-1)).toMatchObject({ kind: 'strangerRejected', names: [name] });
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'strangerRejected', names: [name] });
   expect(runUntil(w, () => w.stranger === null, TICKS_PER_DAY)).toBe(true);
   expect(w.survivors).toHaveLength(3);
 });
@@ -188,7 +192,7 @@ test('si nadie contesta en un día, se marchan', () => {
   narratorSystem(w);
   expect(w.stranger?.leaving).toBe(true);
   expect(w.decisions).toEqual([]);
-  expect(w.log.at(-1)).toMatchObject({ kind: 'strangerLeft' });
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'strangerLeft' });
 });
 
 test('contestar a una decisión que ya no existe no hace nada', () => {
@@ -196,7 +200,7 @@ test('contestar a una decisión que ya no existe no hace nada', () => {
   issue(w, { type: 'decide', decisionId: 12345, option: 0 });
   step(w);
   expect(w.survivors).toHaveLength(3);
-  expect(w.log).toEqual([]);
+  expect(w.common.log).toEqual([]);
 });
 
 test('el mundo con desconocidos sobrevive a JSON', () => {

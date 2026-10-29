@@ -21,10 +21,10 @@ test('catálogo: hueco, capacidad, lo que pesa lo de dentro y la bolsa vacía (s
 
 test('una bolsa nueva es una pieza vacía y sin lista; fuera de la espalda pesa vacía + lo de dentro', () => {
   const w = emptyWorld(5, 5);
-  const made = w.pieceLog.made;
+  const made = w.common.pieceLog.made;
   const b = newBag(w, 'schoolBag');
   expect(b).toMatchObject({ kind: 'schoolBag', list: {} });
-  expect(w.pieceLog.made).toBe(made + 1);
+  expect(w.common.pieceLog.made).toBe(made + 1);
   expect(isBag(b)).toBe(true);
   const cap = newGarment(w, 'cap');
   expect(isBag(cap)).toBe(false);
@@ -43,7 +43,7 @@ test('lo puesto y lo de dentro son piezas; al irse del mapa, se cuenta también 
   expect(s.keep).toEqual({ bandage: 2 });
   expect(s.bagsPinned).toEqual([]);
   expect(s.droppedBag).toBeNull();
-  expect(w.bagLog).toEqual({ found: 0, dropped: 0, recovered: 0 });
+  expect(w.common.bagLog).toEqual({ found: 0, dropped: 0, recovered: 0 });
   const b = newBag(w, 'hikingPack');
   const cap = newGarment(w, 'cap');
   b.items.pieces.push(cap);
@@ -72,7 +72,7 @@ test('invariantes: bolsa dentro de bolsa, hueco que no le vale, pasarse, listas 
   b.items.pieces.push(newBag(w, 'clothBag'));
   expect(checkInvariants(w).join('\n')).toMatch(/dentro de otra/);
   b.items.pieces = [];
-  w.pieceLog.gone++; // (la de tela ya no está)
+  w.common.pieceLog.gone++; // (la de tela ya no está)
   b.list = { bandage: -1 };
   expect(checkInvariants(w).join('\n')).toMatch(/lista/);
   b.list = { bandage: 2 };
@@ -103,7 +103,7 @@ test('partida larga: la madera dentro de una bolsa cuenta, y si la bolsa se va d
   const w = emptyWorld(5, 5);
   const s = w.survivors[0]!;
   w.storage.items.wood = 3;
-  w.woodLog.start += 3;
+  w.common.woodLog.start += 3;
   expect(checkInvariants(w)).toEqual([]);
   const b = newBag(w, 'schoolBag');
   w.storage.items.wood -= 2;
@@ -120,7 +120,7 @@ test('las armas que se van del mundo dentro de una bolsa se apuntan (como las qu
   const b = newBag(w, 'duffel');
   b.items.machete = 1;
   b.items.knife = 2;
-  const before = w.weaponLog.rotted;
+  const before = w.common.weaponLog.rotted;
   piecesGone(w, [b]);
-  expect(w.weaponLog.rotted).toBe(before + 3);
+  expect(w.common.weaponLog.rotted).toBe(before + 3);
 });

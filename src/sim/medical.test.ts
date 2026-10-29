@@ -92,7 +92,9 @@ test('vendarse: si le sangra una herida y lleva venda, allí mismo; luego deja d
   expect(bea.carrying.bandage).toBe(0);
   expect(wd.cleanUntil).toBe(w.tick - 1 + BANDAGE_CLEAN_HOURS * TICKS_PER_HOUR);
   expect(
-    w.log.some((e) => e.kind === 'bandaged' && e.survivorId === bea.id && e.otherId === bea.id),
+    w.common.log.some(
+      (e) => e.kind === 'bandaged' && e.survivorId === bea.id && e.otherId === bea.id,
+    ),
   ).toBe(true);
   expect(tileOf(bea.pos)).toEqual({ x: 20, y: 20 }); // no se ha movido
 });
@@ -134,7 +136,9 @@ test('Sanar: a quien está en la base con una herida que sangra, con sus vendas'
   expect(until(w, () => !wd.bleeding, 600)).toBe(true);
   expect(bea.carrying.bandage).toBeLessThanOrEqual(2); // gastó una (y quizá repuso)
   expect(
-    w.log.some((e) => e.kind === 'bandaged' && e.survivorId === bea.id && e.otherId === ana.id),
+    w.common.log.some(
+      (e) => e.kind === 'bandaged' && e.survivorId === bea.id && e.otherId === ana.id,
+    ),
   ).toBe(true);
 });
 
@@ -168,7 +172,7 @@ test('al derribado que sangra, el que va a rescatarlo le venda antes de cargarlo
   knockDown(w, ana);
   expect(until(w, () => bea.carryingId === ana.id)).toBe(true);
   expect(wd.bleeding).toBe(false);
-  expect(w.log.some((e) => e.kind === 'bandaged' && e.otherId === ana.id)).toBe(true);
+  expect(w.common.log.some((e) => e.kind === 'bandaged' && e.otherId === ana.id)).toBe(true);
 });
 
 test('con más nivel de Sanar se venda antes (nivel 10: un tercio menos)', () => {
@@ -263,7 +267,9 @@ test('si no puede moverse, se lo lleva uno con Sanar', () => {
   expect(w.storage.items.painkillers).toBe(0);
   expect(bea.carrying.painkillers).toBe(0);
   expect(
-    w.log.some((e) => e.kind === 'painkiller' && e.survivorId === bea.id && e.otherId === ana.id),
+    w.common.log.some(
+      (e) => e.kind === 'painkiller' && e.survivorId === bea.id && e.otherId === ana.id,
+    ),
   ).toBe(true);
 });
 

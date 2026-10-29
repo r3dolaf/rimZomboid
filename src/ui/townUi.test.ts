@@ -66,7 +66,7 @@ test('el registro dice el nombre del edificio', () => {
   const w = town();
   w.tick = 0;
   const s = w.survivors[0]!;
-  const text = () => formatLogEntry(w.log.at(-1)!, w).replace(/^.* · /, '');
+  const text = () => formatLogEntry(w.common.log.at(-1)!, w).replace(/^.* · /, '');
   logEvent(w, {
     kind: 'found',
     survivorId: s.id,

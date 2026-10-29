@@ -97,7 +97,7 @@ test('al salir se anuncia: llega en 48–72 h por un lado, y el aviso lo dice', 
     expect(s.at - w.tick).toBeLessThanOrEqual(72 * TICKS_PER_HOUR);
     expect([0, 1, 2, 3]).toContain(s.side);
     expect(s.size).toBeGreaterThanOrEqual(18);
-    const e = w.log.at(-1)!;
+    const e = w.common.log.at(-1)!;
     expect(e).toMatchObject({ kind: 'siegeAnnounced', side: s.side });
     expect(e.kind === 'siegeAnnounced' && e.hours).toBe(
       Math.round((s.at - w.tick) / TICKS_PER_HOUR),
@@ -133,7 +133,7 @@ test('llegada: todos juntos en su borde, alertados hacia la base, con la horda d
     for (const t of ts) expect(depth(t)).toBeLessThanOrEqual(3);
     const alongs = ts.map(along);
     expect(Math.max(...alongs) - Math.min(...alongs)).toBeLessThanOrEqual(24);
-    expect(w.log.at(-1)).toMatchObject({ kind: 'siegeArrived' });
+    expect(w.common.log.at(-1)).toMatchObject({ kind: 'siegeArrived' });
     expect(siegeActive(w)).toBe(true);
     expect(checkInvariants(w)).toEqual([]);
   }
@@ -269,7 +269,7 @@ test('fin al día: la horda se va por donde vino (como unos errantes) y sale del
   expect(siegeActive(w)).toBe(false);
   expect(h).toMatchObject({ kind: 'wander', seen: true });
   expect(h.goal.y).toBeLessThanOrEqual(3); // al borde norte, por donde llegaron
-  expect(w.log.at(-1)).toMatchObject({ kind: 'siegeEnded' });
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'siegeEnded' });
   for (const z of w.zombies) {
     expect(z.hordeId).toBe(h.id);
     expect(z).toMatchObject({ state: 'alert', goal: h.goal });
@@ -283,7 +283,7 @@ test('fin al día: la horda se va por donde vino (como unos errantes) y sale del
   runZ(w, 3000);
   expect(w.zombies.filter((z) => z.hordeId === h.id)).toHaveLength(0);
   expect(w.hordes).toHaveLength(0);
-  expect(w.log.some((e) => e.kind === 'wanderersSighted')).toBe(false);
+  expect(w.common.log.some((e) => e.kind === 'wanderersSighted')).toBe(false);
   expect(checkInvariants(w)).toEqual([]);
 });
 
@@ -291,7 +291,7 @@ test('fin por matarlos: aviso verde y la horda se borra', () => {
   const w = besieged(4);
   w.zombies = [];
   hordeSystem(w);
-  expect(w.log.at(-1)).toMatchObject({ kind: 'siegeRepelled' });
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'siegeRepelled' });
   expect(w.hordes).toHaveLength(0);
   expect(siegeActive(w)).toBe(false);
 });
@@ -304,7 +304,7 @@ test('una horda terminada se borra cuando ya no quedan zombis suyos', () => {
   w.zombies = [];
   hordeSystem(w);
   expect(w.hordes).toHaveLength(0);
-  expect(w.log.filter((e) => e.kind === 'siegeRepelled')).toHaveLength(0);
+  expect(w.common.log.filter((e) => e.kind === 'siegeRepelled')).toHaveLength(0);
 });
 
 test('errantes: tono malo, dureza 2, cada 3 días, desde el día 3', () => {
@@ -340,7 +340,7 @@ test('errantes: 8–15 por la opción, juntos en un borde y con destino en el de
     expect(from).toBeDefined();
     expect(depth(h.goal, from ^ 1)).toBeLessThanOrEqual(3);
     for (const z of w.zombies) expect(z.goal).toEqual(h.goal);
-    expect(w.log.some((e) => e.kind === 'wanderersSighted')).toBe(false); // sin aviso al salir
+    expect(w.common.log.some((e) => e.kind === 'wanderersSighted')).toBe(false); // sin aviso al salir
   }
   expect(Math.min(...sizes)).toBe(8);
   expect(Math.max(...sizes)).toBe(15);
@@ -389,11 +389,11 @@ test('errantes: aviso (una vez) cuando un colono ve a uno', () => {
   w.survivors[0]!.pos = { x: z.pos.x + 3, y: z.pos.y };
   w.base.rect = { x: 70, y: 70, w: 5, h: 5 };
   runZ(w, 12);
-  const seen = w.log.filter((e) => e.kind === 'wanderersSighted');
+  const seen = w.common.log.filter((e) => e.kind === 'wanderersSighted');
   expect(seen).toHaveLength(1);
   expect(w.hordes[0]!.seen).toBe(true);
   runZ(w, 30);
-  expect(w.log.filter((e) => e.kind === 'wanderersSighted')).toHaveLength(1);
+  expect(w.common.log.filter((e) => e.kind === 'wanderersSighted')).toHaveLength(1);
 });
 
 test('"sin zombis" (para los tests de antes) es también sin hordas del narrador', () => {
@@ -440,7 +440,7 @@ test('sin nadie en pie durante 2 h, la horda del asedio se cansa y se dispersa',
   w.tick += 1;
   hordeSystem(w);
   expect(siegeActive(w)).toBe(false);
-  expect(w.log.at(-1)).toMatchObject({ kind: 'siegeEnded' });
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'siegeEnded' });
 });
 
 test('si alguien se levanta, la cuenta de "nadie en pie" vuelve a empezar', () => {

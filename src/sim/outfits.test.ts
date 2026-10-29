@@ -9,8 +9,8 @@ import { createWorld } from './world';
 
 test('de serie: Cualquiera (todo y de muertos), Saqueo y Base; todos empiezan con Cualquiera', () => {
   const w = createWorld(1);
-  expect(w.outfits.map((o) => o.name)).toEqual(['Cualquiera', 'Saqueo', 'Base']);
-  const [any, loot, home] = w.outfits;
+  expect(w.common.outfits.map((o) => o.name)).toEqual(['Cualquiera', 'Saqueo', 'Base']);
+  const [any, loot, home] = w.common.outfits;
   expect(any!.allowed).toEqual(GARMENT_KINDS);
   expect(any!.dead).toBe(true);
   expect(loot!.allowed).toEqual(
@@ -31,8 +31,8 @@ test('crear, renombrar y borrar (siempre queda uno; sus colonos pasan al primero
   const w = createWorld(1);
   issue(w, { type: 'addOutfit' });
   ordersSystem(w);
-  const mine = w.outfits.at(-1)!;
-  expect(w.outfits).toHaveLength(4);
+  const mine = w.common.outfits.at(-1)!;
+  expect(w.common.outfits).toHaveLength(4);
   expect(mine.allowed).toEqual(GARMENT_KINDS);
   expect(mine.dead).toBe(false);
   issue(w, { type: 'renameOutfit', outfitId: mine.id, name: '  Noche  ' });
@@ -45,17 +45,17 @@ test('crear, renombrar y borrar (siempre queda uno; sus colonos pasan al primero
   expect(mine.name).toBe('Noche');
   issue(w, { type: 'deleteOutfit', outfitId: mine.id });
   ordersSystem(w);
-  expect(w.outfits).toHaveLength(3);
-  expect(w.survivors[0]!.outfitId).toBe(w.outfits[0]!.id);
-  for (const o of [...w.outfits]) issue(w, { type: 'deleteOutfit', outfitId: o.id });
+  expect(w.common.outfits).toHaveLength(3);
+  expect(w.survivors[0]!.outfitId).toBe(w.common.outfits[0]!.id);
+  for (const o of [...w.common.outfits]) issue(w, { type: 'deleteOutfit', outfitId: o.id });
   ordersSystem(w);
-  expect(w.outfits).toHaveLength(1);
+  expect(w.common.outfits).toHaveLength(1);
   expect(checkInvariants(w)).toEqual([]);
 });
 
 test('casillas por prenda y "Acepta ropa de muertos"', () => {
   const w = createWorld(1);
-  const base = w.outfits[2]!;
+  const base = w.common.outfits[2]!;
   issue(w, { type: 'setOutfitGarment', outfitId: base.id, garment: 'helmet', on: true });
   issue(w, { type: 'setOutfitGarment', outfitId: base.id, garment: 'cap', on: false });
   issue(w, { type: 'setOutfitDead', outfitId: base.id, on: true });
@@ -77,8 +77,8 @@ test('en pausa, la interfaz ve los atuendos con las órdenes pendientes', () => 
   const view = effectiveOutfits(w);
   expect(view).toHaveLength(4);
   expect(view[0]!.dead).toBe(false);
-  expect(w.outfits).toHaveLength(3); // el mundo no cambia
-  expect(w.outfits[0]!.dead).toBe(true);
+  expect(w.common.outfits).toHaveLength(3); // el mundo no cambia
+  expect(w.common.outfits[0]!.dead).toBe(true);
 });
 
 test('quien se une a la colonia lleva el primer atuendo', () => {
@@ -87,7 +87,7 @@ test('quien se une a la colonia lleva el primer atuendo', () => {
   s.outfitId = 999;
   w.stranger = { survivors: [s], leaving: false };
   acceptStrangers(w);
-  expect(s.outfitId).toBe(w.outfits[0]!.id);
+  expect(s.outfitId).toBe(w.common.outfits[0]!.id);
   expect(checkInvariants(w)).toEqual([]);
   s.outfitId = 999;
   expect(checkInvariants(w).some((p) => p.includes('atuendo'))).toBe(true);

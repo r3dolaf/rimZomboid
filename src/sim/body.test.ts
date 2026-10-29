@@ -101,7 +101,7 @@ test('a 0 de Salud cae derribado; a las 4 h se levanta solo si su Salud ha vuelt
   for (let i = 0; i < 3; i++) addWound(w, s, 'torso', 'bite'); // 3 × 37,5 de dolor
   expect(s.health).toBe(0);
   expect(s.action.type).toBe('downed');
-  expect(w.log.some((e) => e.kind === 'downed')).toBe(true);
+  expect(w.common.log.some((e) => e.kind === 'downed')).toBe(true);
   // A las 4 h el dolor ha bajado: 30 × 1,5 × 1,5 = 67,5 → Salud 32,5.
   w.tick += DOWNED_TICKS;
   healthSystem(w);

@@ -170,7 +170,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
       hud.update(
         gameTime(world.tick),
         world.storage.items,
-        world.tick < world.stormUntil,
+        world.tick < world.common.stormUntil,
         zombiesInSight(world).length,
         siegeText(world),
       );

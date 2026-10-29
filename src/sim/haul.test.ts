@@ -67,8 +67,8 @@ function freeFloor(w: World): Point {
 
 /** Añade madera a un montón como si se hubiera talado (para que cuadre la madera). */
 function chopped(w: World, pos: Point, wood: number) {
-  w.piles.push({ id: w.nextId++, pos, items: { ...emptyInventory(), wood } });
-  w.woodLog.chopped += wood;
+  w.piles.push({ id: w.common.nextId++, pos, items: { ...emptyInventory(), wood } });
+  w.common.woodLog.chopped += wood;
 }
 
 test('lleva un montón al almacén y lo descarga', () => {
@@ -94,7 +94,7 @@ test('de un montón grande coge lo que le cabe (8 tablas) y deja el resto', () =
 test('lleva al plano la madera que le falta, desde el almacén', () => {
   const { w } = scene();
   w.storage.items.wood = 10;
-  w.woodLog.chopped += 10;
+  w.common.woodLog.chopped += 10;
   const p = freeFloor(w);
   issue(w, { type: 'placeBlueprint', kind: 'bed', x: p.x, y: p.y });
   expect(runUntil(w, () => w.blueprints[0]?.wood === 6, 3 * TICKS_PER_HOUR)).toBe(true);
@@ -105,7 +105,7 @@ test('lleva al plano la madera que le falta, desde el almacén', () => {
 test('si ya lleva madera, la entrega directamente', () => {
   const { w, a } = scene();
   a.carrying.wood = 3;
-  w.woodLog.chopped += 3;
+  w.common.woodLog.chopped += 3;
   const p = freeFloor(w);
   issue(w, { type: 'placeBlueprint', kind: 'woodWall', x: p.x, y: p.y });
   expect(runUntil(w, () => w.blueprints[0]?.wood === 2, 2 * TICKS_PER_HOUR)).toBe(true);
@@ -119,7 +119,7 @@ test('dos no abastecen a la vez el mismo plano', () => {
   const b = w.survivors[1]!;
   b.work.haul = true;
   w.storage.items.wood = 20;
-  w.woodLog.chopped += 20;
+  w.common.woodLog.chopped += 20;
   const p = freeFloor(w);
   issue(w, { type: 'placeBlueprint', kind: 'bed', x: p.x, y: p.y });
   step(w);
@@ -133,7 +133,7 @@ test('dos no abastecen a la vez el mismo plano', () => {
 test('si cancelan el plano mientras lleva la madera, la deja en el almacén (no se pierde)', () => {
   const { w, a } = scene();
   w.storage.items.wood = 10;
-  w.woodLog.chopped += 10;
+  w.common.woodLog.chopped += 10;
   const p = freeFloor(w);
   issue(w, { type: 'placeBlueprint', kind: 'bed', x: p.x, y: p.y });
   expect(runUntil(w, () => a.carrying.wood > 0, 2 * TICKS_PER_HOUR)).toBe(true);

@@ -111,7 +111,7 @@ function infect(w: World, s: Survivor, kind: WoundKind): void {
 export function addWound(w: World, s: Survivor, part: BodyPart, kind: WoundKind): Wound {
   const size = WOUNDS[kind].damage;
   const wd: Wound = {
-    id: w.nextWoundId++,
+    id: w.common.nextWoundId++,
     part,
     kind,
     size,

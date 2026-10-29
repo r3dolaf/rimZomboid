@@ -93,9 +93,9 @@ test('el insulto queda en el registro; la charla normal no', () => {
   const { w, a, b } = pair();
   applyChat(w, a, b, 'pleasant');
   applyChat(w, a, b, 'argue');
-  expect(w.log).toEqual([]);
+  expect(w.common.log).toEqual([]);
   applyChat(w, a, b, 'insult');
-  expect(w.log).toEqual([{ tick: 0, kind: 'insult', survivorId: a.id, otherId: b.id }]);
+  expect(w.common.log).toEqual([{ tick: 0, kind: 'insult', survivorId: a.id, otherId: b.id }]);
 });
 
 test('la necesidad social no pasa de 100', () => {
@@ -164,7 +164,7 @@ test('en una charla buena comparte una lata con quien tiene hambre', () => {
   expect(opinionOf(b, a.id)).toBe(1 + 5);
   expect(b.memories).toEqual([{ id: 'sharedFood', expiresAt: 12 * 300, otherId: a.id }]);
   expect(a.bubble?.kind).toBe('share');
-  expect(w.log).toEqual([{ tick: 0, kind: 'sharedFood', survivorId: a.id, otherId: b.id }]);
+  expect(w.common.log).toEqual([{ tick: 0, kind: 'sharedFood', survivorId: a.id, otherId: b.id }]);
 });
 
 test('no comparte si no lleva, si el otro no tiene hambre, si le cae mal, si discuten o si no le cabe', () => {
@@ -287,7 +287,7 @@ test('la pelea: 30 ticks los dos, −15 de opinión, "Se peleó" y al registro',
   expect(a.memories).toEqual([{ id: 'fought', expiresAt: 24 * 300, otherId: b.id }]);
   expect(b.memories).toEqual([{ id: 'fought', expiresAt: 24 * 300, otherId: a.id }]);
   expect(a.bubble?.kind).toBe('fight');
-  expect(w.log).toEqual([{ tick: 0, kind: 'fight', survivorId: a.id, otherId: b.id }]);
+  expect(w.common.log).toEqual([{ tick: 0, kind: 'fight', survivorId: a.id, otherId: b.id }]);
   for (let i = 0; i < 29; i++) activitiesSystem(w);
   expect(a.action.type).toBe('fight');
   activitiesSystem(w);
@@ -351,7 +351,7 @@ test('tras una charla agradable entre dos que se tienen ≥ 60, un 10 % se hacen
       couples++;
       expect(b.partnerId).toBe(a.id);
       expect(a.bubble?.kind).toBe('love');
-      expect(w.log).toEqual([{ tick: 0, kind: 'couple', survivorId: a.id, otherId: b.id }]);
+      expect(w.common.log).toEqual([{ tick: 0, kind: 'couple', survivorId: a.id, otherId: b.id }]);
       expect(checkInvariants(w)).toEqual([]);
     }
   }
@@ -399,7 +399,7 @@ test('rompen si la opinión de alguno baja de 20: "Ruptura" y −20 de opinión'
   expect(opinionOf(b, a.id)).toBe(-1);
   expect(a.memories).toEqual([{ id: 'breakup', expiresAt: 72 * 300, otherId: b.id }]);
   expect(b.memories).toEqual([{ id: 'breakup', expiresAt: 72 * 300, otherId: a.id }]);
-  expect(w.log).toEqual([{ tick: 0, kind: 'breakup', survivorId: a.id, otherId: b.id }]);
+  expect(w.common.log).toEqual([{ tick: 0, kind: 'breakup', survivorId: a.id, otherId: b.id }]);
   expect(checkInvariants(w)).toEqual([]);
 });
 

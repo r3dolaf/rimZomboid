@@ -10,7 +10,7 @@ export function addDecision(
   extra: Partial<Pick<Decision, 'guilty' | 'worse'>> = {},
 ): Decision {
   const d: Decision = {
-    id: w.nextId++,
+    id: w.common.nextId++,
     kind,
     survivorIds,
     expiresAt: w.tick + DECISION_TICKS,

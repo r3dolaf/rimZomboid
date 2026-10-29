@@ -10,11 +10,11 @@ export const stormEvent: GameEvent = {
   tone: 'bad',
   severity: 1,
   cooldownDays: 4,
-  canHappen: (w) => w.tick >= w.stormUntil,
+  canHappen: (w) => w.tick >= w.common.stormUntil,
   happen(w) {
-    w.stormUntil =
+    w.common.stormUntil =
       w.tick + nextInt(w.rng, STORM_HOURS_MIN * TICKS_PER_HOUR, STORM_HOURS_MAX * TICKS_PER_HOUR);
-    w.rainUntil = Math.max(w.rainUntil, w.stormUntil); // H5b: también llueve
+    w.common.rainUntil = Math.max(w.common.rainUntil, w.common.stormUntil); // H5b: también llueve
     for (const s of w.survivors) addMemory(s, 'storm', w.tick);
     logEvent(w, { kind: 'storm' });
   },

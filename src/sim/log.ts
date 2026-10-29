@@ -120,9 +120,13 @@ export type LogEvent =
   | { kind: 'killedForNothing'; name: string }
   | { kind: 'colonyFell' };
 
-export type LogEntry = LogEvent & { tick: number };
+/** Un suceso con su tick y, si pasó en un sitio (H5c1), su mapa. */
+export type LogEntry = LogEvent & { tick: number; mapId?: number };
 
 export function logEvent(w: World, e: LogEvent): void {
-  w.log.push({ tick: w.tick, ...e });
-  if (w.log.length > LOG_MAX) w.log.splice(0, w.log.length - LOG_MAX);
+  // De un sitio (H5c1), con su mapa; los de la base, sin marca.
+  w.common.log.push(
+    w.mapId === 0 ? { tick: w.tick, ...e } : { tick: w.tick, mapId: w.mapId, ...e },
+  );
+  if (w.common.log.length > LOG_MAX) w.common.log.splice(0, w.common.log.length - LOG_MAX);
 }

@@ -8,12 +8,12 @@ import './start.css';
 
 /** Lo más saqueado: las 3 cosas de las que más se ha traído. */
 function topLooted(w: World): string {
-  const top = ITEM_KINDS.filter((k) => w.stats.looted[k] > 0)
-    .sort((a, b) => w.stats.looted[b] - w.stats.looted[a])
+  const top = ITEM_KINDS.filter((k) => w.common.stats.looted[k] > 0)
+    .sort((a, b) => w.common.stats.looted[b] - w.common.stats.looted[a])
     .slice(0, 3);
   if (top.length === 0) return es.end.nothing;
   const inv = emptyInventory();
-  for (const k of top) inv[k] = w.stats.looted[k];
+  for (const k of top) inv[k] = w.common.stats.looted[k];
   // formatItems va en el orden de siempre; aquí, de más a menos.
   return formatItems(inv, top);
 }
@@ -31,7 +31,7 @@ export function mountEndScreen(
   return {
     update() {
       const w = opts.world;
-      if (shown || w.over === null) return;
+      if (shown || w.common.over === null) return;
       shown = true;
       opts.time.setSpeed(0);
       const screen = document.createElement('div');
@@ -65,13 +65,13 @@ export function mountEndScreen(
       );
       panel.append(
         line('h1', t.fell),
-        line('p', t.survived(gameTime(w.over.tick).day)),
+        line('p', t.survived(gameTime(w.common.over.tick).day)),
         line('h2', t.dead),
-        list(w.dead.map((d) => t.deadLine(d.name, d.day, es.deathCauses[d.cause]))),
+        list(w.common.dead.map((d) => t.deadLine(d.name, d.day, es.deathCauses[d.cause]))),
         line('h2', t.joined),
-        list(w.stats.joined),
-        line('p', t.kills(w.stats.kills)),
-        line('p', t.sieges(w.stats.siegesRepelled)),
+        list(w.common.stats.joined),
+        line('p', t.kills(w.common.stats.kills)),
+        line('p', t.sieges(w.common.stats.siegesRepelled)),
         line('p', t.looted(topLooted(w))),
         row,
       );

@@ -257,7 +257,7 @@ export class GameScene extends Phaser.Scene {
       this.drawFog();
       for (const l of this.labels) l.text.setVisible(this.world.seen[l.door] === 1);
     }
-    this.night.setAlpha(skyAlpha(this.world.tick, this.world.tick < this.world.stormUntil));
+    this.night.setAlpha(skyAlpha(this.world.tick, this.world.tick < this.world.common.stormUntil));
     this.drawGlow();
     this.onFrame?.();
   }

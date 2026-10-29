@@ -96,7 +96,7 @@ test('registro: sube de nivel, falla al construir y consuela sin éxito; solo lo
   logEvent(w, { kind: 'skillUp', survivorId: a.id, skill: 'build', level: 4 });
   logEvent(w, { kind: 'buildFailed', survivorId: a.id, what: 'woodWall', wood: 1 });
   logEvent(w, { kind: 'consoleFailed', survivorId: a.id, otherId: b.id });
-  const [up, failed, console] = w.log;
+  const [up, failed, console] = w.common.log;
   expect(formatLogEntry(up!, w)).toContain(`${a.name} ha mejorado en Construir (nivel 4)`);
   expect(formatLogEntry(failed!, w)).toContain(
     `${a.name} ha fallado al levantar el muro (−1 de madera)`,

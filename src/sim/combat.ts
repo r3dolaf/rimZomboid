@@ -49,7 +49,7 @@ export function colonistHit(w: World, s: Survivor, z: Zombie): void {
   w.zombies = w.zombies.filter((x) => x !== z);
   leaveCorpse(w, z); // H4d
   if (!colonist) return;
-  w.stats.kills++;
+  w.common.stats.kills++;
   logEvent(w, { kind: 'zombieKilled', survivorId: s.id });
 }
 

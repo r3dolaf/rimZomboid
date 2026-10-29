@@ -61,7 +61,7 @@ test('robo: requisitos, latas que faltan, sospechoso y decisión', () => {
   expect(cans).toBeGreaterThanOrEqual(1);
   expect(cans).toBeLessThanOrEqual(3);
   for (const o of w.survivors) if (o !== suspect) expect(opinionOf(o, suspect.id)).toBe(-10);
-  expect(w.log.at(-1)).toMatchObject({ kind: 'theft', suspectId: suspect.id, cans });
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'theft', suspectId: suspect.id, cans });
   expect(checkInvariants(w)).toEqual([]);
 });
 
@@ -99,7 +99,7 @@ test('robo, Castigar al culpable: "Le castigaron" y confiesa', () => {
   step(w);
   expect(has(suspect, 'punished')).toBe(true);
   for (const o of others) expect(opinionOf(suspect, o.id)).toBeGreaterThanOrEqual(-1);
-  expect(w.log.at(-1)).toMatchObject({
+  expect(w.common.log.at(-1)).toMatchObject({
     kind: 'theftPunished',
     suspectId: suspect.id,
     guilty: true,
@@ -113,7 +113,7 @@ test('robo, Castigar a un inocente: "Le castigaron sin culpa", −20 a todos y s
   expect(has(suspect, 'punishedUnfairly')).toBe(true);
   expect(has(suspect, 'punished')).toBe(false);
   for (const o of others) expect(opinionOf(suspect, o.id)).toBe(-20);
-  expect(w.log.at(-1)).toMatchObject({ kind: 'theftPunished', guilty: false });
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'theftPunished', guilty: false });
 });
 
 test('robo, Dejarlo estar (también al caducar): más desconfianza y "Alguien nos roba"', () => {
@@ -128,7 +128,7 @@ test('robo, Dejarlo estar (también al caducar): más desconfianza y "Alguien no
     }
     expect(has(suspect, 'thiefAmongUs')).toBe(false);
     expect(w.decisions).toEqual([]);
-    expect(w.log.at(-1)).toMatchObject({ kind: 'theftIgnored', suspectId: suspect.id });
+    expect(w.common.log.at(-1)).toMatchObject({ kind: 'theftIgnored', suspectId: suspect.id });
   }
 });
 
@@ -149,7 +149,7 @@ test('celos: solo con una pareja y alguien que aprecia a uno de los dos', () => 
   expect(opinionOf(a, c.id)).toBe(-20);
   expect(opinionOf(a, b.id)).toBe(50);
   expect(opinionOf(b, a.id)).toBe(50);
-  expect(w.log.at(-1)).toMatchObject({ kind: 'jealousy', survivorId: a.id, otherId: c.id });
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'jealousy', survivorId: a.id, otherId: c.id });
   expect(checkInvariants(w)).toEqual([]);
 });
 
@@ -170,7 +170,7 @@ test('choque: dos que no son pareja y se tienen < 30; sus charlas se tuercen', (
   expect(after.argue).toBeCloseTo(before.argue + 30, 6);
   expect(after.insult).toBeCloseTo(10, 6); // con buen ánimo y opinión ≥ 0, ahora sí puede insultar
   expect(chatWeights(a, c).insult).toBe(0);
-  expect(w.log.at(-1)).toMatchObject({ kind: 'clash' });
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'clash' });
 });
 
 test('choque: nunca entre pareja', () => {
@@ -191,7 +191,7 @@ test('malos recuerdos: a alguien disponible, −20 durante 48 h', () => {
   c.action = { type: 'crisis', ticksLeft: 10 };
   griefEvent.happen(w);
   expect(has(a, 'grief')).toBe(true);
-  expect(w.log.at(-1)).toMatchObject({ kind: 'grief', survivorId: a.id });
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'grief', survivorId: a.id });
   a.action = { type: 'sleep', inBed: true };
   expect(griefEvent.canHappen(w)).toBe(false);
 });
@@ -224,7 +224,7 @@ test('chisme: el oyente pasa a tener peor opinión de quien peor le cae al chism
     w.rng = { s: seed };
     const snap = new Map(w.survivors.map((s) => [s.id, { ...s.opinions }]));
     gossipEvent.happen(w);
-    const e = w.log.at(-1)!;
+    const e = w.common.log.at(-1)!;
     expect(e.kind).toBe('gossip');
     if (e.kind !== 'gossip') return;
     const teller = w.survivors.find((s) => s.id === e.survivorId)!;

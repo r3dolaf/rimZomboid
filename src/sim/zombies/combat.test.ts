@@ -63,7 +63,7 @@ test('con cuchillo mata a un zombi: desaparece, queda en el registro y deja de p
     w.tick++;
   }
   expect(w.zombies).toEqual([]);
-  expect(w.log.some((e) => e.kind === 'zombieKilled' && e.survivorId === s.id)).toBe(true);
+  expect(w.common.log.some((e) => e.kind === 'zombieKilled' && e.survivorId === s.id)).toBe(true);
   expect(s.action).toEqual({ type: 'idle', ticksLeft: 0 });
   expect(ZOMBIE_HEALTH).toBe(60);
 });

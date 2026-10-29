@@ -9,7 +9,7 @@ import type { World } from '../sim/types';
 import { activityText, logText, noticeFor, siegeText } from './describe';
 import { mountHud } from './hud';
 
-const last = (w: World): LogEntry => w.log.at(-1)!;
+const last = (w: World): LogEntry => w.common.log.at(-1)!;
 
 test('avisos: el asedio (anunciado y llegado, rojos), resistido (verde), su fin, errantes y huida', () => {
   const w = emptyWorld(10, 10);

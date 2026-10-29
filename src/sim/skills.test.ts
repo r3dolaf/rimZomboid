@@ -125,11 +125,11 @@ test('invariantes: niveles enteros de 0 a 10 y práctica por debajo de lo que cu
 
 test('la madera que se pierde al fallar cuenta para que cuadre', () => {
   const w = emptyWorld(4, 4);
-  w.woodLog.start = 3;
+  w.common.woodLog.start = 3;
   w.storage.items.wood = 2;
-  w.woodLog.wasted = 1;
+  w.common.woodLog.wasted = 1;
   expect(checkInvariants(w)).toEqual([]);
-  w.woodLog.wasted = 0;
+  w.common.woodLog.wasted = 0;
   expect(checkInvariants(w).join()).toMatch(/la madera no cuadra/);
 });
 
@@ -145,10 +145,10 @@ test('practicar suma práctica y, al llegar, sube de nivel (lo que sobra pasa al
   s.skills.build = { level: 2, xp: 0 };
   practice(w, s, 'build', xpToNext(2) - 1);
   expect(s.skills.build).toEqual({ level: 2, xp: xpToNext(2) - 1 });
-  expect(w.log).toEqual([]);
+  expect(w.common.log).toEqual([]);
   practice(w, s, 'build', 11);
   expect(s.skills.build).toEqual({ level: 3, xp: 10 });
-  expect(w.log.at(-1)).toMatchObject({
+  expect(w.common.log.at(-1)).toMatchObject({
     kind: 'skillUp',
     survivorId: s.id,
     skill: 'build',
@@ -157,7 +157,7 @@ test('practicar suma práctica y, al llegar, sube de nivel (lo que sobra pasa al
   // De golpe, varios niveles.
   practice(w, s, 'build', xpToNext(3) + xpToNext(4));
   expect(s.skills.build).toEqual({ level: 5, xp: 10 });
-  expect(w.log.filter((e) => e.kind === 'skillUp')).toHaveLength(3);
+  expect(w.common.log.filter((e) => e.kind === 'skillUp')).toHaveLength(3);
   expect(checkInvariants(w)).toEqual([]);
 });
 

@@ -15,7 +15,7 @@ test('por defecto, narrador Equilibrado en calma; el primer suceso, al día y me
   expect(w.narrator.phaseEndsAt).toBeLessThanOrEqual(3 * TICKS_PER_DAY);
   expect(w.narrator.lastAt).toEqual({});
   expect(w.decisions).toEqual([]);
-  expect(w.stormUntil).toBe(0);
+  expect(w.common.stormUntil).toBe(0);
   for (const s of w.survivors) {
     expect(s.fever).toBeNull();
     expect(s.celebrated).toBe(false);
@@ -28,15 +28,15 @@ test('el estilo no cambia el resto del mundo (se sortea después de todo), salvo
   expect(b.narrator.style).toBe('chaotic');
   // Los zombis sí dependen del estilo (spec H4b §2.3), con su propio azar.
   // (Y su ropa, H5b: las cuentas de las piezas.)
-  const { zombies, zombieRng, nextZombieId, nextPieceId, pieceLog } = a;
+  const { zombies, zombieRng, nextZombieId } = a;
+  const { nextPieceId, pieceLog } = a.common;
   expect({
     ...b,
     narrator: a.narrator,
     zombies,
     zombieRng,
     nextZombieId,
-    nextPieceId,
-    pieceLog,
+    common: { ...b.common, nextPieceId, pieceLog },
   }).toEqual(a);
 });
 

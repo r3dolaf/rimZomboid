@@ -12,7 +12,7 @@ interface Person {
 interface Debug {
   world: {
     tick: number;
-    nextWoundId: number;
+    common: { nextWoundId: number };
     survivors: Person[];
     beds: { id: number; pos: { x: number; y: number }; medical?: boolean }[];
     storage: { items: Record<string, number> };
@@ -46,7 +46,7 @@ test('pestaña Salud con sus heridas y Dar analgésico; una cama se hace de hosp
     const { world: w } = (window as unknown as { rimzomboid: Debug }).rimzomboid;
     const s = w.survivors[0]!;
     s.wounds.push({
-      id: w.nextWoundId++,
+      id: w.common.nextWoundId++,
       part: 'leftLeg',
       kind: 'cut',
       size: 6,

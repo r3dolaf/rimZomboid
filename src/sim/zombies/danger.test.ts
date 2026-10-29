@@ -68,7 +68,7 @@ test('Huir: fuera de la base corre hacia ella (y queda en el registro)', () => {
   const a = decide(s, w);
   expect(flees(a, w)).toBe(true);
   expect(a).toMatchObject({ run: true });
-  expect(w.log.at(-1)).toMatchObject({ kind: 'fled', survivorId: s.id });
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'fled', survivorId: s.id });
 });
 
 test('Huir: dentro de la base se queda dentro y no sale a trabajar mientras vea zombis', () => {
@@ -77,7 +77,7 @@ test('Huir: dentro de la base se queda dentro y no sale a trabajar mientras vea 
   s.stance = 'flee';
   s.pos = { x: 3.5, y: 3.5 };
   w.piles.push({ id: 9, pos: { x: 20, y: 3 }, items: { ...s.carrying, wood: 2 } });
-  w.woodLog.start = 2;
+  w.common.woodLog.start = 2;
   zombieAt(w, 9, 3);
   const a = decide(s, w);
   expect(toBase(a, w)).toBe(true);
@@ -208,7 +208,7 @@ test('Huir: sigue corriendo a la base aunque deje de verlo un momento (y queda e
   const s = w.survivors[0]!;
   s.stance = 'flee';
   w.piles.push({ id: 9, pos: { x: 20, y: 20 }, items: { ...s.carrying, wood: 2 } });
-  w.woodLog.start = 2;
+  w.common.woodLog.start = 2;
   const z = zombieAt(w, 16, 12);
   s.action = decide(s, w)!;
   expect(flees(s.action, w)).toBe(true);
@@ -216,7 +216,7 @@ test('Huir: sigue corriendo a la base aunque deje de verlo un momento (y queda e
   expect(decide(s, w)).toBeNull();
   z.pos = { x: 16.5, y: 12.5 }; // lo vuelve a ver: sigue con la misma huida
   expect(decide(s, w)).toBeNull();
-  expect(w.log.filter((e) => e.kind === 'fled')).toHaveLength(1);
+  expect(w.common.log.filter((e) => e.kind === 'fled')).toHaveLength(1);
 });
 
 test('dormir: un zombi detrás de un muro no le despierta ni le impide acostarse; uno que ve, sí', () => {
@@ -274,7 +274,7 @@ test('"huye a la base" va al registro como mucho una vez por hora y colono (aunq
   const s = w.survivors[0]!;
   s.stance = 'flee';
   zombieAt(w, 16, 12);
-  const fled = () => w.log.filter((e) => e.kind === 'fled').length;
+  const fled = () => w.common.log.filter((e) => e.kind === 'fled').length;
   expect(flees(decide(s, w), w)).toBe(true);
   s.action = { type: 'idle', ticksLeft: 0 }; // volvió a salir de la base
   w.tick += TICKS_PER_HOUR - 1;

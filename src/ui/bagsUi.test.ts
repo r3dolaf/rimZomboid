@@ -130,8 +130,8 @@ test('Atuendos: una casilla por bolsa y «Bolsa en la mano»', () => {
   duffel.click();
   hand.click();
   ordersSystem(w);
-  expect(w.outfits[0]!.bags).not.toContain('duffel');
-  expect(w.outfits[0]!.handBag).toBe(false);
+  expect(w.common.outfits[0]!.bags).not.toContain('duffel');
+  expect(w.common.outfits[0]!.handBag).toBe(false);
   panel.update();
   expect(duffel.checked).toBe(false);
   root.remove();

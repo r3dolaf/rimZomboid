@@ -86,7 +86,7 @@ export function checkInvariants(w: World): string[] {
       )
         problems.push(`${who}: ${k}: práctica ${xp} no válida para el nivel ${level}`);
     }
-    if (!w.outfits.some((o) => o.id === s.outfitId))
+    if (!w.common.outfits.some((o) => o.id === s.outfitId))
       problems.push(`${who}: su atuendo #${s.outfitId} no existe`);
     if (s.bedId !== null && !w.beds.some((b) => b.id === s.bedId && b.ownerId === s.id))
       problems.push(`${who}: su cama ${s.bedId} no existe o no es suya`);
@@ -149,14 +149,19 @@ export function checkInvariants(w: World): string[] {
   for (const id of w.mercy)
     if (!ids.has(id)) problems.push(`acabar con su sufrimiento: #${id} no es de la colonia`);
   // H5 §8: los muertos ya no están.
-  for (const d of w.dead)
+  for (const d of w.common.dead)
     if (ids.has(d.id) || strangerIds.has(d.id))
       problems.push(`${d.name} (#${d.id}): ha muerto y sigue en el mundo`);
   for (const d of w.decisions)
     for (const id of d.survivorIds)
       if (!ids.has(id) && !strangerIds.has(id))
         problems.push(`decisión ${d.id} (${d.kind}): el superviviente #${id} no existe`);
-  for (const v of [w.narrator.nextEventAt, w.narrator.phaseEndsAt, w.stormUntil, w.rainUntil])
+  for (const v of [
+    w.narrator.nextEventAt,
+    w.narrator.phaseEndsAt,
+    w.common.stormUntil,
+    w.common.rainUntil,
+  ])
     if (!Number.isFinite(v)) problems.push(`narrador: tick no válido (${v})`);
   for (const s of w.stranger?.survivors ?? []) {
     const who = `desconocido ${s.name} (#${s.id})`;
@@ -293,7 +298,7 @@ export function checkInvariants(w: World): string[] {
     (w.stranger?.survivors.reduce((acc, s) => acc + s.carrying.wood, 0) ?? 0) +
     w.blueprints.reduce((acc, b) => acc + b.wood, 0) +
     woodInBags(w); // H5b2
-  const log = w.woodLog;
+  const log = w.common.woodLog;
   if (wood + log.spent + log.wasted !== log.start + log.chopped + log.recovered)
     problems.push(
       `la madera no cuadra: hay ${wood}, gastada ${log.spent}, perdida ${log.wasted}; repartida ${log.start}, talada ${log.chopped}, recuperada ${log.recovered}`,
@@ -307,8 +312,8 @@ export function checkInvariants(w: World): string[] {
       problems.push(`${f.kind} #${f.id}: agua ${l} fuera de 0–${max}`);
   }
   // Atuendos (H5b §4): al menos uno y con ids distintos.
-  if (w.outfits.length === 0) problems.push('no queda ningún atuendo');
-  if (new Set(w.outfits.map((o) => o.id)).size !== w.outfits.length)
+  if (w.common.outfits.length === 0) problems.push('no queda ningún atuendo');
+  if (new Set(w.common.outfits.map((o) => o.id)).size !== w.common.outfits.length)
     problems.push('atuendos con el mismo id');
   checkPieces(problems, w);
   return problems;
@@ -325,7 +330,7 @@ function checkPieces(problems: string[], w: World): void {
       if (before !== undefined)
         problems.push(`pieza #${g.id} en dos sitios: ${before()} y ${where()}`);
       seen.set(g.id, where);
-      if (!Number.isInteger(g.id) || g.id < 1 || g.id >= w.nextPieceId)
+      if (!Number.isInteger(g.id) || g.id < 1 || g.id >= w.common.nextPieceId)
         problems.push(`pieza #${g.id} (${where()}): id no válido`);
       if (isBag(g)) {
         checkBag(problems, g, where);
@@ -351,7 +356,7 @@ function checkPieces(problems: string[], w: World): void {
           if (clashes(list[i] as Garment, list[j] as Garment))
             problems.push(`${where()}: #${list[i]!.id} y #${list[j]!.id} chocan`);
   });
-  const alive = w.pieceLog.made - w.pieceLog.gone;
+  const alive = w.common.pieceLog.made - w.common.pieceLog.gone;
   if (count !== alive) problems.push(`piezas: hay ${count} y las cuentas dicen ${alive}`);
 }
 

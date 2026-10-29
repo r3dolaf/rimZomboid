@@ -131,7 +131,7 @@ function finishSearch(w: World, s: Survivor, containerId: number): void {
   const taken = takeInto(w, s, c.items, 'loot'); // también en sus bolsas (H5b2)
   c.searched = true;
   c.reservedBy = null;
-  addStacks(w.stats.looted, taken); // para el resumen final (H5 §9)
+  addStacks(w.common.stats.looted, taken); // para el resumen final (H5 §9)
   // Un cuerpo (H4d) no es de ninguna casa.
   if (c.kind === 'corpse') {
     logEvent(

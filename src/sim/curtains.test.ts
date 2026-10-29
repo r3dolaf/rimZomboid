@@ -29,7 +29,7 @@ const WIN = { x: 4, y: 4 };
 /** Un plano listo (con lo que necesite) y Ana al lado trabajando en él. */
 function finish(w: World, kind: BuildKind) {
   const b = {
-    id: w.nextId++,
+    id: w.common.nextId++,
     kind,
     pos: { ...WIN },
     wood: 0,
@@ -109,7 +109,7 @@ test('colgarlas: hacen falta unas cortinas, que trae quien acarrea desde el alma
   w.curtains = [];
   w.storage.items.curtains = 1;
   const b = {
-    id: w.nextId++,
+    id: w.common.nextId++,
     kind: 'hangCurtains' as const,
     pos: { ...WIN },
     wood: 0,
@@ -160,10 +160,10 @@ test('tapiar una ventana con cortinas (corridas o no) las deja dentro; al quitar
   const w = world();
   setTile(w.grid, 4, 4, Tile.CurtainedWindow);
   expect(canPlace(w, 'board', WIN)).toBe(true);
-  w.woodLog.chopped += BUILD.board.wood;
+  w.common.woodLog.chopped += BUILD.board.wood;
   w.survivors[0]!.skills.build.level = 10;
   const b = {
-    id: w.nextId++,
+    id: w.common.nextId++,
     kind: 'board' as const,
     pos: { ...WIN },
     wood: BUILD.board.wood,

@@ -37,7 +37,7 @@ function world(): World {
   s.needs = { hunger: 100, sleep: 100, mood: 60, social: 100 };
   s.nextChatAt = 1e9;
   // Que no se ponga la ropa que hay que coser (H5b: se vestiría con ella).
-  w.outfits[0]!.allowed = ['tshirt', 'jeans'];
+  w.common.outfits[0]!.allowed = ['tshirt', 'jeans'];
   return w;
 }
 
@@ -85,7 +85,7 @@ test('Remendar: lleva la prenda a la mesa y tapa el agujero de la zona más golp
   expect(w.storage.items.thread).toBeLessThanOrEqual(9);
   run(w, 100); // lo devuelve al almacén
   expect(w.storage.items.pieces).toContain(jacket);
-  expect(w.log).toContainEqual(
+  expect(w.common.log).toContainEqual(
     expect.objectContaining({ kind: 'crafted', recipe: 'mend', garment: 'denimJacket' }),
   );
   // Y luego el otro, con tela.
@@ -118,12 +118,12 @@ test('Descoser ropa: la destrozada se convierte en lo del catálogo (con cuchill
   torn.holes.push('torso'); // no destrozada
   const helmet = stored(w, newGarment(w, 'helmet'));
   helmet.holes.push('head');
-  const gone = w.pieceLog.gone;
+  const gone = w.common.pieceLog.gone;
   bill(w, 'unpickGarment');
   run(w, 1200);
   expect(w.storage.items.denim).toBe(3);
   expect(w.storage.items.pieces).toEqual([torn, helmet]);
-  expect(w.pieceLog.gone).toBe(gone + 1);
+  expect(w.common.pieceLog.gone).toBe(gone + 1);
   expect(checkInvariants(w)).toEqual([]);
 });
 
@@ -185,8 +185,8 @@ test('Lavar ropa: en el barreño, 2 litros y un cuarto de hora por prenda; quita
   expect(b).toMatchObject({ dirtHours: 0, bloody: false });
   expect(w.furniture[0]!.water).toBe(1);
   expect(w.storage.items.pieces).toEqual(expect.arrayContaining([a, b, c]));
-  expect(w.log.filter((e) => e.kind === 'craftFailed')).toEqual([]);
-  expect(w.log).toContainEqual(
+  expect(w.common.log.filter((e) => e.kind === 'craftFailed')).toEqual([]);
+  expect(w.common.log).toContainEqual(
     expect.objectContaining({ kind: 'crafted', recipe: 'wash', garment: 'shirt' }),
   );
   expect(checkInvariants(w)).toEqual([]);

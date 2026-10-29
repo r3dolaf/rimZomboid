@@ -43,7 +43,7 @@ test('derribado: cae y a las 4 h se levanta (sin heridas, sin dolor) y "Le derri
   s.action = { type: 'eat', ticksLeft: 5 };
   knockDown(w, s);
   expect(s.action).toEqual({ type: 'downed', until: DOWNED_TICKS });
-  expect(w.log.at(-1)).toMatchObject({ kind: 'downed', survivorId: s.id });
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'downed', survivorId: s.id });
   knockDown(w, s); // ya en el suelo: nada cambia
   expect(s.action).toEqual({ type: 'downed', until: DOWNED_TICKS });
   for (let i = 0; i < DOWNED_TICKS - 1; i++) {
@@ -57,7 +57,7 @@ test('derribado: cae y a las 4 h se levanta (sin heridas, sin dolor) y "Le derri
   expect(s.action).toEqual({ type: 'idle', ticksLeft: 0 });
   expect(s.memories.map((m) => m.id)).toContain('downed');
   expect(MEMORY_EFFECTS.downed.value).toBe(-15);
-  expect(w.log.at(-1)).toMatchObject({ kind: 'gotUp', survivorId: s.id });
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'gotUp', survivorId: s.id });
 });
 
 test('en el suelo el sueño sigue bajando, pero no se "desploma" encima: sigue derribado', () => {
@@ -103,7 +103,7 @@ test('en el suelo (o peleando con zombis) nadie le consuela ni le habla: sigue e
   knockDown(w, t);
   for (let i = 0; i < TICKS_PER_HOUR; i++) step(w);
   expect(t.action.type).toBe('downed');
-  expect(w.log.some((e) => e.kind === 'consoled' || e.kind === 'fight')).toBe(false);
+  expect(w.common.log.some((e) => e.kind === 'consoled' || e.kind === 'fight')).toBe(false);
   expect(isAvailable(t)).toBe(false);
   t.action = { type: 'melee', zombieId: 1, cooldown: 0 };
   expect(isAvailable(t)).toBe(false);

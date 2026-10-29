@@ -114,7 +114,7 @@ export function pickUpBag(s: Survivor, w: World, pileId: number): Action {
     pile.items.pieces = pile.items.pieces.filter((x) => x !== b);
     s.bags.hand = b;
     s.droppedBag = null;
-    w.bagLog.recovered++;
+    w.common.bagLog.recovered++;
     logEvent(w, { kind: 'bagRecovered', survivorId: s.id, bag: b.kind });
     prunePiles(w);
   }

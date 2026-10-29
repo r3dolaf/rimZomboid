@@ -63,8 +63,8 @@ test('con el hacha de talar suelta la bolsa de la mano al empezar a pelear', () 
   expect(s.droppedBag).toBe(duffel.id);
   const pile = w.piles.find((p) => p.items.pieces.includes(duffel));
   expect(pile?.pos).toEqual({ x: 5, y: 5 });
-  expect(w.bagLog.dropped).toBe(1);
-  expect(w.log.some((e) => e.kind === 'bagDropped' && e.survivorId === s.id)).toBe(true);
+  expect(w.common.bagLog.dropped).toBe(1);
+  expect(w.common.log.some((e) => e.kind === 'bagDropped' && e.survivorId === s.id)).toBe(true);
   expect(checkInvariants(w)).toEqual([]);
 });
 

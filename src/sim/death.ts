@@ -100,7 +100,7 @@ function leaveBody(w: World, s: Survivor, cause: DeathCause): void {
   items.pieces.push(...wornBags(s));
   s.bags = noBags();
   const c: Container = {
-    id: w.nextId++,
+    id: w.common.nextId++,
     houseId: -1,
     pos: tileOf(s.pos),
     kind: 'corpse',
@@ -159,7 +159,7 @@ export function killSurvivor(w: World, s: Survivor, cause: DeathCause): void {
     return;
   }
   leaveColony(w, s);
-  w.dead.push({ id: s.id, name: s.name, day: gameTime(w.tick).day, cause });
+  w.common.dead.push({ id: s.id, name: s.name, day: gameTime(w.tick).day, cause });
   logEvent(w, { kind: 'died', name: s.name, cause });
 }
 
@@ -220,7 +220,7 @@ function leavingSystem(w: World): void {
 function returningSystem(w: World): void {
   for (const r of [...w.returning]) {
     if (w.tick < r.at) continue;
-    if (r.kind === 'stranger' && (w.stranger !== null || w.over !== null)) continue;
+    if (r.kind === 'stranger' && (w.stranger !== null || w.common.over !== null)) continue;
     w.returning = w.returning.filter((x) => x !== r);
     if (r.kind === 'zombie') {
       const z = newZombie(w, r.pos, false);
@@ -364,12 +364,12 @@ export function deathSystem(w: World): void {
   leavingSystem(w);
   returningSystem(w);
   turnedSystem(w);
-  if (w.over === null && w.survivors.length === 0) endGame(w);
+  if (w.common.over === null && w.survivors.length === 0) endGame(w);
 }
 
 /** No queda nadie (H5 §9): se acaba la partida; el que esperaba a la puerta se va. */
 function endGame(w: World): void {
-  w.over = { tick: w.tick };
+  w.common.over = { tick: w.tick };
   if (w.stranger && !w.stranger.leaving) leaveStrangers(w);
   w.decisions = [];
   logEvent(w, { kind: 'colonyFell' });

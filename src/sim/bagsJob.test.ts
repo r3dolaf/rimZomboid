@@ -39,7 +39,7 @@ const run = (w: World, ticks: number) => {
 
 test('atuendos de partida: todas las bolsas; en la mano, Cualquiera y Saqueo, Base no', () => {
   const { w } = world();
-  expect(w.outfits.map((o) => [o.name, o.bags.length, o.handBag])).toEqual([
+  expect(w.common.outfits.map((o) => [o.name, o.bags.length, o.handBag])).toEqual([
     ['Cualquiera', 5, true],
     ['Saqueo', 5, true],
     ['Base', 5, false],
@@ -99,7 +99,7 @@ test('en Base no lleva bolsa en la mano; lo que su atuendo no permite se lo quit
   expect(s.bags.back).toBeNull();
   issue(w, { type: 'setOutfitHandBag', outfitId: 3, on: true });
   ordersSystem(w);
-  expect(w.outfits[2]!.handBag).toBe(true);
+  expect(w.common.outfits[2]!.handBag).toBe(true);
 });
 
 test('la mochila preparada se coge llena; en modo combate no se cambia de bolsa', () => {

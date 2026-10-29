@@ -660,7 +660,47 @@ export interface Decision {
   worse?: boolean;
 }
 
+/**
+ * Lo común a todos los mapas (H5c1 §1): registro, atuendos, numeración, cuentas, estadísticas,
+ * muertos, fin de partida y tiempo. Solo datos (nunca un mundo dentro: así no hay ciclos).
+ */
+export interface Common {
+  /** Registro de sucesos (los últimos LOG_MAX). */
+  log: LogEntry[];
+  nextId: number;
+  /** Hay tormenta mientras el tick sea menor que este. */
+  stormUntil: number;
+  /** Cuentas de la madera, para comprobar que nunca aparece ni desaparece. */
+  /** `wasted`: la que se pierde al fallar al construir (H4c). */
+  woodLog: { start: number; chopped: number; recovered: number; spent: number; wasted: number };
+  /** Armas que salen de los cuerpos y que se pudren con ellos (para que las cuentas cuadren). */
+  weaponLog: { fromCorpses: number; rotted: number };
+  nextWoundId: number;
+  /** Los colonos que han muerto: quién, el día y de qué. */
+  dead: { id: number; name: string; day: number; cause: DeathCause }[];
+  /** Fin de partida (H5 §9): cuándo no quedó nadie en la colonia. */
+  over: { tick: number } | null;
+  /** Para el resumen final. */
+  stats: { kills: number; siegesRepelled: number; looted: Inventory; joined: string[] };
+  // Ropa (H5b)
+  nextPieceId: number;
+  /** Cuentas de las piezas: las que se han hecho y las que han desaparecido. */
+  pieceLog: { made: number; gone: number };
+  outfits: Outfit[];
+  nextOutfitId: number;
+  /** Llueve mientras el tick sea menor que este (también con tormenta). */
+  rainUntil: number;
+  /** Bolsas (H5b2): las que se han puesto al encontrarlas, las soltadas y las recogidas. */
+  bagLog: { found: number; dropped: number; recovered: number };
+}
+
 export interface World {
+  /** Lo común a todos los mapas (H5c1 §1): el mismo objeto en la base y en cada sitio. */
+  common: Common;
+  /** 0 la base; en un sitio, su id (H5c1). */
+  mapId: number;
+  /** Los mapas de los sitios (solo en la base), con su id. */
+  siteMaps: { siteId: number; world: World }[];
   seed: number;
   tick: number;
   rng: RngState;
@@ -675,22 +715,14 @@ export interface World {
   seen: number[];
   /** Órdenes del jugador pendientes de aplicar en el siguiente tick. */
   orders: Order[];
-  /** Registro de sucesos (los últimos LOG_MAX). */
-  log: LogEntry[];
-  nextId: number;
   stranger: Stranger | null;
   narrator: Narrator;
   decisions: Decision[];
-  /** Hay tormenta mientras el tick sea menor que este. */
-  stormUntil: number;
   piles: Pile[];
   blueprints: Blueprint[];
   furniture: Furniture[];
   /** Árboles marcados para talar, por índice y·ancho + x. */
   chopMarks: number[];
-  /** Cuentas de la madera, para comprobar que nunca aparece ni desaparece. */
-  /** `wasted`: la que se pierde al fallar al construir (H4c). */
-  woodLog: { start: number; chopped: number; recovered: number; spent: number; wasted: number };
   // Zombis (H4b)
   zombies: Zombie[];
   /** Su propio azar: añadir zombis no cambia lo que hacen los colonos con la misma semilla. */
@@ -709,8 +741,6 @@ export interface World {
   /** Pedidos de Fabricar, de arriba abajo. */
   bills: Bill[];
   nextBillId: number;
-  /** Armas que salen de los cuerpos y que se pudren con ellos (para que las cuentas cuadren). */
-  weaponLog: { fromCorpses: number; rotted: number };
   /** Dónde está el pueblo (H4f): para los zombis y, en H5c, para el mapa global. */
   town: Rect;
   // Hordas (H4e)
@@ -719,9 +749,6 @@ export interface World {
   /** El asedio anunciado que aún no ha llegado. */
   siege: { at: number; side: MapSide; size: number } | null;
   // Heridas y muerte (H5)
-  nextWoundId: number;
-  /** Los colonos que han muerto: quién, el día y de qué. */
-  dead: { id: number; name: string; day: number; cause: DeathCause }[];
   /** Los que echaron, de camino al borde por la carretera (H5 §7.4). */
   leaving: Survivor[];
   /** Los que volverán: el infectado, como zombi; el de la gripe, a pedir entrar. */
@@ -730,22 +757,8 @@ export interface World {
   mercy: number[];
   /** Los que echaron (para su nombre en el registro y en los recuerdos, aunque ya no estén). */
   gone: { id: number; name: string }[];
-  /** Fin de partida (H5 §9): cuándo no quedó nadie en la colonia. */
-  over: { tick: number } | null;
-  /** Para el resumen final. */
-  stats: { kills: number; siegesRepelled: number; looted: Inventory; joined: string[] };
-  // Ropa (H5b)
-  nextPieceId: number;
-  /** Cuentas de las piezas: las que se han hecho y las que han desaparecido. */
-  pieceLog: { made: number; gone: number };
-  outfits: Outfit[];
-  nextOutfitId: number;
   /** Tick en que se corta el agua corriente (H5b §6). */
   waterCutAt: number;
-  /** Llueve mientras el tick sea menor que este (también con tormenta). */
-  rainUntil: number;
-  /** Bolsas (H5b2): las que se han puesto al encontrarlas, las soltadas y las recogidas. */
-  bagLog: { found: number; dropped: number; recovered: number };
 }
 
 /** Uno que echaron y que vuelve en `at` por donde se fue (`pos`). */

@@ -71,9 +71,9 @@ function freeFloor(w: World, skip: Point[] = []): Point {
 
 /** Un plano ya con toda su madera (como si se la hubieran traído). */
 function readyBlueprint(w: World, kind: BuildKind, p: Point) {
-  const b = { id: w.nextId++, kind, pos: p, wood: BUILD[kind].wood, progress: 0 };
+  const b = { id: w.common.nextId++, kind, pos: p, wood: BUILD[kind].wood, progress: 0 };
   w.blueprints.push(b);
-  w.woodLog.chopped += b.wood;
+  w.common.woodLog.chopped += b.wood;
   return b;
 }
 
@@ -89,16 +89,16 @@ test('cama: se construye en 2 h y es para quien dormía en el suelo', () => {
   const bed = w.beds.find((x) => at(p)(x.pos))!;
   expect(bed.ownerId).toBe(b.id);
   expect(b.bedId).toBe(bed.id);
-  expect(w.woodLog.spent).toBe(6);
-  expect(w.log.at(-1)).toMatchObject({ kind: 'built', what: 'bed' });
+  expect(w.common.woodLog.spent).toBe(6);
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'built', what: 'bed' });
   expect(checkInvariants(w)).toEqual([]);
 });
 
 test('sin toda la madera no se construye', () => {
   const { w, a } = scene();
   const p = freeFloor(w);
-  w.blueprints.push({ id: w.nextId++, kind: 'table', pos: p, wood: 3, progress: 0 });
-  w.woodLog.chopped += 3;
+  w.blueprints.push({ id: w.common.nextId++, kind: 'table', pos: p, wood: 3, progress: 0 });
+  w.common.woodLog.chopped += 3;
   const d = brains.ai.decide(a, w);
   expect(d?.type === 'moveTo' && d.then?.type === 'build').toBe(false);
 });
@@ -156,7 +156,7 @@ test('puerta, tapiar y quitar tablas (que devuelve una tabla al suelo)', () => {
     runUntil(w, () => getTile(w.grid, win!.x, win!.y) === Tile.Window, 3 * TICKS_PER_HOUR),
   ).toBe(true);
   expect(w.piles.reduce((acc, x) => acc + x.items.wood, 0)).toBe(1);
-  expect(w.woodLog.recovered).toBe(1);
+  expect(w.common.woodLog.recovered).toBe(1);
   expect(checkInvariants(w)).toEqual([]);
 });
 
@@ -229,8 +229,12 @@ test('orden por criticidad: transportar antes que talar, y talar antes que saque
     if (d < best) [tree, best] = [i, d];
   }
   w.chopMarks.push(tree);
-  w.piles.push({ id: w.nextId++, pos: freeFloor(w), items: { ...emptyInventory(), wood: 2 } });
-  w.woodLog.chopped += 2;
+  w.piles.push({
+    id: w.common.nextId++,
+    pos: freeFloor(w),
+    items: { ...emptyInventory(), wood: 2 },
+  });
+  w.common.woodLog.chopped += 2;
   const what = () => {
     const d = brains.ai.decide(a, w);
     return d?.type === 'moveTo' ? d.then?.type : d?.type;

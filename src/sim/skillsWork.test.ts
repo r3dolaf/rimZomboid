@@ -109,9 +109,9 @@ test('Saquear: registrar dura SEARCH_TICKS con nivel 5, el doble con 0; cada tic
 
 /** Un plano con toda su madera y alguien al lado trabajando en él. */
 function plan(w: World, kind: BuildKind, progress = 0): Blueprint {
-  const b = { id: w.nextId++, kind, pos: { x: 4, y: 4 }, wood: BUILD[kind].wood, progress };
+  const b = { id: w.common.nextId++, kind, pos: { x: 4, y: 4 }, wood: BUILD[kind].wood, progress };
   w.blueprints.push(b);
-  w.woodLog.chopped += b.wood;
+  w.common.woodLog.chopped += b.wood;
   const s = w.survivors[0]!;
   s.pos = { x: 4.5, y: 5.5 };
   s.action = { type: 'build', blueprintId: b.id };
@@ -174,8 +174,8 @@ test('al fallar: pierde la mitad de la madera (hacia arriba), el plano vuelve a 
     fails++;
     expect(b.wood).toBe(BUILD.woodWall.wood - 1);
     expect(b.progress).toBe(0);
-    expect(w.woodLog.wasted).toBe(1);
-    expect(w.log.at(-1)).toMatchObject({
+    expect(w.common.woodLog.wasted).toBe(1);
+    expect(w.common.log.at(-1)).toMatchObject({
       kind: 'buildFailed',
       survivorId: s.id,
       what: 'woodWall',
@@ -198,7 +198,7 @@ test('al fallar: pierde la mitad de la madera (hacia arriba), el plano vuelve a 
     if (!w.blueprints.includes(b)) continue;
     failed = true;
     expect(b.wood).toBe(0);
-    expect(w.log.at(-1)).toMatchObject({ kind: 'buildFailed', what: 'repair', wood: 1 });
+    expect(w.common.log.at(-1)).toMatchObject({ kind: 'buildFailed', what: 'repair', wood: 1 });
     expect(checkInvariants(w)).toEqual([]);
   }
   expect(failed).toBe(true);
@@ -222,7 +222,7 @@ test('con nivel 8 no falla nunca; quitar tablas (sin madera) tampoco, ni con niv
     workOnBlueprint(w, s, b.id);
     expect(w.blueprints.includes(b)).toBe(false);
   }
-  expect(w.log.some((e) => e.kind === 'buildFailed')).toBe(false);
+  expect(w.common.log.some((e) => e.kind === 'buildFailed')).toBe(false);
 });
 
 test('tras fallar, el plano vuelve a pedir madera: quien acarrea va a por lo que falta', () => {
@@ -235,7 +235,7 @@ test('tras fallar, el plano vuelve a pedir madera: quien acarrea va a por lo que
     workOnBlueprint(w, s, b.id);
     if (!w.blueprints.includes(b)) continue;
     w.storage.items.wood = 3;
-    w.woodLog.start += 3;
+    w.common.woodLog.start += 3;
     expect(haulJob(addSurvivor(w, { x: 1, y: 1 }), w)).toMatchObject({
       then: { type: 'fetchWood', blueprintId: b.id },
     });
@@ -426,7 +426,11 @@ test('consolar sin éxito: sin "Le consoló", al registro, y durante 1 h nadie v
     c.skills.social.level = 0;
     activitiesSystem(w);
     if (t.memories.some((m) => m.id === 'consoled')) continue;
-    expect(w.log.at(-1)).toMatchObject({ kind: 'consoleFailed', survivorId: c.id, otherId: t.id });
+    expect(w.common.log.at(-1)).toMatchObject({
+      kind: 'consoleFailed',
+      survivorId: c.id,
+      otherId: t.id,
+    });
     expect(c.action.type).toBe('idle');
     expect(t.action.type).toBe('idle');
     expect(needsConsoling(t, w)).toBe(false);
@@ -469,7 +473,7 @@ test('consolar sin éxito no reinicia la crisis: sigue donde estaba y no se vuel
     // Donde la dejó (en el mismo tick ya avanza uno).
     expect(t.action.type).toBe('crisis');
     expect(t.action.type === 'crisis' && t.action.ticksLeft).toBeGreaterThanOrEqual(399);
-    expect(w.log.filter((e) => e.kind === 'crisis')).toHaveLength(0);
+    expect(w.common.log.filter((e) => e.kind === 'crisis')).toHaveLength(0);
     expect(checkInvariants(w)).toEqual([]);
   }
   expect(failed).toBe(true);

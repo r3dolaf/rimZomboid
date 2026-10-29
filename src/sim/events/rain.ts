@@ -8,9 +8,9 @@ export const rainEvent: GameEvent = {
   id: 'rain',
   tone: 'good',
   cooldownDays: 2,
-  canHappen: (w) => w.tick >= w.rainUntil,
+  canHappen: (w) => w.tick >= w.common.rainUntil,
   happen(w) {
-    w.rainUntil =
+    w.common.rainUntil =
       w.tick + nextInt(w.rng, RAIN_HOURS_MIN * TICKS_PER_HOUR, RAIN_HOURS_MAX * TICKS_PER_HOUR);
     logEvent(w, { kind: 'rain' });
   },

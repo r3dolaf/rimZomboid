@@ -81,7 +81,7 @@ test('lo que llevan: un arma el 10 % (cuchillo, bate, palanca, machete o hacha) 
   expect(armed / n).toBeCloseTo(CORPSE_WEAPON_CHANCE, 1);
   expect(small / n).toBeCloseTo(CORPSE_SMALL_CHANCE, 1);
   expect(kinds).toEqual(new Set(WEAPONS));
-  expect(w.weaponLog.fromCorpses).toBe(armed);
+  expect(w.common.weaponLog.fromCorpses).toBe(armed);
 });
 
 test('se marcan como cualquier mueble, y quien saquea los registra: "ha registrado un cuerpo"', () => {
@@ -103,8 +103,8 @@ test('se marcan como cualquier mueble, y quien saquea los registra: "ha registra
   };
   for (let i = 0; i < 400 && !c.searched; i++) step(w);
   expect(c.searched).toBe(true);
-  expect(w.log.some((e) => e.kind === 'corpseSearched' && e.survivorId === s.id)).toBe(true);
-  expect(w.log.some((e) => e.kind === 'found' || e.kind === 'houseEmptied')).toBe(false);
+  expect(w.common.log.some((e) => e.kind === 'corpseSearched' && e.survivorId === s.id)).toBe(true);
+  expect(w.common.log.some((e) => e.kind === 'found' || e.kind === 'houseEmptied')).toBe(false);
 });
 
 test('desaparecen: registrado y vacío, al cabo de un día; si no, se pudre a los 3 días (con sus armas)', () => {
@@ -132,7 +132,7 @@ test('desaparecen: registrado y vacío, al cabo de un día; si no, se pudre a lo
   };
   a.searched = true;
   b.items.machete = 1; // se pudre con ella
-  w.weaponLog.fromCorpses += 1;
+  w.common.weaponLog.fromCorpses += 1;
   corpsesSystem(w);
   expect(a.until).toBe(w.tick + CORPSE_EMPTY_TICKS);
   expect(CORPSE_EMPTY_TICKS).toBe(TICKS_PER_DAY);
@@ -140,10 +140,10 @@ test('desaparecen: registrado y vacío, al cabo de un día; si no, se pudre a lo
   corpsesSystem(w);
   expect(w.containers).toEqual([b]);
   w.tick = b.until!;
-  const rottedBefore = w.weaponLog.rotted;
+  const rottedBefore = w.common.weaponLog.rotted;
   corpsesSystem(w);
   expect(w.containers).toEqual([]);
-  expect(w.weaponLog.rotted).toBe(rottedBefore + weapons(b));
+  expect(w.common.weaponLog.rotted).toBe(rottedBefore + weapons(b));
   expect(CORPSE_ROT_TICKS).toBe(3 * TICKS_PER_DAY);
 });
 
@@ -162,7 +162,7 @@ test('si se tapia la ventana rota en la que cayó un zombi, su cuerpo se aparta 
   const s = w.survivors[0]!;
   s.pos = { x: 5.5, y: 6.5 };
   s.skills.build.level = 10;
-  w.woodLog.chopped += 3;
+  w.common.woodLog.chopped += 3;
   w.blueprints.push({ id: 70, kind: 'board', pos: { x: 5, y: 5 }, wood: 3, progress: 1000 });
   workOnBlueprint(w, s, 70);
   expect(w.grid.tiles[5 * 12 + 5]).toBe(Tile.BoardedWindow);

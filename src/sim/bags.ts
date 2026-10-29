@@ -14,7 +14,7 @@ import {
 import { logEvent } from './log';
 import { dropPile } from './piles';
 import { capacityKg } from './skills';
-import type { PieceCounter } from './clothes';
+import { counterOf, type PieceCounter } from './clothes';
 import type { Bag, BagKind, BagSlot, Garment, Piece, Survivor, World } from './types';
 
 export { isBag };
@@ -27,8 +27,9 @@ export const BAG_KINDS = Object.keys(BAGS) as BagKind[];
 
 /** Una bolsa nueva, vacía y sin lista (se apunta en las cuentas de las piezas). */
 export function newBag(w: PieceCounter, kind: BagKind): Bag {
-  w.pieceLog.made++;
-  return { id: w.nextPieceId++, kind, items: emptyInventory(), list: {} };
+  const c = counterOf(w);
+  c.pieceLog.made++;
+  return { id: c.nextPieceId++, kind, items: emptyInventory(), list: {} };
 }
 
 /** Las prendas de una lista de piezas (sin las bolsas). */
@@ -125,7 +126,7 @@ const fitsHands = (s: Survivor, kg: number) => weightOf(s.carrying) + kg <= capa
 
 /** ¿Permite su atuendo esa bolsa en ese hueco? (Su atuendo, o el primero si ya no existe.) */
 export function bagAllowed(w: World, s: Survivor, kind: BagKind, slot: BagSlot): boolean {
-  const o = w.outfits.find((x) => x.id === s.outfitId) ?? w.outfits[0];
+  const o = w.common.outfits.find((x) => x.id === s.outfitId) ?? w.common.outfits[0];
   return !o || (o.bags.includes(kind) && (slot !== 'hand' || o.handBag));
 }
 
@@ -171,7 +172,7 @@ export function takeInto(w: World, s: Survivor, from: Inventory, mode: 'loot' | 
       taken.pieces.push(b);
       if (mode === 'haul') s.haulingBag = b.id; // para dejarla en el almacén
       if (mode === 'loot') {
-        w.bagLog.found++;
+        w.common.bagLog.found++;
         logEvent(w, { kind: 'bagFound', survivorId: s.id, bag: b.kind });
       }
     } else if (!fitsHands(s, pieceKg(b))) addInto(from, b.items); // la vacía allí mismo
@@ -358,6 +359,6 @@ export function dropHandBag(w: World, s: Survivor): void {
     { ...emptyInventory(), pieces: [b] },
   );
   s.droppedBag = b.id;
-  w.bagLog.dropped++;
+  w.common.bagLog.dropped++;
   logEvent(w, { kind: 'bagDropped', survivorId: s.id, bag: b.kind });
 }

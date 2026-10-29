@@ -82,8 +82,8 @@ test('sin peligro va a por su bolsa y se la vuelve a poner', () => {
   expect(s.bags.hand).toBe(hand);
   expect(hand.items.food).toBe(2);
   expect(s.droppedBag).toBeNull();
-  expect(w.bagLog.recovered).toBe(1);
-  expect(w.log.some((e) => e.kind === 'bagRecovered' && e.survivorId === s.id)).toBe(true);
+  expect(w.common.bagLog.recovered).toBe(1);
+  expect(w.common.log.some((e) => e.kind === 'bagRecovered' && e.survivorId === s.id)).toBe(true);
   expect(w.piles.every((p) => !p.items.pieces.includes(hand))).toBe(true);
   expect(checkInvariants(w)).toEqual([]);
 });
@@ -95,7 +95,7 @@ test('Transportar lleva al almacén la bolsa del suelo (en la mano) y la deja al
   duffel.items.food = 6; // 3 kg
   duffel.list = { food: 2 };
   w.piles.push({
-    id: w.nextId++,
+    id: w.common.nextId++,
     pos: { x: 5, y: 5 },
     items: { ...emptyInventory(), pieces: [duffel] },
   });

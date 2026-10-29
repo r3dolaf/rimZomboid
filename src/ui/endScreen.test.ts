@@ -26,18 +26,18 @@ test('mientras quede alguien, no sale', () => {
 
 test('al caer la colonia: días, quién murió (cuándo y de qué), quién se unió, zombis, asedios y lo más saqueado; pausa', () => {
   const { world, end, screen, time } = setup();
-  world.dead = [
+  world.common.dead = [
     { id: 1, name: 'Ana', day: 2, cause: 'blood' },
     { id: 2, name: 'Bea', day: 3, cause: 'infection' },
   ];
-  world.stats.kills = 14;
-  world.stats.siegesRepelled = 1;
-  world.stats.joined = ['Cris'];
-  world.stats.looted.food = 30;
-  world.stats.looted.bandage = 5;
-  world.stats.looted.wood = 12;
-  world.stats.looted.cloth = 2;
-  world.over = { tick: 2 * TICKS_PER_DAY };
+  world.common.stats.kills = 14;
+  world.common.stats.siegesRepelled = 1;
+  world.common.stats.joined = ['Cris'];
+  world.common.stats.looted.food = 30;
+  world.common.stats.looted.bandage = 5;
+  world.common.stats.looted.wood = 12;
+  world.common.stats.looted.cloth = 2;
+  world.common.over = { tick: 2 * TICKS_PER_DAY };
   end.update();
   const el = screen()!;
   expect(el.hidden).toBe(false);
@@ -59,7 +59,7 @@ test('al caer la colonia: días, quién murió (cuándo y de qué), quién se un
 
 test('sin nadie que se uniera ni nada saqueado, lo dice', () => {
   const { world, end, screen } = setup();
-  world.over = { tick: 100 };
+  world.common.over = { tick: 100 };
   end.update();
   const text = screen()!.textContent ?? '';
   expect(text).toContain('Sobrevivisteis 1 día');
@@ -69,7 +69,7 @@ test('sin nadie que se uniera ni nada saqueado, lo dice', () => {
 
 test('Otra partida y Volver a la portada', () => {
   const { world, end, root, onRestart, onTitle } = setup();
-  world.over = { tick: 100 };
+  world.common.over = { tick: 100 };
   end.update();
   (root.querySelector('[data-testid="end-restart"]') as HTMLButtonElement).click();
   expect(onRestart).toHaveBeenCalledOnce();

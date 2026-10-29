@@ -56,12 +56,12 @@ test('desangrado: muere, deja de ser de la colonia, queda su cuerpo con lo que l
   expect(c?.items).toMatchObject({ food: 2, bandage: 1, bat: 1 });
   expect(c?.until).toBe(w.tick - 1 + CORPSE_ROT_TICKS);
   expect(c?.risesAt).toBeUndefined();
-  expect(w.dead).toEqual([
+  expect(w.common.dead).toEqual([
     { id: ana.id, name: 'Ana', day: gameTime(w.tick - 1).day, cause: 'blood' },
   ]);
-  expect(w.log.some((e) => e.kind === 'died' && e.name === 'Ana' && e.cause === 'blood')).toBe(
-    true,
-  );
+  expect(
+    w.common.log.some((e) => e.kind === 'died' && e.name === 'Ana' && e.cause === 'blood'),
+  ).toBe(true);
   expect(checkInvariants(w)).toEqual([]);
 });
 
@@ -69,7 +69,7 @@ test('golpes: con la cabeza (o el torso) a 0, muere de las heridas', () => {
   const { w, ana } = world();
   for (let i = 0; i < 2; i++) addWound(w, ana, 'head', 'bite');
   step(w);
-  expect(w.dead[0]).toMatchObject({ name: 'Ana', cause: 'wounds' });
+  expect(w.common.dead[0]).toMatchObject({ name: 'Ana', cause: 'wounds' });
 });
 
 test('hambre: sin comer y sin sangre, muere de hambre', () => {
@@ -77,7 +77,7 @@ test('hambre: sin comer y sin sangre, muere de hambre', () => {
   ana.needs.hunger = 0;
   ana.blood = 0.001;
   step(w);
-  expect(w.dead[0]).toMatchObject({ name: 'Ana', cause: 'hunger' });
+  expect(w.common.dead[0]).toMatchObject({ name: 'Ana', cause: 'hunger' });
 });
 
 test('ánimo: todos "Ha muerto Ana" según lo que pensaban de ella; su pareja, más y se queda sin pareja', () => {
@@ -202,7 +202,7 @@ test('infectado: a la hora se levanta como "Ana (zombi)"; lo que llevaba queda e
   expect(w.zombies).toHaveLength(1);
   expect(w.zombies[0]).toMatchObject({ name: 'Ana', pos: { x: 4.5, y: 5.5 } });
   expect(w.piles.find((p) => p.pos.x === 4 && p.pos.y === 5)?.items.food).toBe(3);
-  expect(w.log.some((e) => e.kind === 'rose' && e.name === 'Ana')).toBe(true);
+  expect(w.common.log.some((e) => e.kind === 'rose' && e.name === 'Ana')).toBe(true);
   expect(checkInvariants(w)).toEqual([]);
 });
 
@@ -225,8 +225,8 @@ test('un desconocido que muere a la puerta: al registro; si no queda ninguno, su
   killSurvivor(w, x, 'blood');
   expect(w.stranger?.survivors).toEqual([y]);
   expect(w.decisions[0]?.survivorIds).toEqual([y.id]);
-  expect(w.dead).toEqual([]);
-  expect(w.log.some((e) => e.kind === 'strangerDied' && e.names[0] === x.name)).toBe(true);
+  expect(w.common.dead).toEqual([]);
+  expect(w.common.log.some((e) => e.kind === 'strangerDied' && e.names[0] === x.name)).toBe(true);
   expect(body(w, x.name)).toBeDefined();
   expect(checkInvariants(w)).toEqual([]);
   y.blood = 0.001;
@@ -251,7 +251,7 @@ test('mordida y con zombis encima hasta morir: la partida sigue sin romperse, ta
     expect(checkInvariants(w)).toEqual([]);
   }
   expect(w.survivors).toEqual([]);
-  expect(w.dead[0]?.name).toBe('Ana');
+  expect(w.common.dead[0]?.name).toBe('Ana');
   expect(body(w, 'Ana')?.pos).toEqual(tileOf(ana.pos));
   for (let i = 0; i < 300; i++) step(w); // y sin nadie, sigue
   expect(checkInvariants(w)).toEqual([]);
@@ -259,7 +259,7 @@ test('mordida y con zombis encima hasta morir: la partida sigue sin romperse, ta
 
 test('invariantes: ningún muerto sigue en la colonia', () => {
   const { w, ana } = world();
-  w.dead.push({ id: ana.id, name: 'Ana', day: 1, cause: 'blood' });
+  w.common.dead.push({ id: ana.id, name: 'Ana', day: 1, cause: 'blood' });
   expect(checkInvariants(w).join()).toMatch(/Ana.*muert/);
 });
 
@@ -274,30 +274,35 @@ test('cuando no queda nadie en la colonia (muertos o idos), se acaba: sin narrad
   killSurvivor(w, ana, 'blood');
   killSurvivor(w, bea, 'wounds');
   step(w);
-  expect(w.over).toBeNull();
+  expect(w.common.over).toBeNull();
   killSurvivor(w, cris, 'hunger');
   step(w);
-  expect(w.over).toEqual({ tick: w.tick - 1 });
-  expect(w.log.some((e) => e.kind === 'colonyFell')).toBe(true);
+  expect(w.common.over).toEqual({ tick: w.tick - 1 });
+  expect(w.common.log.some((e) => e.kind === 'colonyFell')).toBe(true);
   expect(w.stranger?.leaving ?? true).toBe(true); // el que esperaba se va
   expect(w.decisions).toEqual([]);
   w.narrator.nextEventAt = w.tick;
-  const events = w.log.length;
+  const events = w.common.log.length;
   w.zombies.push(newZombie(w, { x: 30, y: 30 }));
   for (let i = 0; i < 2 * TICKS_PER_HOUR; i++) step(w);
-  expect(w.log.slice(events).some((e) => e.kind === 'strangerArrived')).toBe(false);
+  expect(w.common.log.slice(events).some((e) => e.kind === 'strangerArrived')).toBe(false);
   expect(w.narrator.nextEventAt).toBeLessThanOrEqual(w.tick); // el narrador ya no hace nada
   expect(w.zombies[0]!.pos).not.toEqual({ x: 30.5, y: 30.5 });
-  expect(w.over).toEqual({ tick: expect.any(Number) });
+  expect(w.common.over).toEqual({ tick: expect.any(Number) });
   expect(checkInvariants(w)).toEqual([]);
 });
 
 test('para el resumen: zombis matados, asedios resistidos, lo saqueado y quién se unió', () => {
   const { w } = world();
-  expect(w.stats).toEqual({ kills: 0, siegesRepelled: 0, looted: emptyInventory(), joined: [] });
+  expect(w.common.stats).toEqual({
+    kills: 0,
+    siegesRepelled: 0,
+    looted: emptyInventory(),
+    joined: [],
+  });
   const fresh = createWorld(3);
-  expect(fresh.stats).toEqual(w.stats);
-  expect(fresh.over).toBeNull();
+  expect(fresh.common.stats).toEqual(w.common.stats);
+  expect(fresh.common.over).toBeNull();
 });
 
 test('las cuentas: cada zombi que mata un colono, cada asedio que se acaba, lo saqueado y quien se une', () => {
@@ -305,10 +310,10 @@ test('las cuentas: cada zombi que mata un colono, cada asedio que se acaba, lo s
   const z = newZombie(w, { x: 5, y: 5 });
   w.zombies.push(z);
   for (let i = 0; i < 200 && w.zombies.includes(z); i++) colonistHit(w, ana, z);
-  expect(w.stats.kills).toBe(1);
+  expect(w.common.stats.kills).toBe(1);
   w.hordes.push({ id: 1, kind: 'siege', goal: { x: 5, y: 5 }, until: w.tick + 100, done: false });
   hordeSystem(w);
-  expect(w.stats.siegesRepelled).toBe(1);
+  expect(w.common.stats.siegesRepelled).toBe(1);
   w.containers.push({
     id: 60,
     houseId: 1,
@@ -321,12 +326,12 @@ test('las cuentas: cada zombi que mata un colono, cada asedio que se acaba, lo s
   });
   ana.action = { type: 'search', containerId: 60, ticksLeft: 1 };
   activitiesSystem(w);
-  expect(w.stats.looted.food).toBe(3);
-  expect(w.log.find((e) => e.kind === 'found')).toMatchObject({ items: { food: 3 } });
+  expect(w.common.stats.looted.food).toBe(3);
+  expect(w.common.log.find((e) => e.kind === 'found')).toMatchObject({ items: { food: 3 } });
   const x = newStranger(w, doorOutside(w));
   w.stranger = { survivors: [x], leaving: false };
   acceptStrangers(w);
-  expect(w.stats.joined).toEqual([x.name]);
+  expect(w.common.stats.joined).toEqual([x.name]);
 });
 
 test('si muere uno de una pareja de desconocidos, el otro se queda sin pareja (y entra sin ella)', () => {
@@ -346,7 +351,7 @@ test('al pudrirse el cuerpo de una persona, lo que llevaba queda en el suelo (na
   const { w, ana } = world();
   ana.carrying.wood = 2;
   ana.carrying.bandage = 1;
-  w.woodLog.start += 2;
+  w.common.woodLog.start += 2;
   killSurvivor(w, ana, 'blood');
   const c = body(w, 'Ana')!;
   w.tick = c.until!;

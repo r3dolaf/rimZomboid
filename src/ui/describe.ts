@@ -51,7 +51,7 @@ export function personName(w: World, id: number): string {
   return (
     all.find((s) => s.id === id)?.name ??
     w.returning.flatMap((r) => (r.kind === 'zombie' && r.survivorId === id ? [r.name] : []))[0] ??
-    w.dead.find((d) => d.id === id)?.name ??
+    w.common.dead.find((d) => d.id === id)?.name ??
     w.gone.find((g) => g.id === id)?.name ??
     '?'
   );

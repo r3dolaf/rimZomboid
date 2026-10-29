@@ -141,7 +141,9 @@ test('de principio a fin: coge la tela, cose en la mesa (a su ritmo) y lleva las
   expect(s.carrying.cloth).toBe(0);
   const each = Math.round(RECIPES.bandages.ticks / skillSpeed(10));
   expect(Math.abs(crafting - 2 * each)).toBeLessThanOrEqual(2);
-  expect(w.log.filter((e) => e.kind === 'crafted' && e.recipe === 'bandages')).toHaveLength(2);
+  expect(w.common.log.filter((e) => e.kind === 'crafted' && e.recipe === 'bandages')).toHaveLength(
+    2,
+  );
 });
 
 test('dos colonos con un pedido de una vez: solo lo hace uno', () => {
@@ -172,11 +174,11 @@ test('al fallar: pierde la mitad de cada material (hacia arriba), lo demás vuel
     ordersSystem(w);
     for (let i = 0; i < 6 * TICKS_PER_HOUR && b.done === 0; i++) {
       step(w);
-      if (w.log.some((e) => e.kind === 'craftFailed')) break;
+      if (w.common.log.some((e) => e.kind === 'craftFailed')) break;
     }
-    if (!w.log.some((e) => e.kind === 'craftFailed')) continue;
+    if (!w.common.log.some((e) => e.kind === 'craftFailed')) continue;
     failed = true;
-    expect(w.log.find((e) => e.kind === 'craftFailed')).toMatchObject({
+    expect(w.common.log.find((e) => e.kind === 'craftFailed')).toMatchObject({
       survivorId: s.id,
       recipe: 'curtains',
       lost: { cloth: 2, thread: 1 },

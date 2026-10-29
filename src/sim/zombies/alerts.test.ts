@@ -20,7 +20,7 @@ function world(): World {
   return w;
 }
 
-const count = (w: World, kind: string) => w.log.filter((e) => e.kind === kind).length;
+const count = (w: World, kind: string) => w.common.log.filter((e) => e.kind === kind).length;
 
 test('"zombis dentro de la base": al entrar el primero; mientras sigan dentro, no se repite', () => {
   const w = world();
@@ -33,7 +33,7 @@ test('"zombis dentro de la base": al entrar el primero; mientras sigan dentro, n
     w.tick++;
   }
   expect(count(w, 'zombiesInBase')).toBe(1);
-  expect(w.log.find((e) => e.kind === 'zombiesInBase')).toMatchObject({ x: 5, y: 3 });
+  expect(w.common.log.find((e) => e.kind === 'zombiesInBase')).toMatchObject({ x: 5, y: 3 });
   // Sale y vuelve a entrar: otro aviso.
   z.pos = { x: 10.5, y: 3.5 };
   z.path = [];

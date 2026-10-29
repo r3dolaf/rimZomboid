@@ -42,7 +42,7 @@ export function mountNotices(
   box.append(decisionsBox, plainBox);
   root.append(box);
 
-  let lastSeen: LogEntry | undefined = opts.world.log.at(-1); // lo de antes no avisa
+  let lastSeen: LogEntry | undefined = opts.world.common.log.at(-1); // lo de antes no avisa
   const plain: { entry: LogEntry; el: HTMLElement }[] = [];
   const decisions = new Map<number, { el: HTMLElement; buttons: HTMLButtonElement[] }>();
   const name = (id: number) => opts.world.survivors.find((s) => s.id === id)?.name ?? '?';
@@ -155,8 +155,9 @@ export function mountNotices(
       const w = opts.world;
       // Sucesos nuevos del registro, en orden.
       const fresh: LogEntry[] = [];
-      for (let i = w.log.length - 1; i >= 0 && w.log[i] !== lastSeen; i--) fresh.push(w.log[i]!);
-      lastSeen = w.log.at(-1);
+      for (let i = w.common.log.length - 1; i >= 0 && w.common.log[i] !== lastSeen; i--)
+        fresh.push(w.common.log[i]!);
+      lastSeen = w.common.log.at(-1);
       for (const e of fresh.reverse()) addPlain(e);
       for (const p of [...plain]) if (w.tick - p.entry.tick >= TICKS_PER_DAY) remove(p.entry);
       while (plain.length > MAX_NOTICES) remove(plain[0]!.entry);

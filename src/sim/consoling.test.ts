@@ -36,7 +36,7 @@ function runUntil(w: World, cond: () => boolean, max: number): boolean {
   return cond();
 }
 
-const consoledLog = (w: World) => w.log.filter((e) => e.kind === 'consoled');
+const consoledLog = (w: World) => w.common.log.filter((e) => e.kind === 'consoled');
 
 test('un amigo cerca consuela a quien está en crisis: la crisis termina', () => {
   const { w, t, c } = scene();
@@ -183,7 +183,7 @@ test('si rompen mientras uno consuela al otro, el consuelo termina sin "su parej
   t.opinions[c.id] = 5; // < 20: rompen en el siguiente tick
   expect(runUntil(w, () => consoledLog(w).length > 0, TICKS_PER_HOUR)).toBe(true);
   expect(t.partnerId).toBeNull();
-  expect(w.log.some((e) => e.kind === 'breakup')).toBe(true);
+  expect(w.common.log.some((e) => e.kind === 'breakup')).toBe(true);
   expect(t.memories.map((m) => m.id)).toContain('consoled');
   expect(t.memories.map((m) => m.id)).not.toContain('consoledByPartner');
   expect(checkInvariants(w)).toEqual([]);

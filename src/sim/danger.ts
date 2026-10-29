@@ -147,7 +147,7 @@ export function dangerDecision(
   }
   if (fleeing(w, a)) return null;
   // Si va y vuelve (un zombi rondando la base), no llena el registro ni los avisos.
-  const lately = w.log.some(
+  const lately = w.common.log.some(
     (e) => e.kind === 'fled' && e.survivorId === s.id && w.tick - e.tick < FLED_LOG_TICKS,
   );
   if (!lately) logEvent(w, { kind: 'fled', survivorId: s.id });

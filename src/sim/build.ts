@@ -152,7 +152,14 @@ export function markTree(w: World, x: number, y: number, on: boolean): void {
 
 export function placeBlueprint(w: World, kind: BuildKind, x: number, y: number): void {
   if (!canPlace(w, kind, { x, y })) return;
-  w.blueprints.push({ id: w.nextId++, kind, pos: { x, y }, wood: 0, progress: 0, curtains: 0 });
+  w.blueprints.push({
+    id: w.common.nextId++,
+    kind,
+    pos: { x, y },
+    wood: 0,
+    progress: 0,
+    curtains: 0,
+  });
 }
 
 /** Quita el plano; la madera (y las cortinas) que tuviera quedan en un montón. */

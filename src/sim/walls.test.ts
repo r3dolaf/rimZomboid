@@ -62,7 +62,7 @@ test('un muro no se termina mientras alguien va a pisar su casilla', () => {
   const b = { id: 50, kind: 'woodWall' as const, pos: { x: 3, y: 1 }, wood: 2, progress: 0 };
   b.progress = BUILD.woodWall.ticks;
   w.blueprints.push(b);
-  w.woodLog.start = 2;
+  w.common.woodLog.start = 2;
   builder.action = { type: 'build', blueprintId: b.id };
   const walker = addSurvivor(w, { x: 2, y: 1 });
   walker.path = [
@@ -115,8 +115,8 @@ test('el recién llegado no recibe una cama de serie donde se ha hecho un muro',
 test('ni donde hay un mueble o un plano: si no queda sitio, duerme en el suelo', () => {
   const w = createWorld(3);
   const [a, b] = freeSlots(w) as [{ x: number; y: number }, { x: number; y: number }];
-  w.furniture.push({ id: w.nextId++, kind: 'table', pos: a });
-  w.blueprints.push({ id: w.nextId++, kind: 'campfire', pos: b, wood: 0, progress: 0 });
+  w.furniture.push({ id: w.common.nextId++, kind: 'table', pos: a });
+  w.blueprints.push({ id: w.common.nextId++, kind: 'campfire', pos: b, wood: 0, progress: 0 });
   const s = newcomer(w);
   expect(s.bedId).toBeNull();
   expect(w.beds.some((x) => x.ownerId === s.id)).toBe(false);
@@ -150,9 +150,9 @@ test('con fiebre y "Que descanse" no hace ningún trabajo (salvo terminar de des
     checks: 0,
   };
   w.blueprints.push({ id: 70, kind: 'campfire', pos: { x: 4, y: 4 }, wood: 3, progress: 0 });
-  w.woodLog.start = 3;
+  w.common.woodLog.start = 3;
   w.piles.push({ id: 71, pos: { x: 5, y: 5 }, items: { ...emptyInventory(), wood: 2 } });
-  w.woodLog.start += 2;
+  w.common.woodLog.start += 2;
   expect(findWork(s, w)).toBeNull();
   s.equipped = 'axe'; // con árboles marcados, el hacha la devuelve, para que otro pueda talar
   setTile(w.grid, 7, 7, Tile.Tree);

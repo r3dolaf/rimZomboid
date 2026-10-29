@@ -127,7 +127,8 @@ test.each([1, 2, 3])(
     }
     // Los que se han unido en toda la partida (al final pueden haber muerto de hambre: el pueblo
     // se vacía y sin zombis acaba sin comida para tantos).
-    if (DAYS >= 10) expect(w.stats.joined.length, 'han llegado y se han unido').toBeGreaterThan(0);
+    if (DAYS >= 10)
+      expect(w.common.stats.joined.length, 'han llegado y se han unido').toBeGreaterThan(0);
   },
   240_000,
 );
@@ -317,17 +318,19 @@ test.each([1, 2, 3])(
       }
       playDay(w, r, day);
       expect(axes(w), `día ${day}: hachas`).toBe(axesAtStart);
-      if (day === Math.floor(DAYS / 2)) choppedHalf = w.woodLog.chopped;
+      if (day === Math.floor(DAYS / 2)) choppedHalf = w.common.woodLog.chopped;
     }
     // H4d: se sigue talando (antes, el machete y la palanca le quitaban el hacha a quien tala).
     // (H5: si los muros al azar han dejado fuera todos los árboles marcados, no se puede.)
     if (DAYS >= 10 && markedTreeReachable(w))
-      expect(w.woodLog.chopped, 'se tala también en la segunda mitad').toBeGreaterThan(choppedHalf);
+      expect(w.common.woodLog.chopped, 'se tala también en la segunda mitad').toBeGreaterThan(
+        choppedHalf,
+      );
     if (DAYS >= 10) {
-      expect(w.woodLog.chopped, 'se ha talado').toBeGreaterThan(0);
-      expect(w.woodLog.spent, 'se ha construido').toBeGreaterThan(0);
+      expect(w.common.woodLog.chopped, 'se ha talado').toBeGreaterThan(0);
+      expect(w.common.woodLog.spent, 'se ha construido').toBeGreaterThan(0);
       expect(
-        w.grid.tiles.includes(Tile.BoardedWindow) || w.woodLog.recovered > 0,
+        w.grid.tiles.includes(Tile.BoardedWindow) || w.common.woodLog.recovered > 0,
         'se ha tapiado',
       ).toBe(true);
       // H4c: practicando se mejora (los que siguen desde el principio: contestando al azar se
@@ -339,7 +342,9 @@ test.each([1, 2, 3])(
           still.reduce((n, s) => n + skillSum(s), 0),
           'las habilidades han subido',
         ).toBeGreaterThan(still.reduce((n, s) => n + startLevels.get(s.id)!, 0));
-      expect(w.woodLog.wasted, 'madera perdida al fallar').toBeLessThan(w.woodLog.spent / 2);
+      expect(w.common.woodLog.wasted, 'madera perdida al fallar').toBeLessThan(
+        w.common.woodLog.spent / 2,
+      );
     }
   },
   240_000,
@@ -358,7 +363,7 @@ test.each([1, 2, 3])(
     const w = withoutZombies(createWorld(seed));
     w.seen.fill(1);
     w.storage.items.wood += 300; // madera de sobra: que se construya deprisa
-    w.woodLog.start += 300;
+    w.common.woodLog.start += 300;
     const r = createRng(seed * 977);
     const rect = w.base.rect;
     for (let day = 1; day <= WALL_DAYS; day++) {
@@ -466,7 +471,7 @@ function drill(w: World, inDay: number): void {
  */
 function clothSetup(w: World): void {
   w.storage.items.wood += 4;
-  w.woodLog.start += 4;
+  w.common.woodLog.start += 4;
   const r = w.base.rect;
   const spot = [];
   for (let y = r.y + 1; y < r.y + r.h - 1; y++)
@@ -484,7 +489,7 @@ function clothSetup(w: World): void {
   for (const recipe of ['mend', 'pad', 'unpickGarment', 'wash'] as const)
     issue(w, { type: 'addBill', recipe });
   w.storage.items.wood += 4;
-  w.woodLog.start += 4;
+  w.common.woodLog.start += 4;
   const d = w.base.door;
   const outside = [
     { x: d.x + 2, y: d.y + 2 },
@@ -527,14 +532,14 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
         if (d && !w.orders.some((o) => o.type === 'decide'))
           issue(w, { type: 'decide', decisionId: d.id, option: answer(r, d) });
         const before = new Map(w.survivors.map((s) => [s.id, { ...s.pos }]));
-        const last = w.log.at(-1);
+        const last = w.common.log.at(-1);
         drill(w, i);
         const t0 = performance.now();
         step(w);
         ms += performance.now() - t0;
         const problems = checkInvariants(w);
         if (problems.length > 0) expect(problems, `tick ${w.tick}`).toEqual([]);
-        for (const e of w.log.slice(last ? w.log.lastIndexOf(last) + 1 : 0)) {
+        for (const e of w.common.log.slice(last ? w.common.log.lastIndexOf(last) + 1 : 0)) {
           if (e.kind === 'zombieKilled') zombieTotals.kills++;
           if (e.kind === 'downed') zombieTotals.downs++;
           if (e.kind === 'broken') zombieTotals.broken++;
@@ -570,17 +575,17 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
           expect(moved.has(s.id), `día ${day}: ${s.name} no se ha movido`).toBe(true);
       }
       // Las de los cuerpos (H4d) entran al morir el zombi y salen si el cuerpo se pudre.
-      const log = w.weaponLog;
+      const log = w.common.weaponLog;
       expect(allWeapons(w), `día ${day}: armas`).toBe(weapons + log.fromCorpses - log.rotted);
     }
     // Límite generoso (en local va por 0,1–0,2 ms por tick).
     expect(ms / (DAYS * TICKS_PER_DAY), 'ms por tick').toBeLessThan(1);
     // H5: ¿cuánto se sobrevive? (Sin nadie, las habilidades ya no cuentan.)
-    zombieTotals.survived.push(w.over ? gameTime(w.over.tick).day : DAYS);
-    zombieTotals.dead += w.dead.length;
-    zombieTotals.bagsFound += w.bagLog.found;
-    zombieTotals.bagsDropped += w.bagLog.dropped;
-    zombieTotals.bagsRecovered += w.bagLog.recovered;
+    zombieTotals.survived.push(w.common.over ? gameTime(w.common.over.tick).day : DAYS);
+    zombieTotals.dead += w.common.dead.length;
+    zombieTotals.bagsFound += w.common.bagLog.found;
+    zombieTotals.bagsDropped += w.common.bagLog.dropped;
+    zombieTotals.bagsRecovered += w.common.bagLog.recovered;
     zombieTotals.bagsWorn += w.survivors.reduce((n, s) => n + wornBags(s).length, 0);
     // Los que siguen desde el principio han mejorado (los que llegan no cuentan: si muere alguien
     // con niveles altos, la suma baja aunque se aprenda).
@@ -604,11 +609,11 @@ test.each([1, 2, 3])(
     const downTicks = new Map<number, number>();
     let arrived = false;
     for (let i = 0; i < 2 * TICKS_PER_DAY; i++) {
-      const last = w.log.at(-1);
+      const last = w.common.log.at(-1);
       step(w);
       const problems = checkInvariants(w);
       if (problems.length > 0) expect(problems, `tick ${w.tick}`).toEqual([]);
-      for (const e of w.log.slice(last ? w.log.lastIndexOf(last) + 1 : 0)) {
+      for (const e of w.common.log.slice(last ? w.common.log.lastIndexOf(last) + 1 : 0)) {
         if (e.kind === 'downed') downs.set(e.survivorId, (downs.get(e.survivorId) ?? 0) + 1);
         if (e.kind === 'siegeArrived') arrived = true;
       }

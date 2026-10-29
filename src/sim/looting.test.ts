@@ -45,13 +45,13 @@ test('marcar la casa más cercana: la vacían y sus objetos acaban en el almacé
     expect(isEmpty(c.items)).toBe(true);
     expect(c.designated).toBe(false);
   }
-  expect(w.log.some((e) => e.kind === 'houseEmptied' && e.houseId === house.id)).toBe(true);
-  expect(w.log.some((e) => e.kind === 'found')).toBe(true);
+  expect(w.common.log.some((e) => e.kind === 'houseEmptied' && e.houseId === house.id)).toBe(true);
+  expect(w.common.log.some((e) => e.kind === 'found')).toBe(true);
   // H5: cada uno se queda con hasta 2 vendas encima (en las manos o en su bolsa, H5b2); lo
   // demás, al almacén.
   for (const s of w.survivors) expect(hasCargo(s)).toBe(false);
   const carried = w.survivors.reduce((n, s) => n + has(s, 'bandage'), 0);
-  const used = w.log.filter((e) => e.kind === 'bandaged').length; // si alguien se ha vendado
+  const used = w.common.log.filter((e) => e.kind === 'bandaged').length; // si alguien se ha vendado
   expect(w.storage.items.bandage + carried + used).toBe(bandages);
   // Las armas, en el almacén o ya en la mano de alguien (spec H4b §6.2), más el cuchillo con que
   // empieza cada uno.
@@ -157,7 +157,7 @@ test('al límite se niega a trabajar más o menos la mitad de las veces', () => 
   }
   expect(refused / N).toBeGreaterThan(REFUSE_CHANCE - 0.1);
   expect(refused / N).toBeLessThan(REFUSE_CHANCE + 0.1);
-  expect(w.log.some((e) => e.kind === 'refused' && e.survivorId === s.id)).toBe(true);
+  expect(w.common.log.some((e) => e.kind === 'refused' && e.survivorId === s.id)).toBe(true);
 });
 
 test('mientras espera tras negarse, no trabaja pero sí atiende urgencias', () => {

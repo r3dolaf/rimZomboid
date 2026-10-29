@@ -71,6 +71,7 @@ test('no va si no le cabe, si no hay en el almacén o si no está en la base', (
 test('Transportar llena las bolsas guardadas con lista; lo de dentro ya no son existencias', () => {
   const { w, s } = world();
   s.work.haul = true;
+  s.bags.back = newBag(w, 'hikingPack'); // (si no, iría a ponérsela)
   const b = newBag(w, 'hikingPack');
   b.list = { food: 4, bandage: 2 };
   w.storage.items.pieces.push(b);

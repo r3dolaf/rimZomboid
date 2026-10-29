@@ -12,6 +12,7 @@ import {
   type ItemKind,
 } from './items';
 import { logEvent } from './log';
+import { dropPile } from './piles';
 import { capacityKg } from './skills';
 import type { PieceCounter } from './clothes';
 import type { Bag, BagKind, BagSlot, Garment, Piece, Survivor, World } from './types';
@@ -334,4 +335,22 @@ export function effectivePinned(w: World, s: Survivor): BagSlot[] {
   for (const o of w.orders)
     if (o.type === 'pinBag' && o.survivorId === s.id) pinned = setPinned(pinned, o.slot, o.on);
   return pinned;
+}
+
+/**
+ * Suelta la bolsa de la mano en el suelo con todo dentro (§4, §5): al pelear con el hacha de talar,
+ * derribado o huyendo. Se acuerda de ella para ir a por ella.
+ */
+export function dropHandBag(w: World, s: Survivor): void {
+  const b = s.bags.hand;
+  if (!b) return;
+  s.bags.hand = null;
+  dropPile(
+    w,
+    { x: Math.floor(s.pos.x), y: Math.floor(s.pos.y) },
+    { ...emptyInventory(), pieces: [b] },
+  );
+  s.droppedBag = b.id;
+  w.bagLog.dropped++;
+  logEvent(w, { kind: 'bagDropped', survivorId: s.id, bag: b.kind });
 }

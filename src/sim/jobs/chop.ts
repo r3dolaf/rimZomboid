@@ -1,5 +1,5 @@
 // Talar (spec H4a §3.2): coger el hacha, ir al árbol marcado más cercano y talarlo.
-import { CHOP_TICKS, CHOP_WOOD_MAX, CHOP_WOOD_MIN } from '../balance';
+import { CHOP_TICKS, CHOP_WOOD_MAX, CHOP_WOOD_MIN, HATCHET_CHOP } from '../balance';
 import { workSpeed } from '../skills';
 import { emptyInventory } from '../items';
 import { getTile, setTile } from '../map/grid';
@@ -8,7 +8,7 @@ import { nextInt, pick } from '../rng';
 import { Tile, type Action, type Point, type Survivor, type World } from '../types';
 import { tileOf } from '../world';
 import { standBeside } from './stand';
-import { canChop, takeBest } from './weapons';
+import { canChop, chopsWith, takeBest } from './weapons';
 
 /** Árbol (índice de casilla) al que va o que está talando, o `null`. */
 export function chopTarget(s: Survivor): number | null {
@@ -62,7 +62,8 @@ export function chopJob(s: Survivor, w: World): Action | null {
   if (w.chopMarks.length === 0) return null;
   const best = treeToChop(s, w);
   if (!best) return null;
-  if (s.equipped !== 'axe') {
+  // Con la hachuela en la mano tala sin ir a por el hacha (H5b2 §4).
+  if (!chopsWith(s.equipped)) {
     if (s.weaponLocked) return null; // con otra arma fijada no tala
     // Hachas libres en el almacén: las que no va a coger ya otro.
     const others = w.survivors.filter((o) => o !== s && goingFor(o, 'takeAxe')).length;
@@ -77,7 +78,7 @@ export function chopStillWorth(s: Survivor, w: World): boolean {
     return canChop(s) && s.equipped !== 'axe' && w.storage.items.axe > 0 && w.chopMarks.length > 0;
   if (goingFor(s, 'storeAxe')) return s.equipped === 'axe';
   const tree = chopTarget(s);
-  return tree !== null && s.work.chop && s.equipped === 'axe' && marked(w, tree);
+  return tree !== null && s.work.chop && chopsWith(s.equipped) && marked(w, tree);
 }
 
 /** Al llegar: coge o deja el hacha, o empieza a talar si sigue teniendo sentido. */
@@ -105,9 +106,10 @@ export function startChopActivity(
   const tx = activity.tree % w.grid.width;
   const ty = Math.floor(activity.tree / w.grid.width);
   const next = Math.max(Math.abs(t.x - tx), Math.abs(t.y - ty)) === 1;
-  if (!next || s.equipped !== 'axe' || !marked(w, activity.tree)) return idle;
-  // Con más habilidad, antes (spec H4c §3.2).
-  const ticksLeft = Math.round(CHOP_TICKS / workSpeed(s, 'chop'));
+  if (!next || !chopsWith(s.equipped) || !marked(w, activity.tree)) return idle;
+  // Con más habilidad, antes (spec H4c §3.2); con la hachuela, más despacio (H5b2).
+  const slow = s.equipped === 'hatchet' ? HATCHET_CHOP : 1;
+  const ticksLeft = Math.round((CHOP_TICKS * slow) / workSpeed(s, 'chop'));
   return { type: 'chop', tree: activity.tree, ticksLeft };
 }
 

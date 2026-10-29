@@ -1,4 +1,11 @@
 // Armas en la mano (spec H4b §6.2): coger lo mejor del almacén y cambiarlo si sale algo mejor.
+import {
+  AXE_DROP_PREF,
+  HAND_BAG_DAMAGE,
+  HAND_BAG_HIT,
+  WEAPON_HANDS,
+  WEAPON_STATS,
+} from '../balance';
 import { has, spend, stashOne } from '../bags';
 import { pick } from '../rng';
 import { doorsToPry } from './pry';
@@ -15,11 +22,31 @@ const RANK: Record<Weapon, number> = {
 };
 /** De mejor a peor (spec H4d §2). */
 export const WEAPONS: readonly Weapon[] = ['machete', 'crowbar', 'hatchet', 'axe', 'bat', 'knife'];
-const rank = (x: Weapon | null) => (x ? RANK[x] : 0);
+
+/**
+ * Con una bolsa en la mano (H5b2 §4), lo que hace por segundo con los factores de la mano: el bate y
+ * la palanca, peor; el hacha, un poco por debajo (hay que soltar la bolsa).
+ */
+function handBagValue(k: Weapon): number {
+  const hands = WEAPON_HANDS[k];
+  const f =
+    hands === 'either' ? HAND_BAG_HIT * HAND_BAG_DAMAGE : hands === 'two' ? AXE_DROP_PREF : 1;
+  return (WEAPON_STATS[k].damage / WEAPON_STATS[k].ticks) * f;
+}
+const HAND_BAG_ORDER = [...WEAPONS].sort((a, b) => handBagValue(b) - handBagValue(a));
+
+/** Lo que vale un arma para él: el orden de H4d o, con bolsa en la mano, el de `handBagValue`. */
+const rankFor = (s: Survivor, x: Weapon | null) =>
+  !x ? 0 : s.bags.hand ? handBagValue(x) : RANK[x];
+/** Sus armas de mejor a peor. */
+const weaponsFor = (s: Survivor) => (s.bags.hand ? HAND_BAG_ORDER : WEAPONS);
+
+/** ¿Tala con ella? El hacha o la hachuela (H5b2). */
+export const chopsWith = (x: Weapon | null) => x === 'axe' || x === 'hatchet';
 
 /** ¿Puede talar? (permiso, sin gripe con descanso y sin otra arma fijada) */
 export function canChop(s: Survivor): boolean {
-  return s.work.chop && s.fever?.rest !== true && !(s.weaponLocked && s.equipped !== 'axe');
+  return s.work.chop && s.fever?.rest !== true && !(s.weaponLocked && !chopsWith(s.equipped));
 }
 
 /** ¿Puede forzar puertas? (permiso de Saquear, sin gripe con descanso y sin otra arma fijada) */
@@ -32,7 +59,7 @@ export function canPry(s: Survivor): boolean {
  * tampoco, si hay puertas que forzar y no saquea (H4d).
  */
 export function bestInStorage(s: Survivor, w: World): Weapon | null {
-  for (const k of WEAPONS) {
+  for (const k of weaponsFor(s)) {
     if (w.storage.items[k] <= 0) continue;
     if (k === 'axe' && w.chopMarks.length > 0 && !canChop(s)) continue;
     if (k === 'crowbar' && !canPry(s) && doorsToPry(w).length > 0) continue;
@@ -56,7 +83,7 @@ const better = (s: Survivor, w: World) =>
   !s.weaponLocked &&
   !keepsCrowbar(s, w) &&
   !keepsAxe(s, w.chopMarks.length > 0) &&
-  rank(bestInStorage(s, w)) > rank(s.equipped);
+  rankFor(s, bestInStorage(s, w)) > rankFor(s, s.equipped);
 
 /** Quien no saquea devuelve la palanca si hay puertas que forzar (H4d), como el hacha al talar. */
 const returnsCrowbar = (s: Survivor, w: World) =>
@@ -97,10 +124,10 @@ export function takeBest(s: Survivor, w: World): void {
  */
 export function equipFromPack(s: Survivor, chopMarked = false): void {
   if (s.weaponLocked || keepsAxe(s, chopMarked)) return;
-  for (const k of WEAPONS) {
+  for (const k of weaponsFor(s)) {
     if (has(s, k) <= 0) continue;
     if (k === 'axe' && chopMarked && !canChop(s)) continue;
-    if (rank(k) <= rank(s.equipped)) return;
+    if (rankFor(s, k) <= rankFor(s, s.equipped)) return;
     // La de la mano pasa a la carga (o a una bolsa, H5b2): tiene que caber.
     spend(s, k);
     if (s.equipped && !stashOne(s, s.equipped)) {

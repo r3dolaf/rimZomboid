@@ -1120,3 +1120,21 @@ export const LOOT_BAGS: Partial<
   farm: { count: [0, 2], kinds: { hikingPack: 1, duffel: 1 } },
   warehouse: { count: [0, 2], kinds: { hikingPack: 1, duffel: 1 } },
 };
+
+// Pelear con una bolsa en la mano (H5b2 §4): bate y palanca se usan con una mano, peor; el hacha
+// de talar es de dos (la suelta). Al elegir arma, el hacha cuenta un poco menos (hay que soltarla).
+export const HAND_BAG_HIT = 0.85;
+export const HAND_BAG_DAMAGE = 0.75;
+export const AXE_DROP_PREF = 0.75;
+/** Lo que tarda en talar con la hachuela frente al hacha. */
+export const HATCHET_CHOP = 1.5;
+/** Cuántas manos pide cada arma: una, una o dos (bate, palanca) o dos (hacha de talar). */
+export const WEAPON_HANDS = {
+  none: 'one',
+  knife: 'one',
+  machete: 'one',
+  hatchet: 'one',
+  bat: 'either',
+  crowbar: 'either',
+  axe: 'two',
+} as const;

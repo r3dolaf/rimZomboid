@@ -98,3 +98,19 @@ test('los zombis y los que vuelven pueden llevar bolsas (se cuentan)', () => {
   expect(allPieces(w).map((x) => x.piece)).toContain(b);
   expect(checkInvariants(w)).toEqual([]);
 });
+
+test('partida larga: la madera dentro de una bolsa cuenta, y si la bolsa se va del mundo, se pierde', () => {
+  const w = emptyWorld(5, 5);
+  const s = w.survivors[0]!;
+  w.storage.items.wood = 3;
+  w.woodLog.start += 3;
+  expect(checkInvariants(w)).toEqual([]);
+  const b = newBag(w, 'schoolBag');
+  w.storage.items.wood -= 2;
+  b.items.wood = 2;
+  s.bags.back = b;
+  expect(checkInvariants(w)).toEqual([]); // la de la bolsa sigue estando
+  s.bags.back = null;
+  piecesGone(w, [b]); // p. ej., se pudre en el cuerpo de un zombi
+  expect(checkInvariants(w)).toEqual([]);
+});

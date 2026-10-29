@@ -280,7 +280,12 @@ export function dressStarter(w: PieceCounter, s: Survivor, rng: RngState): void 
 /** Se va del mundo (por el borde del mapa) con todo lo que lleva: se apunta en las cuentas. */
 export function piecesGone(w: World, pieces: readonly Piece[]): void {
   w.pieceLog.gone += pieces.length;
-  for (const p of pieces) if (isBag(p)) piecesGone(w, p.items.pieces); // con lo de dentro (H5b2)
+  // Con lo de dentro (H5b2): sus piezas y su madera, que se pierde.
+  for (const p of pieces)
+    if (isBag(p)) {
+      w.woodLog.wasted += p.items.wood;
+      piecesGone(w, p.items.pieces);
+    }
 }
 
 /** Las personas que están en el mundo (colonos, desconocidos, los que se van y los que vuelven). */

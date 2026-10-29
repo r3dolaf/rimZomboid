@@ -291,7 +291,8 @@ export function checkInvariants(w: World): string[] {
     w.piles.reduce((acc, p) => acc + p.items.wood, 0) +
     w.survivors.reduce((acc, s) => acc + s.carrying.wood, 0) +
     (w.stranger?.survivors.reduce((acc, s) => acc + s.carrying.wood, 0) ?? 0) +
-    w.blueprints.reduce((acc, b) => acc + b.wood, 0);
+    w.blueprints.reduce((acc, b) => acc + b.wood, 0) +
+    woodInBags(w); // H5b2
   const log = w.woodLog;
   if (wood + log.spent + log.wasted !== log.start + log.chopped + log.recovered)
     problems.push(
@@ -383,4 +384,13 @@ function checkInventory(problems: string[], where: string, inv: Inventory): void
   for (const k of ITEM_KINDS)
     if (!Number.isInteger(inv[k]) || inv[k] < 0)
       problems.push(`${where}: ${k} no válido (${inv[k]})`);
+}
+
+/** La madera dentro de las bolsas (H5b2), estén donde estén. */
+function woodInBags(w: World): number {
+  let n = 0;
+  forEachPieceList(w, (list) => {
+    for (const p of list) if (isBag(p)) n += p.items.wood;
+  });
+  return n;
 }

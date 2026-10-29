@@ -1,7 +1,8 @@
 // Expediciones (spec H5c1 §4): mandar un grupo a un sitio, prepararse en el almacén con la lista
 // del grupo, ir al borde de ese lado y salir del mapa; el viaje empieza cuando han salido todos.
 import { ACTIVE_SITES_MAX } from './balance';
-import { stashOne, unloadAt } from './bags';
+import { stashOne, takeInto, unloadAt } from './bags';
+import { WEAPONS } from './jobs/weapons';
 import { detach } from './death';
 import { ITEM_KINDS, type ItemKind } from './items';
 import { takeSupplies } from './jobs/supplies';
@@ -67,14 +68,17 @@ function shares(
 /** La orden de mandar un grupo (§4), desde la base. Las que no valen no hacen nada. */
 export function applyExpeditionOrder(
   w: World,
-  o: {
-    type: 'sendExpedition';
-    siteId: number;
-    survivorIds: number[];
-    items: Partial<Record<ItemKind, number>>;
-  },
+  o:
+    | {
+        type: 'sendExpedition';
+        siteId: number;
+        survivorIds: number[];
+        items: Partial<Record<ItemKind, number>>;
+      }
+    | { type: 'returnHome'; siteId: number },
 ): void {
   if (w.mapId !== 0) return;
+  if (o.type === 'returnHome') return returnHome(w, o.siteId);
   const site = w.common.expedition.sites.find((x) => x.id === o.siteId && x.state === 'known');
   if (!site) return;
   const active = activeSiteIds(w);
@@ -119,7 +123,11 @@ export function tripJob(s: Survivor, w: World): Action | null {
 
 /** En el almacén: descarga, coge lo suyo («Llevar siempre», sus bolsas) y su parte de la lista. */
 export function startPrepareTrip(s: Survivor, w: World): Action {
-  if (s.trip) {
+  const t = travelOf(w, s);
+  if (s.trip && t?.kind === 'back') {
+    loadForTrip(w, s);
+    s.trip.stage = 'exit';
+  } else if (s.trip) {
     unloadAt(w, s);
     takeSupplies(s, w);
     const store = w.storage.items;
@@ -152,6 +160,11 @@ export function leaveMap(w: World, s: Survivor, t: Travel): void {
   s.trip = null;
   t.members.push(s);
   t.pending = t.pending.filter((id) => id !== s.id);
+  // El último en irse de un sitio lo deja guardado (H5c1 §2).
+  if (w.mapId !== 0 && w.survivors.length === 0) {
+    const info = w.common.expedition.sites.find((x) => x.id === w.mapId);
+    if (info) info.leftAt = w.tick;
+  }
 }
 
 /**
@@ -160,14 +173,53 @@ export function leaveMap(w: World, s: Survivor, t: Travel): void {
  */
 export function departuresSystem(w: World): void {
   const ex = w.common.expedition;
+  // (Salen de la base o, de vuelta, de un sitio.)
+  const people = [w, ...w.siteMaps.map((m) => m.world)].flatMap((m) => m.survivors);
   for (const t of ex.travels) {
     if (t.pending.length === 0) continue;
     t.pending = t.pending.filter((id) => {
-      const s = w.survivors.find((x) => x.id === id);
+      const s = people.find((x) => x.id === id);
       const ok = s !== undefined && s.trip?.travelId === t.id && s.action.type !== 'downed';
       if (!ok && s) s.trip = null;
       return ok;
     });
   }
   ex.travels = ex.travels.filter((t) => t.pending.length > 0 || t.members.length > 0);
+}
+
+/** «Volver» (§4): todos los del sitio se cargan lo que puedan del campamento y salen. */
+function returnHome(base: World, siteId: number): void {
+  const info = base.common.expedition.sites.find((x) => x.id === siteId);
+  const site = base.siteMaps.find((m) => m.siteId === siteId)?.world;
+  if (!info || !site) return;
+  const members = site.survivors.filter(canGo);
+  if (members.length === 0) return;
+  const travel: Travel = {
+    id: base.common.nextId++,
+    kind: 'back',
+    siteId,
+    side: info.side,
+    members: [],
+    hoursLeft: info.hours,
+    pending: members.map((s) => s.id),
+  };
+  base.common.expedition.travels.push(travel);
+  for (const s of members) {
+    s.trip = { travelId: travel.id, stage: 'prepare', items: {} };
+    s.action = { type: 'idle', ticksLeft: 0 };
+    s.path = [];
+  }
+}
+
+/**
+ * Lo que se carga primero al volver (comida, medicinas y armas; luego lo demás), lo ligero y
+ * valioso delante: si no, la comida llenaba las manos y se quedaban las armas.
+ */
+const LOAD_FIRST: readonly ItemKind[] = ['bandage', 'painkillers', ...WEAPONS, 'food'];
+
+/** En el campamento, de vuelta: se carga lo que pueda, por ese orden (las bolsas, en la mano). */
+export function loadForTrip(w: World, s: Survivor): void {
+  const store = w.storage.items;
+  for (const k of LOAD_FIRST) while (store[k] > 0 && stashOne(s, k)) store[k]--;
+  takeInto(w, s, store, 'haul');
 }

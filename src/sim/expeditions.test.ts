@@ -6,7 +6,8 @@ import { checkInvariants } from './invariants';
 import { issue, ordersSystem } from './orders';
 import { discoverSite } from './sites';
 import { step } from './step';
-import { addSurvivor, emptyWorld } from './testing/fixtures';
+import { activeMaps, stepGame } from './game';
+import { addSurvivor, emptyWorld, moveTo, siteForTest } from './testing/fixtures';
 import { Tile, type World } from './types';
 
 /** La base de 20×20 con suelo, el almacén en (5, 5), Ana y Bea sin más que hacer. */
@@ -97,4 +98,69 @@ test('como mucho 4 sitios con gente o de camino a la vez', () => {
     ordersSystem(w);
   }
   expect(w.common.expedition.travels).toHaveLength(ACTIVE_SITES_MAX);
+});
+
+/** Un sitio de prueba conocido (id 7, hacia el norte) con Ana y Bea en su campamento. */
+function inSite(): { w: World; site: World } {
+  const w = world();
+  const site = siteForTest(w, 7, 16, 16);
+  site.grid.tiles.fill(Tile.Floor);
+  site.seen.fill(1);
+  w.common.expedition.sites.push({
+    id: 7,
+    kind: 'farm',
+    special: null,
+    side: 0,
+    hours: 3,
+    state: 'known',
+    visited: true,
+    specialUntil: null,
+    leftAt: null,
+  });
+  for (const s of [...w.survivors]) moveTo(w, site, s);
+  return { w, site };
+}
+
+test('volver: cargan del campamento primero comida, vendas, analgésicos y armas, salen y viajan', () => {
+  const { w, site } = inSite();
+  Object.assign(site.storage.items, { food: 30, bandage: 3, painkillers: 1, machete: 1, wood: 10 });
+  w.common.woodLog.start += 10;
+  w.common.weaponLog.fromCorpses += 1;
+  issue(w, { type: 'returnHome', siteId: 7 });
+  for (let i = 0; i < 400 && site.survivors.length > 0; i++) stepGame(w);
+  expect(site.survivors).toEqual([]);
+  const t = w.common.expedition.travels[0]!;
+  expect(t).toMatchObject({ kind: 'back', siteId: 7, side: 0, pending: [] });
+  expect(t.hoursLeft).toBe(3);
+  const carried = (k: 'food' | 'bandage' | 'painkillers' | 'machete' | 'wood') =>
+    t.members.reduce((n, s) => n + s.carrying[k], 0);
+  expect(carried('bandage')).toBe(3);
+  expect(carried('painkillers')).toBe(1);
+  expect(carried('machete') + t.members.filter((s) => s.equipped === 'machete').length).toBe(1);
+  expect(carried('food')).toBeGreaterThan(0);
+  expect(site.storage.items.wood).toBeGreaterThan(0); // la madera, al final: no cabe toda
+  expect(w.common.expedition.sites[0]!.leftAt).toBe(site.tick - 1); // (salió en ese tick)
+  expect(activeMaps(w)).toEqual([w]); // el sitio queda quieto
+  expect(checkInvariants(w)).toEqual([]);
+});
+
+test('otro grupo al mismo sitio se junta con los que hay', () => {
+  const { w, site } = inSite();
+  const carla = addSurvivor(w, { x: 9, y: 9 }, 'Carla');
+  w.common.expedition.travels.push({
+    id: 90,
+    kind: 'go',
+    siteId: 7,
+    side: 0,
+    members: [carla],
+    hoursLeft: 0.001,
+    pending: [],
+  });
+  w.survivors = w.survivors.filter((s) => s !== carla);
+  w.tick = 1000; // de día
+  stepGame(w);
+  expect(site.survivors.map((s) => s.name)).toEqual(
+    expect.arrayContaining(['Ana', 'Bea', 'Carla']),
+  );
+  expect(checkInvariants(w)).toEqual([]);
 });

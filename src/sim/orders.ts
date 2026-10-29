@@ -66,7 +66,8 @@ export type Order =
       siteId: number;
       survivorIds: number[];
       items: Partial<Record<ItemKind, number>>;
-    };
+    }
+  | { type: 'returnHome'; siteId: number };
 
 /** Encola una orden; se aplica al principio del siguiente tick. */
 export function issue(w: World, order: Order): void {
@@ -223,6 +224,7 @@ export function ordersSystem(w: World): void {
         applyBagListOrder(w, o);
         break;
       case 'sendExpedition':
+      case 'returnHome':
         applyExpeditionOrder(w, o);
         break;
     }

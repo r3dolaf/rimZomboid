@@ -1009,8 +1009,10 @@ export const DEFAULT_OUTFITS: readonly {
   name: string;
   allowed: readonly GarmentKind[] | null;
   dead: boolean;
+  /** H5b2: bolsa en la mano (todos aceptan todas las bolsas). */
+  handBag: boolean;
 }[] = [
-  { name: 'Cualquiera', allowed: null, dead: true },
+  { name: 'Cualquiera', allowed: null, dead: true, handBag: true },
   {
     name: 'Saqueo',
     allowed: [
@@ -1027,6 +1029,7 @@ export const DEFAULT_OUTFITS: readonly {
       'beanie',
     ],
     dead: false,
+    handBag: true,
   },
   {
     name: 'Base',
@@ -1046,6 +1049,7 @@ export const DEFAULT_OUTFITS: readonly {
       'beanie',
     ],
     dead: false,
+    handBag: false,
   },
 ];
 /** Nombre de un atuendo nuevo y lo más largo que puede ser un nombre. */

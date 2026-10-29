@@ -7,6 +7,7 @@ import { applyDraftOrder } from './draft';
 import { setMedical } from './jobs/medical';
 import { applyOutfitOrder } from './outfits';
 import type {
+  BagKind,
   Bill,
   BuildKind,
   Container,
@@ -54,6 +55,8 @@ export type Order =
   | { type: 'setOutfitGarment'; outfitId: number; garment: GarmentKind; on: boolean }
   | { type: 'setOutfitDead'; outfitId: number; on: boolean }
   | { type: 'setOutfit'; survivorId: number; outfitId: number }
+  | { type: 'setOutfitBag'; outfitId: number; bag: BagKind; on: boolean }
+  | { type: 'setOutfitHandBag'; outfitId: number; on: boolean }
   // Listas de las bolsas y «Llevar siempre» (H5b2 §3)
   | BagListOrder;
 
@@ -202,10 +205,13 @@ export function ordersSystem(w: World): void {
       case 'setOutfitGarment':
       case 'setOutfitDead':
       case 'setOutfit':
+      case 'setOutfitBag':
+      case 'setOutfitHandBag':
         applyOutfitOrder(w, o);
         break;
       case 'setBagList':
       case 'setKeep':
+      case 'pinBag':
         applyBagListOrder(w, o);
         break;
     }

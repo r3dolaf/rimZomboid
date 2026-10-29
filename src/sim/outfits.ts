@@ -1,5 +1,6 @@
 // Atuendos (spec H5b §4): las prendas que puede ponerse cada colono y si acepta ropa de muertos.
 import { DEFAULT_OUTFITS, NEW_OUTFIT_NAME, OUTFIT_NAME_MAX } from './balance';
+import { BAG_KINDS } from './bags';
 import { GARMENT_KINDS } from './clothes';
 import type { Order } from './orders';
 import type { Garment, Outfit, Survivor, World } from './types';
@@ -12,6 +13,8 @@ export function defaultOutfits(): Outfit[] {
     allowed:
       o.allowed === null ? [...GARMENT_KINDS] : GARMENT_KINDS.filter((k) => o.allowed!.includes(k)),
     dead: o.dead,
+    bags: [...BAG_KINDS],
+    handBag: o.handBag,
   }));
 }
 
@@ -34,7 +37,9 @@ export type OutfitOrder = Extract<
       | 'deleteOutfit'
       | 'setOutfitGarment'
       | 'setOutfitDead'
-      | 'setOutfit';
+      | 'setOutfit'
+      | 'setOutfitBag'
+      | 'setOutfitHandBag';
   }
 >;
 
@@ -44,7 +49,9 @@ export const isOutfitOrder = (o: Order): o is OutfitOrder =>
   o.type === 'deleteOutfit' ||
   o.type === 'setOutfitGarment' ||
   o.type === 'setOutfitDead' ||
-  o.type === 'setOutfit';
+  o.type === 'setOutfit' ||
+  o.type === 'setOutfitBag' ||
+  o.type === 'setOutfitHandBag';
 
 /** Lo que tocan las órdenes de atuendos (el mundo, o una copia para la interfaz). */
 type OutfitState = { outfits: Outfit[]; nextOutfitId: number; survivors: Survivor[] };
@@ -58,6 +65,8 @@ export function applyOutfitOrder(w: OutfitState, o: OutfitOrder): void {
       name: `${NEW_OUTFIT_NAME} ${id}`,
       allowed: [...GARMENT_KINDS],
       dead: false,
+      bags: [...BAG_KINDS],
+      handBag: true,
     });
     return;
   }
@@ -89,6 +98,16 @@ export function applyOutfitOrder(w: OutfitState, o: OutfitOrder): void {
     }
     case 'setOutfitDead':
       outfit.dead = o.on;
+      break;
+    case 'setOutfitBag': {
+      const on = new Set(outfit.bags);
+      if (o.on) on.add(o.bag);
+      else on.delete(o.bag);
+      outfit.bags = BAG_KINDS.filter((k) => on.has(k));
+      break;
+    }
+    case 'setOutfitHandBag':
+      outfit.handBag = o.on;
       break;
   }
 }

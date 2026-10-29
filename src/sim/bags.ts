@@ -122,10 +122,10 @@ export const carriesSomething = (s: Survivor): boolean =>
 /** ¿Le cabe en las manos? */
 const fitsHands = (s: Survivor, kg: number) => weightOf(s.carrying) + kg <= capacityKg(s) + 1e-9;
 
-/** ¿Permite su atuendo esa bolsa en ese hueco? (Los atuendos con bolsas llegan en la tarea 6.) */
-/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-export function bagAllowed(_w: World, _s: Survivor, _kind: BagKind, _slot: BagSlot): boolean {
-  return true;
+/** ¿Permite su atuendo esa bolsa en ese hueco? (Su atuendo, o el primero si ya no existe.) */
+export function bagAllowed(w: World, s: Survivor, kind: BagKind, slot: BagSlot): boolean {
+  const o = w.outfits.find((x) => x.id === s.outfitId) ?? w.outfits[0];
+  return !o || (o.bags.includes(kind) && (slot !== 'hand' || o.handBag));
 }
 
 /**
@@ -283,10 +283,25 @@ function setCount(list: Partial<Record<ItemKind, number>>, item: ItemKind, n: nu
 
 export type BagListOrder =
   | { type: 'setBagList'; pieceId: number; item: ItemKind; n: number }
-  | { type: 'setKeep'; survivorId: number; item: ItemKind; n: number };
+  | { type: 'setKeep'; survivorId: number; item: ItemKind; n: number }
+  /** Fijar la bolsa de un hueco desde la ficha (§2). */
+  | { type: 'pinBag'; survivorId: number; slot: BagSlot; on: boolean };
 
-/** Aplica una orden de listas (§3); las que no valen no hacen nada. */
+/** Fija o suelta un hueco. */
+function setPinned(pinned: BagSlot[], slot: BagSlot, on: boolean): BagSlot[] {
+  const set = new Set(pinned);
+  if (on) set.add(slot);
+  else set.delete(slot);
+  return BAG_SLOTS.filter((x) => set.has(x));
+}
+
+/** Aplica una orden de listas o de fijar (§2, §3); las que no valen no hacen nada. */
 export function applyBagListOrder(w: World, o: BagListOrder): void {
+  if (o.type === 'pinBag') {
+    const s = w.survivors.find((x) => x.id === o.survivorId);
+    if (s && BAG_SLOTS.includes(o.slot)) s.bagsPinned = setPinned(s.bagsPinned, o.slot, o.on);
+    return;
+  }
   if (!validN(o.n) || !ITEM_KINDS.includes(o.item)) return;
   if (o.type === 'setBagList') {
     const b = findBag(w, o.pieceId);
@@ -311,4 +326,12 @@ export function effectiveKeep(w: World, s: Survivor): Partial<Record<ItemKind, n
   for (const o of w.orders)
     if (o.type === 'setKeep' && o.survivorId === s.id && validN(o.n)) setCount(keep, o.item, o.n);
   return keep;
+}
+
+/** Sus huecos fijados con las órdenes pendientes ya aplicadas. */
+export function effectivePinned(w: World, s: Survivor): BagSlot[] {
+  let pinned = s.bagsPinned;
+  for (const o of w.orders)
+    if (o.type === 'pinBag' && o.survivorId === s.id) pinned = setPinned(pinned, o.slot, o.on);
+  return pinned;
 }

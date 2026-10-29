@@ -274,6 +274,8 @@ export type Activity =
   // Rellenar (H5b2 §3): lo que le falta, y llenar una bolsa guardada (Transportar).
   | { type: 'takeSupplies' }
   | { type: 'packBag'; pieceId: number }
+  // Bolsas (H5b2 §2): en el almacén, ponerse la mejor que permita su atuendo.
+  | { type: 'bags' }
   // Descansar (en la cama a la que va) y analgésicos (tomárselo; ir a por uno y llevárselo a otro).
   | { type: 'rest' }
   | { type: 'takePainkiller' }
@@ -410,6 +412,9 @@ export interface Outfit {
   name: string;
   allowed: GarmentKind[];
   dead: boolean;
+  /** Las bolsas que acepta (H5b2 §2) y si acepta bolsa en la mano. */
+  bags: BagKind[];
+  handBag: boolean;
 }
 
 /**

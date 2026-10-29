@@ -15,6 +15,7 @@ import { hasCargo } from './jobs/medical';
 import { packJob, packStillWorth, supplyJob } from './jobs/supplies';
 import { swapWeaponStillWorth, weaponJob } from './jobs/weapons';
 import { dressJob, dressStillWorth } from './jobs/dress';
+import { bagJob, bagStillWorth } from './jobs/bags';
 import { waterJob, waterStillWorth } from './jobs/water';
 import { isEmpty, ITEM_KINDS, pieceKg, weightOf } from './items';
 import { regionOf } from './path/astar';
@@ -123,7 +124,7 @@ export function findWork(s: Survivor, w: World): Action | null {
   // H5b: vestirse con lo mejor que permita su atuendo. Lo mira como mucho una vez por hora: si
   // no, quien no tiene nada que hacer repasaría toda la ropa del almacén en cada tick.
   if (w.tick >= s.dressCheckAt) {
-    const dress = dressJob(s, w);
+    const dress = dressJob(s, w) ?? bagJob(s, w); // H5b2: y las bolsas
     if (dress) return dress;
     s.dressCheckAt = w.tick + DRESS_CHECK_TICKS;
   }
@@ -165,6 +166,7 @@ const WORK_ACTIONS: ReadonlySet<string> = new Set([
   'build',
   'swapWeapon',
   'dress',
+  'bags',
   'takeWater',
   'fillBucket',
   'pourWater',
@@ -194,7 +196,11 @@ export function stillWorthIt(s: Survivor, w: World): boolean {
   const what = a.type === 'moveTo' ? a.then?.type : a.type;
   // Si le mandan descansar, deja lo que esté haciendo (descargar o cambiar de arma, no).
   const finishing =
-    what === 'unload' || what === 'storeAxe' || what === 'swapWeapon' || what === 'dress';
+    what === 'unload' ||
+    what === 'storeAxe' ||
+    what === 'swapWeapon' ||
+    what === 'dress' ||
+    what === 'bags';
   if (s.fever?.rest && !finishing && what !== 'dropOff') return false;
   if (
     what === 'rescue' ||
@@ -211,6 +217,7 @@ export function stillWorthIt(s: Survivor, w: World): boolean {
   if (what === 'build') return buildStillWorth(s, w);
   if (what === 'swapWeapon') return swapWeaponStillWorth(s, w);
   if (what === 'dress') return dressStillWorth(s);
+  if (what === 'bags') return bagStillWorth(s);
   if (what === 'packBag' && a.type === 'moveTo' && a.then?.type === 'packBag')
     return s.work.haul && packStillWorth(w, a.then.pieceId);
   if (what === 'takeCrowbar' || what === 'pry') return pryStillWorth(s, w);

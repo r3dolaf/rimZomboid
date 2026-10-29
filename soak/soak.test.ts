@@ -275,7 +275,7 @@ test.each([1, 2, 3])(
     const cx = w.base.rect.x + Math.floor(w.base.rect.w / 2);
     const cy = w.base.rect.y + Math.floor(w.base.rect.h / 2);
     const axesAtStart = axes(w);
-    const levelsAtStart = levels(w);
+    const startLevels = new Map(w.survivors.map((s) => [s.id, skillSum(s)]));
     let choppedHalf = 0;
     for (let day = 1; day <= DAYS; day++) {
       // Cada mañana: marcar algunos árboles vistos y poner unos planos cerca de la base.
@@ -318,21 +318,20 @@ test.each([1, 2, 3])(
         w.grid.tiles.includes(Tile.BoardedWindow) || w.woodLog.recovered > 0,
         'se ha tapiado',
       ).toBe(true);
-      // H4c: practicando se mejora, y los fallos al construir no se comen la madera. (Si queda
-      // alguien: contestando al azar se puede echar a todos, y los muros al azar pueden dejar a
-      // alguien encerrado sin llegar al almacén; con otra semilla, en H5b pasó las dos cosas.)
-      if (w.survivors.length > 0)
-        expect(levels(w), 'las habilidades han subido').toBeGreaterThan(levelsAtStart);
+      // H4c: practicando se mejora (los que siguen desde el principio: contestando al azar se
+      // echa a gente y los muros al azar pueden encerrar a alguien hasta morir de hambre), y los
+      // fallos al construir no se comen la madera.
+      const still = w.survivors.filter((s) => startLevels.has(s.id));
+      if (still.length > 0)
+        expect(
+          still.reduce((n, s) => n + skillSum(s), 0),
+          'las habilidades han subido',
+        ).toBeGreaterThan(still.reduce((n, s) => n + startLevels.get(s.id)!, 0));
       expect(w.woodLog.wasted, 'madera perdida al fallar').toBeLessThan(w.woodLog.spent / 2);
     }
   },
   240_000,
 );
-
-/** La suma de los niveles de todas las habilidades de los colonos de ahora. */
-function levels(w: World): number {
-  return w.survivors.reduce((n, s) => n + skillSum(s), 0);
-}
 
 /** La suma de los niveles de las habilidades de un colono. */
 function skillSum(s: Survivor): number {

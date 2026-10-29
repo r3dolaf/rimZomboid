@@ -58,9 +58,10 @@ test('cifras: hasta 2 vendas encima; media hora con Sanar 5; limpia 1 día', () 
 
 test('en la base, con menos de 2 vendas encima, va al almacén a por ellas', () => {
   const { w, ana, bea } = world();
-  expect(findWork(ana, w)).toMatchObject({ type: 'moveTo', then: { type: 'takeBandages' } });
+  // (H5b2: con su «Llevar siempre», que trae las 2 vendas de siempre.)
+  expect(findWork(ana, w)).toMatchObject({ type: 'moveTo', then: { type: 'takeSupplies' } });
   expect(findWork(bea, w)?.type === 'moveTo' && findWork(bea, w)).not.toMatchObject({
-    then: { type: 'takeBandages' },
+    then: { type: 'takeSupplies' },
   }); // fuera de la base, no
   expect(until(w, () => ana.carrying.bandage === BANDAGES_CARRIED)).toBe(true);
   expect(w.storage.items.bandage).toBe(3);

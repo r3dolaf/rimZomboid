@@ -1,12 +1,11 @@
 // Vendas (spec H5 §4): cada uno lleva hasta 2; se venda lo que le sangra; Sanar venda a los demás
 // (y al derribado antes de cargarlo); a 1 día la venda está sucia y se cambia. Analgésicos,
 // descanso y camas de hospital (§5 y §6).
-import { has, spend, unloadable } from '../bags';
+import { has, personal, spend, stashOne, unloadable } from '../bags';
 import {
   BANDAGE_CLEAN_HOURS,
   BANDAGE_RANGE,
   BANDAGE_TICKS,
-  BANDAGES_CARRIED,
   ITEM_WEIGHT_KG,
   PAINKILLER_HOURS,
   REST_BELOW,
@@ -25,7 +24,7 @@ import { capacityKg, practice, workSpeed } from '../skills';
 import type { Action, Point, Survivor, World, Wound } from '../types';
 import { tileOf } from '../world';
 
-const inBase = (w: World, s: Survivor) => contains(w.base.rect, tileOf(s.pos));
+export const inBase = (w: World, s: Survivor) => contains(w.base.rect, tileOf(s.pos));
 const sameTile = (a: Point, b: Point) => a.x === b.x && a.y === b.y;
 const near = (a: Survivor, b: Survivor) =>
   (a.pos.x - b.pos.x) ** 2 + (a.pos.y - b.pos.y) ** 2 <= BANDAGE_RANGE * BANDAGE_RANGE;
@@ -120,7 +119,7 @@ export function hasCargo(s: Survivor): boolean {
 }
 
 /** ¿Llega al almacén desde donde está? */
-function reachesStorage(w: World, s: Survivor): boolean {
+export function reachesStorage(w: World, s: Survivor): boolean {
   const here = tileOf(s.pos);
   const st = w.storage.tiles[0];
   return st !== undefined && regionOf(w.grid, here.x, here.y) === regionOf(w.grid, st.x, st.y);
@@ -132,26 +131,18 @@ const goTakeBandages = (w: World): Action => ({
   then: { type: 'takeBandages' },
 });
 
-/** En la base, con menos de 2 vendas encima y quedando en el almacén: a por ellas. */
-export function stockJob(s: Survivor, w: World): Action | null {
-  if (s.carrying.bandage >= BANDAGES_CARRIED || w.storage.items.bandage === 0) return null;
-  return inBase(w, s) && reachesStorage(w, s) ? goTakeBandages(w) : null;
-}
-
 /** Cuántas cosas de `kind` le caben aún encima. */
 const room = (s: Survivor, kind: ItemKind) =>
   Math.floor((capacityKg(s) - weightOf(s.carrying)) / ITEM_WEIGHT_KG[kind] + 1e-9);
 
-/** En el almacén: coge vendas hasta llevar BANDAGES_CARRIED (las que le quepan). */
+/**
+ * En el almacén, para vendar(se): coge vendas hasta las de su «Llevar siempre», y al menos una (las
+ * que le quepan, en una bolsa si puede, H5b2).
+ */
 export function takeBandages(s: Survivor, w: World): void {
-  const n = Math.min(
-    BANDAGES_CARRIED - s.carrying.bandage,
-    w.storage.items.bandage,
-    room(s, 'bandage'),
-  );
-  if (n <= 0) return;
-  w.storage.items.bandage -= n;
-  s.carrying.bandage += n;
+  const want = Math.max(1, s.keep.bandage ?? 0);
+  while (w.storage.items.bandage > 0 && personal(s, 'bandage') < want && stashOne(s, 'bandage'))
+    w.storage.items.bandage--;
 }
 
 /** La herida que hay que atender: la que más sangra; si ninguna sangra, una con la venda sucia. */

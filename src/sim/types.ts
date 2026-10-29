@@ -271,6 +271,9 @@ export type Activity =
   | { type: 'mercy'; patientId: number }
   // Vendas (H5): coger del almacén hasta llevar las que tocan.
   | { type: 'takeBandages' }
+  // Rellenar (H5b2 §3): lo que le falta, y llenar una bolsa guardada (Transportar).
+  | { type: 'takeSupplies' }
+  | { type: 'packBag'; pieceId: number }
   // Descansar (en la cama a la que va) y analgésicos (tomárselo; ir a por uno y llevárselo a otro).
   | { type: 'rest' }
   | { type: 'takePainkiller' }

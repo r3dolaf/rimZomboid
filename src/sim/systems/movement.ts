@@ -1,3 +1,4 @@
+import { startPackBag, takeSupplies } from '../jobs/supplies';
 import { carriesSomething } from '../bags';
 import {
   CARRY_SPEED,
@@ -146,6 +147,11 @@ function startActivity(s: Survivor, activity: Activity, w: World): Action {
     case 'takeBandages':
       takeBandages(s, w);
       return { type: 'idle', ticksLeft: 0 };
+    case 'takeSupplies':
+      takeSupplies(s, w); // H5b2
+      return { type: 'idle', ticksLeft: 0 };
+    case 'packBag':
+      return startPackBag(s, w, activity.pieceId);
     case 'takePainkiller':
       takePainkiller(s, w);
       return { type: 'idle', ticksLeft: 0 };

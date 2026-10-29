@@ -11,7 +11,8 @@ import { pryJob, pryStillWorth } from './jobs/pry';
 import { craftJob, craftStillWorth } from './jobs/craft';
 import { deliverJob, haulJob, haulStillWorth } from './jobs/haul';
 import { healJob, healStillWorth } from './jobs/heal';
-import { hasCargo, stockJob } from './jobs/medical';
+import { hasCargo } from './jobs/medical';
+import { packJob, packStillWorth, supplyJob } from './jobs/supplies';
 import { swapWeaponStillWorth, weaponJob } from './jobs/weapons';
 import { dressJob, dressStillWorth } from './jobs/dress';
 import { waterJob, waterStillWorth } from './jobs/water';
@@ -114,8 +115,8 @@ export function findWork(s: Survivor, w: World): Action | null {
   }
   const back = returnAxeJob(s, w);
   if (back) return back;
-  // H5: en la base, a por sus vendas.
-  const stock = stockJob(s, w);
+  // En la base, a por lo que le falte: sus vendas (H5) y lo demás de sus listas (H5b2).
+  const stock = supplyJob(s, w);
   if (stock) return stock;
   const arm = weaponJob(s, w);
   if (arm) return arm;
@@ -136,7 +137,8 @@ export function findWork(s: Survivor, w: World): Action | null {
     ['heal', () => healJob(s, w)], // H4e
     ['build', () => buildJob(s, w)],
     ['craft', () => craftJob(s, w)],
-    ['haul', () => haulJob(s, w) ?? waterJob(s, w)], // H5b: también llenar el barreño
+    // H5b: también llenar el barreño; H5b2: y las bolsas guardadas.
+    ['haul', () => haulJob(s, w) ?? waterJob(s, w) ?? packJob(s, w)],
     ['chop', () => chopJob(s, w)],
     // Saquear: antes, forzar las puertas atrancadas de las casas marcadas (H4d).
     ['loot', () => pryJob(s, w) ?? lootJob(s, w)],
@@ -174,6 +176,8 @@ const WORK_ACTIONS: ReadonlySet<string> = new Set([
   'dropOff',
   'bandage',
   'takeBandages',
+  'takeSupplies',
+  'packBag',
   'fetchPainkiller',
   'givePainkiller',
 ]);
@@ -207,6 +211,8 @@ export function stillWorthIt(s: Survivor, w: World): boolean {
   if (what === 'build') return buildStillWorth(s, w);
   if (what === 'swapWeapon') return swapWeaponStillWorth(s, w);
   if (what === 'dress') return dressStillWorth(s);
+  if (what === 'packBag' && a.type === 'moveTo' && a.then?.type === 'packBag')
+    return s.work.haul && packStillWorth(w, a.then.pieceId);
   if (what === 'takeCrowbar' || what === 'pry') return pryStillWorth(s, w);
   if (what === 'fetchCraft' || what === 'craft') return craftStillWorth(s, w);
   const id = targetContainerId(s);

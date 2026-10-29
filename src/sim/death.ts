@@ -364,7 +364,10 @@ export function deathSystem(w: World): void {
   leavingSystem(w);
   returningSystem(w);
   turnedSystem(w);
-  if (w.common.over === null && w.survivors.length === 0) endGame(w);
+  // Se acaba cuando no queda nadie en ningún mapa (H5c1; desde la base, que guarda los sitios).
+  const everyone = [w, ...w.siteMaps.map((m) => m.world)];
+  if (w.mapId === 0 && w.common.over === null && everyone.every((m) => m.survivors.length === 0))
+    endGame(w);
 }
 
 /** No queda nadie (H5 §9): se acaba la partida; el que esperaba a la puerta se va. */

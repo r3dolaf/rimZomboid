@@ -22,6 +22,7 @@ import { contains, intersects } from './geom';
 import {
   Tile,
   type Bag,
+  type Bed,
   type BodyPart,
   type BuildingKind,
   type Garment,
@@ -33,8 +34,34 @@ import { zombieMax } from './zombies/spawn';
 
 const BUILDING_KINDS: ReadonlySet<BuildingKind> = new Set(Object.keys(BUILDINGS) as BuildingKind[]);
 
-/** Reglas que nunca deben romperse. Devuelve los problemas encontrados (vacío si todo va bien). */
+/**
+ * Reglas que nunca deben romperse. Devuelve los problemas encontrados (vacío si todo va bien). Desde
+ * la base mira también los sitios (H5c1) y las cuentas de todo el juego: piezas, madera e ids.
+ */
 export function checkInvariants(w: World): string[] {
+  const maps = w.mapId === 0 ? [w, ...w.siteMaps.map((m) => m.world)] : [w];
+  const problems: string[] = [];
+  const everyone = maps.flatMap((m) => m.survivors);
+  const everyoneIds = new Set(everyone.map((s) => s.id));
+  if (everyoneIds.size !== everyone.length) problems.push('id repetido entre mapas');
+  const allBeds = maps.flatMap((m) => m.beds);
+  for (const m of maps)
+    for (const p of checkMap(m, everyoneIds, allBeds))
+      problems.push(m.mapId === 0 ? p : `sitio ${m.mapId}: ${p}`);
+  // La madera nunca aparece ni desaparece: lo que hay más lo gastado (y lo perdido al fallar) es lo
+  // repartido, talado y recuperado.
+  const wood = maps.reduce((n, m) => n + woodIn(m), 0);
+  const log = w.common.woodLog;
+  if (wood + log.spent + log.wasted !== log.start + log.chopped + log.recovered)
+    problems.push(
+      `la madera no cuadra: hay ${wood}, gastada ${log.spent}, perdida ${log.wasted}; repartida ${log.start}, talada ${log.chopped}, recuperada ${log.recovered}`,
+    );
+  checkPieces(problems, maps);
+  return problems;
+}
+
+/** Las reglas de un mapa; los dueños de camas y las camas pueden estar en cualquier mapa. */
+function checkMap(w: World, everyoneIds: ReadonlySet<number>, allBeds: readonly Bed[]): string[] {
   const problems: string[] = [];
   if (!Number.isInteger(w.tick) || w.tick < 0) problems.push(`tick no válido: ${w.tick}`);
 
@@ -88,7 +115,7 @@ export function checkInvariants(w: World): string[] {
     }
     if (!w.common.outfits.some((o) => o.id === s.outfitId))
       problems.push(`${who}: su atuendo #${s.outfitId} no existe`);
-    if (s.bedId !== null && !w.beds.some((b) => b.id === s.bedId && b.ownerId === s.id))
+    if (s.bedId !== null && !allBeds.some((b) => b.id === s.bedId && b.ownerId === s.id))
       problems.push(`${who}: su cama ${s.bedId} no existe o no es suya`);
     for (const [id, v] of Object.entries(s.opinions))
       if (!Number.isFinite(v) || Math.abs(v) > OPINION_LIMIT)
@@ -213,7 +240,7 @@ export function checkInvariants(w: World): string[] {
       problems.push(`${s.name}: va al contenedor ${id} sin tenerlo reservado`);
   }
   for (const b of w.beds) {
-    if (b.ownerId !== null && !ids.has(b.ownerId))
+    if (b.ownerId !== null && !everyoneIds.has(b.ownerId))
       problems.push(`cama ${b.id}: su dueño ${b.ownerId} no existe`);
     if (b.medical === true && b.ownerId !== null)
       problems.push(`cama ${b.id}: es de hospital y tiene dueño`);
@@ -288,21 +315,6 @@ export function checkInvariants(w: World): string[] {
       b.done < 0
     )
       problems.push(`pedido ${b.id}: ${b.recipe}, ${b.mode}, N ${b.target}, hechos ${b.done}`);
-  // La madera nunca aparece ni desaparece: lo que hay más lo gastado (y lo perdido al fallar) es lo
-  // repartido, talado y recuperado.
-  const wood =
-    w.storage.items.wood +
-    w.containers.reduce((acc, c) => acc + c.items.wood, 0) +
-    w.piles.reduce((acc, p) => acc + p.items.wood, 0) +
-    w.survivors.reduce((acc, s) => acc + s.carrying.wood, 0) +
-    (w.stranger?.survivors.reduce((acc, s) => acc + s.carrying.wood, 0) ?? 0) +
-    w.blueprints.reduce((acc, b) => acc + b.wood, 0) +
-    woodInBags(w); // H5b2
-  const log = w.common.woodLog;
-  if (wood + log.spent + log.wasted !== log.start + log.chopped + log.recovered)
-    problems.push(
-      `la madera no cuadra: hay ${wood}, gastada ${log.spent}, perdida ${log.wasted}; repartida ${log.start}, talada ${log.chopped}, recuperada ${log.recovered}`,
-    );
   // Agua (H5b §6): entre 0 y lo que cabe.
   for (const f of w.furniture) {
     const max = f.kind === 'tub' ? TUB_LITERS : f.kind === 'cistern' ? CISTERN_LITERS : null;
@@ -315,47 +327,61 @@ export function checkInvariants(w: World): string[] {
   if (w.common.outfits.length === 0) problems.push('no queda ningún atuendo');
   if (new Set(w.common.outfits.map((o) => o.id)).size !== w.common.outfits.length)
     problems.push('atuendos con el mismo id');
-  checkPieces(problems, w);
   return problems;
 }
 
-/** Piezas (H5b §1): cada una en un solo sitio, con id válido, y ninguna perdida. */
-function checkPieces(problems: string[], w: World): void {
+/** La madera de un mapa: almacén, muebles, montones, lo que llevan, planos y bolsas (H5b2). */
+function woodIn(w: World): number {
+  return (
+    w.storage.items.wood +
+    w.containers.reduce((acc, c) => acc + c.items.wood, 0) +
+    w.piles.reduce((acc, p) => acc + p.items.wood, 0) +
+    w.survivors.reduce((acc, s) => acc + s.carrying.wood, 0) +
+    (w.stranger?.survivors.reduce((acc, s) => acc + s.carrying.wood, 0) ?? 0) +
+    w.blueprints.reduce((acc, b) => acc + b.wood, 0) +
+    woodInBags(w)
+  );
+}
+
+/** Piezas (H5b §1): cada una en un solo sitio, con id válido, y ninguna perdida (en todos los mapas). */
+function checkPieces(problems: string[], maps: readonly World[]): void {
+  const w = maps[0]!;
   const seen = new Map<number, () => string>();
   let count = 0;
-  forEachPieceList(w, (list, where, worn) => {
-    for (const g of list) {
-      count++;
-      const before = seen.get(g.id);
-      if (before !== undefined)
-        problems.push(`pieza #${g.id} en dos sitios: ${before()} y ${where()}`);
-      seen.set(g.id, where);
-      if (!Number.isInteger(g.id) || g.id < 1 || g.id >= w.common.nextPieceId)
-        problems.push(`pieza #${g.id} (${where()}): id no válido`);
-      if (isBag(g)) {
-        checkBag(problems, g, where);
-        continue;
+  for (const m of maps)
+    forEachPieceList(m, (list, where, worn) => {
+      for (const g of list) {
+        count++;
+        const before = seen.get(g.id);
+        if (before !== undefined)
+          problems.push(`pieza #${g.id} en dos sitios: ${before()} y ${where()}`);
+        seen.set(g.id, where);
+        if (!Number.isInteger(g.id) || g.id < 1 || g.id >= w.common.nextPieceId)
+          problems.push(`pieza #${g.id} (${where()}): id no válido`);
+        if (isBag(g)) {
+          checkBag(problems, g, where);
+          continue;
+        }
+        // Agujeros, parches y refuerzos solo en lo que cubre; parche y agujero no a la vez.
+        const covers = coversOf(g);
+        for (const z of g.holes) {
+          if (!covers.includes(z))
+            problems.push(`prenda #${g.id} (${where()}): marca en ${z}, que no cubre`);
+          if (g.patches[z]) problems.push(`prenda #${g.id} (${where()}): agujero y parche en ${z}`);
+        }
+        for (const z of [...Object.keys(g.patches), ...Object.keys(g.pads)] as BodyPart[])
+          if (!covers.includes(z))
+            problems.push(`prenda #${g.id} (${where()}): marca en ${z}, que no cubre`);
+        if (g.holes.length > 1 && new Set(g.holes).size !== g.holes.length)
+          problems.push(`prenda #${g.id} (${where()}): agujeros repetidos`);
       }
-      // Agujeros, parches y refuerzos solo en lo que cubre; parche y agujero no a la vez.
-      const covers = coversOf(g);
-      for (const z of g.holes) {
-        if (!covers.includes(z))
-          problems.push(`prenda #${g.id} (${where()}): marca en ${z}, que no cubre`);
-        if (g.patches[z]) problems.push(`prenda #${g.id} (${where()}): agujero y parche en ${z}`);
-      }
-      for (const z of [...Object.keys(g.patches), ...Object.keys(g.pads)] as BodyPart[])
-        if (!covers.includes(z))
-          problems.push(`prenda #${g.id} (${where()}): marca en ${z}, que no cubre`);
-      if (g.holes.length > 1 && new Set(g.holes).size !== g.holes.length)
-        problems.push(`prenda #${g.id} (${where()}): agujeros repetidos`);
-    }
-    // Nada que choque puesto a la vez.
-    if (worn)
-      for (let i = 0; i < list.length; i++)
-        for (let j = i + 1; j < list.length; j++)
-          if (clashes(list[i] as Garment, list[j] as Garment))
-            problems.push(`${where()}: #${list[i]!.id} y #${list[j]!.id} chocan`);
-  });
+      // Nada que choque puesto a la vez.
+      if (worn)
+        for (let i = 0; i < list.length; i++)
+          for (let j = i + 1; j < list.length; j++)
+            if (clashes(list[i] as Garment, list[j] as Garment))
+              problems.push(`${where()}: #${list[i]!.id} y #${list[j]!.id} chocan`);
+    });
   const alive = w.common.pieceLog.made - w.common.pieceLog.gone;
   if (count !== alive) problems.push(`piezas: hay ${count} y las cuentas dicen ${alive}`);
 }

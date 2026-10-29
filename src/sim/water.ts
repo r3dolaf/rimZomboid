@@ -71,6 +71,7 @@ export const isRaining = (w: World): boolean => w.tick < w.common.rainUntil;
  * al aire libre se llenan, las cisternas suben y el barreño de fuera también.
  */
 export function waterSystem(w: World): void {
+  if (w.mapId !== 0) return; // H5c1: en los sitios no hay agua corriente ni depósitos
   if (w.tick === w.waterCutAt) logEvent(w, { kind: 'waterCut' });
   if (!isRaining(w) || w.tick % TICKS_PER_HOUR !== 0) return;
   for (const p of w.piles) {

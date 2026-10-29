@@ -1,5 +1,5 @@
 import { checkInvariants } from '../sim/invariants';
-import { step } from '../sim/step';
+import { stepGame } from '../sim/game';
 import type { World } from '../sim/types';
 
 /**
@@ -8,7 +8,7 @@ import type { World } from '../sim/types';
  */
 export function runTicks(w: World, ticks: number, onProblems?: (problems: string[]) => void): void {
   for (let i = 0; i < ticks; i++) {
-    step(w);
+    stepGame(w); // la base y los sitios con gente (H5c1)
     if (!onProblems) continue;
     const problems = checkInvariants(w);
     if (problems.length > 0) {

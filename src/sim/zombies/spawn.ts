@@ -168,6 +168,7 @@ export function arrivalInterval(w: World): number {
  * Llega un zombi por un borde cuando toca (sin pasar del máximo) y va hacia el pueblo (H4f).
  */
 export function arrivalsSystem(w: World): void {
+  if (w.mapId !== 0) return; // H5c1: en los sitios, solo sus zombis
   if (w.tick < w.nextZombieAt) return;
   w.nextZombieAt = w.tick + arrivalInterval(w);
   // Mientras dura un asedio no llegan sueltos (H4e §2.2).

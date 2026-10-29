@@ -200,6 +200,7 @@ function backTo(w: World, from: { side: MapSide; center: number }): Point {
 
 /** Cada tick, antes de las llegadas por los bordes: llega el asedio anunciado si es su hora. */
 export function hordeSystem(w: World): void {
+  if (w.mapId !== 0) return; // H5c1: las hordas del narrador, solo en la base
   const s = w.siege;
   if (s && w.tick >= s.at) {
     w.siege = null;

@@ -169,11 +169,20 @@ export function emptyWorld(width: number, height: number): World {
 
 /** Añade un superviviente (sin cama) en el centro de la casilla `t`. */
 export function addSurvivor(w: World, t: Point, name = 'Bea'): Survivor {
-  const s: Survivor = {
-    ...structuredClone(w.survivors[0]!),
+  const s = fixturePerson(w, name);
+  s.pos = { x: t.x + 0.5, y: t.y + 0.5 };
+  w.survivors.push(s);
+  return s;
+}
+
+/** Un superviviente nuevo (sin cama ni sitio), como el primero de algún mapa, con su ropa. */
+export function fixturePerson(w: World, name = 'Bea'): Survivor {
+  const template = [w, ...w.siteMaps.map((m) => m.world)].flatMap((m) => m.survivors)[0]!;
+  return {
+    ...structuredClone(template),
     id: w.common.nextId++,
     name,
-    pos: { x: t.x + 0.5, y: t.y + 0.5 },
+    pos: { ...template.pos },
     action: { type: 'idle', ticksLeft: 0 },
     path: [],
     needs: { hunger: 100, sleep: 100, mood: 50, social: 100 },
@@ -197,8 +206,39 @@ export function addSurvivor(w: World, t: Point, name = 'Bea'): Survivor {
     infection: null,
     worn: [newGarment(w, 'tshirt'), newGarment(w, 'jeans')],
   };
-  w.survivors.push(s);
-  return s;
+}
+
+/**
+ * Un sitio de prueba (H5c1) de `width`×`height` sin nadie, con la caja común de la base y su
+ * campamento (el almacén) en las 3×3 casillas de la esquina; queda en `base.siteMaps`.
+ */
+export function siteForTest(base: World, siteId: number, width = 12, height = 12): World {
+  const w = emptyWorld(width, height);
+  w.common = base.common;
+  w.mapId = siteId;
+  w.survivors = [];
+  w.beds = [];
+  w.storage = { tiles: [], items: emptyInventory() };
+  for (let y = 1; y <= 3; y++)
+    for (let x = 1; x <= 3; x++) {
+      w.storage.tiles.push({ x, y });
+      setTile(w.grid, x, y, Tile.Floor); // el suelo del campamento
+    }
+  w.base = { ...w.base, rect: { x: 1, y: 1, w: 3, h: 3 }, door: { x: 2, y: 3 } };
+  w.tick = base.tick;
+  base.siteMaps.push({ siteId, world: w });
+  return w;
+}
+
+/** Lleva a `s` de su mapa a `to`, al campamento o al almacén (sin viajar). */
+export function moveTo(base: World, to: World, s: Survivor): void {
+  for (const m of [base, ...base.siteMaps.map((x) => x.world)])
+    m.survivors = m.survivors.filter((x) => x !== s);
+  const t = to.storage.tiles[0]!;
+  s.pos = { x: t.x + 0.5, y: t.y + 0.5 };
+  s.action = { type: 'idle', ticksLeft: 0 };
+  s.path = [];
+  to.survivors.push(s);
 }
 
 /** Deja solo a esos colonos (los demás se van del mundo con su ropa, H5b). */

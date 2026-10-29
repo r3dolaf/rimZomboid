@@ -770,7 +770,7 @@ export const listRows = (list: Partial<Record<ItemKind, number>>): ListRow[] =>
   ITEM_KINDS.filter((k) => (list[k] ?? 0) > 0).map((k) => ({
     item: k,
     n: list[k]!,
-    name: es.items[k][1],
+    name: es.items[k][list[k] === 1 ? 0 : 1],
   }));
 
 /**

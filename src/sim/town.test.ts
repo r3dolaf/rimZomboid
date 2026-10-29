@@ -60,6 +60,7 @@ test('botín por tipo (spec §4): rangos y, para lo de "a veces", la probabilida
     thread: [2, 2],
     needle: [1, 1],
     axe: [2, 2],
+    hatchet: [2, 2], // H5b2
     crowbar: [2, 2],
     machete: [1, 1],
     knife: [1, 1],
@@ -93,6 +94,7 @@ test('botín por tipo (spec §4): rangos y, para lo de "a veces", la probabilida
     wood: [6, 10],
     cloth: [1, 3],
     axe: [1, 1],
+    hatchet: [1, 1], // H5b2
     machete: [1, 1],
     bucket: [1, 2], // H5b
   });
@@ -103,6 +105,7 @@ test('botín por tipo (spec §4): rangos y, para lo de "a veces", la probabilida
     cloth: [5, 10],
     crowbar: [1, 1],
     axe: [1, 1],
+    hatchet: [1, 1], // H5b2
     bucket: [1, 2], // H5b
   });
 });

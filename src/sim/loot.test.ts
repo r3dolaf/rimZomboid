@@ -1,4 +1,5 @@
 // H4f §4: el botín depende del tipo de edificio, y cada cosa va a su mueble.
+import { garments } from './bags';
 import { expect, test } from 'vitest';
 import { BUILDINGS, LOOT, LOOT_GARMENTS, THREAD_PER_SPOOL, type LootItem } from './balance';
 import { checkInvariants } from './invariants';
@@ -206,7 +207,7 @@ test('ropa en el botín: mucha en la tienda de ropa, chalecos y cascos en la com
     const w = createWorld(seed);
     expect(checkInvariants(w)).toEqual([]);
     for (const c of w.containers)
-      for (const g of c.items.pieces) {
+      for (const g of garments(c.items.pieces)) {
         const h = w.houses.find((x) => x.id === c.houseId)!;
         (byKind[h.kind as LootKind] ??= []).push(g.kind);
         expect(['wardrobe', 'locker', 'crate', 'shelf', 'counter']).toContain(c.kind);

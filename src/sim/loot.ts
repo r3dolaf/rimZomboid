@@ -39,7 +39,7 @@ const ITEMS: readonly LootItem[] = [
   'leather',
   'waterBottle',
   'bucket',
-  'hatchet', // H5b2
+  // (La hachuela, H5b2, se reparte aparte: `fillHatchets`.)
 ];
 
 /** El mueble de cada cosa (spec H4f §4). */
@@ -201,5 +201,16 @@ export function fillBags(
       const kind = weightedPick(rng, { ...spec.kinds } as Record<BagKind, number>);
       pool[nextInt(rng, 0, pool.length - 1)]!.items.pieces.push(newBag(pieces, kind));
     }
+  }
+}
+
+/** Las hachuelas del botín (H5b2 §4): donde el hacha, igual de a menudo, con el azar de la ropa. */
+export function fillHatchets(houses: Building[], containers: Container[], rng: RngState): void {
+  for (const h of houses) {
+    if (h.kind === 'base') continue;
+    const cs = containers.filter((c) => c.houseId === h.id);
+    const n = cs.length > 0 ? roll(rng, LOOT[h.kind].hatchet) : 0;
+    const pool = placesFor(cs, 'hatchet');
+    for (let k = 0; k < n; k++) pool[nextInt(rng, 0, pool.length - 1)]!.items.hatchet++;
   }
 }

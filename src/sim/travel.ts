@@ -9,6 +9,9 @@ import {
   HUNGER_PER_TICK,
   SLEEP_DRAIN_PER_TICK,
   SLEEP_GAIN_PER_TICK,
+  EXPLORE_SECOND_BASE,
+  EXPLORE_SECOND_PER_LEVEL,
+  EXPLORE_WOUND,
   TICKS_PER_HOUR,
   TRAVEL_DAY,
 } from './balance';
@@ -20,7 +23,9 @@ import { exitTile } from './expeditions';
 import { assignBeds } from './jobs/medical';
 import { WEAPONS } from './jobs/weapons';
 import { logEvent } from './log';
-import { catchUp, siteMap } from './sites';
+import { catchUp, discoverSite, siteMap } from './sites';
+import { addWound, BODY_PARTS } from './body';
+import { nextFloat, pick } from './rng';
 import type { DeathCause, Point, Survivor, Travel, World } from './types';
 
 const clamp = (v: number) => Math.min(100, Math.max(0, v));
@@ -118,4 +123,20 @@ export function arrive(base: World, t: Travel): void {
   }
   enterMap(base, t.members, exitTile(base, t.side));
   logEvent(base, { kind: 'expeditionArrived', site: null, names });
+  if (t.kind === 'explore') exploreFindings(base, t);
+}
+
+/** Al volver de explorar (§3): 1 o 2 sitios de ese lado, y a veces una herida. */
+function exploreFindings(base: World, t: Travel): void {
+  const rng = base.common.expedition.rng;
+  const first = t.members[0];
+  const by = first ? { survivorId: first.id } : {};
+  discoverSite(base, { how: 'explore', side: t.side, ...by });
+  const best = Math.max(0, ...t.members.map((s) => s.skills.loot.level));
+  if (nextFloat(rng) < EXPLORE_SECOND_BASE + EXPLORE_SECOND_PER_LEVEL * best)
+    discoverSite(base, { how: 'explore', side: t.side, ...by });
+  const chance = t.members.length === 1 ? EXPLORE_WOUND.alone : EXPLORE_WOUND.pair;
+  for (const s of t.members)
+    if (nextFloat(rng) < chance)
+      addWound(base, s, pick(rng, BODY_PARTS), nextFloat(rng) < 0.5 ? 'scratch' : 'cut');
 }

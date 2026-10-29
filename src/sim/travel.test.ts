@@ -1,7 +1,9 @@
 // H5c1 §4: viajar (solo de día; de noche duermen), comer y vendarse con lo suyo, morir por el
 // camino, y llegar a un sitio o volver a la base.
 import { expect, test } from 'vitest';
-import { TICKS_PER_HOUR } from './balance';
+import { EXPLORE_HOURS, EXPLORE_WOUND, TICKS_PER_DAY, TICKS_PER_HOUR } from './balance';
+import { issue } from './orders';
+import { createRng } from './rng';
 import { dayStart } from './clock';
 import { newBag } from './bags';
 import { allAsleep } from './colony';
@@ -130,4 +132,49 @@ test('quien muere por el camino se pierde con lo que llevaba; sin nadie más, se
   expect(w.common.dead.map((d) => d.name)).toEqual([ana.name]);
   expect(checkInvariants(w)).toEqual([]);
   expect(w.common.over).not.toBeNull();
+});
+
+test('explorar: 1 o 2 salen hacia un lado, están fuera un día de luz y vuelven con sitios de ese lado', () => {
+  expect([EXPLORE_HOURS, EXPLORE_WOUND.alone, EXPLORE_WOUND.pair]).toEqual([14, 0.2, 0.1]);
+  const w = world();
+  w.storage.tiles = [{ x: 5, y: 5 }];
+  const ana = w.survivors[0]!;
+  ana.carrying.bandage = 2;
+  ana.needs = { hunger: 100, sleep: 100, mood: 60, social: 100 };
+  for (const k of Object.keys(ana.work) as (keyof typeof ana.work)[]) ana.work[k] = false;
+  issue(w, { type: 'explore', side: 2, survivorIds: [ana.id, 999] });
+  at(w, 1, 7);
+  for (let i = 0; i < 300 && w.survivors.length > 0; i++) stepGame(w);
+  const t = w.common.expedition.travels[0]!;
+  expect(t).toMatchObject({ kind: 'explore', siteId: null, side: 2, members: [ana] });
+  expect(t.hoursLeft).toBe(EXPLORE_HOURS);
+  for (let i = 0; i < 2 * TICKS_PER_DAY && w.common.expedition.travels.length > 0; i++) stepGame(w);
+  expect(w.survivors).toEqual([ana]); // ha vuelto
+  const sites = w.common.expedition.sites;
+  expect(sites.length).toBeGreaterThanOrEqual(1);
+  expect(sites.length).toBeLessThanOrEqual(2);
+  for (const s of sites) expect(s.side).toBe(2);
+  expect(w.common.log.find((e) => e.kind === 'siteFound')).toMatchObject({
+    how: 'explore',
+    survivorId: ana.id,
+  });
+  expect(checkInvariants(w)).toEqual([]);
+});
+
+test('explorar tiene riesgo: a veces vuelven con un arañazo o un corte (más si va uno solo)', () => {
+  let hurt = 0;
+  for (let seed = 1; seed <= 60; seed++) {
+    const w = world();
+    w.common.expedition.rng = createRng(seed);
+    const ana = onTheRoad(w, 'explore', 0.001, null);
+    ana.wounds = [];
+    at(w, 1, 10);
+    stepGame(w);
+    if (ana.wounds.length > 0) {
+      hurt++;
+      expect(['scratch', 'cut']).toContain(ana.wounds[0]!.kind);
+    }
+  }
+  expect(hurt).toBeGreaterThan(4);
+  expect(hurt).toBeLessThan(24);
 });

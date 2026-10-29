@@ -1,6 +1,6 @@
 // Expediciones (spec H5c1 §4): mandar un grupo a un sitio, prepararse en el almacén con la lista
 // del grupo, ir al borde de ese lado y salir del mapa; el viaje empieza cuando han salido todos.
-import { ACTIVE_SITES_MAX } from './balance';
+import { ACTIVE_SITES_MAX, EXPLORE_HOURS, EXPLORE_MAX } from './balance';
 import { stashOne, takeInto, unloadAt } from './bags';
 import { WEAPONS } from './jobs/weapons';
 import { detach } from './death';
@@ -75,10 +75,12 @@ export function applyExpeditionOrder(
         survivorIds: number[];
         items: Partial<Record<ItemKind, number>>;
       }
-    | { type: 'returnHome'; siteId: number },
+    | { type: 'returnHome'; siteId: number }
+    | { type: 'explore'; side: MapSide; survivorIds: number[] },
 ): void {
   if (w.mapId !== 0) return;
   if (o.type === 'returnHome') return returnHome(w, o.siteId);
+  if (o.type === 'explore') return explore(w, o.side, o.survivorIds);
   const site = w.common.expedition.sites.find((x) => x.id === o.siteId && x.state === 'known');
   if (!site) return;
   const active = activeSiteIds(w);
@@ -222,4 +224,28 @@ export function loadForTrip(w: World, s: Survivor): void {
   const store = w.storage.items;
   for (const k of LOAD_FIRST) while (store[k] > 0 && stashOne(s, k)) store[k]--;
   takeInto(w, s, store, 'haul');
+}
+
+/** Explorar (§3): 1 o 2 salen hacia un lado y están fuera un día de luz. */
+function explore(base: World, side: MapSide, ids: number[]): void {
+  const members = ids
+    .map((id) => base.survivors.find((s) => s.id === id))
+    .filter((s): s is Survivor => s !== undefined && canGo(s))
+    .slice(0, EXPLORE_MAX);
+  if (members.length === 0) return;
+  const travel: Travel = {
+    id: base.common.nextId++,
+    kind: 'explore',
+    siteId: null,
+    side,
+    members: [],
+    hoursLeft: EXPLORE_HOURS,
+    pending: members.map((s) => s.id),
+  };
+  base.common.expedition.travels.push(travel);
+  for (const s of members) {
+    s.trip = { travelId: travel.id, stage: 'prepare', items: {} };
+    s.action = { type: 'idle', ticksLeft: 0 };
+    s.path = [];
+  }
 }

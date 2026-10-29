@@ -8,6 +8,7 @@ import { applyDraftOrder } from './draft';
 import { setMedical } from './jobs/medical';
 import { applyOutfitOrder } from './outfits';
 import type {
+  MapSide,
   BagKind,
   Bill,
   BuildKind,
@@ -67,7 +68,8 @@ export type Order =
       survivorIds: number[];
       items: Partial<Record<ItemKind, number>>;
     }
-  | { type: 'returnHome'; siteId: number };
+  | { type: 'returnHome'; siteId: number }
+  | { type: 'explore'; side: MapSide; survivorIds: number[] };
 
 /** Encola una orden; se aplica al principio del siguiente tick. */
 export function issue(w: World, order: Order): void {
@@ -225,6 +227,7 @@ export function ordersSystem(w: World): void {
         break;
       case 'sendExpedition':
       case 'returnHome':
+      case 'explore':
         applyExpeditionOrder(w, o);
         break;
     }

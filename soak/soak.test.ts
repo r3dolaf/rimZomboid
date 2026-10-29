@@ -229,8 +229,18 @@ function axes(w: World): number {
     w.storage.items.axe +
     w.containers.reduce((n, c) => n + c.items.axe, 0) +
     w.piles.reduce((n, p) => n + p.items.axe, 0) +
-    people.reduce((n, s) => n + s.carrying.axe + (s.equipped === 'axe' ? 1 : 0), 0)
+    people.reduce((n, s) => n + s.carrying.axe + (s.equipped === 'axe' ? 1 : 0), 0) +
+    inBags(w, 'axe') // H5b2
   );
+}
+
+/** Lo que hay de `k` dentro de las bolsas (H5b2), estén donde estén. */
+function inBags(w: World, k: 'axe'): number {
+  let n = 0;
+  forEachPieceList(w, (list) => {
+    for (const p of list) if (isBag(p)) n += p.items[k];
+  });
+  return n;
 }
 
 /**

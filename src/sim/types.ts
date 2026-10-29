@@ -276,6 +276,9 @@ export type Activity =
   | { type: 'packBag'; pieceId: number }
   // Bolsas (H5b2 §2): en el almacén, ponerse la mejor que permita su atuendo.
   | { type: 'bags' }
+  // Expediciones (H5c1): prepararse en el almacén y salir del mapa por el borde.
+  | { type: 'prepareTrip' }
+  | { type: 'leaveMap' }
   // Recoger su bolsa del montón donde la soltó (H5b2 §5).
   | { type: 'pickUpBag'; pileId: number }
   // Descansar (en la cama a la que va) y analgésicos (tomárselo; ir a por uno y llevárselo a otro).
@@ -406,6 +409,8 @@ export interface Survivor {
   bagsPinned: BagSlot[];
   /** Su bolsa de la mano, si la soltó (para ir a por ella); `null` si no. */
   droppedBag: number | null;
+  /** Si se va de expedición (H5c1). */
+  trip: Trip | null;
   /** La bolsa que lleva en la mano para dejarla en el almacén (Transportar, H5b2 §5). */
   haulingBag?: number;
 }
@@ -691,6 +696,16 @@ export interface Travel {
   side: MapSide;
   members: Survivor[];
   hoursLeft: number;
+  /** Los que aún tienen que salir del mapa (el viaje empieza cuando han salido todos). */
+  pending: number[];
+}
+
+/** Su parte de una expedición (H5c1 §4): prepararse en el almacén o ir a la salida. */
+export interface Trip {
+  travelId: number;
+  stage: 'prepare' | 'exit';
+  /** Lo que coge del almacén (su parte de la lista del grupo). */
+  items: Partial<Record<ItemKind, number>>;
 }
 
 /** Las expediciones (H5c1): sitios conocidos, viajes en curso y su propio azar. */

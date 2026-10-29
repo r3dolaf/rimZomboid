@@ -106,6 +106,7 @@ export function emptyWorld(width: number, height: number): World {
         hates: 'chaps',
         outfitId: 1,
         dressCheckAt: 0,
+        trip: null,
         ...bagFields(),
       },
     ],

@@ -352,3 +352,21 @@ export function forEachPieceList(
   for (const c of w.containers) each(c.items.pieces, () => `contenedor #${c.id}`);
   for (const p of w.piles) each(p.items.pieces, () => `montón #${p.id}`);
 }
+
+/** Las listas de piezas de los que van de viaje (H5c1): lo que llevan, lo puesto y sus bolsas. */
+export function forEachTravelerPieceList(
+  w: World,
+  fn: (list: readonly Piece[], where: () => string, worn: boolean) => void,
+): void {
+  const each = (list: readonly Piece[], where: () => string, worn = false): void => {
+    if (list.length > 0) fn(list, where, worn);
+    for (const p of list)
+      if (isBag(p)) each(p.items.pieces, () => `dentro de la bolsa #${p.id} (${where()})`);
+  };
+  for (const t of w.common.expedition.travels)
+    for (const s of t.members) {
+      each(s.carrying.pieces, () => `carga de ${s.name} (de viaje)`);
+      each(s.worn, () => `ropa de ${s.name} (de viaje)`, true);
+      each(wornBags(s), () => `bolsas de ${s.name} (de viaje)`);
+    }
+}

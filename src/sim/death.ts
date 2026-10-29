@@ -115,13 +115,16 @@ function leaveBody(w: World, s: Survivor, cause: DeathCause): void {
   w.containers.push(c);
 }
 
-/** Que nada se quede apuntando a `s` (cosas de dos, llevar en brazos, reservas, decisiones…). */
-function detach(w: World, s: Survivor): void {
+/**
+ * Que nada se quede apuntando a `s` (cosas de dos, llevar en brazos, reservas, decisiones…). Al
+ * irse de expedición (H5c1) sigue siendo pareja de quien lo fuera.
+ */
+export function detach(w: World, s: Survivor, keepPartner = false): void {
   if (s.carryingId !== null) dropCarried(w, s);
   for (const o of [...w.survivors, ...(w.stranger?.survivors ?? [])]) {
     if (o === s) continue;
     if (o.carryingId === s.id) o.carryingId = null;
-    if (o.partnerId === s.id) o.partnerId = null; // también entre desconocidos
+    if (o.partnerId === s.id && !keepPartner) o.partnerId = null; // también entre desconocidos
     if (involves(o.action, s.id)) {
       o.action = { type: 'idle', ticksLeft: 0 };
       o.path = [];
@@ -366,7 +369,13 @@ export function deathSystem(w: World): void {
   turnedSystem(w);
   // Se acaba cuando no queda nadie en ningún mapa (H5c1; desde la base, que guarda los sitios).
   const everyone = [w, ...w.siteMaps.map((m) => m.world)];
-  if (w.mapId === 0 && w.common.over === null && everyone.every((m) => m.survivors.length === 0))
+  const traveling = w.common.expedition.travels.some((t) => t.members.length > 0);
+  if (
+    w.mapId === 0 &&
+    w.common.over === null &&
+    !traveling &&
+    everyone.every((m) => m.survivors.length === 0)
+  )
     endGame(w);
 }
 

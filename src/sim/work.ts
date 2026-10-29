@@ -1,5 +1,6 @@
 // Trabajos (spec H4a §3): cuál toca por orden de criticidad, si sigue teniendo sentido, y el
 // saqueo (elegir contenedor, reservar, descargar en el almacén).
+import { tripJob } from './expeditions';
 import { BAGS, DRESS_CHECK_TICKS, HUNGRY_LOOT_DAYS, ITEM_WEIGHT_KG } from './balance';
 import { bagAllowed, bagRoom, isBag, personal, wornBags } from './bags';
 import { armFactor } from './body';
@@ -106,7 +107,9 @@ function lootJob(s: Survivor, w: World): Action | null {
  */
 export function findWork(s: Survivor, w: World): Action | null {
   if (armFactor(s) === 0) return null; // sin brazos no se trabaja (H5)
-  // Lo primero, su bolsa si la soltó (H5b2 §5).
+  // Lo primero, irse de expedición si le toca (H5c1 §4); luego, su bolsa si la soltó (H5b2 §5).
+  const trip = tripJob(s, w);
+  if (trip) return trip;
   const recover = recoverBagJob(s, w);
   if (recover) return recover;
   const loot = may(s, 'loot');
@@ -174,6 +177,8 @@ const WORK_ACTIONS: ReadonlySet<string> = new Set([
   'dress',
   'bags',
   'pickUpBag',
+  'prepareTrip',
+  'leaveMap',
   'takeWater',
   'fillBucket',
   'pourWater',

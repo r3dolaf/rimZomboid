@@ -1,3 +1,4 @@
+import { startLeaveMap, startPrepareTrip } from '../expeditions';
 import { pickUpBag, startBags } from '../jobs/bags';
 import { startPackBag, takeSupplies } from '../jobs/supplies';
 import { carriesSomething } from '../bags';
@@ -135,6 +136,10 @@ function startActivity(s: Survivor, activity: Activity, w: World): Action {
       return startBags(s, w); // H5b2
     case 'pickUpBag':
       return pickUpBag(s, w, activity.pileId);
+    case 'prepareTrip':
+      return startPrepareTrip(s, w); // H5c1
+    case 'leaveMap':
+      return startLeaveMap(s, w);
     case 'takeWater':
     case 'fillBucket':
     case 'pourWater':

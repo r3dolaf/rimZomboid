@@ -212,6 +212,7 @@ export function newStranger(w: World, start: Point): Survivor {
     hates: 'cap',
     outfitId: w.common.outfits[0]?.id ?? 1,
     dressCheckAt: 0,
+    trip: null,
     ...bagFields(),
   };
   dressStarter(w, s, w.rng); // H5b: llegan vestidos

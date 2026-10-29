@@ -1,5 +1,6 @@
 import { applyBagListOrder, type BagListOrder } from './bags';
-import { isEmpty } from './items';
+import { applyExpeditionOrder } from './expeditions';
+import { isEmpty, type ItemKind } from './items';
 import { resolveDecision } from './events/resolve';
 import { cancelBlueprint, markTree, placeBlueprint } from './build';
 import { BILL_DEFAULT_TARGET, RECIPES } from './balance';
@@ -58,7 +59,14 @@ export type Order =
   | { type: 'setOutfitBag'; outfitId: number; bag: BagKind; on: boolean }
   | { type: 'setOutfitHandBag'; outfitId: number; on: boolean }
   // Listas de las bolsas y «Llevar siempre» (H5b2 §3)
-  | BagListOrder;
+  | BagListOrder
+  // Expediciones (H5c1 §4)
+  | {
+      type: 'sendExpedition';
+      siteId: number;
+      survivorIds: number[];
+      items: Partial<Record<ItemKind, number>>;
+    };
 
 /** Encola una orden; se aplica al principio del siguiente tick. */
 export function issue(w: World, order: Order): void {
@@ -213,6 +221,9 @@ export function ordersSystem(w: World): void {
       case 'setKeep':
       case 'pinBag':
         applyBagListOrder(w, o);
+        break;
+      case 'sendExpedition':
+        applyExpeditionOrder(w, o);
         break;
     }
   }

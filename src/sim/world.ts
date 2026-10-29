@@ -121,6 +121,7 @@ export function createWorld(
     hates: 'cap',
     outfitId: 1, // Cualquiera
     dressCheckAt: 0,
+    trip: null,
     ...bagFields(), // H5b2: nadie empieza con bolsa
   }));
   // La ropa del principio y las preferencias (H5b), con su propio azar.

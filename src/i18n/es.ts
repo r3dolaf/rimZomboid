@@ -5,6 +5,7 @@ import type { ItemKind } from '../sim/items';
 import type { RelationLabel } from '../sim/social';
 import type {
   BagKind,
+  BagSlot,
   BodyPart,
   BubbleKind,
   BuildingKind,
@@ -54,7 +55,27 @@ export const es = {
     chop: 'Talar',
     loot: 'Saquear',
   } satisfies Record<WorkType, string>,
-  sheetTabs: { general: 'General', skills: 'Habilidades', health: 'Salud', clothes: 'Ropa' },
+  sheetTabs: {
+    general: 'General',
+    skills: 'Habilidades',
+    health: 'Salud',
+    clothes: 'Ropa',
+    bags: 'Bolsas',
+  },
+  // Bolsas (H5b2 §7)
+  bagsUi: {
+    slots: { waist: 'Cintura', back: 'Espalda', hand: 'Mano' } satisfies Record<BagSlot, string>,
+    nothing: 'Nada',
+    load: (now: string, max: string) => `${now} / ${max} kg`,
+    pin: 'Fijar',
+    pinned: 'Fijada',
+    inside: (what: string) => `Dentro: ${what}`,
+    list: 'Su lista (no se descarga y se rellena)',
+    keep: 'Llevar siempre',
+    add: 'Añadir…',
+    hands: (what: string, kg: string) => `En las manos: ${what} · ${kg} kg`,
+    count: (n: number, name: string) => `${n} ${name}`,
+  },
   /** La ropa en pantalla (H5b §8). */
   clothesUi: {
     /** Concordancia con la prenda: "rota", "rotos"… según su artículo. */

@@ -1,6 +1,7 @@
 // Traducciones del estado de la simulación a textos e indicadores para la interfaz.
 import { es } from '../i18n/es';
 import {
+  BAGS,
   BODY_HP,
   CISTERN_LITERS,
   CLEAN_BANDAGE_HEAL,
@@ -16,10 +17,13 @@ import { BODY_PARTS, painOf, partHp } from '../sim/body';
 import { layersOn, zoneBlock } from '../sim/clothes';
 import { mainsOn } from '../sim/water';
 import { gameTime } from '../sim/clock';
-import { ITEM_KINDS, type Inventory, type ItemKind } from '../sim/items';
+import { ITEM_KINDS, weightOf, type Inventory, type ItemKind } from '../sim/items';
+import { BAG_SLOTS, effectiveKeep, effectiveList, effectivePinned } from '../sim/bags';
 import type { LogEntry } from '../sim/log';
 import type { MoodModifier } from '../sim/mood';
 import type {
+  BagKind,
+  BagSlot,
   BodyPart,
   Building,
   Furniture,
@@ -747,4 +751,67 @@ export function noticeFor(e: LogEntry): NoticeInfo | null {
     default:
       return null;
   }
+}
+
+/** Kilos con una cifra decimal, salvo si son justos: "8", "7,2". */
+export const kgText = (n: number): string =>
+  Number.isInteger(Math.round(n * 10) / 10)
+    ? String(Math.round(n))
+    : n.toFixed(1).replace('.', ',');
+
+/** El nombre de una bolsa con mayúscula: "Mochila escolar". */
+export const bagName = (kind: BagKind): string =>
+  es.bags[kind].charAt(0).toUpperCase() + es.bags[kind].slice(1);
+
+type ListRow = { item: ItemKind; n: number; name: string };
+const listRows = (list: Partial<Record<ItemKind, number>>): ListRow[] =>
+  ITEM_KINDS.filter((k) => (list[k] ?? 0) > 0).map((k) => ({
+    item: k,
+    n: list[k]!,
+    name: es.items[k][1],
+  }));
+
+/**
+ * La pestaña Bolsas (H5b2 §7): cada hueco con su bolsa (kilos dentro y lo que admite, si está
+ * fijada, lo de dentro y su lista), lo de las manos y su «Llevar siempre» (con lo pedido en pausa).
+ */
+export function bagsView(
+  w: World,
+  s: Survivor,
+): {
+  slots: {
+    slot: BagSlot;
+    name: string;
+    bag: {
+      id: number;
+      name: string;
+      load: string;
+      pinned: boolean;
+      contents: string;
+      list: ListRow[];
+    } | null;
+  }[];
+  hands: string;
+  keep: ListRow[];
+} {
+  const pinned = effectivePinned(w, s);
+  return {
+    slots: BAG_SLOTS.map((slot) => {
+      const b = s.bags[slot];
+      return {
+        slot,
+        name: es.bagsUi.slots[slot],
+        bag: b && {
+          id: b.id,
+          name: bagName(b.kind),
+          load: es.bagsUi.load(kgText(weightOf(b.items)), kgText(BAGS[b.kind].capacity)),
+          pinned: pinned.includes(slot),
+          contents: formatItems(b.items),
+          list: listRows(effectiveList(w, b)),
+        },
+      };
+    }),
+    hands: es.bagsUi.hands(formatItems(s.carrying), kgText(weightOf(s.carrying))),
+    keep: listRows(effectiveKeep(w, s)),
+  };
 }

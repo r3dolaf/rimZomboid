@@ -788,3 +788,26 @@
   margin: 0.1em 0 0.4em 1em;
   padding: 0;
 }
+/* Bolsas (H5b2 §7) */
+.sheet .bags .bag-slot {
+  margin: 0.3em 0 0.5em;
+}
+.sheet .bags .bag-slot p {
+  margin: 0.15em 0;
+}
+.sheet .bags .bag-list {
+  margin: 0.1em 0 0.3em 1em;
+}
+.sheet .bags .bag-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  margin: 0.1em 0;
+}
+.sheet .bags button {
+  pointer-events: auto;
+  min-width: 1.8em;
+}
+.sheet .bags button.selected {
+  font-weight: bold;
+}

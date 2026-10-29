@@ -18,6 +18,7 @@ import {
   personName,
   signed,
 } from './describe';
+import { mountBagsPane } from './bagsPane';
 import type { Selection } from './selection';
 import {
   cyclePriority,
@@ -201,6 +202,12 @@ export function mountSheet(
   let clothesShown = '';
   let outfitsShown = '';
 
+  // Bolsas (H5b2 §7).
+  const bags = mountBagsPane({
+    world: opts.world,
+    survivor: () => opts.world.survivors.find((x) => x.id === opts.selection.id),
+  });
+
   const tabs = document.createElement('nav');
   tabs.className = 'tabs';
   const panes: Record<SheetTab, HTMLElement> = {
@@ -208,6 +215,7 @@ export function mountSheet(
     skills: skillsPane,
     health: healthPane,
     clothes: clothesPane,
+    bags: bags.pane,
   };
   let tab = loadTab();
   const tabButtons = SHEET_TABS.map((k) => {
@@ -229,7 +237,7 @@ export function mountSheet(
     for (const k of SHEET_TABS) panes[k].hidden = k !== tab;
   };
   showTab();
-  panel.append(head, tabs, general, skillsPane, healthPane, clothesPane);
+  panel.append(head, tabs, general, skillsPane, healthPane, clothesPane, bags.pane);
 
   let shown = ''; // firma de lo pintado, para no rehacer el DOM en cada fotograma
 
@@ -333,6 +341,7 @@ export function mountSheet(
         clothesShown = clothesKey;
         clothesBody.replaceChildren(renderClothes(clothes));
       }
+      bags.update(s);
 
       const key = JSON.stringify(view);
       panel.hidden = false;
@@ -350,7 +359,7 @@ const kg = (n: number) =>
     ? String(Math.round(n))
     : n.toFixed(1).replace('.', ',');
 
-const SHEET_TABS = ['general', 'skills', 'health', 'clothes'] as const;
+const SHEET_TABS = ['general', 'skills', 'health', 'clothes', 'bags'] as const;
 type SheetTab = (typeof SHEET_TABS)[number];
 const TAB_KEY = 'rimzomboid.sheetTab';
 

@@ -1,6 +1,9 @@
 // Cuántos zombis hay y dónde aparecen (spec H4b §2.3).
+import { bagRoom, newBag } from '../bags';
 import { zombieClothes } from '../clothes';
 import {
+  ITEM_WEIGHT_KG,
+  ZOMBIE_BAG,
   START_HOUR,
   TICKS_PER_DAY,
   TICKS_PER_HOUR,
@@ -19,8 +22,8 @@ import {
 import { contains, intersects } from '../geom';
 import { isNight } from '../clock';
 import { isZombieWalkable } from '../map/grid';
-import { nextFloat, nextInt } from '../rng';
-import type { NarratorStyle, Point, World, Zombie, ZombieLevel } from '../types';
+import { nextFloat, nextInt, pick, weightedPick } from '../rng';
+import type { Bag, BagKind, NarratorStyle, Point, World, Zombie, ZombieLevel } from '../types';
 import { siegeActive } from './hordes';
 
 export function zombieStartCount(style: NarratorStyle, level: ZombieLevel): number {
@@ -53,8 +56,12 @@ export function newZombie(w: World, t: Point, dressed = true): Zombie {
     worn: [],
     bags: [],
   };
-  // Vestido (H5b §7), salvo el que fue una persona (lleva su ropa).
-  if (dressed) z.worn = zombieClothes(w);
+  // Vestido (H5b §7), salvo el que fue una persona (lleva su ropa); algunos, con bolsa (H5b2 §6).
+  if (dressed) {
+    z.worn = zombieClothes(w);
+    const bag = zombieBag(w);
+    if (bag) z.bags.push(bag);
+  }
   return z;
 }
 
@@ -188,4 +195,17 @@ export function arrivalsSystem(w: World): void {
     w.zombies.push(z);
     return;
   }
+}
+
+/** La bolsa de un zombi (H5b2 §6), con unas pocas cosas, o `null` (con el azar de los zombis). */
+function zombieBag(w: World): Bag | null {
+  const rng = w.zombieRng;
+  if (nextFloat(rng) >= ZOMBIE_BAG.chance) return null;
+  const b = newBag(w, weightedPick(rng, { ...ZOMBIE_BAG.kinds } as Record<BagKind, number>));
+  const n = nextInt(rng, ZOMBIE_BAG.items[0], ZOMBIE_BAG.items[1]);
+  for (let i = 0; i < n; i++) {
+    const k = pick(rng, ZOMBIE_BAG.from);
+    if (bagRoom(b) + 1e-9 >= ITEM_WEIGHT_KG[k]) b.items[k]++;
+  }
+  return b;
 }

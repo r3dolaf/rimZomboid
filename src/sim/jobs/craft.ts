@@ -7,7 +7,7 @@ import {
   RECIPES,
   type Recipe,
 } from '../balance';
-import { garments } from '../bags';
+import { bagsIn, garments, newBag } from '../bags';
 import { coversOf, destroyed, piecesGone } from '../clothes';
 import { emptyInventory, pieceKg, weightOf, type ItemKind } from '../items';
 import { logEvent } from '../log';
@@ -15,6 +15,7 @@ import { findPath } from '../path/astar';
 import { nextFloat, pick } from '../rng';
 import { buildFailChance, capacityKg, workSpeed } from '../skills';
 import type {
+  Piece,
   Action,
   Bill,
   BodyPart,
@@ -97,6 +98,14 @@ export function billWanted(w: World, b: Bill): boolean {
   const busy = w.survivors.filter((s) => craftTarget(s) === b.id).length;
   if (b.mode === 'count') return b.done + busy < b.target;
   const r = RECIPES[b.recipe];
+  // Una bolsa (H5b2): las de ese tipo del almacén y las que van camino de él.
+  if (r.makes) {
+    const kind = r.makes;
+    const count = (list: readonly Piece[]) => bagsIn(list).filter((x) => x.kind === kind).length;
+    const have =
+      count(w.storage.items.pieces) + w.survivors.reduce((n, s) => n + count(s.carrying.pieces), 0);
+    return have + busy < b.target;
+  }
   return entries(r.output).some(([k, n]) => {
     const have = w.storage.items[k] + w.survivors.reduce((acc, s) => acc + s.carrying[k], 0);
     return have + busy * n < b.target;
@@ -287,6 +296,7 @@ export function finishCraft(
     return;
   }
   for (const [k, n] of entries(r.output)) s.carrying[k] += n;
+  if (r.makes) s.carrying.pieces.push(newBag(w, r.makes)); // H5b2: una bolsa
   if (g) workOnGarment(w, s, a.recipe, g, a.material);
   const b = w.bills.find((x) => x.id === a.billId);
   if (b && b.mode === 'count') b.done++;

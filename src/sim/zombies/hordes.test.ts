@@ -278,7 +278,8 @@ test('fin al día: la horda se va por donde vino (como unos errantes) y sale del
   const before = w.zombies.length;
   arrivalsSystem(w);
   expect(w.zombies.length).toBe(before + 1);
-  piecesGone(w, w.zombies.pop()!.worn);
+  const gone = w.zombies.pop()!;
+  piecesGone(w, [...gone.worn, ...gone.bags]);
   runZ(w, 3000);
   expect(w.zombies.filter((z) => z.hordeId === h.id)).toHaveLength(0);
   expect(w.hordes).toHaveLength(0);

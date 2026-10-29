@@ -1,5 +1,5 @@
 // Ayudas para los tests de la simulación.
-import { bagFields } from '../bags';
+import { bagFields, wornBags } from '../bags';
 import { newGarment, piecesGone } from '../clothes';
 import { DEFAULT_OUTFITS } from '../balance';
 import { emptyInventory } from '../items';
@@ -200,7 +200,7 @@ export function addSurvivor(w: World, t: Point, name = 'Bea'): Survivor {
 /** Deja solo a esos colonos (los demás se van del mundo con su ropa, H5b). */
 export function keepSurvivors(w: World, keep: Survivor[]): void {
   for (const s of w.survivors)
-    if (!keep.includes(s)) piecesGone(w, [...s.worn, ...s.carrying.pieces]);
+    if (!keep.includes(s)) piecesGone(w, [...s.worn, ...s.carrying.pieces, ...wornBags(s)]);
   w.survivors = w.survivors.filter((s) => keep.includes(s));
 }
 
@@ -221,7 +221,7 @@ export function encloseTile(w: World, t: Point): void {
  * ellos (antes de H4b). Las hordas, como si acabaran de salir para siempre.
  */
 export function withoutZombies(w: World): World {
-  for (const z of w.zombies) piecesGone(w, z.worn);
+  for (const z of w.zombies) piecesGone(w, [...z.worn, ...z.bags]);
   w.zombies = [];
   w.nextZombieAt = Number.MAX_SAFE_INTEGER;
   w.narrator.lastAt.siege = Number.MAX_SAFE_INTEGER;

@@ -336,6 +336,8 @@ export interface Recipe {
   water?: number;
   /** No falla nunca (lavar). */
   safe?: boolean;
+  /** Lo que hace es una bolsa (H5b2 §6): sale como pieza. */
+  makes?: BagKind;
 }
 export const RECIPES: Record<RecipeId, Recipe> = {
   bandages: {
@@ -390,6 +392,14 @@ export const RECIPES: Record<RecipeId, Recipe> = {
     station: 'tub',
     water: 2,
     safe: true,
+  },
+  // H5b2 §6: la bolsa de tela.
+  sewBag: {
+    input: { cloth: 4, thread: 2 },
+    tool: 'needle',
+    output: {},
+    ticks: TICKS_PER_HOUR,
+    makes: 'clothBag',
   },
 };
 export const BILL_DEFAULT_TARGET = 5; // un pedido nuevo: "hasta tener 5"
@@ -1138,3 +1148,18 @@ export const WEAPON_HANDS = {
   crowbar: 'either',
   axe: 'two',
 } as const;
+
+/** Zombis con bolsa (H5b2 §6): cuántos, cuál y con cuántas cosas dentro (de estas, al azar). */
+export const ZOMBIE_BAG: {
+  chance: number;
+  kinds: Partial<Record<BagKind, number>>;
+  items: [number, number];
+  from: readonly ItemKind[];
+} = {
+  chance: 0.1,
+  kinds: { fannyPack: 2, schoolBag: 2, duffel: 1 },
+  items: [1, 3],
+  from: ['food', 'bandage', 'cloth', 'waterBottle', 'painkillers'],
+};
+/** Desconocidos que llegan con una riñonera o una mochila escolar (H5b2 §6). */
+export const STRANGER_BAG_CHANCE = 0.3;

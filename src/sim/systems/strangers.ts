@@ -6,11 +6,12 @@ import {
   SURVIVOR_WALK_SPEED,
   COLONY_MAX,
   STRANGER_BANDAGE_CHANCE,
+  STRANGER_BAG_CHANCE,
   STRANGER_FOOD_MAX,
   STRANGER_NEED_MAX,
   STRANGER_NEED_MIN,
 } from '../balance';
-import { bagFields, wornBags } from '../bags';
+import { bagFields, newBag, wornBags } from '../bags';
 import { baseLayout } from '../base';
 import { freeFloor } from '../build';
 import { dressStarter, piecesGone } from '../clothes';
@@ -213,6 +214,11 @@ export function newStranger(w: World, start: Point): Survivor {
     ...bagFields(),
   };
   dressStarter(w, s, w.rng); // H5b: llegan vestidos
+  // Algunos, con una riñonera o una mochila escolar (H5b2 §6).
+  if (nextFloat(w.rng) < STRANGER_BAG_CHANCE) {
+    const b = newBag(w, nextFloat(w.rng) < 0.5 ? 'fannyPack' : 'schoolBag');
+    s.bags[b.kind === 'fannyPack' ? 'waist' : 'back'] = b;
+  }
   s.needs.mood = moodTarget(s, w.tick, w.base.rect);
   s.stance = defaultStance(s.traits);
   s.skills = rollSkills(skillRng(w.seed, s.id), s.traits);

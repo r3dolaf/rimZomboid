@@ -143,6 +143,12 @@ export const es = {
       done: 'ha lavado una prenda',
       fail: 'lavar la ropa',
     },
+    sewBag: {
+      name: 'Bolsa de tela',
+      doing: 'Cosiendo una bolsa de tela',
+      done: 'ha cosido una bolsa de tela',
+      fail: 'coser la bolsa de tela',
+    },
   } satisfies Record<RecipeId, { name: string; doing: string; done: string; fail: string }>,
   /** Materiales que se pierden al fallar (sin plural): "−2 de tela". */
   materials: {
@@ -168,6 +174,7 @@ export const es = {
     pad: 'una prenda, 1 uso de hilo, 1 tela, retal o tira y una aguja',
     unpickGarment: 'una prenda destrozada y un cuchillo',
     wash: 'una prenda sucia o con sangre y 2 litros de agua en el barreño',
+    sewBag: '4 telas, 2 usos de hilo y una aguja',
   } satisfies Record<RecipeId, string>,
   /** En el registro, con la prenda (H5b): "Ana ha remendado la chaqueta vaquera". */
   garmentDone: {

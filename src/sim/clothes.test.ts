@@ -1,5 +1,5 @@
 // H5b §2: prendas, capas y zonas; gente vestida; la ropa no se pierde ni se duplica.
-import { garments } from './bags';
+import { garments, wornBags } from './bags';
 import { expect, test } from 'vitest';
 import { CORPSE_ROT_TICKS, DIRTY_HOURS, GARMENTS, TICKS_PER_DAY } from './balance';
 import {
@@ -157,7 +157,7 @@ test('los desconocidos que se van del mapa se llevan su ropa (se apunta en las c
   expect(checkInvariants(w)).toEqual([]);
   strangerSystem(w);
   expect(w.stranger).toBeNull();
-  expect(w.pieceLog.gone).toBe(s.worn.length);
+  expect(w.pieceLog.gone).toBe(s.worn.length + wornBags(s).length); // (y su bolsa, H5b2)
   expect(checkInvariants(w)).toEqual([]);
 });
 
@@ -342,7 +342,7 @@ test('el cuerpo de un zombi guarda su ropa y ya no lleva tela', () => {
   for (let i = 0; i < 40; i++) {
     const z = newZombie(w, { x: 20, y: 20 });
     w.zombies.push(z);
-    const kinds = z.worn.map((x) => x.kind);
+    const kinds = [...z.worn, ...z.bags].map((x) => x.kind); // (y su bolsa, H5b2)
     leaveCorpse(w, z);
     w.zombies = w.zombies.filter((x) => x !== z);
     const c = w.containers.at(-1)!;

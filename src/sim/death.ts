@@ -18,7 +18,7 @@ import {
   TURNED_RETURN_TICKS,
 } from './balance';
 import { armFactor, canWalk } from './body';
-import { garments, isBag, wornBags } from './bags';
+import { bagsIn, garments, isBag, noBags, wornBags } from './bags';
 import { wearable } from './clothes';
 import { gameTime } from './clock';
 import { seenByColony } from './danger';
@@ -96,6 +96,9 @@ function leaveBody(w: World, s: Survivor, cause: DeathCause): void {
   for (const g of s.worn) g.from = 'colonist';
   items.pieces.push(...s.worn);
   s.worn = [];
+  // Sus bolsas (H5b2 §5), con todo dentro.
+  items.pieces.push(...wornBags(s));
+  s.bags = noBags();
   const c: Container = {
     id: w.nextId++,
     houseId: -1,
@@ -340,6 +343,9 @@ function rise(w: World, c: Container): void {
   for (const g of garments(c.items.pieces))
     if (g.from === 'colonist' && wearable(z.worn, g)) z.worn.push(g);
   c.items.pieces = c.items.pieces.filter((g) => isBag(g) || !z.worn.includes(g));
+  // Y con sus bolsas (H5b2 §5).
+  z.bags = bagsIn(c.items.pieces);
+  c.items.pieces = c.items.pieces.filter((g) => !isBag(g));
   dropPile(w, c.pos, c.items);
   if (c.name !== undefined) z.name = c.name;
   w.zombies.push(z);

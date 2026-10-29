@@ -2,7 +2,13 @@
 // el almacén; lo que su atuendo ya no permite, se lo quita (salvo los huecos fijados).
 import { BAGS, DRESS_TICKS } from '../balance';
 import { BAG_SLOTS, bagAllowed, bagsIn, settleBag, unloadAt } from '../bags';
+import { canWalk } from '../body';
+import { logEvent } from '../log';
+import { regionOf } from '../path/astar';
+import { prunePiles } from '../piles';
 import { pick } from '../rng';
+import { tileOf } from '../world';
+import { atOrBeside } from './stand';
 import type { Action, Bag, BagSlot, Survivor, World } from '../types';
 import { takeSupplies } from './supplies';
 
@@ -75,4 +81,40 @@ export function startBags(s: Survivor, w: World): Action {
   return changes > 0
     ? { type: 'dress', ticksLeft: changes * DRESS_TICKS }
     : { type: 'idle', ticksLeft: 0 };
+}
+
+/** El montón donde está su bolsa soltada, o `undefined`. */
+const pileWith = (w: World, bagId: number) =>
+  w.piles.find((p) => p.items.pieces.some((x) => x.id === bagId));
+
+/**
+ * Su bolsa soltada (§5): si está bien, tiene la mano libre y llega, va primero a por ella. Si ya no
+ * está en el suelo (se la ha llevado otro), se olvida de ella.
+ */
+export function recoverBagJob(s: Survivor, w: World): Action | null {
+  if (s.droppedBag === null) return null;
+  const pile = pileWith(w, s.droppedBag);
+  if (!pile) {
+    s.droppedBag = null;
+    return null;
+  }
+  if (s.bags.hand !== null || s.drafted || !canWalk(s)) return null;
+  const at = tileOf(s.pos);
+  if (regionOf(w.grid, at.x, at.y) !== regionOf(w.grid, pile.pos.x, pile.pos.y)) return null;
+  return { type: 'moveTo', target: { ...pile.pos }, then: { type: 'pickUpBag', pileId: pile.id } };
+}
+
+/** Al llegar al montón: se pone su bolsa en la mano. */
+export function pickUpBag(s: Survivor, w: World, pileId: number): Action {
+  const pile = w.piles.find((p) => p.id === pileId);
+  const b = pile && bagsIn(pile.items.pieces).find((x) => x.id === s.droppedBag);
+  if (pile && b && s.bags.hand === null && atOrBeside(s, pile.pos)) {
+    pile.items.pieces = pile.items.pieces.filter((x) => x !== b);
+    s.bags.hand = b;
+    s.droppedBag = null;
+    w.bagLog.recovered++;
+    logEvent(w, { kind: 'bagRecovered', survivorId: s.id, bag: b.kind });
+    prunePiles(w);
+  }
+  return { type: 'idle', ticksLeft: 0 };
 }

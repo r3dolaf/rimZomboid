@@ -10,7 +10,7 @@ import {
   STRANGER_NEED_MAX,
   STRANGER_NEED_MIN,
 } from '../balance';
-import { bagFields } from '../bags';
+import { bagFields, wornBags } from '../bags';
 import { baseLayout } from '../base';
 import { freeFloor } from '../build';
 import { dressStarter, piecesGone } from '../clothes';
@@ -61,7 +61,7 @@ export function strangerSystem(w: World): void {
   }
   if (!st.leaving || !arrived) return;
   // Se van del mapa con lo que llevan (H5b: las piezas, en las cuentas).
-  for (const s of st.survivors) piecesGone(w, [...s.worn, ...s.carrying.pieces]);
+  for (const s of st.survivors) piecesGone(w, [...s.worn, ...s.carrying.pieces, ...wornBags(s)]); // H5b2: y sus bolsas
   w.stranger = null;
 }
 

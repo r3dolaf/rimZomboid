@@ -235,7 +235,7 @@ export function hordeSystem(w: World): void {
     );
     if (out.size > 0) {
       w.zombies = w.zombies.filter((z) => !out.has(z));
-      for (const z of out) piecesGone(w, z.worn); // H5b: se van con su ropa
+      for (const z of out) piecesGone(w, [...z.worn, ...z.bags]); // H5b: con su ropa (y bolsas)
       mine = mine.filter((z) => !out.has(z));
     }
     if (mine.length === 0) {

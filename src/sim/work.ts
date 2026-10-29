@@ -15,7 +15,7 @@ import { hasCargo } from './jobs/medical';
 import { packJob, packStillWorth, supplyJob } from './jobs/supplies';
 import { swapWeaponStillWorth, weaponJob } from './jobs/weapons';
 import { dressJob, dressStillWorth } from './jobs/dress';
-import { bagJob, bagStillWorth } from './jobs/bags';
+import { bagJob, bagStillWorth, recoverBagJob } from './jobs/bags';
 import { waterJob, waterStillWorth } from './jobs/water';
 import { isEmpty, ITEM_KINDS, pieceKg, weightOf } from './items';
 import { regionOf } from './path/astar';
@@ -104,6 +104,9 @@ function lootJob(s: Survivor, w: World): Action | null {
  */
 export function findWork(s: Survivor, w: World): Action | null {
   if (armFactor(s) === 0) return null; // sin brazos no se trabaja (H5)
+  // Lo primero, su bolsa si la soltó (H5b2 §5).
+  const recover = recoverBagJob(s, w);
+  if (recover) return recover;
   const loot = may(s, 'loot');
   // Quien lleva cosas termina el viaje: sigue saqueando si puede o descarga.
   if (hasCargo(s)) {
@@ -167,6 +170,7 @@ const WORK_ACTIONS: ReadonlySet<string> = new Set([
   'swapWeapon',
   'dress',
   'bags',
+  'pickUpBag',
   'takeWater',
   'fillBucket',
   'pourWater',

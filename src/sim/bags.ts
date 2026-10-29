@@ -169,6 +169,7 @@ export function takeInto(w: World, s: Survivor, from: Inventory, mode: 'loot' | 
       from.pieces = from.pieces.filter((x) => x !== b);
       s.bags[slot] = b;
       taken.pieces.push(b);
+      if (mode === 'haul') s.haulingBag = b.id; // para dejarla en el almacén
       if (mode === 'loot') {
         w.bagLog.found++;
         logEvent(w, { kind: 'bagFound', survivorId: s.id, bag: b.kind });
@@ -228,10 +229,13 @@ export function unloadAt(w: World, s: Survivor): void {
   addInto(pool, s.carrying);
   for (const slot of BAG_SLOTS) {
     const b = s.bags[slot];
-    if (!b || s.bagsPinned.includes(slot) || bagAllowed(w, s, b.kind, slot)) continue;
+    if (!b) continue;
+    const hauled = b.id === s.haulingBag;
+    if (!hauled && (s.bagsPinned.includes(slot) || bagAllowed(w, s, b.kind, slot))) continue;
     s.bags[slot] = null;
     pool.pieces.push(b);
   }
+  delete s.haulingBag;
   // Lo que les falta a las listas.
   for (const b of wornBags(s))
     for (const k of ITEM_KINDS) {

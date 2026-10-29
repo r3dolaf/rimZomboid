@@ -1,4 +1,5 @@
 // La capa de Peligro del cerebro (spec H4b §7): pelear o huir según la postura.
+import { dropHandBag } from './bags';
 import {
   ALLY_RANGE,
   DANGER_RANGE,
@@ -150,5 +151,6 @@ export function dangerDecision(
     (e) => e.kind === 'fled' && e.survivorId === s.id && w.tick - e.tick < FLED_LOG_TICKS,
   );
   if (!lately) logEvent(w, { kind: 'fled', survivorId: s.id });
+  dropHandBag(w, s); // huyendo, suelta la bolsa de la mano (H5b2 §5)
   return { type: 'moveTo', target: target!, run: true };
 }

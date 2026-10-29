@@ -276,6 +276,8 @@ export type Activity =
   | { type: 'packBag'; pieceId: number }
   // Bolsas (H5b2 §2): en el almacén, ponerse la mejor que permita su atuendo.
   | { type: 'bags' }
+  // Recoger su bolsa del montón donde la soltó (H5b2 §5).
+  | { type: 'pickUpBag'; pileId: number }
   // Descansar (en la cama a la que va) y analgésicos (tomárselo; ir a por uno y llevárselo a otro).
   | { type: 'rest' }
   | { type: 'takePainkiller' }
@@ -404,6 +406,8 @@ export interface Survivor {
   bagsPinned: BagSlot[];
   /** Su bolsa de la mano, si la soltó (para ir a por ella); `null` si no. */
   droppedBag: number | null;
+  /** La bolsa que lleva en la mano para dejarla en el almacén (Transportar, H5b2 §5). */
+  haulingBag?: number;
 }
 
 /** Un atuendo (H5b §4): las prendas que se puede poner y si acepta ropa de muertos. */

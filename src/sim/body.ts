@@ -1,5 +1,6 @@
 // El cuerpo (spec H5 §2): partes con su vida, heridas, dolor (la Salud) y lo que hacen piernas y
 // brazos heridos.
+import { dropHandBag } from './bags';
 import {
   BODY_HP,
   DOWNED_TICKS,
@@ -89,6 +90,7 @@ export function knockDown(w: World, s: Survivor): void {
   s.action = { type: 'downed', until: w.tick + DOWNED_TICKS, ...(inBed ? { inBed } : {}) };
   s.path = [];
   s.drafted = false;
+  dropHandBag(w, s); // la bolsa de la mano, al suelo (H5b2 §5)
   // Un desconocido no es de la colonia: se apunta con su nombre y sin aviso.
   if (colonist(w, s)) logEvent(w, { kind: 'downed', survivorId: s.id });
   else logEvent(w, { kind: 'strangerDowned', names: [s.name] });

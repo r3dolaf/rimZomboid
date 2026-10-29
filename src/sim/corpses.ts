@@ -29,6 +29,8 @@ export function leaveCorpse(w: World, z: Zombie): void {
   for (const g of z.worn) g.from ??= 'zombie';
   items.pieces.push(...z.worn);
   z.worn = [];
+  items.pieces.push(...z.bags); // H5b2
+  z.bags = [];
   const c: Container = {
     id: w.nextId++,
     houseId: -1,

@@ -1,4 +1,4 @@
-import { startBags } from '../jobs/bags';
+import { pickUpBag, startBags } from '../jobs/bags';
 import { startPackBag, takeSupplies } from '../jobs/supplies';
 import { carriesSomething } from '../bags';
 import {
@@ -133,6 +133,8 @@ function startActivity(s: Survivor, activity: Activity, w: World): Action {
       return startDress(s, w); // H5b
     case 'bags':
       return startBags(s, w); // H5b2
+    case 'pickUpBag':
+      return pickUpBag(s, w, activity.pileId);
     case 'takeWater':
     case 'fillBucket':
     case 'pourWater':

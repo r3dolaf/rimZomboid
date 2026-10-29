@@ -3,11 +3,13 @@ import { expect, test } from 'vitest';
 import { effectiveKeep, effectiveList, newBag, personal, unloadAt, unloadable } from './bags';
 import { newGarment } from './clothes';
 import { checkInvariants } from './invariants';
+import { emptyInventory } from './items';
 import { hasCargo } from './jobs/medical';
 import { issue, ordersSystem } from './orders';
 import { activitiesSystem } from './systems/activities';
 import { emptyWorld } from './testing/fixtures';
-import type { Survivor, World } from './types';
+import { Tile, type Survivor, type World } from './types';
+import { findWork } from './work';
 
 function ana(): { w: World; s: Survivor } {
   const w = emptyWorld(10, 10);
@@ -111,4 +113,30 @@ test('órdenes: lista de una bolsa (puesta o guardada) y «Llevar siempre», tam
   expect(worn.list).toEqual({});
   expect(s.keep).toEqual({ painkillers: 1 });
   expect(checkInvariants(w)).toEqual([]);
+});
+
+test('si en el almacén no queda comida, lleva antes la de sus bolsas (salvo la de su lista)', () => {
+  const { w, s } = ana();
+  w.grid.tiles.fill(Tile.Floor);
+  w.storage.items.food = 0;
+  s.work.loot = true;
+  const b = newBag(w, 'schoolBag');
+  b.list = { food: 1 };
+  b.items.food = 1;
+  s.bags.back = b;
+  s.carrying.bandage = 2;
+  s.carrying.thread = 1; // algo que descargar
+  w.containers.push({
+    id: w.nextId++,
+    houseId: 1,
+    pos: { x: 3, y: 3 },
+    kind: 'shelf',
+    items: { ...emptyInventory(), cloth: 2 },
+    searched: true,
+    designated: true,
+    reservedBy: null,
+  });
+  expect(findWork(s, w)).toMatchObject({ then: { type: 'search' } }); // la de su lista, no
+  b.items.food = 3; // 2 de más
+  expect(findWork(s, w)).toMatchObject({ then: { type: 'unload' } });
 });

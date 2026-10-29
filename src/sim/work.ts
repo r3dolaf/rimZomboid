@@ -1,7 +1,7 @@
 // Trabajos (spec H4a §3): cuál toca por orden de criticidad, si sigue teniendo sentido, y el
 // saqueo (elegir contenedor, reservar, descargar en el almacén).
 import { BAGS, DRESS_CHECK_TICKS, HUNGRY_LOOT_DAYS, ITEM_WEIGHT_KG } from './balance';
-import { bagAllowed, bagRoom, isBag, wornBags } from './bags';
+import { bagAllowed, bagRoom, isBag, personal, wornBags } from './bags';
 import { armFactor } from './body';
 import { capacityKg } from './skills';
 import { foodDays } from './colony';
@@ -112,8 +112,9 @@ export function findWork(s: Survivor, w: World): Action | null {
   const loot = may(s, 'loot');
   // Quien lleva cosas termina el viaje: sigue saqueando si puede o descarga.
   if (hasCargo(s)) {
-    // Si en el almacén no queda comida y él lleva, lo primero es llevarla para que coman todos.
-    if (s.carrying.food > 0 && w.storage.items.food === 0) return goUnload(w);
+    // Si en el almacén no queda comida y él lleva (en las manos o en sus bolsas, salvo la de sus
+    // listas y su «Llevar siempre», H5b2), lo primero es llevarla para que coman todos.
+    if (personal(s, 'food') > (s.keep.food ?? 0) && w.storage.items.food === 0) return goUnload(w);
     // La madera que lleva, a un plano que la necesite.
     const deliver = may(s, 'haul') ? deliverJob(s, w) : null;
     if (deliver) return deliver;

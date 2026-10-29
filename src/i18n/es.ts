@@ -673,6 +673,12 @@ export const es = {
         smoke: `Se ve humo: ${what}`,
         radio: `Una llamada por radio: ${what}`,
       })[how] ?? what,
+    expeditionArrived: (who: string, many: boolean, where: string | null) => {
+      const verb = many ? 'han' : 'ha';
+      return where === null
+        ? `${who} ${verb} vuelto a la base`
+        : `${who} ${verb} llegado a ${where}`;
+    },
     bagFound: (who: string, bag: BagKind) =>
       `${who} ha encontrado una ${es.bags[bag]} y se la ha puesto`,
     bagDropped: (who: string, bag: BagKind) => `${who} ha soltado la ${es.bags[bag]}`,

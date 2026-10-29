@@ -23,6 +23,12 @@ export type LogEvent =
       how: SiteHow;
       survivorId?: number;
     }
+  // Un grupo llega a un sitio (`site`) o vuelve a la base (`site` null) (H5c1).
+  | {
+      kind: 'expeditionArrived';
+      site: Pick<SiteInfo, 'kind' | 'special' | 'side' | 'hours'> | null;
+      names: string[];
+    }
   // Bolsas (H5b2): se pone una que encuentra; suelta la de la mano; recoge la suya.
   | { kind: 'bagFound'; survivorId: number; bag: BagKind }
   | { kind: 'bagDropped'; survivorId: number; bag: BagKind }

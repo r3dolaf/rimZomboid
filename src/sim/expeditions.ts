@@ -147,6 +147,7 @@ export function leaveMap(w: World, s: Survivor, t: Travel): void {
   w.survivors = w.survivors.filter((x) => x !== s);
   s.action = { type: 'idle', ticksLeft: 0 };
   s.path = [];
+  s.pos = { x: -10, y: -10 }; // fuera de todo mapa
   s.drafted = false;
   s.trip = null;
   t.members.push(s);

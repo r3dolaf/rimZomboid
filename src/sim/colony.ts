@@ -16,6 +16,9 @@ export function foodDays(w: World): number {
 
 /** Duermen todos, en todos los mapas (y hay alguien): el tiempo puede ir a x6. */
 export function allAsleep(w: World): boolean {
-  const all = [w, ...w.siteMaps.map((m) => m.world)].flatMap((m) => m.survivors);
+  const all = [
+    ...[w, ...w.siteMaps.map((m) => m.world)].flatMap((m) => m.survivors),
+    ...w.common.expedition.travels.flatMap((t) => t.members), // de noche, de viaje, duermen
+  ];
   return all.length > 0 && all.every((s) => s.action.type === 'sleep');
 }

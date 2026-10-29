@@ -1212,3 +1212,6 @@ export const SPECIAL_SHARE = 0.25;
 export const SURVIVORS_WAIT_DAYS: [number, number] = [2, 3];
 /** Salt del azar de las expediciones (no cambia nada de lo de antes). */
 export const EXPEDITION_SALT = 0x51f15e;
+
+/** Se viaja de 6 a 20 h; de noche acampan y duermen (H5c1 §4). */
+export const TRAVEL_DAY: [number, number] = [6, 20];

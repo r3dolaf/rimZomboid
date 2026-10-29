@@ -597,6 +597,13 @@ export function logText(e: LogEntry, w: World): string {
     case 'clothesTorn':
       text = l.clothesTorn(name(e.survivorId), e.garment, e.part);
       break;
+    case 'expeditionArrived':
+      text = l.expeditionArrived(
+        listNames(e.names),
+        e.names.length > 1,
+        e.site ? siteText(e.site) : null,
+      );
+      break;
     case 'siteFound':
       text = l.siteFound(
         e.how,
@@ -841,4 +848,10 @@ export function pileLabel(p: Pile): string | null {
 export function siteText(site: Pick<SiteInfo, 'kind' | 'special' | 'side' | 'hours'>): string {
   const what = site.special ? es.sites.specials[site.special] : es.sites.kinds[site.kind];
   return `${what} hacia ${es.sites.sides[site.side]}, a ${site.hours} horas`;
+}
+
+/** «Ana», «Ana y Bea», «Ana, Bea y Carlos». */
+export function listNames(names: readonly string[]): string {
+  if (names.length <= 1) return names[0] ?? '';
+  return `${names.slice(0, -1).join(', ')} ${es.and} ${names.at(-1)}`;
 }

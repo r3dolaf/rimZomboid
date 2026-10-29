@@ -1,6 +1,7 @@
 // Varios mapas a la vez (spec H5c1 §1): la base guarda los mapas de los sitios y todos avanzan
 // juntos; un sitio sin nadie se queda quieto hasta que vuelva alguien.
 import { departuresSystem } from './expeditions';
+import { travelSystem } from './travel';
 import { sitesDailySystem } from './sites';
 import { step } from './step';
 import type { Survivor, World } from './types';
@@ -32,7 +33,9 @@ export function allColonists(base: World): { s: Survivor; where: number | 'trave
 
 /** Un tick de todo el juego: la base y los sitios con gente. */
 export function stepGame(base: World): void {
+  // Primero los viajes (con la hora de este tick): los que llegan avanzan ya con su mapa.
+  travelSystem(base); // H5c1
   for (const w of activeMaps(base)) step(w);
-  departuresSystem(base); // H5c1: los que salen de expedición
+  departuresSystem(base); // los que salen de expedición
   sitesDailySystem(base); // H5c1: avisos de sitios
 }

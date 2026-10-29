@@ -159,3 +159,14 @@ test('no vuelve a por una bolsa que su atuendo no le deja ponerse y no le cabe e
   c.searched = true;
   expect(findWork(s, w)).not.toMatchObject({ then: { type: 'search' } });
 });
+
+test('una bolsa que no puede ponerse se coge al final, como la ropa: antes la comida', () => {
+  const w = emptyWorld(10, 10);
+  const s = w.survivors[0]!;
+  s.carrying.bandage = 0;
+  for (const o of w.outfits) o.bags = []; // ninguna bolsa en su atuendo
+  const from = { ...emptyInventory(), food: 40 };
+  from.pieces.push(newBag(w, 'duffel'));
+  takeInto(w, s, from, 'loot');
+  expect(s.carrying.food).toBe(Math.floor(capacityKg(s) / ITEM_WEIGHT_KG.food + 1e-9));
+});

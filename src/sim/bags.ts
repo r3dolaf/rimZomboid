@@ -151,9 +151,9 @@ function placeForPiece(s: Survivor, kg: number): Inventory | null {
 }
 
 /**
- * Coge de `from` lo que pueda (spec §2, §3): primero las bolsas (se la pone si puede; si no, entera
- * a las manos si cabe; si no, la vacía allí mismo y la bolsa vacía se mira al final), luego los
- * montones (a la bolsa cuya lista los pide, a la de más sitio, a las manos) y luego las prendas.
+ * Coge de `from` lo que pueda (spec §2, §3): primero se pone las bolsas que puede (y vacía allí
+ * mismo las que no le caben enteras), luego los montones (a la bolsa cuya lista los pide, a la de
+ * más sitio, a las manos) y al final las prendas y las bolsas que no se pone (enteras, si caben).
  * Devuelve lo cogido (las mismas piezas, no copias).
  */
 export function takeInto(w: World, s: Survivor, from: Inventory, mode: 'loot' | 'haul'): Inventory {
@@ -174,8 +174,8 @@ export function takeInto(w: World, s: Survivor, from: Inventory, mode: 'loot' | 
         w.bagLog.found++;
         logEvent(w, { kind: 'bagFound', survivorId: s.id, bag: b.kind });
       }
-    } else if (fitsHands(s, pieceKg(b))) takePiece(b, s.carrying);
-    else addInto(from, b.items); // la vacía allí mismo
+    } else if (!fitsHands(s, pieceKg(b))) addInto(from, b.items); // la vacía allí mismo
+    // (La que no se pone pero cabe entera se coge al final, como la ropa: antes, la comida.)
   }
   for (const k of ITEM_KINDS)
     while (from[k] > 0) {

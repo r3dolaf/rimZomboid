@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { expect, test, vi } from 'vitest';
 import { createTimeController } from '../game/timeController';
+import { emptyInventory } from '../sim/items';
 import { formatDayTime, mountHud } from './hud';
 import { createTool } from './tool';
 
@@ -205,4 +206,20 @@ test('el botón Avisos abre su menú (H4e)', () => {
   expect(b.textContent).toBe('Avisos');
   b.click();
   expect(toggleNotices).toHaveBeenCalledTimes(1);
+});
+
+test('con todos durmiendo muestra «x6 (durmiendo)» y ningún botón activo; al despertar, el elegido', () => {
+  const root = document.createElement('div');
+  const time = createTimeController();
+  const hud = mountHud(root, { seed: 1, time });
+  const badge = root.querySelector('[data-testid="hud-sleep-speed"]') as HTMLElement;
+  expect(badge.hidden).toBe(true);
+  time.setAllAsleep(true);
+  hud.update({ day: 1, hour: 23, minute: 0 }, emptyInventory());
+  expect(badge.hidden).toBe(false);
+  expect(badge.textContent).toBe('x6 (durmiendo)');
+  expect(root.querySelectorAll('[data-speed].active')).toHaveLength(0);
+  (root.querySelector('[data-speed="1"]') as HTMLButtonElement).click(); // manda lo tuyo
+  expect(badge.hidden).toBe(true);
+  expect(root.querySelector('[data-speed="1"]')!.classList.contains('active')).toBe(true);
 });

@@ -472,6 +472,7 @@ export const es = {
   pauseIcon: '⏸',
   speed: (n: number) => `x${n}`,
   speedLabel: (n: number) => `Velocidad x${n}`,
+  sleepSpeed: (n: number) => `x${n} (durmiendo)`,
   close: 'Cerrar',
   logTitle: 'Sucesos',
   carrying: (what: string, kg: string, max: string) => `Lleva: ${what} (${kg} / ${max} kg)`,

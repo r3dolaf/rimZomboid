@@ -12,3 +12,8 @@ export function foodDays(w: World): number {
   const n = w.survivors.length;
   return n === 0 ? Infinity : totalFood(w) / ((n * HUNGER_PER_DAY) / EAT_RESTORE);
 }
+
+/** Duermen todos (y hay alguien): el tiempo puede ir a x6. */
+export function allAsleep(w: World): boolean {
+  return w.survivors.length > 0 && w.survivors.every((s) => s.action.type === 'sleep');
+}

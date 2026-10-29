@@ -40,6 +40,17 @@
   border-color: #c9a227;
   color: #111;
 }
+.hud-sleep-speed {
+  align-self: center;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: #c9a227;
+  color: #111;
+  white-space: nowrap;
+}
+.hud-sleep-speed[hidden] {
+  display: none;
+}
 .hud-zombies.alert {
   color: #f08a87;
   font-weight: 600;

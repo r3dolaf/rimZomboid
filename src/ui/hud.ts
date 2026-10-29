@@ -1,4 +1,4 @@
-import type { Speed, TimeController } from '../game/timeController';
+import { SLEEP_SPEED, type Speed, type TimeController } from '../game/timeController';
 import { es } from '../i18n/es';
 import type { GameTime } from '../sim/clock';
 import type { Inventory } from '../sim/items';
@@ -64,6 +64,13 @@ export function mountHud(
     speeds.append(b);
     return b;
   });
+  // Con todos durmiendo, el tiempo va solo más rápido (pulsar una velocidad lo quita esta noche).
+  const sleepSpeed = document.createElement('span');
+  sleepSpeed.className = 'hud-sleep-speed';
+  sleepSpeed.dataset.testid = 'hud-sleep-speed';
+  sleepSpeed.textContent = es.sleepSpeed(SLEEP_SPEED);
+  sleepSpeed.hidden = true;
+  speeds.append(sleepSpeed);
 
   const food = document.createElement('span');
   food.className = 'hud-food';
@@ -173,11 +180,13 @@ export function mountHud(
   );
   root.append(bar);
 
-  let shownSpeed: Speed | null = null;
+  let shownSpeed: Speed | 'boosted' | null = null;
   function refreshSpeed(): void {
-    if (shownSpeed === opts.time.speed) return;
-    shownSpeed = opts.time.speed;
-    buttons.forEach((b, i) => b.classList.toggle('active', SPEEDS[i] === shownSpeed));
+    const now = opts.time.boosted ? 'boosted' : opts.time.speed;
+    if (shownSpeed === now) return;
+    shownSpeed = now;
+    buttons.forEach((b, i) => b.classList.toggle('active', SPEEDS[i] === now));
+    sleepSpeed.hidden = now !== 'boosted';
   }
   refreshSpeed();
 

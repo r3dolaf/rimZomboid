@@ -24,6 +24,7 @@ import {
 } from '../sim/balance';
 import { canPlace, markedTrees } from '../sim/build';
 import { darkness } from '../sim/clock';
+import { allAsleep } from '../sim/colony';
 import { CATALOG } from '../sim/events/catalog';
 import { isEmpty } from '../sim/items';
 import { effectiveDesignated, houseMarked, issue } from '../sim/orders';
@@ -241,6 +242,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   update(_now: number, dtMs: number): void {
+    this.clock.setAllAsleep(allAsleep(this.world));
     runTicks(this.world, this.clock.advance(dtMs), this.onProblems);
     this.panWithKeys(dtMs);
     this.refreshMap();

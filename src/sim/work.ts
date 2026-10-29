@@ -1,7 +1,7 @@
 // Trabajos (spec H4a §3): cuál toca por orden de criticidad, si sigue teniendo sentido, y el
 // saqueo (elegir contenedor, reservar, descargar en el almacén).
 import { BAGS, DRESS_CHECK_TICKS, HUNGRY_LOOT_DAYS, ITEM_WEIGHT_KG } from './balance';
-import { bagRoom, isBag, wornBags } from './bags';
+import { bagAllowed, bagRoom, isBag, wornBags } from './bags';
 import { armFactor } from './body';
 import { capacityKg } from './skills';
 import { foodDays } from './colony';
@@ -46,7 +46,7 @@ const LIGHTEST_KG = Math.min(...ITEM_KINDS.map((k) => ITEM_WEIGHT_KG[k]));
  * menos lo más ligero. Si ya está registrado, solo si cabe algo de lo que queda. Sin esto, quien
  * va casi lleno volvería una y otra vez a un contenedor del que no puede coger nada.
  */
-function canTakeSomething(c: Container, s: Survivor): boolean {
+function canTakeSomething(c: Container, s: Survivor, w: World): boolean {
   // En las manos o en alguna de sus bolsas (H5b2).
   const hands = capacityKg(s) - weightOf(s.carrying) + 1e-9;
   const room = Math.max(hands, ...wornBags(s).map((b) => bagRoom(b) + 1e-9));
@@ -56,7 +56,9 @@ function canTakeSomething(c: Container, s: Survivor): boolean {
     c.items.pieces.some((p) =>
       // Una bolsa: ponérsela, cogerla entera o vaciarla allí (H5b2 §3).
       isBag(p)
-        ? BAGS[p.kind].slots.some((slot) => s.bags[slot] === null) ||
+        ? BAGS[p.kind].slots.some(
+            (slot) => s.bags[slot] === null && bagAllowed(w, s, p.kind, slot),
+          ) ||
           pieceKg(p) <= hands ||
           !isEmpty(p.items)
         : pieceKg(p) <= room,
@@ -72,7 +74,7 @@ function nearestContainer(s: Survivor, w: World): Container | null {
   let best: Container | null = null;
   let bestD = Infinity;
   for (const c of w.containers) {
-    if (!available(c, s) || !canTakeSomething(c, s)) continue;
+    if (!available(c, s) || !canTakeSomething(c, s, w)) continue;
     if (regionOf(w.grid, c.pos.x, c.pos.y) !== region) continue;
     const d = (c.pos.x - sx) ** 2 + (c.pos.y - sy) ** 2;
     if (d < bestD) {
@@ -229,7 +231,7 @@ export function stillWorthIt(s: Survivor, w: World): boolean {
   const id = targetContainerId(s);
   if (id === null || s.action.type === 'search') return true;
   const c = w.containers.find((x) => x.id === id);
-  return c !== undefined && s.work.loot && available(c, s) && canTakeSomething(c, s);
+  return c !== undefined && s.work.loot && available(c, s) && canTakeSomething(c, s, w);
 }
 
 /** Libera las reservas de quien ya no va a ese contenedor. */

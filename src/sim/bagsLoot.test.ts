@@ -144,3 +144,18 @@ test('con las manos llenas sigue saqueando si le cabe algo en la bolsa', () => {
   s.bags.back = newBag(w, 'schoolBag');
   expect(findWork(s, w)).toMatchObject({ then: { type: 'search', containerId: c.id } });
 });
+
+test('no vuelve a por una bolsa que su atuendo no le deja ponerse y no le cabe en las manos', () => {
+  const w = emptyWorld(10, 10);
+  w.grid.tiles.fill(Tile.Floor);
+  const s = w.survivors[0]!;
+  s.outfitId = 3; // Base: sin bolsa en la mano
+  s.bags.back = newBag(w, 'hikingPack');
+  s.bags.back.items.wood = 12; // llena
+  w.woodLog.start += 12;
+  s.carrying.thread = Math.ceil(capacityKg(s) / 0.01); // manos llenas
+  const c = box(w);
+  c.items.pieces.push(newBag(w, 'duffel')); // vacía: solo cabría en la mano
+  c.searched = true;
+  expect(findWork(s, w)).not.toMatchObject({ then: { type: 'search' } });
+});

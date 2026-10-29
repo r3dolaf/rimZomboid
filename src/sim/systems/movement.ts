@@ -1,3 +1,4 @@
+import { carriesSomething } from '../bags';
 import {
   CARRY_SPEED,
   CRISIS_TICKS,
@@ -27,7 +28,6 @@ import { startWaterActivity } from '../jobs/water';
 import { logEvent } from '../log';
 import { makeNoise } from '../noise';
 import { loadFactor, practice, workSpeed } from '../skills';
-import { weightOf } from '../items';
 import { isWalkable } from '../map/grid';
 import { findPath } from '../path/astar';
 import { nextInt } from '../rng';
@@ -43,7 +43,7 @@ export function movementSystem(w: World): void {
     const speed =
       (run ? SURVIVOR_RUN_SPEED : SURVIVOR_WALK_SPEED) * (s.carryingId !== null ? CARRY_SPEED : 1);
     const step = walkStep(s, w.grid, speed);
-    if (step === 'walking' && weightOf(s.carrying) > 0) practice(w, s, 'haul', 1);
+    if (step === 'walking' && carriesSomething(s)) practice(w, s, 'haul', 1);
     // Quien corre hace ruido (spec H4b §3).
     if (run && step === 'walking' && w.tick % RUN_NOISE_TICKS === 0) makeNoise(w, s.pos, NOISE.run);
     if (step === 'walking') continue;

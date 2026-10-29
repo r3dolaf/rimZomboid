@@ -1,8 +1,6 @@
 // Armas en la mano (spec H4b §6.2): coger lo mejor del almacén y cambiarlo si sale algo mejor.
-import { ITEM_WEIGHT_KG } from '../balance';
-import { weightOf } from '../items';
+import { has, spend, stashOne } from '../bags';
 import { pick } from '../rng';
-import { capacityKg } from '../skills';
 import { doorsToPry } from './pry';
 import type { Action, Survivor, Weapon, World } from '../types';
 
@@ -92,14 +90,15 @@ export function takeBest(s: Survivor, w: World): void {
 export function equipFromPack(s: Survivor, chopMarked = false): void {
   if (s.weaponLocked || keepsAxe(s, chopMarked)) return;
   for (const k of WEAPONS) {
-    if (s.carrying[k] <= 0) continue;
+    if (has(s, k) <= 0) continue;
     if (k === 'axe' && chopMarked && !canChop(s)) continue;
     if (rank(k) <= rank(s.equipped)) return;
-    // La de la mano pasa a la carga: tiene que caber (un machete pesa menos que un hacha).
-    const swapKg = (s.equipped ? ITEM_WEIGHT_KG[s.equipped] : 0) - ITEM_WEIGHT_KG[k];
-    if (weightOf(s.carrying) + swapKg > capacityKg(s) + 1e-9) continue;
-    s.carrying[k]--;
-    if (s.equipped) s.carrying[s.equipped]++;
+    // La de la mano pasa a la carga (o a una bolsa, H5b2): tiene que caber.
+    spend(s, k);
+    if (s.equipped && !stashOne(s, s.equipped)) {
+      stashOne(s, k); // vuelve: cabe, acaba de salir
+      continue;
+    }
     s.equipped = k;
     return;
   }

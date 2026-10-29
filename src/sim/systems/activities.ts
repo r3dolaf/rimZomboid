@@ -1,3 +1,4 @@
+import { spend } from '../bags';
 import {
   BANDAGES_CARRIED,
   CHOP_NOISE_TICKS,
@@ -28,10 +29,11 @@ export function activitiesSystem(w: World): void {
     if (a.type === 'eat') {
       if (--a.ticksLeft > 0) continue;
       // Puede que otro se haya comido la última lata del almacén mientras tanto.
-      const source = a.fromPack ? s.carrying : w.storage.items;
-      if (source.food > 0) {
-        source.food--;
-        if (!a.fromPack && source.food === 0) logEvent(w, { kind: 'outOfFood' });
+      // De lo que lleva, también de sus bolsas (H5b2 §3).
+      const store = w.storage.items;
+      const ate = a.fromPack ? spend(s, 'food') === 1 : store.food > 0 && store.food-- > 0;
+      if (ate) {
+        if (!a.fromPack && store.food === 0) logEvent(w, { kind: 'outOfFood' });
         s.needs.hunger = Math.min(100, s.needs.hunger + EAT_RESTORE);
         addMemory(s, 'ate', w.tick);
         if (nearTable(w, s)) addMemory(s, 'ateAtTable', w.tick);

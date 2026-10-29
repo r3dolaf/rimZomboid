@@ -1,3 +1,4 @@
+import { has } from './bags';
 import {
   CRISIS_BREAK_HUNGER,
   EAT_TICKS,
@@ -132,7 +133,7 @@ function wantsToSleep(s: Survivor, w: World): boolean {
 
 /** Come de lo que lleva encima si puede; si no, va al almacén si queda comida. */
 function eatSomething(s: Survivor, w: World): Action | null {
-  if (s.carrying.food > 0) return { type: 'eat', ticksLeft: EAT_TICKS, fromPack: true };
+  if (has(s, 'food') > 0) return { type: 'eat', ticksLeft: EAT_TICKS, fromPack: true };
   if (w.storage.items.food > 0) return goEat(w);
   return null;
 }

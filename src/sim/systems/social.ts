@@ -1,3 +1,4 @@
+import { has, spend } from '../bags';
 import {
   BREAKUP_BELOW,
   BREAKUP_OPINION_LOSS,
@@ -114,10 +115,10 @@ export function applyChat(w: World, a: Survivor, b: Survivor, kind: ChatKind): v
 
 /** Si `b` tiene hambre y `a` lleva comida y le cae bien, le da una lata. */
 function maybeShareFood(w: World, a: Survivor, b: Survivor): void {
-  if (b.needs.hunger >= SHARE_HUNGER_BELOW || a.carrying.food === 0) return;
+  if (b.needs.hunger >= SHARE_HUNGER_BELOW || has(a, 'food') === 0) return;
   if (opinionOf(a, b.id) < 0) return;
   if (weightOf(b.carrying) + ITEM_WEIGHT_KG.food > capacityKg(b) + 1e-9) return;
-  a.carrying.food--;
+  spend(a, 'food'); // también de sus bolsas (H5b2)
   b.carrying.food++;
   changeOpinion(a, b.id, SHARE_OPINION);
   changeOpinion(b, a.id, SHARE_OPINION);

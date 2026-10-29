@@ -1,5 +1,6 @@
 // Habilidades (spec H4c): cómo empiezan, lo que cuesta subir y lo que cambian.
 import {
+  BAGS,
   BUILD_FAIL_BASE,
   CARRY_BASE_KG,
   CARRY_PER_LEVEL_KG,
@@ -82,10 +83,21 @@ export function capacityKg(s: Survivor): number {
   return CARRY_BASE_KG + CARRY_PER_LEVEL_KG * s.skills.haul.level;
 }
 
+/**
+ * Lo que pesa al andar (H5b2 §1): lo de las manos, entero; cada bolsa puesta, vacía más lo de dentro
+ * por su porcentaje.
+ */
+export function effectiveLoad(s: Survivor): number {
+  let kg = weightOf(s.carrying);
+  for (const b of Object.values(s.bags))
+    if (b) kg += BAGS[b.kind].kg + weightOf(b.items) * BAGS[b.kind].factor;
+  return kg;
+}
+
 /** Cuánto le frena lo que lleva (1 = nada): a plena carga, ×0,6 con 0, ×0,75 con 5, ×0,9 con 10. */
 export function loadFactor(s: Survivor): number {
   const brake = LOAD_BRAKE_BASE - LOAD_BRAKE_PER_LEVEL * s.skills.haul.level;
-  return 1 - brake * Math.min(1, weightOf(s.carrying) / capacityKg(s));
+  return 1 - brake * Math.min(1, effectiveLoad(s) / capacityKg(s));
 }
 
 /** Acierto de un golpe a un zombi: 60 % con Pelear 0, 75 % con 5, 90 % con 10. */

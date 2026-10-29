@@ -1,5 +1,6 @@
 // Sanar (spec H4e §4): rescatar a los derribados (llevarlos en brazos a una cama o a la base). Lo
 // de vendar está en medical.ts (H5).
+import { has } from '../bags';
 import { RESCUE_REACH, RESCUE_SAFE_RANGE } from '../balance';
 import { baseFloor } from '../base';
 import { seenByColony } from '../danger';
@@ -137,7 +138,7 @@ export function startHealActivity(
     if (!d || d.action.type !== 'downed' || !rescuable(w, d, s)) return idle;
     if ((d.pos.x - s.pos.x) ** 2 + (d.pos.y - s.pos.y) ** 2 > RESCUE_REACH ** 2) return idle;
     // Si sangra y hay venda a mano (la suya o la del derribado), primero le venda (H5 §4).
-    if (d.wounds.some((x) => x.bleeding) && s.carrying.bandage + d.carrying.bandage > 0)
+    if (d.wounds.some((x) => x.bleeding) && has(s, 'bandage') + has(d, 'bandage') > 0)
       return startBandage(w, s, d) ?? idle;
     const spot = rescueSpot(w, d);
     if (spot === null) return idle;

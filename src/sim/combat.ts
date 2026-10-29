@@ -1,4 +1,5 @@
 // Los colonos pelean con los zombis (spec H4b §6.1): golpes según el arma y matar.
+import { carriesSomething } from './bags';
 import {
   HEAD_HIT_CHANCE,
   NOISE,
@@ -8,7 +9,6 @@ import {
   WEAPON_STATS,
 } from './balance';
 import { leaveCorpse } from './corpses';
-import { weightOf } from './items';
 import { logEvent } from './log';
 import { makeNoise } from './noise';
 import { findPath } from './path/astar';
@@ -78,7 +78,7 @@ export function combatSystem(w: World): void {
       s.path = path;
     }
     const step = walkStep(s, w.grid, SURVIVOR_RUN_SPEED);
-    if (step === 'walking' && weightOf(s.carrying) > 0) practice(w, s, 'haul', 1);
+    if (step === 'walking' && carriesSomething(s)) practice(w, s, 'haul', 1);
     if (step === 'walking' && w.tick % RUN_NOISE_TICKS === 0) makeNoise(w, s.pos, NOISE.run);
   }
 }

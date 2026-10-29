@@ -1,6 +1,7 @@
 // Vendas (spec H5 §4): cada uno lleva hasta 2; se venda lo que le sangra; Sanar venda a los demás
 // (y al derribado antes de cargarlo); a 1 día la venda está sucia y se cambia. Analgésicos,
 // descanso y camas de hospital (§5 y §6).
+import { has, spend } from '../bags';
 import {
   BANDAGE_CLEAN_HOURS,
   BANDAGE_RANGE,
@@ -193,11 +194,11 @@ export function selfCare(s: Survivor, w: World): Action | null | undefined {
   if (a.type === 'bandage' && a.patientId === s.id) return null;
   if (a.type === 'moveTo' && (a.then?.type === 'takeBandages' || a.then?.type === 'takePainkiller'))
     return null;
-  if (bleeding && unloading && s.carrying.bandage === 0) return null; // descarga para coger vendas
+  if (bleeding && unloading && has(s, 'bandage') === 0) return null; // descarga para coger vendas
   // Si otro viene a vendarle, no se venda a la vez (gastarían dos vendas).
   const helped = w.survivors.some((o) => o !== s && bandageTargetId(o) === s.id);
   if (armFactor(s) > 0 && bleeding && !helped) {
-    if (s.carrying.bandage > 0) {
+    if (has(s, 'bandage') > 0) {
       const own = startBandage(w, s, s);
       if (own) return own;
     } else if (w.storage.items.bandage > 0 && reachesStorage(w, s)) {
@@ -259,7 +260,7 @@ export function painkillerJob(s: Survivor, w: World): Action | null {
       !w.survivors.some((x) => x !== s && painkillerTargetId(x) === o.id),
   );
   if (!p) return null;
-  if (s.carrying.painkillers > 0) return goGivePainkiller(p);
+  if (has(s, 'painkillers') > 0) return goGivePainkiller(p);
   if (w.storage.items.painkillers === 0 || !reachesStorage(w, s)) return null;
   return {
     type: 'moveTo',
@@ -283,7 +284,7 @@ export function startPainkillerActivity(
   const idle: Action = { type: 'idle', ticksLeft: 0 };
   const p = w.survivors.find((x) => x.id === activity.patientId);
   if (activity.type === 'fetchPainkiller') {
-    if (s.carrying.painkillers === 0) {
+    if (has(s, 'painkillers') === 0) {
       if (w.storage.items.painkillers === 0 || room(s, 'painkillers') === 0) return idle;
       w.storage.items.painkillers--;
       s.carrying.painkillers++;
@@ -294,8 +295,8 @@ export function startPainkillerActivity(
     s.path = path;
     return goGivePainkiller(p);
   }
-  if (!p || !p.painkillerWanted || s.carrying.painkillers === 0 || !near(s, p)) return idle;
-  s.carrying.painkillers--;
+  if (!p || !p.painkillerWanted || has(s, 'painkillers') === 0 || !near(s, p)) return idle;
+  spend(s, 'painkillers');
   painkillerTaken(w, p);
   logEvent(w, { kind: 'painkiller', survivorId: s.id, otherId: p.id });
   return idle;
@@ -327,7 +328,7 @@ export function bandageJob(s: Survivor, w: World): Action | null {
   }
   if (!best) return null;
   // Sin vendas encima: las del herido (§4); si no lleva, al almacén.
-  if (s.carrying.bandage === 0 && best.carrying.bandage === 0) {
+  if (has(s, 'bandage') === 0 && has(best, 'bandage') === 0) {
     return w.storage.items.bandage > 0 && reachesStorage(w, s) ? goTakeBandages(w) : null;
   }
   if (best === s) return startBandage(w, s, s);
@@ -354,9 +355,8 @@ export function startBandageActivity(s: Survivor, w: World, patientId: number): 
 
 /** Gasta una venda: la suya; si no, la del herido; si no, del almacén (si está en la base). */
 function useBandage(w: World, healer: Survivor, p: Survivor): boolean {
-  if (healer.carrying.bandage > 0) healer.carrying.bandage--;
-  else if (p.carrying.bandage > 0) p.carrying.bandage--;
-  else if (inBase(w, healer) && w.storage.items.bandage > 0) w.storage.items.bandage--;
+  if (spend(healer, 'bandage') === 1 || spend(p, 'bandage') === 1) return true;
+  if (inBase(w, healer) && w.storage.items.bandage > 0) w.storage.items.bandage--;
   else return false;
   return true;
 }

@@ -28,11 +28,18 @@ test('todos durmiendo: «x6 (durmiendo)» y el tiempo corre más; pulsar x1 lo q
   await expect(badge).toBeVisible();
   await expect(badge).toHaveText('x6 (durmiendo)');
   await page.waitForTimeout(1000); // (al cargar, los primeros fotogramas van lentos)
-  const t0 = await tick(page);
-  await page.waitForTimeout(2000);
-  expect((await tick(page)) - t0).toBeGreaterThan(40); // a x6, unos 120; a x1, 20 como mucho
+  // Lo que avanza en 2 s a x6 y luego a x1: se compara entre sí, porque con varios navegadores a
+  // la vez los fotogramas van lentos y los ticks por segundo cambian.
+  const during = async () => {
+    const t0 = await tick(page);
+    await page.waitForTimeout(2000);
+    return (await tick(page)) - t0;
+  };
+  const fast = await during();
   await page.locator('[data-speed="1"]').click();
   await expect(badge).toBeHidden();
   await expect(page.locator('[data-speed="1"]')).toHaveClass(/active/);
+  const slow = await during();
+  expect(fast).toBeGreaterThan(3 * slow); // unas 6 veces más
   expect(errores).toEqual([]);
 });

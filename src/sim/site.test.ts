@@ -21,6 +21,7 @@ const info = (over: Partial<SiteInfo> = {}): SiteInfo => ({
   visited: false,
   specialUntil: null,
   leftAt: null,
+  extraZombies: 0,
   ...over,
 });
 

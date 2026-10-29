@@ -3,13 +3,24 @@ import { expect, test } from 'vitest';
 import {
   KNOWN_SITES_MAX,
   LOOT,
+  SITE_BURN_PER_DAY,
+  SITE_HORDE_PER_DAY,
+  SITE_HORDE_ZOMBIES,
   SITE_HOURS,
+  SITE_ZOMBIES_PER_DAY,
   SITE_RUMOR_PER_DAY,
   TICKS_PER_DAY,
   ZOMBIE_NOTE_CHANCE,
 } from './balance';
 import { checkInvariants } from './invariants';
-import { discoverSite, readFindings, sitesDailySystem } from './sites';
+import {
+  catchUp,
+  discoverSite,
+  readFindings,
+  siteMap,
+  siteZombiesAtStart,
+  sitesDailySystem,
+} from './sites';
 import { emptyWorld } from './testing/fixtures';
 import { createWorld } from './world';
 
@@ -71,4 +82,47 @@ test('de vez en cuando, humo o una llamada por radio descubren un sitio (la radi
   const found = w.common.log.filter((e) => e.kind === 'siteFound');
   expect(found.length).toBeGreaterThan(2);
   expect(found.every((e) => e.how === 'smoke' || e.how === 'radio')).toBe(true);
+});
+
+test('al volver a un sitio, ha pasado el tiempo: más zombis (con tope) y otros se han llevado cosas', () => {
+  const w = emptyWorld(10, 10);
+  const info = discoverSite(w, { how: 'roadMap', special: null })!;
+  const site = siteMap(w, info);
+  const zombies = site.zombies.length;
+  const food = site.containers.reduce((n, c) => n + c.items.food, 0);
+  site.storage.items.food = 10; // lo dejado en el campamento
+  w.tick += 3 * TICKS_PER_DAY;
+  catchUp(site, info, w.tick);
+  expect(site.tick).toBe(w.tick);
+  expect(site.zombies.length).toBe(
+    Math.min(zombies + 3 * SITE_ZOMBIES_PER_DAY, 2 * siteZombiesAtStart(info)),
+  );
+  const keep = 0.9 ** 3;
+  expect(site.storage.items.food).toBe(10 - Math.round(10 * (1 - keep)));
+  expect(site.containers.reduce((n, c) => n + c.items.food, 0)).toBeLessThan(food + 1);
+  expect(checkInvariants(w)).toEqual([]);
+  // Solo una vez por ausencia.
+  const now = site.zombies.length;
+  catchUp(site, info, w.tick);
+  expect(site.zombies.length).toBe(now);
+});
+
+test('cada día, un sitio sin gente puede quemarse (se pierde) o llenarse de zombis; los supervivientes dejan de esperar', () => {
+  expect([SITE_BURN_PER_DAY, SITE_HORDE_PER_DAY, SITE_HORDE_ZOMBIES]).toEqual([0.02, 0.03, 10]);
+  const w = emptyWorld(10, 10);
+  for (let i = 0; i < 6; i++) siteMap(w, discoverSite(w, { how: 'roadMap', special: null })!);
+  const help = discoverSite(w, { how: 'note', special: 'survivors' })!;
+  for (let day = 1; day <= 80; day++) {
+    w.tick = day * TICKS_PER_DAY;
+    sitesDailySystem(w);
+    expect(checkInvariants(w)).toEqual([]);
+  }
+  const changes = w.common.log.filter((e) => e.kind === 'siteChanged').map((e) => e.change);
+  expect(changes).toContain('burned');
+  expect(changes).toContain('overrun');
+  expect(changes).toContain('silent');
+  expect(help.special).toBeNull();
+  const lost = w.common.expedition.sites.filter((x) => x.state === 'lost');
+  expect(lost.length).toBeGreaterThan(0);
+  for (const x of lost) expect(w.siteMaps.some((m) => m.siteId === x.id)).toBe(false);
 });

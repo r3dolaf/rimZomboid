@@ -7,7 +7,12 @@ import {
   KNOWN_SITES_MAX,
   NOTE_SURVIVORS,
   RADIO_SURVIVORS,
+  SITE_BURN_PER_DAY,
+  SITE_HORDE_PER_DAY,
+  SITE_HORDE_ZOMBIES,
   SITE_HOURS,
+  SITE_LOOT_KEEP_PER_DAY,
+  SITE_ZOMBIES_PER_DAY,
   SITE_RADIO_SHARE,
   SITE_RUMOR_PER_DAY,
   SPECIAL_SHARE,
@@ -17,7 +22,9 @@ import {
   SITE_ZOMBIES,
 } from './balance';
 import { placeBlueprint } from './build';
-import { emptyInventory } from './items';
+import { emptyInventory, ITEM_KINDS } from './items';
+import { piecesGone } from './clothes';
+import { WEAPONS } from './jobs/weapons';
 import {
   fillBags,
   fillBuilding,
@@ -126,20 +133,9 @@ export function siteMap(base: World, info: SiteInfo): World {
         if (x >= 0 && y >= 0 && x < n && y < g.grid.height) w.seen[y * n + x] = 1;
       }
   placeBlueprint(w, 'campfire', g.campfire.x, g.campfire.y);
-  // Sus zombis, lejos de la entrada.
-  const count =
-    SITE_ZOMBIES[
-      info.special === 'stash' || info.special === 'dangerous' ? info.special : info.kind
-    ];
-  const far = (x: number, y: number) =>
-    g.entry.every((e) => Math.abs(e.x - x) + Math.abs(e.y - y) >= SITE_ZOMBIE_CLEAR);
-  for (let i = 0, tries = 0; i < count && tries < 10_000; tries++) {
-    const x = nextInt(w.zombieRng, 0, g.grid.width - 1);
-    const y = nextInt(w.zombieRng, 0, g.grid.height - 1);
-    if (!isWalkable(g.grid, x, y) || !far(x, y)) continue;
-    w.zombies.push(newZombie(w, { x, y }));
-    i++;
-  }
+  // Sus zombis, lejos del campamento (y los de las hordas que llegaron antes).
+  addZombies(w, siteZombiesAtStart(info) + info.extraZombies);
+  info.extraZombies = 0;
   base.siteMaps.push({ siteId: info.id, world: w });
   return w;
 }
@@ -181,6 +177,7 @@ export function discoverSite(
         ? w.tick + nextInt(rng, d0 * TICKS_PER_DAY, d1 * TICKS_PER_DAY)
         : null,
     leftAt: null,
+    extraZombies: 0,
   };
   ex.sites.push(info);
   const site = { kind, special, side, hours };
@@ -204,10 +201,14 @@ export function readFindings(w: World): void {
   }
 }
 
-/** Cada día, a veces, el narrador avisa de un sitio: humo a lo lejos o una llamada por radio. */
+/**
+ * Cada día: los cambios de los sitios sin gente y, a veces, el narrador avisa de uno nuevo (humo a lo
+ * lejos o una llamada por radio).
+ */
 export function sitesDailySystem(base: World): void {
   if (base.tick % TICKS_PER_DAY !== 0 || base.common.over) return;
   const rng = base.common.expedition.rng;
+  for (const info of base.common.expedition.sites) if (info.state === 'known') siteDay(base, info);
   if (nextFloat(rng) >= SITE_RUMOR_PER_DAY) return;
   if (nextFloat(rng) < SITE_RADIO_SHARE)
     discoverSite(
@@ -215,4 +216,99 @@ export function sitesDailySystem(base: World): void {
       nextFloat(rng) < RADIO_SURVIVORS ? { how: 'radio', special: 'survivors' } : { how: 'radio' },
     );
   else discoverSite(base, { how: 'smoke' });
+}
+
+/** Los zombis de un sitio al crearse (el alijo y el peligroso, los suyos). */
+export function siteZombiesAtStart(info: SiteInfo): number {
+  return SITE_ZOMBIES[
+    info.special === 'stash' || info.special === 'dangerous' ? info.special : info.kind
+  ];
+}
+
+/** `n` zombis en casillas al azar por las que se anda, lejos del campamento. */
+function addZombies(w: World, n: number): void {
+  const camp = w.storage.tiles[0] ?? { x: 0, y: 0 };
+  for (let i = 0, tries = 0; i < n && tries < 10_000; tries++) {
+    const x = nextInt(w.zombieRng, 0, w.grid.width - 1);
+    const y = nextInt(w.zombieRng, 0, w.grid.height - 1);
+    if (!isWalkable(w.grid, x, y)) continue;
+    if (Math.abs(camp.x - x) + Math.abs(camp.y - y) < SITE_ZOMBIE_CLEAR) continue;
+    w.zombies.push(newZombie(w, { x, y }));
+    i++;
+  }
+}
+
+/** Lo que tiene un mapa en sus muebles, su almacén o campamento y sus montones. */
+const inventoriesOf = (w: World) => [
+  w.storage.items,
+  ...w.containers.map((c) => c.items),
+  ...w.piles.map((p) => p.items),
+];
+
+/**
+ * Lo que ha pasado en un sitio mientras nadie estaba (§2), una sola vez al volver: zombis por día
+ * (hasta el doble de los del principio) y otros se han llevado un 10 % por día (montones y piezas;
+ * la madera y las armas, en sus cuentas).
+ */
+export function catchUp(map: World, info: SiteInfo, now: number): void {
+  const elapsed = now - map.tick;
+  if (elapsed <= 0) return;
+  const days = elapsed / TICKS_PER_DAY;
+  const cap = 2 * siteZombiesAtStart(info);
+  const more = Math.min(Math.round(SITE_ZOMBIES_PER_DAY * days), cap - map.zombies.length);
+  addZombies(map, Math.max(0, more));
+  const taken = 1 - SITE_LOOT_KEEP_PER_DAY ** days;
+  const c = map.common;
+  for (const inv of inventoriesOf(map)) {
+    for (const k of ITEM_KINDS) {
+      const n = Math.round(inv[k] * taken);
+      if (n <= 0) continue;
+      inv[k] -= n;
+      if (k === 'wood') c.woodLog.wasted += n;
+      if ((WEAPONS as readonly string[]).includes(k)) c.weaponLog.rotted += n;
+    }
+    const gone = inv.pieces.filter(() => nextFloat(map.rng) < taken);
+    if (gone.length === 0) continue;
+    inv.pieces = inv.pieces.filter((p) => !gone.includes(p));
+    piecesGone(map, gone);
+  }
+  map.tick = now;
+}
+
+/** Se quema un sitio: se pierde con todo (en las cuentas: piezas, madera y armas). */
+function burn(base: World, info: SiteInfo): void {
+  info.state = 'lost';
+  const entry = base.siteMaps.find((m) => m.siteId === info.id);
+  if (!entry) return;
+  const map = entry.world;
+  const c = base.common;
+  for (const inv of inventoriesOf(map)) {
+    c.woodLog.wasted += inv.wood;
+    c.weaponLog.rotted += WEAPONS.reduce((n, k) => n + inv[k], 0);
+    piecesGone(map, inv.pieces);
+  }
+  c.woodLog.wasted += map.blueprints.reduce((n, b) => n + b.wood, 0);
+  for (const z of map.zombies) piecesGone(map, [...z.worn, ...z.bags]);
+  base.siteMaps = base.siteMaps.filter((m) => m !== entry);
+}
+
+/** Los cambios del día de un sitio conocido sin gente (§2): quemarse, horda, supervivientes. */
+function siteDay(base: World, info: SiteInfo): void {
+  const map = base.siteMaps.find((m) => m.siteId === info.id)?.world;
+  if (map && map.survivors.length > 0) return;
+  const rng = base.common.expedition.rng;
+  const site = { kind: info.kind, special: info.special, side: info.side, hours: info.hours };
+  if (info.special === 'survivors' && info.specialUntil !== null && base.tick > info.specialUntil) {
+    info.special = null;
+    info.specialUntil = null;
+    logEvent(base, { kind: 'siteChanged', site, change: 'silent' });
+  }
+  if (nextFloat(rng) < SITE_BURN_PER_DAY) {
+    burn(base, info);
+    logEvent(base, { kind: 'siteChanged', site, change: 'burned' });
+  } else if (nextFloat(rng) < SITE_HORDE_PER_DAY) {
+    if (map) addZombies(map, SITE_HORDE_ZOMBIES);
+    else info.extraZombies += SITE_HORDE_ZOMBIES;
+    logEvent(base, { kind: 'siteChanged', site, change: 'overrun' });
+  }
 }

@@ -20,7 +20,7 @@ import { exitTile } from './expeditions';
 import { assignBeds } from './jobs/medical';
 import { WEAPONS } from './jobs/weapons';
 import { logEvent } from './log';
-import { siteMap } from './sites';
+import { catchUp, siteMap } from './sites';
 import type { DeathCause, Point, Survivor, Travel, World } from './types';
 
 const clamp = (v: number) => Math.min(100, Math.max(0, v));
@@ -108,7 +108,7 @@ export function arrive(base: World, t: Travel): void {
       return;
     }
     const w = siteMap(base, info);
-    if (w.survivors.length === 0) w.tick = base.tick; // un sitio dormido despierta (T8: lo que pasó)
+    if (w.survivors.length === 0) catchUp(w, info, base.tick); // lo que pasó sin nadie (§2)
     info.visited = true;
     info.leftAt = null;
     enterMap(w, t.members, exitTile(w, info.side));

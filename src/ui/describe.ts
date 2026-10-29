@@ -597,6 +597,9 @@ export function logText(e: LogEntry, w: World): string {
     case 'clothesTorn':
       text = l.clothesTorn(name(e.survivorId), e.garment, e.part);
       break;
+    case 'siteChanged':
+      text = l.siteChanged(e.change, siteText(e.site));
+      break;
     case 'expeditionArrived':
       text = l.expeditionArrived(
         listNames(e.names),

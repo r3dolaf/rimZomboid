@@ -673,6 +673,12 @@ export const es = {
         smoke: `Se ve humo: ${what}`,
         radio: `Una llamada por radio: ${what}`,
       })[how] ?? what,
+    siteChanged: (change: string, where: string) =>
+      ({
+        burned: `Se ve una columna de humo: se ha quemado ${where}`,
+        overrun: `Una horda ha llegado a ${where}`,
+        silent: `Ya no responden: ${where}`,
+      })[change] ?? where,
     expeditionArrived: (who: string, many: boolean, where: string | null) => {
       const verb = many ? 'han' : 'ha';
       return where === null

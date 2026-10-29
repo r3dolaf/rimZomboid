@@ -116,6 +116,7 @@ function inSite(): { w: World; site: World } {
     visited: true,
     specialUntil: null,
     leftAt: null,
+    extraZombies: 0,
   });
   for (const s of [...w.survivors]) moveTo(w, site, s);
   return { w, site };

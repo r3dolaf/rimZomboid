@@ -23,6 +23,12 @@ export type LogEvent =
       how: SiteHow;
       survivorId?: number;
     }
+  // Un sitio cambia sin nadie (H5c1 §2): se quema, lo invade una horda, los supervivientes callan.
+  | {
+      kind: 'siteChanged';
+      site: Pick<SiteInfo, 'kind' | 'special' | 'side' | 'hours'>;
+      change: 'burned' | 'overrun' | 'silent';
+    }
   // Un grupo llega a un sitio (`site`) o vuelve a la base (`site` null) (H5c1).
   | {
       kind: 'expeditionArrived';

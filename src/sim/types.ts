@@ -683,6 +683,8 @@ export interface SiteInfo {
   visited: boolean;
   specialUntil: number | null;
   leftAt: number | null;
+  /** Zombis de hordas que llegaron antes de que nadie fuera (se ponen al crearse el sitio). */
+  extraZombies: number;
 }
 
 /**

@@ -1215,3 +1215,12 @@ export const EXPEDITION_SALT = 0x51f15e;
 
 /** Se viaja de 6 a 20 h; de noche acampan y duermen (H5c1 §4). */
 export const TRAVEL_DAY: [number, number] = [6, 20];
+
+// El mundo cambia (H5c1 §2): mientras nadie está, llegan zombis (hasta el doble de los de al
+// principio) y otros se llevan un 10 % por día; cada día, un sitio sin gente puede quemarse o
+// llenarse de zombis por una horda.
+export const SITE_ZOMBIES_PER_DAY = 2;
+export const SITE_LOOT_KEEP_PER_DAY = 0.9;
+export const SITE_BURN_PER_DAY = 0.02;
+export const SITE_HORDE_PER_DAY = 0.03;
+export const SITE_HORDE_ZOMBIES = 10;

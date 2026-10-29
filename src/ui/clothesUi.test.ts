@@ -147,6 +147,7 @@ test('panel Atuendos: los de serie, casillas por prenda agrupadas por zona, ropa
     'Cabeza',
     'Torso y brazos',
     'Piernas',
+    'Bolsas', // H5b2
   ]);
   const box = (k: string) =>
     root.querySelector(`[data-testid="outfit-garment-${k}"]`) as HTMLInputElement;

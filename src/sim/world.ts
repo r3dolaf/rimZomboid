@@ -54,7 +54,7 @@ export function tileOf(p: Point): Point {
 }
 
 /** Salt del azar de los zombis: se deriva de la semilla, pero va aparte. */
-const ZOMBIE_RNG_SALT = 0x2f6b9d1;
+export const ZOMBIE_RNG_SALT = 0x2f6b9d1;
 
 export function createWorld(
   seed: number,

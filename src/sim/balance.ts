@@ -4,6 +4,8 @@ import {
   Tile,
   type BagKind,
   type BagSlot,
+  type SiteKind,
+  type SiteSpecial,
   type BodyPart,
   type BuildKind,
   type GarmentKind,
@@ -1163,3 +1165,22 @@ export const ZOMBIE_BAG: {
 };
 /** Desconocidos que llegan con una riñonera o una mochila escolar (H5b2 §6). */
 export const STRANGER_BAG_CHANCE = 0.3;
+
+// Expediciones (H5c1 §2): tamaño de los sitios, horas de viaje, topes y zombis al crearse.
+export const SITE_SIZE = 64;
+export const VILLAGE_SIZE = 96;
+export const SITE_HOURS: [number, number] = [2, 12];
+export const KNOWN_SITES_MAX = 10;
+export const ACTIVE_SITES_MAX = 4;
+export const SITE_ZOMBIES: Record<SiteKind | SiteSpecial, number> = {
+  house: 4,
+  farm: 6,
+  gas: 6,
+  warehouse: 8,
+  village: 12,
+  stash: 3,
+  dangerous: 30,
+  survivors: 6,
+};
+/** Los zombis de un sitio no se acercan tanto a la entrada (casillas desde el borde). */
+export const SITE_ZOMBIE_CLEAR = 15;

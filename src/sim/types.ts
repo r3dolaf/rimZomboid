@@ -660,6 +660,26 @@ export interface Decision {
   worse?: boolean;
 }
 
+/** Sitios (H5c1 §2): de qué tipo es y si es especial. */
+export type SiteKind = 'house' | 'farm' | 'gas' | 'warehouse' | 'village';
+export type SiteSpecial = 'survivors' | 'stash' | 'dangerous';
+
+/**
+ * Un sitio conocido (H5c1 §2): hacia qué lado y a cuántas horas está, si se ha perdido (quemado),
+ * si ya se visitó, hasta cuándo esperan los supervivientes y cuándo se fue el último.
+ */
+export interface SiteInfo {
+  id: number;
+  kind: SiteKind;
+  special: SiteSpecial | null;
+  side: MapSide;
+  hours: number;
+  state: 'known' | 'lost';
+  visited: boolean;
+  specialUntil: number | null;
+  leftAt: number | null;
+}
+
 /**
  * Lo común a todos los mapas (H5c1 §1): registro, atuendos, numeración, cuentas, estadísticas,
  * muertos, fin de partida y tiempo. Solo datos (nunca un mundo dentro: así no hay ciclos).

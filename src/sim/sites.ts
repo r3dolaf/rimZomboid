@@ -33,13 +33,17 @@ import {
   fillHatchets,
   placeContainers,
 } from './loot';
-import { isWalkable, setTile } from './map/grid';
+import { getTile, isWalkable, setTile } from './map/grid';
+import { addDecision } from './decisions';
+import { newStranger } from './systems/strangers';
+import { wornBags } from './bags';
 import { generateSite } from './map/site';
 import { createRng, nextFloat, nextInt, pick } from './rng';
 import { logEvent, type SiteHow } from './log';
 import {
   Tile,
   type MapSide,
+  type Point,
   type SiteInfo,
   type SiteKind,
   type SiteSpecial,
@@ -136,6 +140,7 @@ export function siteMap(base: World, info: SiteInfo): World {
   // Sus zombis, lejos del campamento (y los de las hordas que llegaron antes).
   addZombies(w, siteZombiesAtStart(info) + info.extraZombies);
   info.extraZombies = 0;
+  if (info.special === 'survivors') addTrapped(w);
   base.siteMaps.push({ siteId: info.id, world: w });
   return w;
 }
@@ -301,6 +306,12 @@ function siteDay(base: World, info: SiteInfo): void {
   if (info.special === 'survivors' && info.specialUntil !== null && base.tick > info.specialUntil) {
     info.special = null;
     info.specialUntil = null;
+    // Los que esperaban ya no están (con lo suyo, en las cuentas).
+    if (map?.stranger) {
+      for (const s of map.stranger.survivors)
+        piecesGone(map, [...s.worn, ...s.carrying.pieces, ...wornBags(s)]);
+      map.stranger = null;
+    }
     logEvent(base, { kind: 'siteChanged', site, change: 'silent' });
   }
   if (nextFloat(rng) < SITE_BURN_PER_DAY) {
@@ -310,5 +321,53 @@ function siteDay(base: World, info: SiteInfo): void {
     if (map) addZombies(map, SITE_HORDE_ZOMBIES);
     else info.extraZombies += SITE_HORDE_ZOMBIES;
     logEvent(base, { kind: 'siteChanged', site, change: 'overrun' });
+  }
+}
+
+/** Supervivientes que piden ayuda (§2): 1 o 2 desconocidos dentro del primer edificio. */
+function addTrapped(w: World): void {
+  const h = w.houses[0];
+  if (!h) return;
+  const floor: Point[] = [];
+  for (let y = h.rect.y; y < h.rect.y + h.rect.h; y++)
+    for (let x = h.rect.x; x < h.rect.x + h.rect.w; x++)
+      if (getTile(w.grid, x, y) === Tile.Floor) floor.push({ x, y });
+  if (floor.length === 0) return;
+  const n = nextInt(w.rng, 1, 2);
+  const survivors = Array.from({ length: n }, () => newStranger(w, pick(w.rng, floor)));
+  w.stranger = { survivors, leaving: false };
+}
+
+/** Distancia (en casillas) a la que un colono ve a los atrapados. */
+const SEE_TRAPPED = 10;
+
+/**
+ * Supervivientes atrapados (§2): cuando un colono los ve, «¿Se unen?» (una vez); aceptados, el sitio
+ * deja de ser especial.
+ */
+export function survivorsSystem(base: World): void {
+  for (const { siteId, world: w } of base.siteMaps) {
+    if (w.survivors.length === 0) continue;
+    const info = base.common.expedition.sites.find((x) => x.id === siteId);
+    const st = w.stranger;
+    if (!st) {
+      if (info?.special === 'survivors') {
+        info.special = null;
+        info.specialUntil = null;
+      }
+      continue;
+    }
+    if (st.leaving || w.decisions.some((d) => d.kind === 'stranger')) continue;
+    const seen = st.survivors.some((t) =>
+      w.survivors.some(
+        (s) => (s.pos.x - t.pos.x) ** 2 + (s.pos.y - t.pos.y) ** 2 <= SEE_TRAPPED ** 2,
+      ),
+    );
+    if (seen)
+      addDecision(
+        w,
+        'stranger',
+        st.survivors.map((s) => s.id),
+      );
   }
 }

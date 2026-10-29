@@ -2,7 +2,7 @@
 // juntos; un sitio sin nadie se queda quieto hasta que vuelva alguien.
 import { departuresSystem } from './expeditions';
 import { travelSystem } from './travel';
-import { sitesDailySystem } from './sites';
+import { sitesDailySystem, survivorsSystem } from './sites';
 import { step } from './step';
 import type { Survivor, World } from './types';
 
@@ -37,5 +37,6 @@ export function stepGame(base: World): void {
   travelSystem(base); // H5c1
   for (const w of activeMaps(base)) step(w);
   departuresSystem(base); // los que salen de expedición
+  survivorsSystem(base); // supervivientes atrapados en los sitios
   sitesDailySystem(base); // H5c1: avisos de sitios
 }

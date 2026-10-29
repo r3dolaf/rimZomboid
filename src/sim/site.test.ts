@@ -1,13 +1,14 @@
 // H5c1 §2: el mapa de un sitio, con las recetas del pueblo (H4f): edificios, botín, zombis y
 // el campamento junto a la entrada.
 import { expect, test } from 'vitest';
-import { SITE_SIZE, SITE_ZOMBIES, VILLAGE_SIZE } from './balance';
+import { SITE_SIZE, SITE_ZOMBIES, TICKS_PER_DAY, VILLAGE_SIZE } from './balance';
 import { checkInvariants } from './invariants';
 import { generateSite } from './map/site';
 import { getTile } from './map/grid';
 import { findPath } from './path/astar';
 import { createRng } from './rng';
-import { siteMap } from './sites';
+import { siteMap, sitesDailySystem, survivorsSystem } from './sites';
+import { issue, ordersSystem } from './orders';
 import { emptyWorld } from './testing/fixtures';
 import { Tile, type MapSide, type SiteInfo, type SiteKind } from './types';
 
@@ -82,4 +83,62 @@ test('el mismo sitio sale igual con la misma semilla', () => {
   const b = siteMap(emptyWorld(10, 10), info({ id: 5, kind: 'gas', side: 2 }));
   expect(a.grid.tiles).toEqual(b.grid.tiles);
   expect(a.zombies.map((z) => z.pos)).toEqual(b.zombies.map((z) => z.pos));
+});
+
+test('especiales: supervivientes atrapados en un edificio; alijo con pocos zombis; peligroso con muchos', () => {
+  const base = emptyWorld(10, 10);
+  const help = siteMap(base, info({ id: 11, kind: 'house', special: 'survivors' }));
+  const trapped = help.stranger!.survivors;
+  expect(trapped.length).toBeGreaterThanOrEqual(1);
+  expect(trapped.length).toBeLessThanOrEqual(2);
+  const house = help.houses[0]!.rect;
+  for (const s of trapped) {
+    expect(s.pos.x).toBeGreaterThanOrEqual(house.x);
+    expect(s.pos.x).toBeLessThan(house.x + house.w);
+  }
+  const stash = siteMap(base, info({ id: 12, kind: 'farm', special: 'stash' }));
+  expect(stash.houses.map((h) => h.kind)).toEqual(['house']);
+  expect(stash.zombies).toHaveLength(SITE_ZOMBIES.stash);
+  const danger = siteMap(base, info({ id: 13, kind: 'gas', special: 'dangerous' }));
+  expect(['police', 'supermarket']).toContain(danger.houses[0]!.kind);
+  expect(danger.zombies).toHaveLength(SITE_ZOMBIES.dangerous);
+  expect(checkInvariants(base)).toEqual([]);
+});
+
+test('al verlos, «¿Se unen?»; si aceptas, son colonos del sitio y el sitio deja de ser especial', () => {
+  const base = emptyWorld(10, 10);
+  const i = info({ id: 11, kind: 'house', special: 'survivors', specialUntil: 1e9 });
+  base.common.expedition.sites.push(i);
+  const site = siteMap(base, i);
+  const trapped = site.stranger!.survivors.map((s) => s.id);
+  const ana = base.survivors[0]!;
+  base.survivors = [];
+  ana.pos = { ...site.stranger!.survivors[0]!.pos };
+  site.survivors.push(ana);
+  survivorsSystem(base);
+  const d = site.decisions.find((x) => x.kind === 'stranger')!;
+  expect(d.survivorIds).toEqual(trapped);
+  survivorsSystem(base);
+  expect(site.decisions.filter((x) => x.kind === 'stranger')).toHaveLength(1); // solo una vez
+  issue(site, { type: 'decide', decisionId: d.id, option: 0 });
+  ordersSystem(site);
+  expect(site.survivors.map((s) => s.id)).toEqual(expect.arrayContaining(trapped));
+  survivorsSystem(base);
+  expect(i.special).toBeNull();
+  expect(checkInvariants(base)).toEqual([]);
+});
+
+test('si nadie llega a tiempo, los supervivientes callan y desaparecen (en las cuentas)', () => {
+  const base = emptyWorld(10, 10);
+  const i = info({ id: 11, kind: 'house', special: 'survivors', specialUntil: 100 });
+  base.common.expedition.sites.push(i);
+  const site = siteMap(base, i);
+  base.tick = TICKS_PER_DAY;
+  for (let k = 0; k < 3 && i.special; k++) {
+    sitesDailySystem(base);
+    base.tick += TICKS_PER_DAY;
+  }
+  expect(i.special).toBeNull();
+  expect(site.stranger).toBeNull();
+  expect(checkInvariants(base)).toEqual([]);
 });

@@ -35,7 +35,8 @@ import { walkStep } from './movement';
  * El que está en el suelo o peleando no se ha ido aún.
  */
 export function strangerSystem(w: World): void {
-  if (w.mapId !== 0) return; // H5c1: los desconocidos que llegan, solo a la base
+  // H5c1: los desconocidos que llegan, solo a la base; en un sitio, los rechazados se van.
+  if (w.mapId !== 0 && !w.stranger?.leaving) return;
   const st = w.stranger;
   if (st === null) return;
   if (!st.leaving) strangerDanger(w);

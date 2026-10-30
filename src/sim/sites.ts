@@ -175,6 +175,7 @@ function discover(
   const rng = ex.rng;
   const route = findRoute(atlas, atlas.base, info.hex);
   info.state = 'known';
+  info.foundAt = w.tick;
   info.side = sideFrom(atlas, atlas.base, info.hex);
   info.hours = route
     ? Math.max(1, Math.round(routeHours(atlas, route)))

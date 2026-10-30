@@ -124,6 +124,9 @@ export function mountMapTabs(root: HTMLElement, opts: { view: MapView }): { upda
         if (b.textContent !== t.label) b.textContent = t.label;
         b.classList.toggle('active', t.mapId === view.mapId);
       }
+      // En su orden (la del mundo, al final, aunque aparezca después la de un sitio).
+      const order = tabs.map((t) => buttons.get(t.mapId)!);
+      if (order.some((b, i) => bar.children[i] !== b)) bar.append(...order);
       const hide = tabs.length <= 1;
       if (bar.hidden !== hide) bar.hidden = hide;
       document.body.classList.toggle('with-map-tabs', !hide); // lo de arriba baja un poco

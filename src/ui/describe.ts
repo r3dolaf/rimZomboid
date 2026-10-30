@@ -77,12 +77,15 @@ export function siteName(w: World, site: SiteInfo): { name: string; the: string 
     return { what, side: es.maps.sides[x.side] };
   };
   const { what, side } = base(site);
-  // H5c2: si hay otro conocido que se llame igual, «Granja del norte 2».
-  const same = w.common.expedition.sites.filter((x) => {
-    if (x.state === 'hidden') return false;
-    const o = base(x);
-    return o.what === what && o.side === side;
-  });
+  // H5c2: si hay otro conocido que se llame igual, «Granja del norte 2» (por orden de descubrimiento,
+  // para que el nombre de uno no cambie al descubrir otro).
+  const same = w.common.expedition.sites
+    .filter((x) => {
+      if (x.state === 'hidden') return false;
+      const o = base(x);
+      return o.what === what && o.side === side;
+    })
+    .sort((a, b) => (a.foundAt ?? -1) - (b.foundAt ?? -1) || a.id - b.id);
   const n = same.indexOf(site) + 1;
   const tail = n > 1 ? ` ${n}` : '';
   return { name: `${what.name} ${side}${tail}`, the: `${what.the} ${side}${tail}` };

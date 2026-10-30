@@ -6,8 +6,10 @@ import { hexCenter } from '../sim/atlas/hex';
 import { findRoute } from '../sim/atlas/route';
 import { HEX_HOURS } from '../sim/balance';
 import { hexToward } from '../sim/expeditions';
+import { reveal } from '../sim/sites';
 import { addSurvivor, emptyWorld, moveTo, siteForTest, travelFor } from '../sim/testing/fixtures';
 import type { SiteInfo, World } from '../sim/types';
+import { mapName } from './describe';
 import { mountExpeditionsPanel } from './expeditionsPanel';
 import { createFlag } from './flag';
 import { createMapView, mapTabs, mountMapTabs, WORLD_MAP } from './mapView';
@@ -352,4 +354,61 @@ test('Expediciones: explorar una zona elegida en el mapa; «Ver en el mapa» en 
   q('site-4-map').click();
   q(`travel-${t.id}-map`).click();
   expect(shown).toEqual([farm.hex, t.path[t.at]]);
+});
+
+test('cambiar de destino en la ficha: no a un sitio que pasaría del tope de 4', () => {
+  const { base, atlas, gas, t, card, q } = cardGame();
+  // La granja tiene gente (cuenta); otros tres sitios con un grupo de camino: ya son 4.
+  for (const id of [6, 7, 8]) {
+    const s = site(base, id, { kind: 'house', hex: hexToward(atlas, atlas.base, 2, id) });
+    const path = [atlas.base, s.hex];
+    base.common.expedition.travels.push({
+      ...t,
+      id: 300 + id,
+      siteId: id,
+      target: s.hex,
+      path,
+      at: 0,
+      members: [],
+    });
+  }
+  card.group(t.id);
+  card.update();
+  q('world-card-redirect')!.click();
+  card.hex(gas.hex);
+  card.update();
+  expect(q('world-card-confirm')).toBeNull(); // no se puede
+  card.hex(atlas.base);
+  card.update();
+  expect(q('world-card-confirm')).not.toBeNull(); // a la base, siempre
+});
+
+test('dos sitios que se llaman igual: el «2» es el que se descubre después (y no cambia luego)', () => {
+  const base = emptyWorld(10, 10);
+  const { atlas } = base.common;
+  const later = site(base, 7, { state: 'hidden', hex: hexToward(atlas, atlas.base, 0, 8) });
+  const first = site(base, 12, { state: 'hidden', hex: hexToward(atlas, atlas.base, 0, 5) });
+  base.tick = 100;
+  reveal(base, first.hex, 0, 'seen');
+  expect(mapName(base, 12)).toBe('Granja del norte');
+  base.tick = 200;
+  reveal(base, later.hex, 0, 'seen');
+  expect(mapName(base, 12)).toBe('Granja del norte');
+  expect(mapName(base, 7)).toBe('Granja del norte 2');
+});
+
+test('la pestaña del mundo sigue al final cuando aparece la de un sitio nuevo', () => {
+  const base = emptyWorld(10, 10);
+  const view = createMapView(base);
+  const root = document.createElement('div');
+  const tabs = mountMapTabs(root, { view });
+  tabs.update(); // solo la base y el mundo
+  site(base, 4);
+  moveTo(base, siteForTest(base, 4), base.survivors[0]!);
+  addSurvivor(base, { x: 2, y: 2 }, 'Bea');
+  tabs.update();
+  const ids = [...root.querySelectorAll('[data-testid^="map-tab-"]')].map(
+    (b) => (b as HTMLElement).dataset.testid,
+  );
+  expect(ids).toEqual(['map-tab-0', 'map-tab-4', `map-tab-${WORLD_MAP}`]);
 });

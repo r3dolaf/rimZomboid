@@ -687,6 +687,8 @@ export interface SiteInfo {
   visited: boolean;
   specialUntil: number | null;
   leftAt: number | null;
+  /** H5c2: cuándo se descubrió (para numerar los que se llaman igual por orden). */
+  foundAt?: number;
   /** Zombis de hordas que llegaron antes de que nadie fuera (se ponen al crearse el sitio). */
   extraZombies: number;
 }

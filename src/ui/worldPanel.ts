@@ -4,6 +4,7 @@
 import { es } from '../i18n/es';
 import { hexDistance } from '../sim/atlas/hex';
 import { findRoute, routeHours } from '../sim/atlas/route';
+import { canRedirect } from '../sim/expeditions';
 import { issue } from '../sim/orders';
 import type { World } from '../sim/types';
 import { listNames, siteName, travelText } from './describe';
@@ -60,9 +61,12 @@ export function mountWorldCard(
   const travel = (id: number) => base.common.expedition.travels.find((x) => x.id === id);
   const siteAt = (hex: number) =>
     base.common.expedition.sites.find((s) => s.hex === hex && s.state !== 'hidden');
-  /** A dónde se puede cambiar el destino: la base o un sitio conocido. */
-  const destination = (hex: number) =>
-    hex === atlas.base || siteAt(hex)?.state === 'known' ? hex : null;
+  /** A dónde se puede cambiar el destino: la base o un sitio conocido (sin pasar del tope). */
+  const destination = (travelId: number, hex: number) => {
+    const site = siteAt(hex);
+    if (hex === atlas.base) return hex;
+    return site && canRedirect(base, travelId, site.id) ? hex : null;
+  };
   const releasePlan = () => {
     if (showing.kind === 'redirect') opts.plan.set(null, null);
   };
@@ -225,7 +229,7 @@ export function mountWorldCard(
   return {
     hex(hex) {
       if (showing.kind === 'redirect') {
-        const to = destination(hex);
+        const to = destination(showing.travelId, hex);
         const tr = travel(showing.travelId);
         if (to === null || !tr) return;
         showing = { ...showing, to };

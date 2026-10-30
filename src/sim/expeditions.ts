@@ -175,6 +175,22 @@ export function applyExpeditionOrder(w: World, o: ExpeditionOrder): void {
   board(w, t, members, o.from === 0 ? o.items : undefined);
 }
 
+/**
+ * Si un viaje puede cambiar a ese destino: la base, o un sitio conocido sin pasar del tope de sitios
+ * con gente o de camino (el suyo de ahora no cuenta).
+ */
+export function canRedirect(base: World, travelId: number, siteId: number | null): boolean {
+  const ex = base.common.expedition;
+  if (!ex.travels.some((x) => x.id === travelId)) return false;
+  if (siteId === null) return true;
+  if (!ex.sites.some((x) => x.id === siteId && x.state === 'known')) return false;
+  const active = new Set<number>();
+  for (const m of base.siteMaps) if (m.world.survivors.length > 0) active.add(m.siteId);
+  for (const t of ex.travels)
+    if (t.id !== travelId && t.kind === 'go' && t.siteId !== null) active.add(t.siteId);
+  return active.has(siteId) || active.size < ACTIVE_SITES_MAX;
+}
+
 /** Cambia el destino de un viaje (a un sitio conocido o a la base) desde donde vayan. */
 function redirect(
   base: World,
@@ -184,10 +200,8 @@ function redirect(
 ): void {
   const ex = base.common.expedition;
   const t = ex.travels.find((x) => x.id === travelId);
-  if (!t) return;
-  const site =
-    siteId === null ? null : ex.sites.find((x) => x.id === siteId && x.state === 'known');
-  if (siteId !== null && !site) return;
+  if (!t || !canRedirect(base, travelId, siteId)) return;
+  const site = siteId === null ? null : ex.sites.find((x) => x.id === siteId)!;
   const target = site ? site.hex : base.common.atlas.base;
   const here = t.path[t.at]!;
   const path = findRoute(base.common.atlas, here, target, waypoints);

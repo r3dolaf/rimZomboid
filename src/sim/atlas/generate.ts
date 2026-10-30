@@ -13,7 +13,15 @@ import {
 } from '../balance';
 import { createRng, nextFloat, nextInt, pick, type RngState } from '../rng';
 import type { Atlas, Terrain } from '../types';
-import { hexDistance, hexesWithin, hexIndex, hexOf, neighbors, type HexSize } from './hex';
+import {
+  hexCenter,
+  hexDistance,
+  hexesWithin,
+  hexIndex,
+  hexOf,
+  neighbors,
+  type HexSize,
+} from './hex';
 import { cheapestPath } from './search';
 
 /** Manchas de `t` hasta cubrir `share` del mundo: paseos al azar desde un hexágono cualquiera. */
@@ -32,26 +40,27 @@ function blobs(size: HexSize, terrain: Terrain[], t: Terrain, share: number, rng
   }
 }
 
-/** Un río de un borde al de enfrente (de arriba abajo o de izquierda a derecha), serpenteando. */
-function river(size: HexSize, terrain: Terrain[], rng: RngState): void {
+/**
+ * Un río de un borde al de enfrente (de arriba abajo o de izquierda a derecha), serpenteando de
+ * vecino en vecino: sin huecos, para que solo se cruce por un puente.
+ */
+export function river(size: HexSize, terrain: Terrain[], rng: RngState): void {
   const down = nextFloat(rng) < 0.5;
-  let col = down ? nextInt(rng, 2, size.width - 3) : 0;
-  let row = down ? 0 : nextInt(rng, 2, size.height - 3);
+  let i = down
+    ? hexIndex(size, nextInt(rng, 2, size.width - 3), 0)
+    : hexIndex(size, 0, nextInt(rng, 2, size.height - 3));
   for (let guard = 0; guard < size.width * size.height; guard++) {
-    const i = hexIndex(size, col, row);
-    if (i < 0) return;
     terrain[i] = 'water';
-    if (down) {
-      // Abajo, a la izquierda o a la derecha (sin salirse).
-      row++;
-      if (row % 2 === 0) col -= nextFloat(rng) < 0.5 ? 1 : 0;
-      else col += nextFloat(rng) < 0.5 ? 1 : 0;
-      col = Math.max(0, Math.min(size.width - 1, col));
-    } else {
-      col++;
-      row += nextFloat(rng) < 0.25 ? 1 : nextFloat(rng) < 0.33 ? -1 : 0;
-      row = Math.max(0, Math.min(size.height - 1, row));
-    }
+    const { col, row } = hexOf(size, i);
+    if (down ? row === size.height - 1 : col === size.width - 1) return;
+    // Los vecinos que avanzan: abajo (suroeste o sureste) o a la derecha (este, noreste o sureste).
+    const here = hexCenter(size, i);
+    const ahead = neighbors(size, i).filter((j) =>
+      down ? hexCenter(size, j).y > here.y : hexCenter(size, j).x > here.x,
+    );
+    if (ahead.length === 0) return;
+    const east = ahead.find((j) => hexCenter(size, j).y === here.y);
+    i = !down && east !== undefined && nextFloat(rng) < 0.5 ? east : pick(rng, ahead);
   }
 }
 

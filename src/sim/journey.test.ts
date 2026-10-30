@@ -2,14 +2,14 @@
 // ruta si aparece agua; salir y entrar por el lado de la ruta; explorar con vuelta; mandar desde un
 // sitio; cambiar de destino.
 import { expect, test } from 'vitest';
-import { EXPLORE_RADIUS, HEX_HOURS, TICKS_PER_HOUR } from './balance';
+import { ACTIVE_SITES_MAX, EXPLORE_RADIUS, HEX_HOURS, TICKS_PER_HOUR } from './balance';
 import { dayStart } from './clock';
 import { hexesWithin, hexIndex, sideFrom } from './atlas/hex';
-import { exitTile, hexToward } from './expeditions';
+import { canRedirect, exitTile, hexToward } from './expeditions';
 import { mapById, stepGame } from './game';
 import { checkInvariants } from './invariants';
 import { issue, ordersSystem } from './orders';
-import { addSurvivor, emptyWorld, moveTo, siteForTest } from './testing/fixtures';
+import { addSurvivor, emptyWorld, moveTo, siteForTest, travelFor } from './testing/fixtures';
 import { Tile, type SiteInfo, type Survivor, type World } from './types';
 
 /** Base de 20×20 con suelo; Ana y Bea sin trabajo; un sitio conocido (id 1) al este. */
@@ -214,4 +214,52 @@ test('las comprobaciones del juego: la ruta de cada viaje, de vecino en vecino y
   t.target = site.hex;
   t.path.splice(1, 1);
   expect(has('salta de')).toBe(true);
+});
+
+test('cambiar de destino respeta el tope de sitios con gente o de camino (el suyo no cuenta)', () => {
+  const { w, ana, site } = world();
+  const { atlas } = w.common;
+  const ex = w.common.expedition;
+  for (let id = 2; id <= ACTIVE_SITES_MAX + 1; id++)
+    ex.sites.push({
+      ...site,
+      id,
+      hex: hexToward(atlas, atlas.base, (id % 4) as 0 | 1 | 2 | 3, id + 6),
+    });
+  // Un grupo de camino a cada uno de los 4 primeros y uno explorando.
+  for (let id = 1; id <= ACTIVE_SITES_MAX; id++)
+    ex.travels.push(
+      travelFor(w, {
+        kind: 'go',
+        from: atlas.base,
+        to: ex.sites.find((x) => x.id === id)!.hex,
+        siteId: id,
+        members: [addSurvivor(w, { x: 1, y: 1 }, `P${id}`)],
+        hoursLeft: 1,
+        id: 100 + id,
+      }),
+    );
+  const scout = travelFor(w, {
+    kind: 'explore',
+    from: atlas.base,
+    to: hexToward(atlas, atlas.base, 1, 6),
+    members: [ana],
+    hoursLeft: 1,
+    id: 200,
+  });
+  ex.travels.push(scout);
+  const out = new Set(ex.travels.flatMap((t) => t.members));
+  w.survivors = w.survivors.filter((s) => !out.has(s));
+  const fifth = ACTIVE_SITES_MAX + 1;
+  issue(w, { type: 'redirectTravel', travelId: scout.id, siteId: fifth });
+  ordersSystem(w);
+  expect(scout).toMatchObject({ kind: 'explore', siteId: null }); // ya hay 4: no
+  expect(canRedirect(w, scout.id, fifth)).toBe(false);
+  expect(canRedirect(w, scout.id, 1)).toBe(true); // a uno que ya cuenta, sí
+  // El que va al 4.º puede cambiar al 5.º: el suyo deja de contar.
+  expect(canRedirect(w, 100 + ACTIVE_SITES_MAX, fifth)).toBe(true);
+  issue(w, { type: 'redirectTravel', travelId: 100 + ACTIVE_SITES_MAX, siteId: fifth });
+  ordersSystem(w);
+  expect(ex.travels.find((t) => t.id === 100 + ACTIVE_SITES_MAX)!.siteId).toBe(fifth);
+  expect(checkInvariants(w)).toEqual([]);
 });

@@ -33,6 +33,7 @@ import { nextInt } from './rng';
 import { doorOutside, exitFor, leaveStrangers } from './systems/strangers';
 import { walkStep } from './systems/movement';
 import type {
+  Common,
   Action,
   Activity,
   Container,
@@ -162,6 +163,7 @@ export function killSurvivor(w: World, s: Survivor, cause: DeathCause): void {
     return;
   }
   leaveColony(w, s);
+  w.common.departed.push({ id: s.id, how: 'died', mapId: w.mapId });
   w.common.dead.push({ id: s.id, name: s.name, day: gameTime(w.tick).day, cause });
   logEvent(w, { kind: 'died', name: s.name, cause });
 }
@@ -185,7 +187,49 @@ export function banish(w: World, s: Survivor): void {
   s.path = findPath(w.grid, tileOf(s.pos), exit) ?? [];
   w.leaving.push(s);
   w.gone.push({ id: s.id, name: s.name });
+  w.common.departed.push({ id: s.id, how: 'banished', mapId: w.mapId });
   logEvent(w, { kind: 'banished', name: s.name });
+}
+
+/** Lo que siente `o` por quien se ha ido o ha muerto en otro mapa (como en `mourn`). */
+function feelFor(w: World, o: Survivor, d: Common['departed'][number]): void {
+  if (o.id === d.id) return;
+  if (o.partnerId === d.id) {
+    o.partnerId = null;
+    remember(w, o, d.how === 'died' ? 'partnerDied' : 'partnerBanished', d.id);
+    return;
+  }
+  if (d.how === 'banished') {
+    remember(w, o, 'banished', d.id);
+    return;
+  }
+  const value = MEMORY_EFFECTS.died.value - (o.opinions[d.id] ?? 0) * DEATH_OPINION_MOOD;
+  remember(w, o, 'died', d.id, Math.max(DEATH_MOOD_MIN, Math.min(DEATH_MOOD_MAX, value)));
+  delete o.opinions[d.id];
+}
+
+/**
+ * H5c1: quien muere o se va de un mapa (o de viaje) deja libre a su pareja y su cama en los demás,
+ * y los demás lo sienten. Desde la base, que ve todos los mapas, al final de cada tick.
+ */
+export function farewellsSystem(base: World): void {
+  const c = base.common;
+  if (c.departed.length === 0) return;
+  const maps = [base, ...base.siteMaps.map((m) => m.world)];
+  const travelers = c.expedition.travels.flatMap((t) => t.members);
+  for (const d of c.departed) {
+    for (const m of maps) {
+      if (m.mapId === d.mapId) continue; // allí ya se hizo
+      for (const o of m.survivors) feelFor(m, o, d);
+      const bed = m.beds.find((b) => b.ownerId === d.id);
+      if (bed) {
+        bed.ownerId = null;
+        assignBeds(m);
+      }
+    }
+    for (const o of travelers) feelFor(base, o, d);
+  }
+  c.departed = [];
 }
 
 /** Los que se van andan hasta el borde; al llegar, se apunta cuándo y cómo vuelven. */

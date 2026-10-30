@@ -57,6 +57,8 @@ export const isOutfitOrder = (o: Order): o is OutfitOrder =>
 type OutfitState = {
   common: Pick<Common, 'outfits' | 'nextOutfitId'>;
   survivors: Survivor[];
+  /** Los de otros mapas o de viaje (H5c1): al borrar un atuendo, cambian también. */
+  away?: Survivor[];
 };
 
 /** Aplica una orden de atuendos. */
@@ -89,7 +91,7 @@ export function applyOutfitOrder(w: OutfitState, o: OutfitOrder): void {
     case 'deleteOutfit': {
       if (w.common.outfits.length <= 1) break;
       w.common.outfits = w.common.outfits.filter((x) => x !== outfit);
-      for (const s of w.survivors)
+      for (const s of [...w.survivors, ...(w.away ?? [])])
         if (s.outfitId === outfit.id) s.outfitId = w.common.outfits[0]!.id;
       break;
     }

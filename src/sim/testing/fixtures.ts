@@ -132,6 +132,7 @@ export function emptyWorld(width: number, height: number): World {
       outfits: defaultOutfits(),
       nextOutfitId: DEFAULT_OUTFITS.length + 1,
       expedition: newExpedition(1),
+      departed: [],
     },
     mapId: 0,
     siteMaps: [],

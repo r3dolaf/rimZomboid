@@ -211,6 +211,7 @@ export function createWorld(
       outfits: defaultOutfits(),
       nextOutfitId: DEFAULT_OUTFITS.length + 1,
       expedition: newExpedition(seed),
+      departed: [],
     },
     mapId: 0,
     siteMaps: [],

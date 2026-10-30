@@ -653,7 +653,7 @@ function expeditionPlan(base: World, day: number, since: Map<number, number>): v
       issue(base, { type: 'returnHome', siteId: m.siteId });
   }
   const busy = new Set(ex.travels.flatMap((t) => [...t.pending, ...t.members.map((s) => s.id)]));
-  const free = base.survivors.filter((s) => canGo(s) && !busy.has(s.id) && s.health > 60);
+  const free = base.survivors.filter((s) => canGo(s, base) && !busy.has(s.id) && s.health > 60);
   const active = activeSiteIds(base);
   const target = ex.sites
     .filter((x) => x.state === 'known' && !active.has(x.id))

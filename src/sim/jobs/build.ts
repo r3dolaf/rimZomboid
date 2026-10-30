@@ -120,7 +120,7 @@ export function finishBuild(w: World, b: Blueprint, builder: Survivor): void {
   switch (b.kind) {
     case 'bed': {
       const owner = w.survivors.find((s) => s.bedId === null);
-      const id = Math.max(0, ...w.beds.map((k) => k.id)) + 1;
+      const id = w.common.nextId++; // único en todos los mapas (H5c1)
       w.beds.push({ id, pos: { x, y }, ownerId: owner?.id ?? null });
       if (owner) owner.bedId = id;
       break;

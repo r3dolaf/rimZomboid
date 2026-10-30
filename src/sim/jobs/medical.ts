@@ -98,16 +98,23 @@ function restSpot(s: Survivor, w: World): Point {
   return inBase(w, s) ? tileOf(s.pos) : pick(w.rng, baseFloor(w));
 }
 
+const isResting = (s: Survivor) =>
+  s.action.type === 'rest' || (s.action.type === 'moveTo' && s.action.then?.type === 'rest');
+
+/** ¿Tiene que descansar (o seguir descansando)? Por dolor sin analgésico o por fiebre (§5, §7). */
+export function needsRest(s: Survivor, w: World): boolean {
+  const pain = !hasPainkiller(s, w) && s.health < (isResting(s) ? REST_UNTIL : REST_BELOW);
+  return pain || s.fever?.rest === true;
+}
+
 /**
  * Descansar (§5): por dolor, con la Salud bajo REST_BELOW y sin analgésico, hasta pasar de
  * REST_UNTIL; por fiebre con "Que descanse" (§7), hasta que se le pase. `null`: sigue
  * descansando; `undefined`: no le hace falta.
  */
 export function restDecision(s: Survivor, w: World): Action | null | undefined {
-  const a = s.action;
-  const resting = a.type === 'rest' || (a.type === 'moveTo' && a.then?.type === 'rest');
-  const pain = !hasPainkiller(s, w) && s.health < (resting ? REST_UNTIL : REST_BELOW);
-  const needed = pain || s.fever?.rest === true;
+  const resting = isResting(s);
+  const needed = needsRest(s, w);
   if (resting) return needed ? null : { type: 'idle', ticksLeft: 0 };
   if (!needed) return undefined;
   return { type: 'moveTo', target: restSpot(s, w), then: { type: 'rest' } };

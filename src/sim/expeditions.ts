@@ -3,7 +3,9 @@
 import { ACTIVE_SITES_MAX, EXPLORE_FOOD, EXPLORE_HOURS, EXPLORE_MAX } from './balance';
 import { stashOne, takeInto, unloadAt } from './bags';
 import { WEAPONS } from './jobs/weapons';
+import { armFactor } from './body';
 import { detach } from './death';
+import { needsRest } from './jobs/medical';
 import { ITEM_KINDS, type ItemKind } from './items';
 import { takeSupplies } from './jobs/supplies';
 import { isWalkable } from './map/grid';
@@ -45,9 +47,19 @@ export function activeSiteIds(base: World): Set<number> {
   return ids;
 }
 
-/** ¿Puede irse? (No derribado, ni en crisis, ni en modo combate, ni ya de viaje.) */
-export const canGo = (s: Survivor) =>
-  s.trip === null && !s.drafted && s.action.type !== 'downed' && s.action.type !== 'crisis';
+/**
+ * ¿Puede hacer el viaje? Ni derribado, ni en crisis, ni en modo combate, ni descansando por dolor o
+ * fiebre, ni sin brazos: si no, no cogería el viaje y el grupo le esperaría.
+ */
+const able = (s: Survivor, w: World) =>
+  !s.drafted &&
+  s.action.type !== 'downed' &&
+  s.action.type !== 'crisis' &&
+  armFactor(s) > 0 &&
+  !needsRest(s, w);
+
+/** ¿Puede irse? (Puede hacer el viaje y no está ya en otro.) */
+export const canGo = (s: Survivor, w: World) => s.trip === null && able(s, w);
 
 /** Reparte la lista del grupo entre ellos: lo mismo a cada uno; lo que sobra, a los primeros. */
 function shares(
@@ -87,7 +99,7 @@ export function applyExpeditionOrder(
   if (!active.has(site.id) && active.size >= ACTIVE_SITES_MAX) return;
   const members = o.survivorIds
     .map((id) => w.survivors.find((s) => s.id === id))
-    .filter((s): s is Survivor => s !== undefined && canGo(s));
+    .filter((s): s is Survivor => s !== undefined && canGo(s, w));
   if (members.length === 0) return;
   const travel: Travel = {
     id: w.common.nextId++,
@@ -181,7 +193,7 @@ export function departuresSystem(w: World): void {
     if (t.pending.length === 0) continue;
     t.pending = t.pending.filter((id) => {
       const s = people.find((x) => x.id === id);
-      const ok = s !== undefined && s.trip?.travelId === t.id && s.action.type !== 'downed';
+      const ok = s !== undefined && s.trip?.travelId === t.id && able(s, w);
       if (!ok && s) s.trip = null;
       return ok;
     });
@@ -194,7 +206,7 @@ function returnHome(base: World, siteId: number): void {
   const info = base.common.expedition.sites.find((x) => x.id === siteId);
   const site = base.siteMaps.find((m) => m.siteId === siteId)?.world;
   if (!info || !site) return;
-  const members = site.survivors.filter(canGo);
+  const members = site.survivors.filter((s) => canGo(s, site));
   if (members.length === 0) return;
   const travel: Travel = {
     id: base.common.nextId++,
@@ -230,7 +242,7 @@ export function loadForTrip(w: World, s: Survivor): void {
 function explore(base: World, side: MapSide, ids: number[]): void {
   const members = ids
     .map((id) => base.survivors.find((s) => s.id === id))
-    .filter((s): s is Survivor => s !== undefined && canGo(s))
+    .filter((s): s is Survivor => s !== undefined && canGo(s, base))
     .slice(0, EXPLORE_MAX);
   if (members.length === 0) return;
   const travel: Travel = {

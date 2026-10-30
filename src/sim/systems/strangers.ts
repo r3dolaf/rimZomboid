@@ -146,21 +146,29 @@ export function roadEnds(w: World): Point[] {
   return out;
 }
 
-/** Nombres que nadie de la colonia (ni quien espera) lleva ya. */
-export function freeNames(w: World): string[] {
+/**
+ * Nombres que nadie de la colonia (ni quien espera) lleva ya: en este mapa, en los sitios (desde la
+ * base), de viaje (H5c1) o en `taken`.
+ */
+export function freeNames(w: World, taken: readonly string[] = []): string[] {
+  const maps = [w, ...w.siteMaps.map((m) => m.world)];
   const used = new Set([
-    ...w.survivors.map((s) => s.name),
-    ...(w.stranger?.survivors.map((s) => s.name) ?? []),
+    ...taken,
+    ...maps.flatMap((m) => [
+      ...m.survivors.map((s) => s.name),
+      ...(m.stranger?.survivors.map((s) => s.name) ?? []),
+    ]),
+    ...w.common.expedition.travels.flatMap((t) => t.members.map((s) => s.name)),
   ]);
   return NAMES.filter((n) => !used.has(n));
 }
 
-/** Un desconocido en `start` que va hacia la puerta, con lo que lleve encima. */
-export function newStranger(w: World, start: Point): Survivor {
+/** Un desconocido en `start` que va hacia la puerta, con lo que lleve encima (sin un nombre de `taken`). */
+export function newStranger(w: World, start: Point, taken: readonly string[] = []): Survivor {
   const door = doorOutside(w);
   const s: Survivor = {
     id: w.common.nextId++,
-    name: pick(w.rng, freeNames(w)),
+    name: pick(w.rng, freeNames(w, taken)),
     pos: { x: start.x + 0.5, y: start.y + 0.5 },
     brain: 'ai',
     action: { type: 'moveTo', target: door },
@@ -267,7 +275,7 @@ export function acceptStrangers(w: World): void {
       spare.ownerId = s.id;
       s.bedId = spare.id;
     } else if (free) {
-      const id = Math.max(0, ...w.beds.map((b) => b.id)) + 1;
+      const id = w.common.nextId++; // único en todos los mapas (H5c1)
       w.beds.push({ id, pos: free, ownerId: s.id });
       s.bedId = id;
     }

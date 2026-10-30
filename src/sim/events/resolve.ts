@@ -47,7 +47,7 @@ export function resolveDecision(
 }
 
 /** Las que caducan se resuelven con su opción por defecto. */
-export function expireDecisions(w: World): void {
+export function expireDecisions(w: World, which: (d: Decision) => boolean = () => true): void {
   for (const d of [...w.decisions])
-    if (w.tick >= d.expiresAt) resolveDecision(w, d.id, DEFAULT_OPTION[d.kind], true);
+    if (w.tick >= d.expiresAt && which(d)) resolveDecision(w, d.id, DEFAULT_OPTION[d.kind], true);
 }

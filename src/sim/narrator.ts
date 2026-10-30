@@ -48,7 +48,9 @@ export function wellbeing(w: World): number {
 /** Decisiones caducadas, fases del Equilibrado, el siguiente suceso y, si toca, el suceso. */
 export function narratorSystem(w: World, catalog: readonly GameEvent[] = CATALOG): void {
   if (w.common.over) return; // H5 §9: sin nadie, no pasa nada más
-  if (w.mapId !== 0) return; // H5c1: el narrador es solo de la base
+  // H5c1: el narrador es solo de la base; en un sitio solo caducan sus decisiones (la fiebre), no
+  // la de los atrapados, que esperan a que alguien conteste.
+  if (w.mapId !== 0) return expireDecisions(w, (d) => d.kind !== 'stranger');
   expireDecisions(w);
   const n = w.narrator;
   if (n.style === 'balanced') {

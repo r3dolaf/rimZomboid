@@ -217,9 +217,15 @@ export function ordersSystem(w: World): void {
       case 'setOutfitDead':
       case 'setOutfit':
       case 'setOutfitBag':
-      case 'setOutfitHandBag':
-        applyOutfitOrder(w, o);
+      case 'setOutfitHandBag': {
+        // Los de los sitios y de viaje (H5c1), por si se borra un atuendo que llevan.
+        const away = [
+          ...w.siteMaps.flatMap((m) => m.world.survivors),
+          ...w.common.expedition.travels.flatMap((t) => t.members),
+        ];
+        applyOutfitOrder({ common: w.common, survivors: w.survivors, away }, o);
         break;
+      }
       case 'setBagList':
       case 'setKeep':
       case 'pinBag':

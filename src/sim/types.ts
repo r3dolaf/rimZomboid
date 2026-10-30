@@ -753,6 +753,11 @@ export interface Common {
   bagLog: { found: number; dropped: number; recovered: number };
   /** Sitios conocidos y viajes (H5c1). */
   expedition: Expedition;
+  /**
+   * Quien ha muerto o se ha ido de la colonia este tick, y desde qué mapa (`null`: de viaje): los
+   * demás mapas se enteran al final del tick (`farewellsSystem`, desde la base).
+   */
+  departed: { id: number; how: 'died' | 'banished'; mapId: number | null }[];
 }
 
 export interface World {

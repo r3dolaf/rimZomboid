@@ -93,12 +93,12 @@ export function mountExpeditionsPanel(
   /** Los que ya salen (con su orden pedida o de camino). */
   const leaving = () =>
     new Set(pending().flatMap((o) => (o.type === 'returnHome' ? [] : o.survivorIds)));
-  const free = (s: Survivor, out: Set<number>) => canGo(s) && !out.has(s.id);
+  const free = (s: Survivor, out: Set<number>) => canGo(s, base()) && !out.has(s.id);
   const siteMapOf = (id: number) => base().siteMaps.find((m) => m.siteId === id)?.world;
   /** Si ese sitio ya tiene pedida la vuelta (o ya no queda nadie que pueda volver). */
   const returning = (id: number) =>
     pending().some((o) => o.type === 'returnHome' && o.siteId === id) ||
-    !(siteMapOf(id)?.survivors.some(canGo) ?? false);
+    !(siteMapOf(id)?.survivors.some((s) => canGo(s, siteMapOf(id)!)) ?? false);
   /** Si se puede mandar un grupo a ese sitio (como mucho 4 con gente, contando lo pedido). */
   const allowed = (id: number) => {
     const active = activeSiteIds(base());

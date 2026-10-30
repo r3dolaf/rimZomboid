@@ -46,8 +46,10 @@ export function checkInvariants(w: World): string[] {
   const everyoneIds = new Set(everyone.map((s) => s.id));
   if (everyoneIds.size !== everyone.length) problems.push('id repetido entre mapas');
   const allBeds = maps.flatMap((m) => m.beds);
+  if (new Set(allBeds.map((b) => b.id)).size !== allBeds.length)
+    problems.push('número de cama repetido entre mapas');
   for (const m of maps)
-    for (const p of checkMap(m, everyoneIds, allBeds))
+    for (const p of checkMap(m, everyone, allBeds))
       problems.push(m.mapId === 0 ? p : `sitio ${m.mapId}: ${p}`);
   // La madera nunca aparece ni desaparece: lo que hay más lo gastado (y lo perdido al fallar) es lo
   // repartido, talado y recuperado.
@@ -66,9 +68,13 @@ export function checkInvariants(w: World): string[] {
   return problems;
 }
 
-/** Las reglas de un mapa; los dueños de camas y las camas pueden estar en cualquier mapa. */
-function checkMap(w: World, everyoneIds: ReadonlySet<number>, allBeds: readonly Bed[]): string[] {
+/**
+ * Las reglas de un mapa; los dueños de camas, las camas y las parejas pueden estar en cualquier
+ * mapa o de viaje (H5c1).
+ */
+function checkMap(w: World, everyone: readonly Survivor[], allBeds: readonly Bed[]): string[] {
   const problems: string[] = [];
+  const everyoneIds = new Set(everyone.map((s) => s.id));
   if (!Number.isInteger(w.tick) || w.tick < 0) problems.push(`tick no válido: ${w.tick}`);
 
   const ids = new Set<number>();
@@ -134,7 +140,7 @@ function checkMap(w: World, everyoneIds: ReadonlySet<number>, allBeds: readonly 
         problems.push(`${who}: ${a.type} con #${a.otherId}, que no está en ${mirror} con él`);
     }
     if (s.partnerId !== null) {
-      const p = w.survivors.find((x) => x.id === s.partnerId);
+      const p = everyone.find((x) => x.id === s.partnerId);
       if (!p || p === s || p.partnerId !== s.id)
         problems.push(`${who}: su pareja #${s.partnerId} no existe o no es mutua`);
     }
@@ -272,9 +278,10 @@ function checkMap(w: World, everyoneIds: ReadonlySet<number>, allBeds: readonly 
     if (w.grid.tiles[i] !== Tile.Tree) problems.push(`marca de talar en ${i}: no es un árbol`);
   // H4b: zombis y daños.
   // Las hordas (H4e) y los que fueron colonos (H5, con nombre) pueden pasar del tope; los demás, no.
+  // (Un sitio, H5c1, tiene los suyos, sin ese tope: los de su tipo y los que llegan con el tiempo.)
   const max = zombieMax(w.narrator.style, w.zombieLevel);
   const loose = w.zombies.filter((z) => z.hordeId === null && z.name === undefined).length;
-  if (loose > max) problems.push(`demasiados zombis: ${loose} > ${max}`);
+  if (w.mapId === 0 && loose > max) problems.push(`demasiados zombis: ${loose} > ${max}`);
   const hordeIds = new Set(w.hordes.map((h) => h.id));
   for (const z of w.zombies) {
     const who = `zombi #${z.id}`;

@@ -20,7 +20,6 @@ import { bloodTick } from './blood';
 import { gameTime } from './clock';
 import { piecesGone } from './clothes';
 import { exitTile } from './expeditions';
-import { assignBeds } from './jobs/medical';
 import { WEAPONS } from './jobs/weapons';
 import { logEvent } from './log';
 import { catchUp, discoverSite, siteMap } from './sites';
@@ -70,22 +69,17 @@ function travelerTick(base: World, t: Travel, s: Survivor, night: boolean): void
   if (s.dying) roadDeath(base, t, s, s.dying);
 }
 
-/** Muere por el camino: se pierde con todo lo que llevaba (en las cuentas) y su cama queda libre. */
+/** Muere por el camino: se pierde con todo lo que llevaba (en las cuentas); los demás se enteran. */
 function roadDeath(base: World, t: Travel, s: Survivor, cause: DeathCause): void {
   t.members = t.members.filter((x) => x !== s);
   const c = base.common;
   piecesGone(base, [...s.worn, ...s.carrying.pieces, ...wornBags(s)]);
   c.woodLog.wasted += s.carrying.wood;
   c.weaponLog.rotted += WEAPONS.reduce((k, w) => k + s.carrying[w], 0) + (s.equipped ? 1 : 0);
-  const maps = [base, ...base.siteMaps.map((m) => m.world)];
-  for (const m of maps) {
-    for (const b of m.beds) if (b.ownerId === s.id) b.ownerId = null;
-    for (const o of m.survivors) if (o.partnerId === s.id) o.partnerId = null;
-  }
-  for (const tr of c.expedition.travels)
-    for (const o of tr.members) if (o.partnerId === s.id) o.partnerId = null;
+  // Su pareja, su cama y el duelo, en todos los mapas: al final del tick (`farewellsSystem`).
   s.bedId = null;
-  assignBeds(base);
+  s.partnerId = null;
+  c.departed.push({ id: s.id, how: 'died', mapId: null });
   c.dead.push({ id: s.id, name: s.name, day: gameTime(base.tick).day, cause });
   logEvent(base, { kind: 'died', name: s.name, cause });
 }

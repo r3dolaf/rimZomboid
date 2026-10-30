@@ -20,6 +20,7 @@ import {
   TICKS_PER_DAY,
   SITE_ZOMBIE_CLEAR,
   SITE_ZOMBIES,
+  ZOMBIE_LEVEL_MULT,
 } from './balance';
 import { placeBlueprint } from './build';
 import { emptyInventory, ITEM_KINDS } from './items';
@@ -45,9 +46,11 @@ import {
   type MapSide,
   type Point,
   type SiteInfo,
+  type Survivor,
   type SiteKind,
   type SiteSpecial,
   type World,
+  type ZombieLevel,
 } from './types';
 import { ZOMBIE_RNG_SALT } from './world';
 import { newZombie } from './zombies/spawn';
@@ -143,9 +146,13 @@ export function siteMap(base: World, info: SiteInfo): World {
       }
   placeBlueprint(w, 'campfire', g.campfire.x, g.campfire.y);
   // Sus zombis, lejos del campamento (y los de las hordas que llegaron antes).
-  addZombies(w, siteZombiesAtStart(info) + info.extraZombies);
+  addZombies(w, siteZombiesAtStart(info, base.zombieLevel) + info.extraZombies);
   info.extraZombies = 0;
-  if (info.special === 'survivors') addTrapped(w);
+  // Con nombres que no lleve ya nadie de la colonia, esté en el mapa que esté.
+  const names = [base, ...base.siteMaps.map((m) => m.world)].flatMap((m) =>
+    m.survivors.map((s) => s.name),
+  );
+  if (info.special === 'survivors') addTrapped(w, names);
   base.siteMaps.push({ siteId: info.id, world: w });
   return w;
 }
@@ -229,10 +236,12 @@ export function sitesDailySystem(base: World): void {
 }
 
 /** Los zombis de un sitio al crearse (el alijo y el peligroso, los suyos). */
-export function siteZombiesAtStart(info: SiteInfo): number {
-  return SITE_ZOMBIES[
-    info.special === 'stash' || info.special === 'dangerous' ? info.special : info.kind
-  ];
+export function siteZombiesAtStart(info: SiteInfo, level: ZombieLevel): number {
+  const n =
+    SITE_ZOMBIES[
+      info.special === 'stash' || info.special === 'dangerous' ? info.special : info.kind
+    ];
+  return Math.round(n * ZOMBIE_LEVEL_MULT[level]); // con la opción Zombis, como en la base
 }
 
 /** `n` zombis en casillas al azar por las que se anda, lejos del campamento. */
@@ -264,7 +273,7 @@ export function catchUp(map: World, info: SiteInfo, now: number): void {
   const elapsed = now - map.tick;
   if (elapsed <= 0) return;
   const days = elapsed / TICKS_PER_DAY;
-  const cap = 2 * siteZombiesAtStart(info);
+  const cap = 2 * siteZombiesAtStart(info, map.zombieLevel);
   const more = Math.min(Math.round(SITE_ZOMBIES_PER_DAY * days), cap - map.zombies.length);
   addZombies(map, Math.max(0, more));
   const taken = 1 - SITE_LOOT_KEEP_PER_DAY ** days;
@@ -285,6 +294,14 @@ export function catchUp(map: World, info: SiteInfo, now: number): void {
   map.tick = now;
 }
 
+/** Alguien que desaparece de un sitio con lo que lleva (en las cuentas: piezas, madera y armas). */
+function vanish(map: World, s: Survivor): void {
+  const c = map.common;
+  piecesGone(map, [...s.worn, ...s.carrying.pieces, ...wornBags(s)]);
+  c.woodLog.wasted += s.carrying.wood;
+  c.weaponLog.rotted += WEAPONS.reduce((n, k) => n + s.carrying[k], 0) + (s.equipped ? 1 : 0);
+}
+
 /** Se quema un sitio: se pierde con todo (en las cuentas: piezas, madera y armas). */
 function burn(base: World, info: SiteInfo): void {
   info.state = 'lost';
@@ -299,6 +316,14 @@ function burn(base: World, info: SiteInfo): void {
   }
   c.woodLog.wasted += map.blueprints.reduce((n, b) => n + b.wood, 0);
   for (const z of map.zombies) piecesGone(map, [...z.worn, ...z.bags]);
+  // Y la gente que había (atrapados, quien se iba o volvía) y los cuerpos que se iban a levantar.
+  const people = [
+    ...(map.stranger?.survivors ?? []),
+    ...map.leaving,
+    ...map.returning.flatMap((r) => (r.kind === 'stranger' ? [r.survivor] : [])),
+  ];
+  for (const s of people) vanish(map, s);
+  for (const r of map.returning) if (r.kind === 'zombie') piecesGone(map, [...r.worn, ...r.bags]);
   base.siteMaps = base.siteMaps.filter((m) => m !== entry);
 }
 
@@ -313,9 +338,9 @@ function siteDay(base: World, info: SiteInfo): void {
     info.specialUntil = null;
     // Los que esperaban ya no están (con lo suyo, en las cuentas).
     if (map?.stranger) {
-      for (const s of map.stranger.survivors)
-        piecesGone(map, [...s.worn, ...s.carrying.pieces, ...wornBags(s)]);
+      for (const s of map.stranger.survivors) vanish(map, s);
       map.stranger = null;
+      map.decisions = map.decisions.filter((d) => d.kind !== 'stranger'); // ya no hay a quién
     }
     logEvent(base, { kind: 'siteChanged', site, change: 'silent' });
   }
@@ -330,7 +355,7 @@ function siteDay(base: World, info: SiteInfo): void {
 }
 
 /** Supervivientes que piden ayuda (§2): 1 o 2 desconocidos dentro del primer edificio. */
-function addTrapped(w: World): void {
+function addTrapped(w: World, taken: readonly string[]): void {
   const h = w.houses[0];
   if (!h) return;
   const floor: Point[] = [];
@@ -339,7 +364,9 @@ function addTrapped(w: World): void {
       if (getTile(w.grid, x, y) === Tile.Floor) floor.push({ x, y });
   if (floor.length === 0) return;
   const n = nextInt(w.rng, 1, 2);
-  const survivors = Array.from({ length: n }, () => newStranger(w, pick(w.rng, floor)));
+  const survivors: Survivor[] = [];
+  for (let i = 0; i < n; i++)
+    survivors.push(newStranger(w, pick(w.rng, floor), [...taken, ...survivors.map((s) => s.name)]));
   w.stranger = { survivors, leaving: false };
 }
 

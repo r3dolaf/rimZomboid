@@ -95,7 +95,7 @@ test('al volver a un sitio, ha pasado el tiempo: más zombis (con tope) y otros 
   catchUp(site, info, w.tick);
   expect(site.tick).toBe(w.tick);
   expect(site.zombies.length).toBe(
-    Math.min(zombies + 3 * SITE_ZOMBIES_PER_DAY, 2 * siteZombiesAtStart(info)),
+    Math.min(zombies + 3 * SITE_ZOMBIES_PER_DAY, 2 * siteZombiesAtStart(info, site.zombieLevel)),
   );
   const keep = 0.9 ** 3;
   expect(site.storage.items.food).toBe(10 - Math.round(10 * (1 - keep)));

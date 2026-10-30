@@ -4,13 +4,11 @@ import {
   BUILDINGS,
   CLOTHES_SALT,
   INITIAL_REVEAL,
-  KNOWN_SITES_MAX,
   NOTE_SURVIVORS,
   RADIO_SURVIVORS,
   SITE_BURN_PER_DAY,
   SITE_HORDE_PER_DAY,
   SITE_HORDE_ZOMBIES,
-  SITE_HOURS,
   SITE_LOOT_KEEP_PER_DAY,
   SITE_ZOMBIES_PER_DAY,
   SITE_RADIO_SHARE,
@@ -21,11 +19,14 @@ import {
   SITE_ZOMBIE_CLEAR,
   SITE_ZOMBIES,
   ZOMBIE_LEVEL_MULT,
+  ROADMAP_RADIUS,
 } from './balance';
 import { placeBlueprint } from './build';
 import { emptyInventory, ITEM_KINDS } from './items';
 import { piecesGone } from './clothes';
 import { WEAPONS } from './jobs/weapons';
+import { hexDistance, hexesWithin, sideFrom } from './atlas/hex';
+import { findRoute, routeHours } from './atlas/route';
 import {
   fillBags,
   fillBuilding,
@@ -47,7 +48,6 @@ import {
   type Point,
   type SiteInfo,
   type Survivor,
-  type SiteKind,
   type SiteSpecial,
   type World,
   type ZombieLevel,
@@ -157,53 +157,79 @@ export function siteMap(base: World, info: SiteInfo): World {
   return w;
 }
 
-const SITE_KINDS: readonly SiteKind[] = ['house', 'farm', 'gas', 'warehouse', 'village'];
 const SPECIALS: readonly SiteSpecial[] = ['survivors', 'stash', 'dangerous'];
 
 /**
- * Descubre un sitio (§3): tipo, lado y horas al azar (o el lado y lo especial que se pidan) con el
- * azar de las expediciones; `null` si ya se conocen 10. Avisa en el registro.
+ * Un sitio oculto pasa a conocido (H5c2 §3): sabe hacia dónde queda y a cuántas horas está de la base
+ * por la ruta; puede ser especial (o lo que se pida). Avisa en el registro. `false` si ya se conocía.
+ */
+function discover(
+  w: World,
+  info: SiteInfo,
+  how: SiteHow,
+  survivorId?: number,
+  special?: SiteSpecial | null,
+): boolean {
+  if (info.state !== 'hidden') return false;
+  const { atlas, expedition: ex } = w.common;
+  const rng = ex.rng;
+  const route = findRoute(atlas, atlas.base, info.hex);
+  info.state = 'known';
+  info.side = sideFrom(atlas, atlas.base, info.hex);
+  info.hours = route
+    ? Math.max(1, Math.round(routeHours(atlas, route)))
+    : hexDistance(atlas, atlas.base, info.hex);
+  info.special =
+    special !== undefined ? special : nextFloat(rng) < SPECIAL_SHARE ? pick(rng, SPECIALS) : null;
+  const [d0, d1] = SURVIVORS_WAIT_DAYS;
+  info.specialUntil =
+    info.special === 'survivors'
+      ? w.tick + nextInt(rng, d0 * TICKS_PER_DAY, d1 * TICKS_PER_DAY)
+      : null;
+  const site = { kind: info.kind, special: info.special, side: info.side, hours: info.hours };
+  logEvent(
+    w,
+    survivorId === undefined
+      ? { kind: 'siteFound', site, how }
+      : { kind: 'siteFound', site, how, survivorId },
+  );
+  return true;
+}
+
+/**
+ * Despeja la niebla a `radius` de `center` (H5c2 §3) y descubre los sitios ocultos de esa zona.
+ * Devuelve los que se han descubierto.
+ */
+export function reveal(
+  w: World,
+  center: number,
+  radius: number,
+  how: SiteHow,
+  survivorId?: number,
+): SiteInfo[] {
+  const { atlas, expedition: ex } = w.common;
+  const area = new Set(hexesWithin(atlas, center, radius));
+  for (const i of area) atlas.seen[i] = 1;
+  return ex.sites.filter((x) => area.has(x.hex) && discover(w, x, how, survivorId));
+}
+
+/**
+ * Un mapa de carreteras, una nota, el humo o la radio (§3): señalan un sitio oculto al azar (si se
+ * pide, de ese lado) y lo descubren; el mapa, además, despeja una zona grande a su alrededor.
+ * `null` si ya no queda ninguno oculto.
  */
 export function discoverSite(
   w: World,
   opts: { how: SiteHow; side?: MapSide; special?: SiteSpecial | null; survivorId?: number },
 ): SiteInfo | null {
   const ex = w.common.expedition;
-  if (ex.sites.filter((x) => x.state === 'known').length >= KNOWN_SITES_MAX) return null;
-  const rng = ex.rng;
-  const kind = pick(rng, SITE_KINDS);
-  const side = opts.side ?? (nextInt(rng, 0, 3) as MapSide);
-  const hours = nextInt(rng, SITE_HOURS[0], SITE_HOURS[1]);
-  const special =
-    opts.special !== undefined
-      ? opts.special
-      : nextFloat(rng) < SPECIAL_SHARE
-        ? pick(rng, SPECIALS)
-        : null;
-  const [d0, d1] = SURVIVORS_WAIT_DAYS;
-  const info: SiteInfo = {
-    id: ex.nextSiteId++,
-    kind,
-    special,
-    side,
-    hours,
-    state: 'known',
-    visited: false,
-    specialUntil:
-      special === 'survivors'
-        ? w.tick + nextInt(rng, d0 * TICKS_PER_DAY, d1 * TICKS_PER_DAY)
-        : null,
-    leftAt: null,
-    extraZombies: 0,
-  };
-  ex.sites.push(info);
-  const site = { kind, special, side, hours };
-  logEvent(
-    w,
-    opts.survivorId === undefined
-      ? { kind: 'siteFound', site, how: opts.how }
-      : { kind: 'siteFound', site, how: opts.how, survivorId: opts.survivorId },
+  const hidden = ex.sites.filter(
+    (x) => x.state === 'hidden' && (opts.side === undefined || x.side === opts.side),
   );
+  if (hidden.length === 0) return null;
+  const info = pick(ex.rng, hidden);
+  discover(w, info, opts.how, opts.survivorId, opts.special);
+  reveal(w, info.hex, opts.how === 'roadMap' ? ROADMAP_RADIUS : 0, opts.how, opts.survivorId);
   return info;
 }
 

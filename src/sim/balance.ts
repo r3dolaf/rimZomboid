@@ -1182,8 +1182,6 @@ export const STRANGER_BAG_CHANCE = 0.3;
 // Expediciones (H5c1 §2): tamaño de los sitios, horas de viaje, topes y zombis al crearse.
 export const SITE_SIZE = 64;
 export const VILLAGE_SIZE = 96;
-export const SITE_HOURS: [number, number] = [2, 12];
-export const KNOWN_SITES_MAX = 10;
 export const ACTIVE_SITES_MAX = 4;
 export const SITE_ZOMBIES: Record<SiteKind | SiteSpecial, number> = {
   house: 4,
@@ -1248,3 +1246,13 @@ export const TOWN_MIN_DIST = 6; // entre pueblos y de la base
 export const ROAD_BUILD_COST = { field: 1, forest: 2, hills: 3, water: 6, road: 0.3 } as const;
 /** Horas de luz para entrar en un hexágono (H5c2 §4); el agua sin puente no se cruza. */
 export const HEX_HOURS = { road: 0.5, field: 1, forest: 1.5, hills: 2 } as const;
+/** Los sitios del mundo (H5c2 §2): cuántos, lejos de la base y separados entre sí. */
+export const SITES_SALT = 0x5173a;
+export const ATLAS_SITES: [number, number] = [40, 60];
+export const SITE_MIN_DIST = 4; // de la base (así al empezar no se ve ninguno)
+export const SITE_SPACING = 2; // entre sitios
+/** La niebla (H5c2 §3): lo que se ve al empezar, al viajar, al explorar y con un mapa. */
+export const ATLAS_START_SEEN = 3;
+export const TRAVEL_SEEN = 1;
+export const EXPLORE_RADIUS = 3;
+export const ROADMAP_RADIUS = 5;

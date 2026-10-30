@@ -67,13 +67,24 @@ export function personName(w: World, id: number): string {
 }
 
 /** El nombre corto de un sitio y con artículo: «Granja del norte», «la granja del norte». */
-function siteName(site: SiteInfo): { name: string; the: string } {
-  const what =
-    site.special === 'stash' || site.special === 'dangerous'
-      ? es.maps.specials[site.special]
-      : es.maps.kinds[site.kind];
-  const side = es.maps.sides[site.side];
-  return { name: `${what.name} ${side}`, the: `${what.the} ${side}` };
+function siteName(w: World, site: SiteInfo): { name: string; the: string } {
+  const base = (x: SiteInfo) => {
+    const what =
+      x.special === 'stash' || x.special === 'dangerous'
+        ? es.maps.specials[x.special]
+        : es.maps.kinds[x.kind];
+    return { what, side: es.maps.sides[x.side] };
+  };
+  const { what, side } = base(site);
+  // H5c2: si hay otro conocido que se llame igual, «Granja del norte 2».
+  const same = w.common.expedition.sites.filter((x) => {
+    if (x.state === 'hidden') return false;
+    const o = base(x);
+    return o.what === what && o.side === side;
+  });
+  const n = same.indexOf(site) + 1;
+  const tail = n > 1 ? ` ${n}` : '';
+  return { name: `${what.name} ${side}${tail}`, the: `${what.the} ${side}${tail}` };
 }
 
 const siteById = (w: World, id: number) => w.common.expedition.sites.find((x) => x.id === id);
@@ -81,19 +92,19 @@ const siteById = (w: World, id: number) => w.common.expedition.sites.find((x) =>
 /** El nombre de un mapa (H5c1 §7): «Base» o el del sitio («Granja del norte»). */
 export function mapName(w: World, mapId: number): string {
   const site = mapId === 0 ? undefined : siteById(w, mapId);
-  return site ? siteName(site).name : es.maps.base;
+  return site ? siteName(w, site).name : es.maps.base;
 }
 
 /** El sitio de ese mapa con artículo («la granja del norte»). */
 export function mapThe(w: World): string {
   const site = w.mapId === 0 ? undefined : siteById(w, w.mapId);
-  return site ? siteName(site).the : es.maps.base;
+  return site ? siteName(w, site).the : es.maps.base;
 }
 
 /** Un sitio por su id, con artículo («la granja del norte»). */
 export function siteThe(base: World, siteId: number | null): string {
   const site = siteId === null ? undefined : siteById(base, siteId);
-  return site ? siteName(site).the : es.maps.base;
+  return site ? siteName(base, site).the : es.maps.base;
 }
 
 /** Un viaje (H5c1 §7): «Viajando a la granja del norte · faltan 3 h», «Explorando el este · …». */

@@ -819,6 +819,7 @@ export const es = {
     siteFound: (how: string, what: string, who?: string) =>
       ({
         explore: `${who} ha encontrado ${what}`,
+        seen: who ? `${who} ha visto por el camino ${what}` : `Por el camino se ve ${what}`,
         roadMap: `Un mapa de carreteras marca ${what}`,
         note: `Una nota habla de ${what}`,
         smoke: `Se ve humo: ${what}`,

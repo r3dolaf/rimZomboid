@@ -65,7 +65,35 @@ export function checkInvariants(w: World): string[] {
       `la madera no cuadra: hay ${wood}, gastada ${log.spent}, perdida ${log.wasted}; repartida ${log.start}, talada ${log.chopped}, recuperada ${log.recovered}`,
     );
   checkPieces(problems, maps);
+  if (w.mapId === 0) checkAtlas(w, problems);
   return problems;
+}
+
+/** El mapa del mundo (H5c2): tamaños que cuadran y cada sitio en un hexágono propio y válido. */
+function checkAtlas(w: World, problems: string[]): void {
+  const { atlas, expedition } = w.common;
+  const n = atlas.width * atlas.height;
+  for (const [name, arr] of [
+    ['terreno', atlas.terrain],
+    ['carreteras', atlas.road],
+    ['pueblos', atlas.town],
+    ['niebla', atlas.seen],
+  ] as const)
+    if (arr.length !== n) problems.push(`mapa del mundo: ${name} con ${arr.length} de ${n}`);
+  if (!Number.isInteger(atlas.base) || atlas.base < 0 || atlas.base >= n)
+    problems.push(`mapa del mundo: la base en ${atlas.base}`);
+  const used = new Set<number>();
+  for (const s of expedition.sites) {
+    const who = `sitio ${s.id}`;
+    if (!Number.isInteger(s.hex) || s.hex < 0 || s.hex >= n) {
+      problems.push(`${who}: hexágono ${s.hex} fuera del mundo`);
+      continue;
+    }
+    if (atlas.terrain[s.hex] === 'water' && atlas.road[s.hex] !== 1)
+      problems.push(`${who}: en el agua (${s.hex})`);
+    if (used.has(s.hex)) problems.push(`${who}: otro sitio en su hexágono ${s.hex}`);
+    used.add(s.hex);
+  }
 }
 
 /**

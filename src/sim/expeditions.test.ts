@@ -7,7 +7,7 @@ import { issue, ordersSystem } from './orders';
 import { discoverSite } from './sites';
 import { step } from './step';
 import { activeMaps, stepGame } from './game';
-import { addSurvivor, emptyWorld, moveTo, siteForTest } from './testing/fixtures';
+import { addSurvivor, addWorldSites, emptyWorld, moveTo, siteForTest } from './testing/fixtures';
 import { Tile, type World } from './types';
 
 /** La base de 20×20 con suelo, el almacén en (5, 5), Ana y Bea sin más que hacer. */
@@ -45,7 +45,8 @@ test('mandar un grupo: se reparten la lista; los que no pueden ir, no van; sitio
   issue(w, { type: 'sendExpedition', siteId: 99, survivorIds: [ana!.id], items: {} });
   ordersSystem(w);
   expect(ana!.trip).toBeNull(); // ese sitio no existe
-  const site = discoverSite(w, { how: 'roadMap', side: 0 })!;
+  addWorldSites(w); // H5c2: los sitios del mundo, ocultos
+  const site = discoverSite(w, { how: 'note', side: 0 })!;
   bea!.action = { type: 'downed', until: 1e9 };
   issue(w, {
     type: 'sendExpedition',
@@ -70,7 +71,8 @@ test('mandar un grupo: se reparten la lista; los que no pueden ir, no van; sitio
 test('se prepara en el almacén (su «Llevar siempre» y su parte de la lista), va al borde y sale', () => {
   const w = world();
   const [ana, bea] = w.survivors;
-  const site = discoverSite(w, { how: 'roadMap', side: 0 })!;
+  addWorldSites(w); // H5c2: los sitios del mundo, ocultos
+  const site = discoverSite(w, { how: 'note', side: 0 })!;
   issue(w, {
     type: 'sendExpedition',
     siteId: site.id,
@@ -93,6 +95,7 @@ test('como mucho 4 sitios con gente o de camino a la vez', () => {
   const w = world();
   for (let i = 0; i < ACTIVE_SITES_MAX + 1; i++) {
     const s = addSurvivor(w, { x: 3, y: 3 }, `P${i}`);
+    if (i === 0) addWorldSites(w);
     const site = discoverSite(w, { how: 'smoke' })!;
     issue(w, { type: 'sendExpedition', siteId: site.id, survivorIds: [s.id], items: {} });
     ordersSystem(w);
@@ -117,6 +120,7 @@ function inSite(): { w: World; site: World } {
     specialUntil: null,
     leftAt: null,
     extraZombies: 0,
+    hex: 300,
   });
   for (const s of [...w.survivors]) moveTo(w, site, s);
   return { w, site };

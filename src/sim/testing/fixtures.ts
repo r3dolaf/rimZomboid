@@ -1,8 +1,9 @@
 // Ayudas para los tests de la simulación.
-import { newExpedition } from '../world';
+import { newAtlas, newExpedition } from '../world';
+import { hexesWithin } from '../atlas/hex';
 import { bagFields, wornBags } from '../bags';
 import { newGarment, piecesGone } from '../clothes';
-import { DEFAULT_OUTFITS } from '../balance';
+import { ATLAS_SIZE, ATLAS_START_SEEN, DEFAULT_OUTFITS } from '../balance';
 import { emptyInventory } from '../items';
 import { defaultOutfits } from '../outfits';
 import { createGrid, setTile } from '../map/grid';
@@ -17,6 +18,8 @@ import {
   type SkillId,
   type Survivor,
   type World,
+  type Atlas,
+  type Terrain,
 } from '../types';
 
 /** Una prenda nueva con ese id (para la ropa de serie de la fixture). */
@@ -132,6 +135,7 @@ export function emptyWorld(width: number, height: number): World {
       outfits: defaultOutfits(),
       nextOutfitId: DEFAULT_OUTFITS.length + 1,
       expedition: newExpedition(1),
+      atlas: plainAtlas(),
       departed: [],
     },
     mapId: 0,
@@ -294,4 +298,31 @@ export function addBase(w: World, rect: { x: number; y: number; w: number; h: nu
   for (const b of w.beds) b.pos = { x: rect.x + 1 + (b.id - 1), y: rect.y + 1 };
   w.storage.tiles = [{ x: door.x, y: door.y - 1 }];
   return w;
+}
+
+/** Un mapa del mundo de campo, sin pueblos ni sitios (H5c2): la base en el centro y su alrededor visto. */
+export function plainAtlas(): Atlas {
+  const { width, height } = ATLAS_SIZE;
+  const n = width * height;
+  const base = (height >> 1) * width + (width >> 1);
+  const atlas: Atlas = {
+    width,
+    height,
+    terrain: new Array<Terrain>(n).fill('field'),
+    road: new Array<number>(n).fill(0),
+    town: new Array<number>(n).fill(0),
+    seen: new Array<number>(n).fill(0),
+    base,
+  };
+  atlas.town[base] = 1;
+  for (const i of hexesWithin(atlas, base, ATLAS_START_SEEN)) atlas.seen[i] = 1;
+  return atlas;
+}
+
+/** Pone en `w` el mapa del mundo de la semilla `seed`, con sus sitios ocultos (H5c2). */
+export function addWorldSites(w: World, seed = 1): void {
+  const { atlas, sites } = newAtlas(seed);
+  w.common.atlas = atlas;
+  w.common.expedition.sites = sites;
+  w.common.expedition.nextSiteId = sites.length + 1;
 }

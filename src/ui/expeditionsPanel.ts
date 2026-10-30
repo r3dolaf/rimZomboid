@@ -178,16 +178,18 @@ export function mountExpeditionsPanel(
 
   function renderSites(): void {
     const w = base();
-    const view = w.common.expedition.sites.map((info) => {
-      const people = siteMapOf(info.id)?.survivors.length ?? 0;
-      return {
-        id: info.id,
-        name: mapName(w, info.id),
-        state: siteState(w, info, people).join(' · '),
-        lost: info.state === 'lost',
-        back: people > 0 ? (returning(info.id) ? 'busy' : 'ok') : null,
-      };
-    });
+    const view = w.common.expedition.sites
+      .filter((x) => x.state !== 'hidden')
+      .map((info) => {
+        const people = siteMapOf(info.id)?.survivors.length ?? 0;
+        return {
+          id: info.id,
+          name: mapName(w, info.id),
+          state: siteState(w, info, people).join(' · '),
+          lost: info.state === 'lost',
+          back: people > 0 ? (returning(info.id) ? 'busy' : 'ok') : null,
+        };
+      });
     const key = JSON.stringify(view);
     if (key === shown.sites) return;
     shown.sites = key;

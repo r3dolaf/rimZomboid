@@ -141,7 +141,7 @@ export type LogEvent =
   | { kind: 'colonyFell' };
 
 /** Cómo se descubre un sitio (H5c1 §3). */
-export type SiteHow = 'explore' | 'roadMap' | 'note' | 'smoke' | 'radio';
+export type SiteHow = 'explore' | 'seen' | 'roadMap' | 'note' | 'smoke' | 'radio';
 
 /** Un suceso con su tick y, si pasó en un sitio (H5c1), su mapa. */
 export type LogEntry = LogEvent & { tick: number; mapId?: number };

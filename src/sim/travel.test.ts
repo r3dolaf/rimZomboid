@@ -17,11 +17,12 @@ import { exitTile } from './expeditions';
 import { allColonists, mapById, stepGame } from './game';
 import { checkInvariants } from './invariants';
 import { discoverSite } from './sites';
-import { emptyWorld } from './testing/fixtures';
+import { addWorldSites, emptyWorld } from './testing/fixtures';
 import { Tile, type Survivor, type Travel, type World } from './types';
 
 function world(): World {
   const w = emptyWorld(20, 20);
+  addWorldSites(w); // H5c2: los sitios del mundo, ocultos
   w.seen.fill(1);
   w.grid.tiles.fill(Tile.Floor);
   w.narrator.nextEventAt = 1e9;
@@ -52,7 +53,7 @@ const at = (w: World, day: number, hour: number) =>
 
 test('solo se viaja de 6 a 20 h; de noche duermen (y cuentan para el ×6)', () => {
   const w = world();
-  const site = discoverSite(w, { how: 'roadMap', side: 0 })!;
+  const site = discoverSite(w, { how: 'note', side: 0 })!;
   const ana = onTheRoad(w, 'go', 2, site.id);
   at(w, 1, 19);
   for (let i = 0; i < TICKS_PER_HOUR; i++) stepGame(w);
@@ -156,7 +157,7 @@ test('explorar: 1 o 2 salen hacia un lado, están fuera un día de luz y vuelven
   expect(t.hoursLeft).toBe(EXPLORE_HOURS);
   for (let i = 0; i < 2 * TICKS_PER_DAY && w.common.expedition.travels.length > 0; i++) stepGame(w);
   expect(w.survivors).toEqual([ana]); // ha vuelto
-  const sites = w.common.expedition.sites;
+  const sites = w.common.expedition.sites.filter((x) => x.state === 'known');
   expect(sites.length).toBeGreaterThanOrEqual(1);
   expect(sites.length).toBeLessThanOrEqual(2);
   for (const s of sites) expect(s.side).toBe(2);

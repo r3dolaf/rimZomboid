@@ -677,9 +677,13 @@ export interface SiteInfo {
   id: number;
   kind: SiteKind;
   special: SiteSpecial | null;
+  /** Su hexágono en el mapa del mundo (H5c2). */
+  hex: number;
+  /** Hacia dónde queda desde la base, y a cuántas horas por la ruta (al descubrirlo). */
   side: MapSide;
   hours: number;
-  state: 'known' | 'lost';
+  /** Oculto (en la niebla, H5c2), conocido o perdido (quemado). */
+  state: 'hidden' | 'known' | 'lost';
   visited: boolean;
   specialUntil: number | null;
   leftAt: number | null;
@@ -773,6 +777,8 @@ export interface Common {
   bagLog: { found: number; dropped: number; recovered: number };
   /** Sitios conocidos y viajes (H5c1). */
   expedition: Expedition;
+  /** El mapa del mundo (H5c2). */
+  atlas: Atlas;
   /**
    * Quien ha muerto o se ha ido de la colonia este tick, y desde qué mapa (`null`: de viaje): los
    * demás mapas se enteran al final del tick (`farewellsSystem`, desde la base).

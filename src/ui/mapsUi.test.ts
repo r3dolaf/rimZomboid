@@ -26,6 +26,7 @@ const site = (id: number, over: Partial<SiteInfo> = {}): SiteInfo => ({
   specialUntil: null,
   leftAt: null,
   extraZombies: 0,
+  hex: 200 + id,
   ...over,
 });
 

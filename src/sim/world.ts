@@ -1,6 +1,8 @@
 import {
   CLOTHES_SALT,
+  ATLAS_START_SEEN,
   EXPEDITION_SALT,
+  SITES_SALT,
   DEFAULT_OUTFITS,
   BANDAGES_CARRIED,
   BUILDINGS,
@@ -19,6 +21,9 @@ import {
   SURVIVOR_COUNT,
   TICKS_PER_DAY,
 } from './balance';
+import { generateAtlas } from './atlas/generate';
+import { hexesWithin } from './atlas/hex';
+import { placeSites } from './atlas/place';
 import { bagFields } from './bags';
 import { baseLayout } from './base';
 import { dressStarter } from './clothes';
@@ -37,7 +42,9 @@ import { rollSkills, skillRng } from './skills';
 import { rollTraits } from './traits';
 import {
   Tile,
+  type Atlas,
   type Expedition,
+  type SiteInfo,
   type Bed,
   type NarratorStyle,
   type Point,
@@ -57,6 +64,16 @@ export function tileOf(p: Point): Point {
 
 /** Salt del azar de los zombis: se deriva de la semilla, pero va aparte. */
 export const ZOMBIE_RNG_SALT = 0x2f6b9d1;
+
+/**
+ * El mapa del mundo y sus sitios al empezar (H5c2): se conoce lo de alrededor de la base; los sitios,
+ * ocultos.
+ */
+export function newAtlas(seed: number): { atlas: Atlas; sites: SiteInfo[] } {
+  const atlas = generateAtlas(seed);
+  for (const i of hexesWithin(atlas, atlas.base, ATLAS_START_SEEN)) atlas.seen[i] = 1;
+  return { atlas, sites: placeSites(atlas, createRng((seed ^ SITES_SALT) >>> 0)) };
+}
 
 /** Las expediciones al empezar (H5c1): sin sitios conocidos, con su propio azar. */
 export function newExpedition(seed: number): Expedition {
@@ -127,6 +144,7 @@ export function createWorld(
   // La ropa del principio y las preferencias (H5b), con su propio azar.
   const clothesRng = createRng((seed ^ CLOTHES_SALT) >>> 0);
   const pieces = { nextPieceId: 1, pieceLog: { made: 0, gone: 0 } };
+  const { atlas, sites } = newAtlas(seed); // H5c2: el mapa del mundo
   for (const s of survivors) dressStarter(pieces, s, clothesRng);
   for (const s of survivors) {
     s.work = defaultWork(s.traits);
@@ -210,7 +228,8 @@ export function createWorld(
       pieceLog: pieces.pieceLog,
       outfits: defaultOutfits(),
       nextOutfitId: DEFAULT_OUTFITS.length + 1,
-      expedition: newExpedition(seed),
+      expedition: { ...newExpedition(seed), sites, nextSiteId: sites.length + 1 },
+      atlas,
       departed: [],
     },
     mapId: 0,

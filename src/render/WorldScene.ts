@@ -412,9 +412,19 @@ export class WorldScene extends Phaser.Scene {
       return { x: (c.x - cam.worldView.x) * cam.zoom, y: (c.y - cam.worldView.y) * cam.zoom };
     };
     const g = window as unknown as { rimzomboid?: Record<string, unknown> };
+    /** Dónde se ve un grupo que viaja, en pantalla (o `null`). */
+    const groupToScreen = (travelId: number) => {
+      const cam = this.cameras.main;
+      const grp = worldGroups(this.base).find((x) => x.travelId === travelId);
+      return grp
+        ? { x: (grp.x - cam.worldView.x) * cam.zoom, y: (grp.y - cam.worldView.y) * cam.zoom }
+        : null;
+    };
     g.rimzomboid = {
       ...g.rimzomboid,
       hexToScreen,
+      groupToScreen,
+      plannedRoute: () => this.plannedRoute(),
       centerOnHex: (i: number) => this.centerOnHex(i),
     };
   }

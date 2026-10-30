@@ -633,6 +633,8 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
 const tripTotals = {
   explores: 0,
   sent: 0,
+  siteToSite: 0, // H5c2
+  redirected: 0, // H5c2
   arrived: 0,
   returned: 0,
   sitesFound: 0,
@@ -645,7 +647,8 @@ const tripTotals = {
 /**
  * H5c1: el jugador de las expediciones, cada mañana: los que llevan dos días en un sitio vuelven;
  * si hay un sitio por visitar, manda a uno o dos con comida y vendas (siempre se queda alguien
- * libre); si no, manda a uno a explorar (cada día hacia un lado).
+ * libre); si no, manda a uno a explorar (cada día hacia un lado). H5c2: los que llevan un día en
+ * un sitio siguen a otro sin visitar, y cada tres días un grupo de camino cambia de idea y vuelve.
  */
 function expeditionPlan(base: World, day: number, since: Map<number, number>): void {
   const ex = base.common.expedition;
@@ -655,8 +658,29 @@ function expeditionPlan(base: World, day: number, since: Map<number, number>): v
       continue;
     }
     if (!since.has(m.siteId)) since.set(m.siteId, base.tick);
-    if (base.tick - since.get(m.siteId)! >= 2 * TICKS_PER_DAY)
-      issue(base, { type: 'returnHome', siteId: m.siteId });
+    const stay = base.tick - since.get(m.siteId)!;
+    if (stay >= 2 * TICKS_PER_DAY) issue(base, { type: 'returnHome', siteId: m.siteId });
+    else if (stay >= TICKS_PER_DAY) {
+      const next = ex.sites.find(
+        (x) => x.state === 'known' && !x.visited && !activeSiteIds(base).has(x.id),
+      );
+      const ids = m.world.survivors.filter((s) => canGo(s, m.world)).map((s) => s.id);
+      if (next && ids.length > 0) {
+        issue(base, {
+          type: 'sendExpedition',
+          from: m.siteId,
+          siteId: next.id,
+          survivorIds: ids,
+          items: {},
+        });
+        tripTotals.siteToSite++;
+      }
+    }
+  }
+  const going = ex.travels.find((t) => t.kind === 'go' && t.members.length > 0);
+  if (day % 3 === 0 && going) {
+    issue(base, { type: 'redirectTravel', travelId: going.id, siteId: null });
+    tripTotals.redirected++;
   }
   const busy = new Set(ex.travels.flatMap((t) => [...t.pending, ...t.members.map((s) => s.id)]));
   const free = base.survivors.filter((s) => canGo(s, base) && !busy.has(s.id) && s.health > 60);
@@ -760,6 +784,8 @@ test('con expediciones se explora, se descubren sitios, se va, se saquea allí y
   expect(tripTotals.arrived, 'llegadas a un sitio').toBeGreaterThan(0);
   expect(tripTotals.foundOnSites, 'cosas encontradas en los sitios').toBeGreaterThan(0);
   expect(tripTotals.returned, 'vueltas a la base').toBeGreaterThan(0);
+  expect(tripTotals.siteToSite, 'de un sitio a otro (H5c2)').toBeGreaterThan(0);
+  expect(tripTotals.redirected, 'cambios de destino (H5c2)').toBeGreaterThan(0);
 });
 
 test.each([1, 2, 3])(

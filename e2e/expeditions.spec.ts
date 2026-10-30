@@ -14,10 +14,12 @@ interface Debug {
   world: {
     survivors: Survivor[];
     siteMaps: { siteId: number; world: { survivors: Survivor[]; zombies: unknown[] } }[];
-    common: { expedition: { sites: { id: number; hours: number }[] } };
+    common: { expedition: { sites: { id: number }[] } };
   };
   view: { mapId: number };
   discoverSite(o: { how: string; side?: number; special?: null }): { id: number } | null;
+  /** H5c2: lleva el sitio cerca de la base (el viaje va hexágono a hexágono). */
+  siteNear(id: number, side: number, dist: number): number | null;
 }
 
 const mapId = (page: Page) =>
@@ -73,7 +75,7 @@ test('expediciones: descubrir un sitio, mandar a alguien, verlo en su pestaña y
   const { site, first, other } = await page.evaluate(() => {
     const d = (window as unknown as { rimzomboid: Debug }).rimzomboid;
     const s = d.discoverSite({ how: 'roadMap', side: 0, special: null })!;
-    d.world.common.expedition.sites.find((x) => x.id === s.id)!.hours = 0.2;
+    d.siteNear(s.id, 0, 3);
     return { site: s.id, first: d.world.survivors[0]!.id, other: d.world.survivors[1]!.id };
   });
 

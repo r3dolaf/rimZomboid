@@ -32,6 +32,7 @@ import { doorSide } from '../sim/map/recipes';
 import {
   Tile,
   type BuildKind,
+  type MapSide,
   type ContainerKind,
   type Point,
   type Survivor,
@@ -43,6 +44,7 @@ import { pileAt } from '../sim/piles';
 import { mainsOn } from '../sim/water';
 import { visibleTiles } from '../sim/vision';
 import { discoverSite } from '../sim/sites';
+import { hexToward } from '../sim/expeditions';
 import type { MapView } from '../ui/mapView';
 import type { Selection } from '../ui/selection';
 import type { Tool, ToolMode } from '../ui/tool';
@@ -1083,11 +1085,30 @@ export class GameScene extends Phaser.Scene {
       world: this.base,
       view: this.view, // H5c1: qué mapa se ve
       discoverSite: (o: Parameters<typeof discoverSite>[1]) => discoverSite(this.base, o),
+      siteNear: (id: number, side: MapSide, dist: number) => this.siteNear(id, side, dist),
       tileToScreen,
       forceEvent,
       canPlace: (kind: BuildKind, x: number, y: number) => canPlace(this.world, kind, { x, y }),
       centerOnTile: (x: number, y: number) => this.centerOnTile({ x, y }),
     };
+  }
+
+  /**
+   * Para los tests de navegador (H5c2): lleva un sitio a `dist` hexágonos de la base hacia `side`
+   * (o algo más lejos, si ahí hay agua u otro sitio), para que el viaje sea corto.
+   */
+  private siteNear(id: number, side: MapSide, dist: number): number | null {
+    const { atlas, expedition } = this.base.common;
+    const site = expedition.sites.find((x) => x.id === id);
+    if (!site) return null;
+    for (let d = dist; d < dist + 10; d++) {
+      const hex = hexToward(atlas, atlas.base, side, d);
+      if (atlas.terrain[hex] === 'water' || expedition.sites.some((x) => x.hex === hex)) continue;
+      site.hex = hex;
+      atlas.seen[hex] = 1;
+      return hex;
+    }
+    return null;
   }
 
   /** Centra la cámara en un superviviente (al pulsar un aviso). */

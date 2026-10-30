@@ -104,3 +104,27 @@ aparte, en una pestaña «🌍 Mundo».
 - Navegador: la pestaña Mundo, elegir un sitio, ver y ajustar la ruta, mandar un grupo.
 - Sonda de equilibrio (con y sin expediciones, jugador sensato), como en H5c1; ajustar cifras si hace
   falta y apuntarlo aquí (§8) y en la hoja de ruta.
+
+## 8. Equilibrio y cambios tras la revisión
+
+- **Partida larga** de 30 días con expediciones: también viajes de un sitio a otro y cambios de
+  destino por el camino. Nada se rompe y las cuentas cuadran en todo el juego.
+- **Sonda:** 36 semillas, narrador Equilibrado y zombis normales, saqueando todo el pueblo durante
+  30 días y contestando con sensatez. Las expediciones se usan con cabeza: cuando el pueblo está
+  casi vacío o falta comida, y siempre se quedan dos en casa; se va al sitio sin visitar más cercano
+  por la ruta.
+  - **Sin expediciones:** la colonia cae de media hacia el día 20 y 12 de 36 llegan al día 30.
+  - **Con expediciones:** igual, hacia el día 20 y 13 de 36. Se manda poco (un grupo por partida, de
+    media): cuando el pueblo se vacía, la colonia suele estar ya cayendo.
+  - Ya se conocen unos 13 sitios por partida sin salir: los mapas de carreteras del botín despejan
+    mucho.
+  - Lo que mata sigue siendo la infección de los arañazos y la sangre, como en H5c1. No se cambian
+    cifras: las expediciones ni regalan ni hunden la partida. Si se quiere que ayuden más, para H6.
+- **Cambios tras la revisión:**
+  - Los ríos van de vecino en vecino sin huecos, así que solo se cruzan por un puente. Antes salían
+    a trozos y no había puentes.
+  - Cambiar de destino respeta el tope de 4 sitios con gente o de camino. El sitio al que iba el
+    grupo deja de contar.
+  - Cuando dos sitios conocidos se llaman igual, el «2» es el que se descubrió después
+    (`SiteInfo.foundAt`). Así el nombre de uno no cambia al descubrir otro.
+  - La pestaña «🌍 Mundo» se queda la última aunque aparezca después la pestaña de un sitio.

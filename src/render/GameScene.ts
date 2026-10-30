@@ -260,6 +260,14 @@ export class GameScene extends Phaser.Scene {
   update(_now: number, dtMs: number): void {
     this.clock.setAllAsleep(allAsleep(this.base));
     runTicks(this.base, this.clock.advance(dtMs), this.onProblems);
+    // Con la pestaña del mundo (H5c2) el juego sigue, pero este mapa ni se ve ni atiende al ratón.
+    const hidden = this.view.atlas;
+    if (this.sys.isVisible() === hidden) this.sys.setVisible(!hidden);
+    if (this.input.enabled === hidden) this.input.enabled = !hidden;
+    if (hidden) {
+      this.onFrame?.();
+      return;
+    }
     this.syncMap();
     this.panWithKeys(dtMs);
     this.refreshMap();
@@ -1069,7 +1077,9 @@ export class GameScene extends Phaser.Scene {
       this.base.narrator.lastAt[ev.id] = this.base.tick;
       return true;
     };
-    (window as unknown as { rimzomboid: unknown }).rimzomboid = {
+    const g = window as unknown as { rimzomboid?: Record<string, unknown> };
+    g.rimzomboid = {
+      ...g.rimzomboid, // lo de la escena del mundo (H5c2)
       world: this.base,
       view: this.view, // H5c1: qué mapa se ve
       discoverSite: (o: Parameters<typeof discoverSite>[1]) => discoverSite(this.base, o),

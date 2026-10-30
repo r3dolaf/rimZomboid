@@ -453,6 +453,7 @@ export const es = {
     } satisfies Partial<Record<SiteSpecial, { name: string; the: string }>>,
     sides: ['del norte', 'del sur', 'del oeste', 'del este'] as const,
     tab: (name: string, n: number) => `${name} · ${n}`,
+    worldTab: '🌍 Mundo',
     inBase: 'En la base',
     inSite: (the: string) => `En ${the}`,
     going: (the: string, hours: number) => `Viajando ${toThe(the)} · faltan ${hours} h`,

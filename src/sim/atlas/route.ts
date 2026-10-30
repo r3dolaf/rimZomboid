@@ -13,7 +13,7 @@ export function hexHours(atlas: Atlas, i: number): number {
 }
 
 /** Lo que se cree que cuesta `i`: lo de verdad si se conoce; si no, como campo. */
-const planned = (atlas: Atlas, i: number) =>
+export const plannedHours = (atlas: Atlas, i: number) =>
   atlas.seen[i] === 1 ? hexHours(atlas, i) : HEX_HOURS.field;
 
 /** La ruta de `from` a `to` pasando por `waypoints` en orden (los extremos incluidos), o `null`. */
@@ -30,7 +30,7 @@ export function findRoute(
       atlas,
       stops[k - 1]!,
       stops[k]!,
-      (i) => planned(atlas, i),
+      (i) => plannedHours(atlas, i),
       HEX_HOURS.road,
     );
     if (!leg) return null;
@@ -41,5 +41,5 @@ export function findRoute(
 
 /** Las horas que se cree que cuesta la ruta (sin contar el hexágono de salida). */
 export function routeHours(atlas: Atlas, route: readonly number[]): number {
-  return route.slice(1).reduce((n, i) => n + planned(atlas, i), 0);
+  return route.slice(1).reduce((n, i) => n + plannedHours(atlas, i), 0);
 }

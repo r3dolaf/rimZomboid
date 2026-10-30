@@ -4,6 +4,7 @@ import { parseNarrator, parseSeed, parseZombies, randomSeed, startUrl } from './
 import { createTimeController } from './game/timeController';
 import { BACKGROUND } from './render/colors';
 import { GameScene, type GameSceneData } from './render/GameScene';
+import { WorldScene, type WorldSceneData } from './render/WorldScene';
 import { gameTime } from './sim/clock';
 import { zombiesInSight } from './sim/danger';
 import type { NarratorStyle, ZombieLevel } from './sim/types';
@@ -221,4 +222,15 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
     },
   };
   game.scene.add('game', GameScene, true, data);
+  // H5c2: el mapa del mundo, encima; solo se ve con su pestaña.
+  const worldData: WorldSceneData = {
+    world,
+    view,
+    debug: data.debug,
+    onHex(hex) {
+      const scene = game.scene.getScene('world') as WorldScene | null;
+      if (scene) scene.selected = scene.selected === hex ? -1 : hex;
+    },
+  };
+  game.scene.add('world', WorldScene, true, worldData);
 }

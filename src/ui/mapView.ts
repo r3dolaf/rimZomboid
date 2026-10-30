@@ -6,6 +6,9 @@ import type { World } from '../sim/types';
 import { mapName } from './describe';
 import './panels.css';
 
+/** La pestaña «🌍 Mundo» (H5c2 §6): no es un mapa; detrás sigue la base. */
+export const WORLD_MAP = -1;
+
 export interface CameraSpot {
   x: number;
   y: number;
@@ -14,10 +17,13 @@ export interface CameraSpot {
 
 export interface MapView {
   readonly base: World;
+  /** El mapa que se ve, o `WORLD_MAP`. */
   readonly mapId: number;
-  /** El mapa que se ve (la base, si ese sitio ya no tiene mapa). */
+  /** Si se ve el mapa del mundo (H5c2). */
+  readonly atlas: boolean;
+  /** El mapa que se ve (la base, si ese sitio ya no tiene mapa o se ve el mundo). */
   readonly world: World;
-  /** Pasa a ver ese mapa (si existe). */
+  /** Pasa a ver ese mapa (si existe) o el mundo. */
   set(mapId: number): void;
   onChange(fn: (mapId: number) => void): void;
   saveCamera(mapId: number, spot: CameraSpot): void;
@@ -33,11 +39,14 @@ export function createMapView(base: World): MapView {
     get mapId() {
       return mapId;
     },
+    get atlas() {
+      return mapId === WORLD_MAP;
+    },
     get world() {
       return mapById(base, mapId) ?? base;
     },
     set(id) {
-      if (id === mapId || !mapById(base, id)) return;
+      if (id === mapId || (id !== WORLD_MAP && !mapById(base, id))) return;
       mapId = id;
       for (const fn of listeners) fn(id);
     },
@@ -62,18 +71,21 @@ export function viewed<T extends object>(view: MapView, rest: T): T & { readonly
   }) as T & { readonly world: World };
 }
 
-/** Las pestañas: la base y cada sitio con gente, con cuántos hay. */
+/** Las pestañas: la base y cada sitio con gente, con cuántos hay; y al final, el mundo (H5c2). */
 export function mapTabs(base: World): { mapId: number; label: string }[] {
-  return [base, ...base.siteMaps.map((m) => m.world)]
-    .filter((w) => w.mapId === 0 || w.survivors.length > 0)
-    .map((w) => ({
-      mapId: w.mapId,
-      label: es.maps.tab(mapName(base, w.mapId), w.survivors.length),
-    }));
+  return [
+    ...[base, ...base.siteMaps.map((m) => m.world)]
+      .filter((w) => w.mapId === 0 || w.survivors.length > 0)
+      .map((w) => ({
+        mapId: w.mapId,
+        label: es.maps.tab(mapName(base, w.mapId), w.survivors.length),
+      })),
+    { mapId: WORLD_MAP, label: es.maps.worldTab },
+  ];
 }
 
 /**
- * Pestañas de mapa arriba (H5c1 §7); con solo la base no se ven. Si el sitio que se ve se queda sin
+ * Pestañas de mapa arriba (H5c1 §7), con la del mundo (H5c2). Si el sitio que se ve se queda sin
  * nadie, se vuelve a la base.
  */
 export function mountMapTabs(root: HTMLElement, opts: { view: MapView }): { update(): void } {

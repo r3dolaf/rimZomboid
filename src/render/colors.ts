@@ -1,4 +1,4 @@
-import { Tile, type BuildingKind } from '../sim/types';
+import { Tile, type BuildingKind, type Terrain } from '../sim/types';
 
 /** Colores provisionales: primero que sea divertido, luego bonito. */
 export const TILE_COLORS: Record<Tile, number> = {
@@ -121,3 +121,18 @@ export const LABEL_SHADOW = '#1a1a1a';
 export const CRATE_CROSS = 0x5e4422;
 export const LOCKER_LINE = 0x3e4650;
 export const MEDICINE_CROSS = 0xc0392b;
+
+/** El mapa del mundo (H5c2): el terreno de cada hexágono, la niebla, carreteras y pueblos. */
+export const ATLAS_TERRAIN: Record<Terrain, number> = {
+  field: 0x6f8a4a,
+  forest: 0x2f4f2a,
+  hills: 0x8a7a5a,
+  water: 0x3a6ea5,
+};
+export const ATLAS_FOG = 0x1e1e22;
+export const ATLAS_EDGE = 0x000000;
+export const ATLAS_ROAD = 0xcfc4a8;
+export const ATLAS_TOWN = 0xb8b0a0;
+export const ATLAS_HOVER = 0xffffff;
+export const ATLAS_GROUP = 0xf2c641;
+export const ATLAS_SPECIAL = '#ffd34d';

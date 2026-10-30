@@ -90,7 +90,7 @@ test('los nombres se buscan en todos los mapas y de viaje', () => {
   expect(personName(base, carla.id)).toBe('Carla');
 });
 
-test('pestañas: Base y una por sitio con gente; al pulsar, ese mapa; si se queda vacío, a la base', () => {
+test('pestañas: Base y una por sitio con gente; al pulsar, ese mapa; si se queda vacío, a la base y sin su pestaña', () => {
   const { base, farm, bea } = game();
   const view = createMapView(base);
   const root = document.createElement('div');
@@ -111,7 +111,7 @@ test('pestañas: Base y una por sitio con gente; al pulsar, ese mapa; si se qued
   tabs.update();
   expect(view.mapId).toBe(0);
   expect(view.world).toBe(base);
-  expect(bar().hidden).toBe(true); // con solo la base, sin pestañas
+  expect(tab(7)).toBeNull(); // sin gente, sin pestaña (quedan la base y el mundo)
 });
 
 test('cada mapa recuerda su cámara; quien escucha se entera del cambio', () => {

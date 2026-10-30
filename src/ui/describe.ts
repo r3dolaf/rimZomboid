@@ -68,7 +68,7 @@ export function personName(w: World, id: number): string {
 }
 
 /** El nombre corto de un sitio y con artículo: «Granja del norte», «la granja del norte». */
-function siteName(w: World, site: SiteInfo): { name: string; the: string } {
+export function siteName(w: World, site: SiteInfo): { name: string; the: string } {
   const base = (x: SiteInfo) => {
     const what =
       x.special === 'stash' || x.special === 'dangerous'

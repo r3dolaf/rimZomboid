@@ -1246,3 +1246,5 @@ export const ATLAS_TOWNS: [number, number] = [4, 6];
 export const TOWN_MIN_DIST = 6; // entre pueblos y de la base
 /** Lo que cuesta pasar por cada terreno al trazar las carreteras (el agua, con puente). */
 export const ROAD_BUILD_COST = { field: 1, forest: 2, hills: 3, water: 6, road: 0.3 } as const;
+/** Horas de luz para entrar en un hexágono (H5c2 §4); el agua sin puente no se cruza. */
+export const HEX_HOURS = { road: 0.5, field: 1, forest: 1.5, hills: 2 } as const;

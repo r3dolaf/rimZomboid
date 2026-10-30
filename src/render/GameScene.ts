@@ -42,6 +42,7 @@ import { buildingTitle, furnitureLabel, pileLabel, zombieLabel } from '../ui/des
 import { pileAt } from '../sim/piles';
 import { mainsOn } from '../sim/water';
 import { visibleTiles } from '../sim/vision';
+import type { MapView } from '../ui/mapView';
 import type { Selection } from '../ui/selection';
 import type { Tool, ToolMode } from '../ui/tool';
 import {
@@ -126,7 +127,10 @@ const GLOW_RINGS = [1, 0.85, 0.7, 0.55, 0.4, 0.25]; // resplandor de la hoguera,
 const GLOW_ALPHA = 0.045; // por cada círculo: se suman hacia el centro
 
 export interface GameSceneData {
+  /** La base: avanza todo el juego desde ella (H5c1). */
   world: World;
+  /** El mapa que se ve (H5c1 §7). */
+  view: MapView;
   time: TimeController;
   selection: Selection;
   houseSelection: Selection;
@@ -142,7 +146,12 @@ export interface GameSceneData {
 
 /** Dibuja el mundo. Solo lee el estado de la simulación; nunca decide nada del juego. */
 export class GameScene extends Phaser.Scene {
+  /** El mapa que se dibuja (el que se ve). */
   private world!: World;
+  private base!: World;
+  private view!: MapView;
+  private mapImage!: Phaser.GameObjects.Image;
+  private fogImage!: Phaser.GameObjects.Image;
   private clock!: TimeController;
   private selection!: Selection;
   private houseSelection!: Selection;
@@ -203,7 +212,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   init(data: GameSceneData): void {
-    this.world = data.world;
+    this.base = data.world;
+    this.view = data.view;
+    this.world = data.view.world;
     this.clock = data.time;
     this.selection = data.selection;
     this.houseSelection = data.houseSelection;
@@ -221,9 +232,8 @@ export class GameScene extends Phaser.Scene {
     this.bubbleLayer = this.add.container(0, 0);
     const { width, height } = this.world.grid;
     // Niebla: una textura de 1 píxel por casilla, escalada al tamaño del mapa.
-    this.fog = this.textures.createCanvas('fog', width, height)!;
-    this.fogPixels = this.fog.context.createImageData(width, height);
-    this.add.image(0, 0, 'fog').setOrigin(0, 0).setScale(TILE_PX);
+    this.makeFog();
+    this.fogImage = this.add.image(0, 0, 'fog').setOrigin(0, 0).setScale(TILE_PX);
     this.drawFog();
     // Marcas de saqueo y casa seleccionada: encima de la niebla, para verlas también en lo no visto.
     this.marks = this.add.graphics();
@@ -243,8 +253,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   update(_now: number, dtMs: number): void {
-    this.clock.setAllAsleep(allAsleep(this.world));
-    runTicks(this.world, this.clock.advance(dtMs), this.onProblems);
+    this.clock.setAllAsleep(allAsleep(this.base));
+    runTicks(this.base, this.clock.advance(dtMs), this.onProblems);
+    this.syncMap();
     this.panWithKeys(dtMs);
     this.refreshMap();
     this.drawFurniture();
@@ -264,9 +275,27 @@ export class GameScene extends Phaser.Scene {
 
   /** El mapa se pinta en un lienzo, con el almacén encima. */
   private drawMap(): void {
-    const { grid, storage } = this.world;
+    this.makeMapCanvas();
+    this.mapImage = this.add.image(0, 0, 'map').setOrigin(0, 0);
+    this.paintMap();
+  }
+
+  private makeMapCanvas(): void {
+    const { grid } = this.world;
     this.map = this.textures.createCanvas('map', grid.width * TILE_PX, grid.height * TILE_PX)!;
-    this.add.image(0, 0, 'map').setOrigin(0, 0);
+  }
+
+  private makeFog(): void {
+    const { width, height } = this.world.grid;
+    this.fog = this.textures.createCanvas('fog', width, height)!;
+    this.fogPixels = this.fog.context.createImageData(width, height);
+  }
+
+  /** Lo que se guarda de cada casilla para repintar solo lo que cambia; y lo pinta todo. */
+  private paintMap(): void {
+    const { grid, storage } = this.world;
+    this.mapVersion = -1;
+    this.mapCurtains = -1;
     this.storageTiles = new Set(storage.tiles.map((t) => t.y * grid.width + t.x));
     this.mapTiles = new Array<number>(grid.tiles.length).fill(-1);
     this.floors = new Array<FloorStyle | null>(grid.tiles.length).fill(null);
@@ -481,15 +510,57 @@ export class GameScene extends Phaser.Scene {
     for (const [id, t] of this.bubbles) if (!live.has(id)) t.setVisible(false);
   }
 
-  private setupCamera(): void {
+  /**
+   * Si ha cambiado el mapa que se ve (H5c1 §7): guarda la cámara del de antes, rehace el lienzo, la
+   * niebla y los letreros con el nuevo y pone la cámara donde estaba en él (o en su base).
+   */
+  private syncMap(): void {
+    const next = this.view.world;
+    if (next === this.world) return;
+    const cam = this.cameras.main;
+    this.view.saveCamera(this.world.mapId, { x: cam.scrollX, y: cam.scrollY, zoom: cam.zoom });
+    this.world = next;
+    this.drag = null;
+    this.box = null;
+    this.rightFrom = null;
+    this.hover = null;
+    for (const t of [...this.bubbles.values(), ...this.zombieNames.values()]) t.destroy();
+    this.bubbles.clear();
+    this.zombieNames.clear();
+    this.waterLabel?.setVisible(false);
+    for (const l of this.labels) l.text.destroy();
+    this.textures.remove('map');
+    this.textures.remove('fog');
+    this.makeMapCanvas();
+    this.mapImage.setTexture('map');
+    this.paintMap();
+    this.makeFog();
+    this.fogImage.setTexture('fog');
+    this.drawFog();
+    const { width, height } = this.world.grid;
+    this.night.setSize(width * TILE_PX, height * TILE_PX);
+    this.makeLabels();
+    this.placeCamera();
+  }
+
+  /** La cámara de este mapa: donde se dejó o, la primera vez, en su base (o campamento). */
+  private placeCamera(): void {
     const cam = this.cameras.main;
     const { grid, base } = this.world;
     cam.setBounds(0, 0, grid.width * TILE_PX, grid.height * TILE_PX);
-    cam.setZoom(2);
-    cam.centerOn(
-      (base.rect.x + base.rect.w / 2) * TILE_PX,
-      (base.rect.y + base.rect.h / 2) * TILE_PX,
-    );
+    const spot = this.view.camera(this.world.mapId);
+    cam.setZoom(Math.max(spot?.zoom ?? 2, this.minZoom()));
+    if (spot) cam.setScroll(spot.x, spot.y);
+    else
+      cam.centerOn(
+        (base.rect.x + base.rect.w / 2) * TILE_PX,
+        (base.rect.y + base.rect.h / 2) * TILE_PX,
+      );
+  }
+
+  private setupCamera(): void {
+    const cam = this.cameras.main;
+    this.placeCamera();
 
     this.input.mouse?.disableContextMenu();
     this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
@@ -985,13 +1056,14 @@ export class GameScene extends Phaser.Scene {
     /** Saca ya un suceso del narrador si se puede dar (sin mirar su espera). */
     const forceEvent = (id: string): boolean => {
       const ev = CATALOG.find((e) => e.id === id);
-      if (!ev || !ev.canHappen(this.world)) return false;
-      ev.happen(this.world);
-      this.world.narrator.lastAt[ev.id] = this.world.tick;
+      if (!ev || !ev.canHappen(this.base)) return false;
+      ev.happen(this.base);
+      this.base.narrator.lastAt[ev.id] = this.base.tick;
       return true;
     };
     (window as unknown as { rimzomboid: unknown }).rimzomboid = {
-      world: this.world,
+      world: this.base,
+      view: this.view, // H5c1: qué mapa se ve
       tileToScreen,
       forceEvent,
       canPlace: (kind: BuildKind, x: number, y: number) => canPlace(this.world, kind, { x, y }),
@@ -1001,12 +1073,14 @@ export class GameScene extends Phaser.Scene {
 
   /** Centra la cámara en un superviviente (al pulsar un aviso). */
   centerOnSurvivor(id: number): void {
+    this.syncMap();
     const s = this.world.survivors.find((x) => x.id === id);
     if (s) this.cameras.main.centerOn(s.pos.x * TILE_PX, s.pos.y * TILE_PX);
   }
 
   /** Centra la cámara en una casilla (al pulsar un aviso de zombis o destrozos). */
   centerOnTile(p: { x: number; y: number }): void {
+    this.syncMap();
     this.cameras.main.centerOn((p.x + 0.5) * TILE_PX, (p.y + 0.5) * TILE_PX);
   }
 

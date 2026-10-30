@@ -9,6 +9,7 @@ import { zombiesInSight } from './sim/danger';
 import type { NarratorStyle, ZombieLevel } from './sim/types';
 import { issue } from './sim/orders';
 import { createWorld } from './sim/world';
+import { allColonists } from './sim/game';
 import { mountBuildMenu } from './ui/buildMenu';
 import { mountCards } from './ui/cards';
 import { mountCraftPanel } from './ui/craftPanel';
@@ -25,6 +26,7 @@ import { mountNoticeMenu } from './ui/noticeMenu';
 import { createPrefsStore } from './ui/noticePrefs';
 import { mountNotices } from './ui/notices';
 import { createFlag } from './ui/flag';
+import { createMapView, mountMapTabs, viewed } from './ui/mapView';
 import { createSelection } from './ui/selection';
 import { mountSheet } from './ui/sheet';
 import { mountOutfitsPanel } from './ui/outfitsPanel';
@@ -56,7 +58,8 @@ if (new URLSearchParams(location.search).has('seed')) {
 }
 
 function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
-  const world = createWorld(seed, style, zombies);
+  const world = createWorld(seed, style, zombies); // la base, que guarda los sitios (H5c1)
+  const view = createMapView(world); // el mapa que se ve
   const time = createTimeController();
   const selection = createSelection();
   const houseSelection = createSelection();
@@ -74,8 +77,8 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
   const toggles = { toggleWork: workOpen.toggle, toggleCraft: craftOpen.toggle };
   // R (H4e): modo combate para los elegidos.
   const toggleDraft = () => {
-    const o = draftToggle(world, selection.ids);
-    if (o) issue(world, o);
+    const o = draftToggle(view.world, selection.ids);
+    if (o) issue(view.world, o);
   };
   const hud = mountHud(ui, {
     seed,
@@ -87,17 +90,20 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
     toggleStorage: storageOpen.toggle,
     toggleOutfits: outfitsOpen.toggle,
   });
-  const cards = mountCards(ui, { world, selection });
-  const sheet = mountSheet(ui, { world, selection });
-  const group = mountGroupPanel(ui, { world, selection });
-  const housePanel = mountHousePanel(ui, { world, selection: houseSelection });
-  const bedPanel = mountBedPanel(ui, { world, selection: bedSelection });
+  // H5c1: las pestañas de mapa; lo de cada mapa (arriba, Almacén, Fabricar, Trabajos, fichas)
+  // es del que se ve; las tarjetas, el registro y los avisos, de todos.
+  const tabs = mountMapTabs(ui, { view });
+  const cards = mountCards(ui, { world, view, selection });
+  const sheet = mountSheet(ui, viewed(view, { base: world, selection }));
+  const group = mountGroupPanel(ui, viewed(view, { selection }));
+  const housePanel = mountHousePanel(ui, viewed(view, { selection: houseSelection }));
+  const bedPanel = mountBedPanel(ui, viewed(view, { selection: bedSelection }));
   const log = mountLog(ui, { world });
-  const workPanel = mountWorkPanel(ui, { world, open: workOpen });
-  const craftPanel = mountCraftPanel(ui, { world, open: craftOpen });
+  const workPanel = mountWorkPanel(ui, viewed(view, { open: workOpen }));
+  const craftPanel = mountCraftPanel(ui, viewed(view, { open: craftOpen }));
   const buildMenu = mountBuildMenu(ui, { tool });
   const noticeMenu = mountNoticeMenu(ui, { prefs, open: noticesOpen });
-  const storagePanel = mountStoragePanel(ui, { world, open: storageOpen });
+  const storagePanel = mountStoragePanel(ui, viewed(view, { open: storageOpen }));
   const outfitsPanel = mountOutfitsPanel(ui, { world, open: outfitsOpen });
   // Al caer la colonia (H5 §9): otra partida con el mismo narrador y zombis, o a la portada.
   const endScreen = mountEndScreen(ui, {
@@ -110,17 +116,27 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
     world,
     time,
     prefs,
-    // Pulsar un aviso: la cámara va al colono y se abre su ficha.
+    // Pulsar un aviso: a su mapa (H5c1), la cámara va al colono y se abre su ficha.
     onFocus(id) {
+      const where = allColonists(world).find((x) => x.s.id === id)?.where;
+      if (typeof where === 'number') view.set(where);
       selection.set(id);
       (game.scene.getScene('game') as GameScene | null)?.centerOnSurvivor(id);
     },
-    // Zombis y destrozos: la cámara va a la casilla.
-    onFocusAt(p) {
+    // Zombis y destrozos: a su mapa y la cámara va a la casilla.
+    onFocusAt(p, mapId) {
+      view.set(mapId);
       (game.scene.getScene('game') as GameScene | null)?.centerOnTile(p);
     },
   });
 
+  // Al cambiar de mapa, nada elegido ni herramienta (las casas y camas son de cada mapa).
+  view.onChange(() => {
+    selection.set(null);
+    houseSelection.set(null);
+    bedSelection.set(null);
+    tool.set(null);
+  });
   // Solo una ficha abierta a la vez: superviviente o casa.
   selection.onChange(() => {
     if (selection.ids.length === 0) return;
@@ -159,6 +175,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
 
   const data: GameSceneData = {
     world,
+    view,
     time,
     selection,
     houseSelection,
@@ -167,11 +184,13 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
     debug: new URLSearchParams(location.search).get('debug') === '1',
     openCraft: () => craftOpen.set(true),
     onFrame: () => {
+      tabs.update(); // primero: si el sitio que se ve se ha quedado vacío, a la base
+      const here = view.world;
       hud.update(
         gameTime(world.tick),
-        world.storage.items,
+        here.storage.items,
         world.tick < world.common.stormUntil,
-        zombiesInSight(world).length,
+        zombiesInSight(here).length,
         siegeText(world),
       );
       cards.update();

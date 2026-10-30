@@ -15,6 +15,7 @@ import {
   formatItems,
   formatModifier,
   healthView,
+  mapThe,
   personName,
   signed,
 } from './describe';
@@ -37,7 +38,12 @@ import './panels.css';
  */
 export function mountSheet(
   root: HTMLElement,
-  opts: { world: World; selection: Selection },
+  opts: {
+    world: World;
+    selection: Selection;
+    /** La base, para buscar nombres en todos los mapas (H5c1); sin ella, `world`. */
+    base?: World;
+  },
 ): { update(): void } {
   const panel = document.createElement('aside');
   panel.className = 'sheet';
@@ -250,12 +256,14 @@ export function mountSheet(
         shown = '';
         return;
       }
-      const nameOf = (id: number) => personName(world, id);
+      const nameOf = (id: number) => personName(opts.base ?? world, id);
       const mods = moodModifiers(s, world.tick, world.base.rect).map((m) =>
         formatModifier(m, world.tick, nameOf),
       );
       const view = {
         name: s.name,
+        // En un sitio, dónde está (H5c1 §7).
+        where: world.mapId === 0 ? null : es.maps.inSite(mapThe(world)),
         doing: activityText(s, world),
         traits: s.traits.map((t) => es.traits[t]),
         needs: [
@@ -455,6 +463,7 @@ function relations(s: Survivor, w: World): string[] {
 
 /** El cuerpo de la ficha, debajo de la cabecera. */
 function render(v: {
+  where: string | null;
   doing: string;
   traits: { name: string; desc: string }[];
   needs: string[];
@@ -471,6 +480,7 @@ function render(v: {
     return e;
   };
 
+  if (v.where) f.append(el('p', `${es.maps.awayIcon} ${v.where}`, 'where'));
   f.append(el('p', v.doing, 'doing'));
 
   f.append(el('h3', es.traitsTitle));

@@ -819,3 +819,59 @@
 .sheet .bags button.selected {
   font-weight: bold;
 }
+
+/* Pestañas de mapa (H5c1 §7): arriba, en el centro; con ellas, lo de debajo baja un poco. */
+.map-tabs {
+  position: fixed;
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  pointer-events: auto;
+}
+.map-tabs[hidden] {
+  display: none;
+}
+.map-tabs button {
+  padding: 3px 10px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: rgba(42, 45, 49, 0.95);
+  color: #e8e6e3;
+  font:
+    13px/1.2 system-ui,
+    sans-serif;
+  cursor: pointer;
+}
+.map-tabs button.active {
+  background: #c9a227;
+  border-color: #c9a227;
+  color: #111;
+}
+body.with-map-tabs .build-menu,
+body.with-map-tabs .hud-siege {
+  top: 74px;
+}
+body.with-map-tabs .work-panel {
+  top: 114px;
+}
+/* Los que están en otro mapa o de viaje: más apagados y con dónde están. */
+.card.away {
+  opacity: 0.75;
+}
+.card .where {
+  margin-top: 4px;
+  font-size: 11px;
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card .where[hidden] {
+  display: none;
+}
+.sheet .where {
+  margin: 0 0 2px;
+  opacity: 0.85;
+}

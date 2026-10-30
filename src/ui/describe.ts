@@ -16,6 +16,7 @@ import {
 import { BODY_PARTS, painOf, partHp } from '../sim/body';
 import { layersOn, zoneBlock } from '../sim/clothes';
 import { mainsOn } from '../sim/water';
+import { allMaps, mapById } from '../sim/game';
 import { gameTime } from '../sim/clock';
 import { ITEM_KINDS, weightOf, type Inventory, type ItemKind } from '../sim/items';
 import { BAG_SLOTS, bagsIn, effectiveKeep, effectiveList, effectivePinned } from '../sim/bags';
@@ -39,23 +40,69 @@ import type {
 } from '../sim/types';
 
 /**
- * El nombre de alguien por su id: de la colonia, a la puerta, de los que se fueron o de los muertos
- * (H5); si no, "?".
+ * El nombre de alguien por su id: de la colonia (en cualquier mapa o de viaje, H5c1), a la puerta,
+ * de los que se fueron o de los muertos (H5); si no, "?".
  */
 export function personName(w: World, id: number): string {
+  const maps = allMaps(w);
   const all = [
-    ...w.survivors,
-    ...(w.stranger?.survivors ?? []),
-    ...w.leaving,
-    ...w.returning.flatMap((r) => (r.kind === 'stranger' ? [r.survivor] : [])),
+    ...maps.flatMap((m) => [
+      ...m.survivors,
+      ...(m.stranger?.survivors ?? []),
+      ...m.leaving,
+      ...m.returning.flatMap((r) => (r.kind === 'stranger' ? [r.survivor] : [])),
+    ]),
+    ...w.common.expedition.travels.flatMap((t) => t.members),
   ];
   return (
     all.find((s) => s.id === id)?.name ??
-    w.returning.flatMap((r) => (r.kind === 'zombie' && r.survivorId === id ? [r.name] : []))[0] ??
+    maps.flatMap((m) =>
+      m.returning.flatMap((r) => (r.kind === 'zombie' && r.survivorId === id ? [r.name] : [])),
+    )[0] ??
     w.common.dead.find((d) => d.id === id)?.name ??
-    w.gone.find((g) => g.id === id)?.name ??
+    maps.flatMap((m) => m.gone).find((g) => g.id === id)?.name ??
     '?'
   );
+}
+
+/** El nombre corto de un sitio y con artículo: «Granja del norte», «la granja del norte». */
+function siteName(site: SiteInfo): { name: string; the: string } {
+  const what =
+    site.special === 'stash' || site.special === 'dangerous'
+      ? es.maps.specials[site.special]
+      : es.maps.kinds[site.kind];
+  const side = es.maps.sides[site.side];
+  return { name: `${what.name} ${side}`, the: `${what.the} ${side}` };
+}
+
+const siteById = (w: World, id: number) => w.common.expedition.sites.find((x) => x.id === id);
+
+/** El nombre de un mapa (H5c1 §7): «Base» o el del sitio («Granja del norte»). */
+export function mapName(w: World, mapId: number): string {
+  const site = mapId === 0 ? undefined : siteById(w, mapId);
+  return site ? siteName(site).name : es.maps.base;
+}
+
+/** El sitio de ese mapa con artículo («la granja del norte»). */
+export function mapThe(w: World): string {
+  const site = w.mapId === 0 ? undefined : siteById(w, w.mapId);
+  return site ? siteName(site).the : es.maps.base;
+}
+
+/** Dónde está un colono (H5c1 §7): en la base, en un sitio, de viaje o explorando. */
+export function whereText(base: World, id: number): string {
+  const the = (siteId: number | null) => {
+    const site = siteId === null ? undefined : siteById(base, siteId);
+    return site ? siteName(site).the : es.maps.base;
+  };
+  const t = base.common.expedition.travels.find((x) => x.members.some((s) => s.id === id));
+  if (t) {
+    const hours = Math.ceil(t.hoursLeft);
+    if (t.kind === 'explore') return es.maps.exploring(es.sites.sides[t.side], hours);
+    return (t.kind === 'go' ? es.maps.going : es.maps.back)(the(t.siteId), hours);
+  }
+  const m = allMaps(base).find((x) => x.survivors.some((s) => s.id === id));
+  return !m || m.mapId === 0 ? es.maps.inBase : es.maps.inSite(the(m.mapId));
 }
 
 /** "Ana (zombi)" si el zombi fue alguien (H5); si no, `null`. */
@@ -400,18 +447,25 @@ export function formatLogEntry(e: LogEntry, w: World): string {
 
 /** La frase de un suceso, sin la fecha. */
 export function logText(e: LogEntry, w: World): string {
+  const text = logSentence(e, w, e.mapId === undefined ? w : (mapById(w, e.mapId) ?? w));
+  // Lo de un sitio, con su nombre delante (H5c1 §7): «Granja del norte: …».
+  return e.mapId === undefined ? text : `${mapName(w, e.mapId)}: ${text}`;
+}
+
+/** La frase de un suceso; los edificios, los del mapa donde pasó (`here`). */
+function logSentence(e: LogEntry, w: World, here: World): string {
   const name = (id: number) => personName(w, id);
   const l = es.log;
   let text: string;
   switch (e.kind) {
     case 'found':
-      text = l.found(name(e.survivorId), formatItems(e.items), buildingThe(w, e.houseId));
+      text = l.found(name(e.survivorId), formatItems(e.items), buildingThe(here, e.houseId));
       break;
     case 'emptyContainer':
-      text = l.emptyContainer(name(e.survivorId), buildingThe(w, e.houseId));
+      text = l.emptyContainer(name(e.survivorId), buildingThe(here, e.houseId));
       break;
     case 'houseEmptied':
-      text = l.houseEmptied(buildingThe(w, e.houseId));
+      text = l.houseEmptied(buildingThe(here, e.houseId));
       break;
     case 'refused':
       text = l.refused(name(e.survivorId));
@@ -506,7 +560,7 @@ export function logText(e: LogEntry, w: World): string {
       text = l.birthdaySkipped(name(e.survivorId));
       break;
     case 'cache':
-      text = l.cache(name(e.survivorId), buildingThe(w, e.houseId), e.cans);
+      text = l.cache(name(e.survivorId), buildingThe(here, e.houseId), e.cans);
       break;
     case 'storm':
       text = l.storm;
@@ -557,7 +611,7 @@ export function logText(e: LogEntry, w: World): string {
       text = l.skillUp(name(e.survivorId), es.skills[e.skill], e.level);
       break;
     case 'forced':
-      text = l.forced(name(e.survivorId), buildingThe(w, e.houseId));
+      text = l.forced(name(e.survivorId), buildingThe(here, e.houseId));
       break;
     case 'corpseSearched':
       text = l.corpseSearched(name(e.survivorId), formatItems(e.items), e.name);

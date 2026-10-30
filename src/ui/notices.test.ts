@@ -195,7 +195,7 @@ test('zombis (H4b): derribado y zombis en la base, avisos rojos que pausan; lo d
   expect(inBase.classList.contains('bad')).toBe(true);
   expect(time.speed).toBe(0);
   inBase.click();
-  expect(onFocusAt).toHaveBeenCalledWith({ x: 5, y: 6 });
+  expect(onFocusAt).toHaveBeenCalledWith({ x: 5, y: 6 }, 0); // en la base (H5c1)
 });
 
 test('menú de Avisos (H4e): lo que no aparece no sale; lo que pausa o no, según lo elegido', () => {

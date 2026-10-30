@@ -30,6 +30,10 @@ const pad = (n: number) => String(n).padStart(2, '0');
 /** "Ana", "Ana y Luis" o "Ana, Luis y Sara". */
 const list = (names: string[]) =>
   names.length <= 1 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} y ${names.at(-1)}`;
+/** «a la granja», «al pueblecito». */
+const toThe = (the: string) => (the.startsWith('el ') ? `al ${the.slice(3)}` : `a ${the}`);
+/** «de la granja», «del pueblecito». */
+const ofThe = (the: string) => (the.startsWith('el ') ? `del ${the.slice(3)}` : `de ${the}`);
 
 export const es = {
   title: 'rimZomboid',
@@ -366,6 +370,31 @@ export const es = {
       dangerous: 'un sitio peligroso',
     } satisfies Record<SiteSpecial, string>,
     sides: ['el norte', 'el sur', 'el oeste', 'el este'] as const,
+  },
+  // Los mapas en pantalla (H5c1 §7): pestañas, dónde está cada uno.
+  maps: {
+    base: 'Base',
+    tabsLabel: 'Mapas',
+    kinds: {
+      house: { name: 'Casa', the: 'la casa' },
+      farm: { name: 'Granja', the: 'la granja' },
+      gas: { name: 'Gasolinera', the: 'la gasolinera' },
+      warehouse: { name: 'Nave', the: 'la nave' },
+      village: { name: 'Pueblecito', the: 'el pueblecito' },
+    } satisfies Record<SiteKind, { name: string; the: string }>,
+    specials: {
+      stash: { name: 'Alijo', the: 'el alijo' },
+      dangerous: { name: 'Sitio peligroso', the: 'el sitio peligroso' },
+    } satisfies Partial<Record<SiteSpecial, { name: string; the: string }>>,
+    sides: ['del norte', 'del sur', 'del oeste', 'del este'] as const,
+    tab: (name: string, n: number) => `${name} · ${n}`,
+    inBase: 'En la base',
+    inSite: (the: string) => `En ${the}`,
+    going: (the: string, hours: number) => `Viajando ${toThe(the)} · faltan ${hours} h`,
+    back: (the: string, hours: number) => `Volviendo ${ofThe(the)} · faltan ${hours} h`,
+    exploring: (side: string, hours: number) => `Explorando ${side} · faltan ${hours} h`,
+    awayIcon: '📍',
+    travelIcon: '🧭',
   },
   // Bolsas (H5b2): todas en femenino («una», «la»).
   bags: {

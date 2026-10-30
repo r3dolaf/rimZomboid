@@ -2,11 +2,12 @@ import type { TimeController } from '../game/timeController';
 import { es } from '../i18n/es';
 import { BIRTHDAY_CANS, TICKS_PER_DAY } from '../sim/balance';
 import { decisionAnswered } from '../sim/decisions';
+import { allMaps } from '../sim/game';
 import type { DecisionOption } from '../sim/events/resolve';
 import type { LogEntry } from '../sim/log';
 import { issue } from '../sim/orders';
 import type { Decision, Tone, World } from '../sim/types';
-import { formatItems, logText, noticeFor } from './describe';
+import { formatItems, logText, mapName, noticeFor, personName } from './describe';
 import { pauses, shows, type NoticePrefs } from './noticePrefs';
 import './panels.css';
 
@@ -20,7 +21,8 @@ const DECISION_TONE: Record<Decision['kind'], Tone> = {
 
 /**
  * Avisos del narrador (spec H3c §5.2–5.3), arriba a la izquierda: uno por suceso, con su tono,
- * y los de decisión con dos botones. Los rojos y los de decisión pausan al aparecer.
+ * y los de decisión con dos botones. Los rojos y los de decisión pausan al aparecer. `world` es la
+ * base: se ven los avisos y las decisiones de todos los mapas (H5c1), con el nombre del sitio.
  */
 export function mountNotices(
   root: HTMLElement,
@@ -28,8 +30,8 @@ export function mountNotices(
     world: World;
     time: TimeController;
     onFocus?: (survivorId: number) => void;
-    /** Centrar la cámara en una casilla (zombis, destrozos). */
-    onFocusAt?: (p: { x: number; y: number }) => void;
+    /** Centrar la cámara en una casilla (zombis, destrozos) del mapa `mapId` (0, la base). */
+    onFocusAt?: (p: { x: number; y: number }, mapId: number) => void;
     /** Qué aparece y qué pausa (menú de Avisos, H4e); sin ello, lo de siempre. */
     prefs?: { get(): NoticePrefs };
   },
@@ -44,8 +46,11 @@ export function mountNotices(
 
   let lastSeen: LogEntry | undefined = opts.world.common.log.at(-1); // lo de antes no avisa
   const plain: { entry: LogEntry; el: HTMLElement }[] = [];
-  const decisions = new Map<number, { el: HTMLElement; buttons: HTMLButtonElement[] }>();
-  const name = (id: number) => opts.world.survivors.find((s) => s.id === id)?.name ?? '?';
+  const decisions = new Map<
+    number,
+    { el: HTMLElement; buttons: HTMLButtonElement[]; map: World }
+  >();
+  const name = (id: number) => personName(opts.world, id);
 
   function card(
     tone: Tone,
@@ -53,6 +58,7 @@ export function mountNotices(
     lines: string[],
     focusId: number | null,
     focusAt?: { x: number; y: number },
+    mapId = 0,
   ): HTMLElement {
     const el = document.createElement('div');
     el.className = `notice ${tone}`;
@@ -69,7 +75,7 @@ export function mountNotices(
       el.addEventListener('click', () => opts.onFocus?.(focusId));
     } else if (focusAt && opts.onFocusAt) {
       el.classList.add('focusable');
-      el.addEventListener('click', () => opts.onFocusAt?.(focusAt));
+      el.addEventListener('click', () => opts.onFocusAt?.(focusAt, mapId));
     }
     return el;
   }
@@ -84,6 +90,7 @@ export function mountNotices(
       [logText(entry, opts.world)],
       info.focusId,
       info.focusAt,
+      entry.mapId,
     );
     el.dataset.testid = 'notice';
     const x = document.createElement('button');
@@ -109,8 +116,8 @@ export function mountNotices(
     plain.splice(i, 1);
   }
 
-  function addDecision(d: Decision): void {
-    const w = opts.world;
+  /** Una decisión del mapa `w` (la base o un sitio): se contesta allí. */
+  function addDecision(d: Decision, w: World): void {
     const t = es.decisions[d.kind];
     const lines =
       d.kind === 'stranger'
@@ -123,7 +130,8 @@ export function mountNotices(
             ])
         : [(d.worse && t.worse ? t.worse : t.text)(name(d.survivorIds[0]!))];
     const focusId = d.kind === 'stranger' ? null : d.survivorIds[0]!;
-    const el = card(DECISION_TONE[d.kind], t.title, lines, focusId);
+    const title = w.mapId === 0 ? t.title : `${mapName(w, w.mapId)}: ${t.title}`;
+    const el = card(DECISION_TONE[d.kind], title, lines, focusId);
     el.classList.add('decision');
     el.dataset.testid = `decision-${d.kind}`;
     const row = document.createElement('div');
@@ -137,7 +145,7 @@ export function mountNotices(
       b.dataset.testid = `decision-option-${option}`;
       b.addEventListener('click', (ev) => {
         ev.stopPropagation();
-        issue(opts.world, { type: 'decide', decisionId: d.id, option });
+        issue(w, { type: 'decide', decisionId: d.id, option });
         b.blur();
       });
       row.append(b);
@@ -145,7 +153,7 @@ export function mountNotices(
     });
     el.append(row);
     decisionsBox.append(el);
-    decisions.set(d.id, { el, buttons });
+    decisions.set(d.id, { el, buttons, map: w });
     if (pauses(opts.prefs?.get() ?? {}, `decision:${d.kind}`, DECISION_TONE[d.kind]))
       opts.time.setSpeed(0);
   }
@@ -162,17 +170,20 @@ export function mountNotices(
       for (const p of [...plain]) if (w.tick - p.entry.tick >= TICKS_PER_DAY) remove(p.entry);
       while (plain.length > MAX_NOTICES) remove(plain[0]!.entry);
 
-      for (const d of w.decisions) if (!decisions.has(d.id)) addDecision(d);
+      const maps = allMaps(w);
+      for (const m of maps)
+        for (const d of m.decisions) if (!decisions.has(d.id)) addDecision(d, m);
       for (const [id, x] of decisions) {
-        const d = w.decisions.find((k) => k.id === id);
+        const d = maps.includes(x.map) ? x.map.decisions.find((k) => k.id === id) : undefined;
         if (!d) {
           x.el.remove();
           decisions.delete(id);
           continue;
         }
-        const answered = decisionAnswered(w, id);
+        const answered = decisionAnswered(x.map, id);
         if (x.el.hidden !== answered) x.el.hidden = answered;
-        if (d.kind === 'birthday') x.buttons[0]!.disabled = w.storage.items.food < BIRTHDAY_CANS;
+        if (d.kind === 'birthday')
+          x.buttons[0]!.disabled = x.map.storage.items.food < BIRTHDAY_CANS;
       }
     },
   };

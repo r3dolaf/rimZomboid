@@ -48,6 +48,8 @@ Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al p
 
 **Hechos en H5:** al morir se libera su cama, la pareja queda sin pareja, se cortan las acciones de dos (pelea, consuelo, vendar, rescatar, acabar con su sufrimiento) y las invariantes lo comprueban. Queda pendiente probar el desplome en plena crisis de principio a fin.
 
+**Hechos en H5c1:** quien sale a explorar se lleva una lata; con las expediciones usadas con cabeza la colonia aguanta lo mismo (cae hacia el día 20–21; lo que mata sigue siendo la infección de los arañazos), y usadas desde el principio, menos. Si se quiere que ayuden más, para H6: más medicinas en los sitios o menos zombis.
+
 **Para H6 (pulido), de H5:**
 
 - Equilibrio (6 semillas, Equilibrado/normal, saqueando todo desde el principio, con mesa y "vendas hasta 10", marcando los cuerpos, sin defender): con las cifras de la spec la colonia caía en 2–3 días; tras el ajuste (spec §13), cae los días 10–20 (la mitad, hacia el 13). Las primeras muertes llegan los días 4–7, sobre todo por infección (de arañazos más que de mordiscos) y luego desangrados cuando se acaban las vendas. Se pelea mucho: 80–260 zombis matados y 90–185 heridas por partida. El usuario pidió "1–2 semanas" saqueando todo sin defenderse.

@@ -97,3 +97,14 @@ Al empezar no se conoce ninguno.
 - **Navegador:** pestañas de mapa, mandar un grupo, cambiar de mapa con las tarjetas, el clic derecho en una ventana, Fabricar y Construir.
 - **Partida larga** con expediciones (explorar, ir, saquear, volver) y tiempo por tick con varios sitios.
 - **Equilibrio:** cuánto aguanta la colonia con y sin expediciones: que ayuden sin regalarlo.
+
+## 10. Equilibrio tras la partida larga
+
+- **Partida larga** de 30 días, también con expediciones (explorar, ir, saquear y volver) y con 4 sitios con gente a la vez: nada se rompe, las armas y la madera cuadran en todo el juego (las armas del botín de un sitio entran en sus cuentas al crearlo) y cada tick sigue yendo rápido (con 4 sitios, unos 0,7 ms; la base sola, 0,1–0,2).
+- **Sonda:** 36 semillas, narrador Equilibrado y zombis normales, saqueando todo el pueblo durante 30 días y contestando con sensatez (perdonar el robo, celebrar, que descanse, aceptar a quien llega).
+  - **Sin expediciones:** la colonia cae de media hacia el día 21 y 11 de 36 llegan al día 30. Es lo mismo que en `main`: sin los mapas y notas del botín salen exactamente las mismas partidas; con ellos solo cambia el azar de cada una.
+  - **Con expediciones usadas con cabeza** (cuando el pueblo está casi vacío o falta comida, y siempre se quedan dos en casa): hacia el día 20,5 y 10 de 36. Traen comida (unas 9 latas por partida, hasta 68), pero casi todas las muertes son por infección de arañazos y por sangre, y eso no lo arreglan.
+  - **Con expediciones desde el principio** (cuando el pueblo aún tiene de todo): peor, hacia el día 18 y 5 de 36. Quien se va deja la base más floja.
+  - Ayudan cuando se acaba el pueblo, sin regalarlo: **no se tocan las cifras**. Si hiciera falta que ayuden más, lo siguiente sería poner más medicinas en los sitios o menos zombis (H6).
+- **Se arregló al medir:** quien salía a explorar no llevaba comida y volvía muerto de hambre; ahora se lleva una lata (`EXPLORE_FOOD`).
+- **La partida larga de talar y construir al azar** exigía talar en la segunda mitad aunque ya no quedara nadie (las respuestas al azar echan o rematan a alguno y los muros al azar encierran); ahora solo lo exige si la colonia sigue en pie.

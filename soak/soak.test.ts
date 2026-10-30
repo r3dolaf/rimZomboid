@@ -324,8 +324,10 @@ test.each([1, 2, 3])(
       if (day === Math.floor(DAYS / 2)) choppedHalf = w.common.woodLog.chopped;
     }
     // H4d: se sigue talando (antes, el machete y la palanca le quitaban el hacha a quien tala).
-    // (H5: si los muros al azar han dejado fuera todos los árboles marcados, no se puede.)
-    if (DAYS >= 10 && markedTreeReachable(w))
+    // (H5: si los muros al azar han dejado fuera todos los árboles marcados, no se puede. H5c1: ni
+    // si no queda nadie: las respuestas al azar echan o rematan a alguno y los muros encierran.)
+    const lasted = !w.common.over || gameTime(w.common.over.tick).day > DAYS / 2 + 3;
+    if (DAYS >= 10 && markedTreeReachable(w) && lasted)
       expect(w.common.woodLog.chopped, 'se tala también en la segunda mitad').toBeGreaterThan(
         choppedHalf,
       );

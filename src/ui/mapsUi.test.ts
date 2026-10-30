@@ -68,8 +68,11 @@ test('el nombre de cada mapa y dónde está cada uno', () => {
   expect(whereText(base, ana.id)).toBe('En la base');
   expect(whereText(base, bea.id)).toBe('En la granja del norte');
   expect(whereText(base, carla.id)).toBe('Viajando a la granja del norte · faltan 3 h');
-  base.common.expedition.travels[0]!.kind = 'back';
-  expect(whereText(base, carla.id)).toBe('Volviendo de la granja del norte · faltan 3 h');
+  Object.assign(base.common.expedition.travels[0]!, { kind: 'back', siteId: null });
+  expect(whereText(base, carla.id)).toBe('Volviendo a la base · faltan 3 h'); // H5c2
+  Object.assign(base.common.expedition.travels[0]!, { kind: 'explore', explored: true });
+  expect(whereText(base, carla.id)).toBe('Volviendo a la base · faltan 3 h'); // ya exploraron
+  base.common.expedition.travels[0]!.explored = undefined;
   base.common.expedition.sites.push(site(8, { kind: 'village', side: 1 }));
   Object.assign(base.common.expedition.travels[0]!, { kind: 'go', siteId: 8 });
   expect(whereText(base, carla.id)).toBe('Viajando al pueblecito del sur · faltan 3 h');

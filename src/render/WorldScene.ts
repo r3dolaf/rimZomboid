@@ -1,7 +1,9 @@
 import Phaser from 'phaser';
 import { neighbors } from '../sim/atlas/hex';
+import { routeHours } from '../sim/atlas/route';
 import type { Point, World } from '../sim/types';
 import type { MapView } from '../ui/mapView';
+import type { RoutePlan } from '../ui/routePlan';
 import {
   atlasPixels,
   HEX_PX,
@@ -17,6 +19,8 @@ import {
   ATLAS_GROUP,
   ATLAS_HOVER,
   ATLAS_ROAD,
+  ATLAS_ROUTE,
+  ATLAS_STOP,
   ATLAS_SPECIAL,
   ATLAS_TERRAIN,
   ATLAS_TOWN,
@@ -47,6 +51,10 @@ export interface WorldSceneData {
   onHex?: (hex: number, screen: Point) => void;
   /** Clic en un grupo que viaja. */
   onGroup?: (travelId: number, screen: Point) => void;
+  /** La ruta que se planea (H5c2 §6): se dibuja; arrastrarla pone paradas; botón derecho, las quita. */
+  plan?: RoutePlan;
+  /** El hexágono elegido (con su ficha abierta), o −1. */
+  selected?: () => number;
 }
 
 /**
@@ -59,6 +67,13 @@ export class WorldScene extends Phaser.Scene {
   private view!: MapView;
   private onHex?: WorldSceneData['onHex'];
   private onGroup?: WorldSceneData['onGroup'];
+  private plan?: RoutePlan;
+  private selected: () => number = () => -1;
+  /** La ruta planeada (se rehace si cambia lo planeado o lo que se sabe del mundo). */
+  private route: { key: string; path: number[] | null } = { key: '', path: null };
+  private routeLabel!: Phaser.GameObjects.Text;
+  /** El punto de la ruta que se está arrastrando, o −1. */
+  private dragging = -1;
   private ground!: Phaser.GameObjects.Graphics;
   private marks!: Phaser.GameObjects.Graphics;
   /** Lo que se sabe del mundo cuando se pintó el suelo (se repinta al despejar niebla). */
@@ -69,8 +84,6 @@ export class WorldScene extends Phaser.Scene {
   >();
   private groupTexts = new Map<number, Phaser.GameObjects.Text>();
   private hover = -1;
-  /** El hexágono elegido (con su ficha abierta), o −1. */
-  selected = -1;
   /** Dónde se pulsó (en pantalla): soltar cerca es un clic; lejos, arrastrar la cámara. */
   private downAt: Point | null = null;
   private keys!: Record<
@@ -87,12 +100,25 @@ export class WorldScene extends Phaser.Scene {
     this.view = data.view;
     this.onHex = data.onHex;
     this.onGroup = data.onGroup;
+    this.plan = data.plan;
+    if (data.selected) this.selected = data.selected;
     if (data.debug) this.exposeDebug();
   }
 
   create(): void {
     this.ground = this.add.graphics();
     this.marks = this.add.graphics();
+    this.routeLabel = this.add
+      .text(0, 0, '', {
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '9px',
+        color: LABEL_COLOR,
+        stroke: LABEL_SHADOW,
+        strokeThickness: 2,
+        resolution: 4,
+      })
+      .setOrigin(0.5, 1)
+      .setDepth(2);
     this.setupCamera();
     this.setupInput();
     this.keys = this.input.keyboard!.addKeys(
@@ -117,7 +143,18 @@ export class WorldScene extends Phaser.Scene {
       this.input.enabled = on;
       this.downAt = null;
       this.hover = -1;
+      this.dragging = -1;
     }
+  }
+
+  /** La ruta planeada, rehecha solo si cambia lo planeado o lo que se ha visto. */
+  private plannedRoute(): number[] | null {
+    const p = this.plan;
+    if (!p || p.from === null || p.to === null) return null;
+    const { atlas } = this.base.common;
+    const key = `${p.from}>${p.waypoints.join(',')}>${p.to}:${this.groundKey}`;
+    if (key !== this.route.key) this.route = { key, path: p.route(atlas) };
+    return this.route.path;
   }
 
   /** El terreno, las carreteras y los pueblos de lo que se ha visto; lo demás, niebla. */
@@ -172,9 +209,10 @@ export class WorldScene extends Phaser.Scene {
   private drawMarks(): void {
     const { atlas } = this.base.common;
     const g = this.marks.clear();
+    this.drawRoute(g);
     for (const [hex, alpha] of [
       [this.hover, 0.5],
-      [this.selected, 1],
+      [this.selected(), 1],
     ] as const) {
       if (hex < 0) continue;
       const c = hexPixel(atlas, hex);
@@ -244,6 +282,37 @@ export class WorldScene extends Phaser.Scene {
       }
   }
 
+  /** La ruta planeada, con sus paradas y las horas al final (y el punto que se arrastra). */
+  private drawRoute(g: Phaser.GameObjects.Graphics): void {
+    const path = this.plannedRoute();
+    const { atlas } = this.base.common;
+    if (!path || path.length < 2) {
+      this.routeLabel.setVisible(false);
+      return;
+    }
+    const pts = path.map((i) => hexPixel(atlas, i));
+    g.lineStyle(3, ATLAS_ROUTE, 0.85);
+    for (let k = 1; k < pts.length; k++)
+      g.lineBetween(pts[k - 1]!.x, pts[k - 1]!.y, pts[k]!.x, pts[k]!.y);
+    g.fillStyle(ATLAS_ROUTE, 0.9);
+    for (const p of pts.slice(1, -1)) g.fillCircle(p.x, p.y, 2.5);
+    g.fillStyle(ATLAS_STOP, 1);
+    for (const w of this.plan!.waypoints) {
+      const p = hexPixel(atlas, w);
+      g.fillCircle(p.x, p.y, 5);
+    }
+    if (this.dragging > 0 && this.hover >= 0) {
+      const a = pts[this.dragging]!;
+      const b = hexPixel(atlas, this.hover);
+      g.lineStyle(2, ATLAS_STOP, 0.8).lineBetween(a.x, a.y, b.x, b.y);
+      g.fillStyle(ATLAS_STOP, 0.8).fillCircle(b.x, b.y, 5);
+    }
+    const end = pts.at(-1)!;
+    const text = `${Math.round(routeHours(atlas, path))} h`;
+    if (this.routeLabel.text !== text) this.routeLabel.setText(text);
+    this.routeLabel.setPosition(end.x, end.y - HEX_PX * 0.6).setVisible(true);
+  }
+
   /** La cámara empieza en la base; se acerca y aleja con la rueda y se arrastra con los botones. */
   private setupCamera(): void {
     const cam = this.cameras.main;
@@ -256,7 +325,7 @@ export class WorldScene extends Phaser.Scene {
     this.input.mouse?.disableContextMenu();
     this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
       this.hover = hexAtPixel(atlas, p.worldX, p.worldY);
-      if (!p.isDown) return;
+      if (!p.isDown || this.dragging > 0) return; // arrastrando la ruta, la cámara quieta
       const far =
         this.downAt !== null &&
         Math.hypot(p.x - this.downAt.x, p.y - this.downAt.y) > CLICK_SLOP_PX;
@@ -273,22 +342,42 @@ export class WorldScene extends Phaser.Scene {
 
   /** Un clic (sin arrastrar): en un grupo, su ficha; si no, la del hexágono. */
   private setupInput(): void {
+    const { atlas } = this.base.common;
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
       this.downAt = { x: p.x, y: p.y };
+      // Sobre un punto de la ruta (no sus extremos): se arrastra para poner o mover una parada.
+      const path = p.leftButtonDown() ? this.plannedRoute() : null;
+      const k = path ? path.indexOf(hexAtPixel(atlas, p.worldX, p.worldY)) : -1;
+      this.dragging = path && k > 0 && k < path.length - 1 ? k : -1;
     });
     this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
       const from = this.downAt;
+      const dragged = this.dragging;
       this.downAt = null;
-      if (!from || p.button !== 0 || Math.hypot(p.x - from.x, p.y - from.y) > CLICK_SLOP_PX) return;
+      this.dragging = -1;
+      const hex = hexAtPixel(atlas, p.worldX, p.worldY);
+      const moved = !from || Math.hypot(p.x - from.x, p.y - from.y) > CLICK_SLOP_PX;
+      if (dragged > 0 && moved && hex >= 0) {
+        this.plan?.drag(atlas, dragged, hex);
+        return;
+      }
+      // Botón derecho sobre una parada: quitarla.
+      if (p.button === 2 && !moved && this.plan?.waypoints.includes(hex)) {
+        this.plan.remove(hex);
+        return;
+      }
+      if (!from || p.button !== 0 || moved) return;
       const screen = { x: p.x, y: p.y };
       const grp = worldGroups(this.base).find(
         (x) => Math.hypot(x.x - p.worldX, x.y - p.worldY) <= GROUP_RADIUS + 2,
       );
       if (grp) return this.onGroup?.(grp.travelId, screen);
-      const hex = hexAtPixel(this.base.common.atlas, p.worldX, p.worldY);
       if (hex >= 0) this.onHex?.(hex, screen);
     });
-    this.input.on('pointerupoutside', () => (this.downAt = null));
+    this.input.on('pointerupoutside', () => {
+      this.downAt = null;
+      this.dragging = -1;
+    });
     this.input.on('gameout', () => (this.hover = -1));
   }
 

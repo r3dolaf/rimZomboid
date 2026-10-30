@@ -136,3 +136,6 @@ export const ATLAS_TOWN = 0xb8b0a0;
 export const ATLAS_HOVER = 0xffffff;
 export const ATLAS_GROUP = 0xf2c641;
 export const ATLAS_SPECIAL = '#ffd34d';
+/** La ruta que se planea y sus paradas. */
+export const ATLAS_ROUTE = 0xffffff;
+export const ATLAS_STOP = 0xf28c28;

@@ -6,6 +6,7 @@ import type { RelationLabel } from '../sim/social';
 import type {
   SiteKind,
   SiteSpecial,
+  Terrain,
   BagKind,
   BagSlot,
   BodyPart,
@@ -32,8 +33,6 @@ const list = (names: string[]) =>
   names.length <= 1 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} y ${names.at(-1)}`;
 /** «a la granja», «al pueblecito». */
 const toThe = (the: string) => (the.startsWith('el ') ? `al ${the.slice(3)}` : `a ${the}`);
-/** «de la granja», «del pueblecito». */
-const ofThe = (the: string) => (the.startsWith('el ') ? `del ${the.slice(3)}` : `de ${the}`);
 
 export const es = {
   title: 'rimZomboid',
@@ -457,12 +456,38 @@ export const es = {
     inBase: 'En la base',
     inSite: (the: string) => `En ${the}`,
     going: (the: string, hours: number) => `Viajando ${toThe(the)} · faltan ${hours} h`,
-    back: (the: string, hours: number) => `Volviendo ${ofThe(the)} · faltan ${hours} h`,
+    backHome: (hours: number) => `Volviendo a la base · faltan ${hours} h`,
     exploring: (side: string, hours: number) => `Explorando ${side} · faltan ${hours} h`,
     awayIcon: '📍',
     travelIcon: '🧭',
   },
   /** El panel Expediciones (H5c1 §4). */
+  // El mapa del mundo (H5c2 §6): la ficha de un hexágono o de un grupo.
+  world: {
+    terrain: {
+      field: 'Campo',
+      forest: 'Bosque',
+      hills: 'Colinas',
+      water: 'Río',
+    } satisfies Record<Terrain, string>,
+    road: 'carretera',
+    bridge: 'puente',
+    fog: 'Sin explorar',
+    far: (hexes: number, hours: number) =>
+      `a ${hexes} ${hexes === 1 ? 'hexágono' : 'hexágonos'} de la base, unas ${hours} h`,
+    sendHere: 'Mandar grupo aquí',
+    sendHint: 'Abre Expediciones con este sitio elegido',
+    goToMap: 'Ir a su mapa',
+    exploreHere: 'Explorar aquí',
+    exploreHint: 'Abre Expediciones con esta zona para explorar',
+    redirect: 'Cambiar destino',
+    backHome: 'Volver a la base',
+    chooseDest: 'Pulsa un sitio conocido o la base en el mapa',
+    confirm: (hours: number) => `Ir allí (unas ${hours} h)`,
+    cancel: 'Cancelar',
+    noRoute: 'No hay camino',
+    stopsHint: 'Arrastra la ruta para poner una parada; botón derecho sobre una parada, quitarla',
+  },
   expeditions: {
     button: 'Expediciones',
     hint: 'Sitios conocidos, mandar grupos, explorar y volver',
@@ -490,6 +515,11 @@ export const es = {
     orderedExplore: (side: string) => `saldrán a explorar ${side}`,
     orderedBack: (the: string) => `volverán de ${the}`,
     groupTitle: 'Formar un grupo',
+    from: 'Desde',
+    to: 'A',
+    fromSite: 'Desde un sitio cargan lo que puedan del campamento.',
+    onMap: 'Ver en el mapa',
+    zoneOnMap: 'La zona elegida en el mapa',
     chooseSite: 'Elige un sitio…',
     who: 'Quién va',
     cantGo: 'No puede ir: derribado, en crisis, en modo combate o ya sale',

@@ -112,8 +112,9 @@ export function siteThe(base: World, siteId: number | null): string {
 export function travelText(base: World, t: Travel): string {
   // Lo que falta para el siguiente hexágono y, desde él, el resto de la ruta (H5c2).
   const hours = Math.ceil(t.hoursLeft + routeHours(base.common.atlas, t.path.slice(t.at + 1)));
+  if (t.kind === 'back' || t.explored) return es.maps.backHome(hours);
   if (t.kind === 'explore') return es.maps.exploring(es.sites.sides[t.side], hours);
-  return (t.kind === 'go' ? es.maps.going : es.maps.back)(siteThe(base, t.siteId), hours);
+  return es.maps.going(siteThe(base, t.siteId), hours);
 }
 
 /** Dónde está un colono (H5c1 §7): en la base, en un sitio, de viaje o explorando. */

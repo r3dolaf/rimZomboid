@@ -3,11 +3,16 @@
 // cae cada hexágono en pantalla, qué hexágono hay bajo el ratón, los sitios y los grupos que viajan.
 import { expect, test } from 'vitest';
 import { hexCenter } from '../sim/atlas/hex';
+import { findRoute } from '../sim/atlas/route';
 import { HEX_HOURS } from '../sim/balance';
 import { hexToward } from '../sim/expeditions';
 import { addSurvivor, emptyWorld, moveTo, siteForTest, travelFor } from '../sim/testing/fixtures';
 import type { SiteInfo, World } from '../sim/types';
+import { mountExpeditionsPanel } from './expeditionsPanel';
+import { createFlag } from './flag';
 import { createMapView, mapTabs, mountMapTabs, WORLD_MAP } from './mapView';
+import { createRoutePlan } from './routePlan';
+import { mountWorldCard } from './worldPanel';
 import {
   atlasPixels,
   HEX_PX,
@@ -128,4 +133,223 @@ test('la pestaña «🌍 Mundo», siempre al final; al pulsarla se ve el mundo (
   expect(view.mapId).toBe(WORLD_MAP); // no se va a la base sola
   view.set(4);
   expect(view.atlas).toBe(false);
+});
+
+test('la ruta que se planea: de dónde a dónde; arrastrar un punto pone o mueve una parada; el botón derecho la quita', () => {
+  const { atlas } = emptyWorld(10, 10).common;
+  const plan = createRoutePlan();
+  expect(plan.route(atlas)).toBeNull();
+  const to = hexToward(atlas, atlas.base, 3, 6);
+  plan.set(atlas.base, to);
+  const straight = plan.route(atlas)!;
+  expect(straight).toEqual(findRoute(atlas, atlas.base, to));
+  const north = hexToward(atlas, straight[3]!, 0, 3);
+  expect(plan.drag(atlas, 3, north)).toBe(true);
+  expect(plan.waypoints).toEqual([north]);
+  const bent = plan.route(atlas)!;
+  expect(bent).toContain(north);
+  expect(bent.at(-1)).toBe(to);
+  // Otra parada antes de la primera, en su orden; y arrastrar una parada la mueve.
+  const k = bent.indexOf(north);
+  const south = hexToward(atlas, bent[1]!, 1, 2);
+  expect(plan.drag(atlas, 1, south)).toBe(true);
+  expect(plan.waypoints).toEqual([south, north]);
+  const moved = hexToward(atlas, north, 3, 1);
+  expect(plan.drag(atlas, plan.route(atlas)!.indexOf(north), moved)).toBe(true);
+  expect(plan.waypoints).toEqual([south, moved]);
+  expect(k).toBeGreaterThan(0);
+  // En el agua (sin puente) no se puede.
+  atlas.terrain[north] = 'water';
+  atlas.seen[north] = 1;
+  expect(plan.drag(atlas, 2, north)).toBe(false);
+  expect(plan.waypoints).toEqual([south, moved]);
+  expect(plan.remove(south)).toBe(true);
+  expect(plan.remove(south)).toBe(false);
+  expect(plan.waypoints).toEqual([moved]);
+  plan.set(atlas.base, to); // los mismos extremos: se quedan las paradas
+  expect(plan.waypoints).toEqual([moved]);
+  plan.set(atlas.base, hexToward(atlas, atlas.base, 2, 4)); // otro destino: sin paradas
+  expect(plan.waypoints).toEqual([]);
+});
+
+/** La base con Ana y Bea, la granja (sitio 4) con Carla y un grupo (Dani) de camino a ella. */
+function cardGame() {
+  const base = emptyWorld(10, 10);
+  const { atlas } = base.common;
+  const ana = base.survivors[0]!;
+  addSurvivor(base, { x: 2, y: 2 }, 'Bea');
+  const carla = addSurvivor(base, { x: 3, y: 3 }, 'Carla');
+  const dani = addSurvivor(base, { x: 4, y: 4 }, 'Dani');
+  const farm = site(base, 4);
+  const gas = site(base, 5, { kind: 'gas', hex: hexToward(atlas, atlas.base, 3, 5) });
+  for (const s of [farm, gas]) atlas.seen[s.hex] = 1; // al descubrirlos se ve su hexágono
+  const m = siteForTest(base, 4);
+  moveTo(base, m, carla);
+  base.survivors = base.survivors.filter((s) => s !== dani);
+  const t = travelFor(base, {
+    kind: 'go',
+    from: atlas.base,
+    to: farm.hex,
+    siteId: 4,
+    members: [dani],
+    hoursLeft: 0.5,
+    id: 70,
+  });
+  t.at = 1;
+  base.common.expedition.travels.push(t);
+  const view = createMapView(base);
+  view.set(WORLD_MAP); // la ficha solo se ve con el mapa del mundo
+  const plan = createRoutePlan();
+  const sent: number[] = [];
+  const explored: number[] = [];
+  const root = document.createElement('div');
+  const card = mountWorldCard(root, {
+    world: base,
+    view,
+    plan,
+    onSend: (id) => sent.push(id),
+    onExplore: (hex) => explored.push(hex),
+  });
+  const q = (id: string) => root.querySelector(`[data-testid="${id}"]`) as HTMLButtonElement | null;
+  return { base, atlas, ana, farm, gas, t, view, plan, sent, explored, card, q };
+}
+
+test('la ficha de un hexágono: qué hay, a cuánto de la base y sus botones', () => {
+  const { base, atlas, farm, gas, view, sent, explored, card, q } = cardGame();
+  card.hex(farm.hex);
+  card.update();
+  expect(q('world-card')!.hidden).toBe(false);
+  expect(q('world-card')!.textContent).toContain('Granja del norte');
+  expect(q('world-card')!.textContent).toContain('Campo');
+  expect(q('world-card')!.textContent).toContain('1 persona');
+  q('world-card-send')!.click();
+  expect(sent).toEqual([4]);
+  q('world-card-go')!.click();
+  expect(view.mapId).toBe(4);
+  card.update();
+  expect(q('world-card')!.hidden).toBe(true); // fuera del mapa del mundo no se ve
+  view.set(WORLD_MAP);
+  card.update();
+  expect(q('world-card')!.hidden).toBe(false);
+  expect(q('world-card-explore')).toBeNull(); // hay un sitio
+  card.hex(gas.hex);
+  card.update();
+  expect(q('world-card-go')).toBeNull(); // sin gente
+  expect(q('world-card')!.textContent).toMatch(/a 5 hexágonos de la base/);
+  // Un hexágono sin sitio (o en la niebla): explorar.
+  const empty = hexToward(atlas, atlas.base, 2, 6);
+  card.hex(empty);
+  card.update();
+  expect(q('world-card')!.textContent).toContain('Sin explorar');
+  expect(q('world-card-send')).toBeNull();
+  q('world-card-explore')!.click();
+  expect(explored).toEqual([empty]);
+  card.hex(atlas.base);
+  card.update();
+  expect(q('world-card')!.textContent).toContain('Base');
+  expect(q('world-card-explore')).toBeNull();
+  q('world-card-close')!.click();
+  card.update();
+  expect(q('world-card')!.hidden).toBe(true);
+  expect(card.selected).toBe(-1);
+  expect(base.orders).toEqual([]);
+});
+
+test('la ficha de un grupo: a dónde va; volver a la base o cambiar de destino eligiendo en el mapa', () => {
+  const { base, atlas, gas, t, plan, card, q } = cardGame();
+  card.group(t.id);
+  card.update();
+  expect(q('world-card')!.textContent).toContain('Dani');
+  expect(q('world-card')!.textContent).toContain('Viajando a la granja del norte');
+  q('world-card-home')!.click();
+  expect(base.orders).toContainEqual({ type: 'redirectTravel', travelId: t.id, siteId: null });
+  base.orders = [];
+  q('world-card-redirect')!.click();
+  card.update();
+  expect(q('world-card')!.textContent).toContain('Pulsa un sitio');
+  card.hex(hexToward(atlas, atlas.base, 2, 6)); // ahí no hay sitio: nada
+  card.update();
+  expect(q('world-card-confirm')).toBeNull();
+  card.hex(gas.hex);
+  card.update();
+  expect(plan.from).toBe(t.path[t.at]);
+  expect(plan.to).toBe(gas.hex);
+  q('world-card-confirm')!.click();
+  expect(base.orders).toEqual([
+    { type: 'redirectTravel', travelId: t.id, siteId: gas.id, waypoints: [] },
+  ]);
+  card.update();
+  expect(plan.from).toBeNull(); // hecho: nada que planear
+});
+
+/** El panel Expediciones abierto sobre `cardGame` (con su ruta y «Ver en el mapa»). */
+function panelGame() {
+  const g = cardGame();
+  const root = document.createElement('div');
+  const open = createFlag();
+  open.set(true);
+  const shown: number[] = [];
+  const panel = mountExpeditionsPanel(root, {
+    world: g.base,
+    open,
+    plan: g.plan,
+    onShowHex: (hex) => shown.push(hex),
+  });
+  panel.update();
+  const q = <T extends HTMLElement = HTMLElement>(id: string) =>
+    root.querySelector(`[data-testid="${id}"]`) as T;
+  const pick = (id: string, value: string) => {
+    q<HTMLSelectElement>(id).value = value;
+    q<HTMLSelectElement>(id).dispatchEvent(new Event('change', { bubbles: true }));
+    panel.update();
+  };
+  return { ...g, root, open, panel, q, pick, shown };
+}
+
+test('Expediciones: mandar desde un sitio con gente (cargan lo del campamento), con la ruta y sus paradas', () => {
+  const { base, atlas, farm, gas, plan, panel, q, pick } = panelGame();
+  const carla = base.siteMaps[0]!.world.survivors[0]!;
+  const from = q<HTMLSelectElement>('expedition-from');
+  expect([...from.options].map((o) => o.textContent)).toEqual(['Base', 'Granja del norte']);
+  pick('expedition-from', '4');
+  expect(q(`expedition-member-${carla.id}`)).not.toBeNull();
+  expect(q('expedition-form').textContent).toContain('cargan lo que puedan del campamento');
+  expect(q('expedition-list')).toBeNull(); // sin lista del almacén
+  const dest = q<HTMLSelectElement>('expedition-site');
+  expect([...dest.options].map((o) => o.value)).toEqual(['', '5']); // no a donde ya están
+  panel.chooseSite(gas.id);
+  panel.update();
+  expect(plan.from).toBe(farm.hex);
+  expect(plan.to).toBe(gas.hex);
+  const r = plan.route(atlas)!;
+  const stop = hexToward(atlas, r[1]!, 1, 1);
+  expect(plan.drag(atlas, 1, stop)).toBe(true);
+  q(`expedition-member-${carla.id}`).click();
+  panel.update();
+  q('expedition-send').click();
+  expect(base.orders).toContainEqual({
+    type: 'sendExpedition',
+    from: 4,
+    siteId: gas.id,
+    survivorIds: [carla.id],
+    items: {},
+    waypoints: [stop],
+  });
+});
+
+test('Expediciones: explorar una zona elegida en el mapa; «Ver en el mapa» en sitios y viajes', () => {
+  const { base, atlas, ana, farm, t, plan, panel, q, shown } = panelGame();
+  const zone = hexToward(atlas, atlas.base, 2, 7);
+  panel.exploreAt(zone);
+  panel.update();
+  expect(q<HTMLSelectElement>('explore-side').value).toBe('map');
+  expect(plan.from).toBe(atlas.base);
+  expect(plan.to).toBe(zone);
+  q(`explore-member-${ana.id}`).click();
+  panel.update();
+  q('explore-send').click();
+  expect(base.orders).toContainEqual({ type: 'explore', target: zone, survivorIds: [ana.id] });
+  q('site-4-map').click();
+  q(`travel-${t.id}-map`).click();
+  expect(shown).toEqual([farm.hex, t.path[t.at]]);
 });

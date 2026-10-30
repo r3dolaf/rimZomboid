@@ -29,7 +29,9 @@ import { mountNoticeMenu } from './ui/noticeMenu';
 import { createPrefsStore } from './ui/noticePrefs';
 import { mountNotices } from './ui/notices';
 import { createFlag } from './ui/flag';
-import { createMapView, mountMapTabs, viewed } from './ui/mapView';
+import { createMapView, mountMapTabs, viewed, WORLD_MAP } from './ui/mapView';
+import { createRoutePlan } from './ui/routePlan';
+import { mountWorldCard } from './ui/worldPanel';
 import { createSelection } from './ui/selection';
 import { mountSheet } from './ui/sheet';
 import { mountOutfitsPanel } from './ui/outfitsPanel';
@@ -110,7 +112,32 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
   const noticeMenu = mountNoticeMenu(ui, { prefs, open: noticesOpen });
   const storagePanel = mountStoragePanel(ui, viewed(view, { open: storageOpen }));
   const outfitsPanel = mountOutfitsPanel(ui, { world, open: outfitsOpen });
-  const expeditionsPanel = mountExpeditionsPanel(ui, { world, open: expeditionsOpen });
+  // H5c2: la ruta que se planea en el mapa del mundo, su ficha y «Ver en el mapa».
+  const plan = createRoutePlan();
+  const worldScene = () => game.scene.getScene('world') as WorldScene | null;
+  const expeditionsPanel = mountExpeditionsPanel(ui, {
+    world,
+    open: expeditionsOpen,
+    plan,
+    onShowHex(hex) {
+      view.set(WORLD_MAP);
+      if (worldCard.selected !== hex) worldCard.hex(hex);
+      worldScene()?.centerOnHex(hex);
+    },
+  });
+  const worldCard = mountWorldCard(ui, {
+    world,
+    view,
+    plan,
+    onSend(siteId) {
+      expeditionsPanel.chooseSite(siteId);
+      expeditionsOpen.set(true);
+    },
+    onExplore(hex) {
+      expeditionsPanel.exploreAt(hex);
+      expeditionsOpen.set(true);
+    },
+  });
   const contextMenu = mountContextMenu(ui, viewed(view, {})); // clic derecho (H5c1 §8)
   // Al caer la colonia (H5 §9): otra partida con el mismo narrador y zombis, o a la portada.
   const endScreen = mountEndScreen(ui, {
@@ -156,6 +183,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
   // ficha de la casa y la del superviviente.
   bindEscape(window, [
     () => contextMenu.close(),
+    () => view.atlas && worldCard.selected >= 0 && (worldCard.close(), true),
     () => tool.active && (tool.set(null), true),
     () => workOpen.value && (workOpen.set(false), true),
     () => craftOpen.value && (craftOpen.set(false), true),
@@ -215,6 +243,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
       storagePanel.update();
       outfitsPanel.update();
       expeditionsPanel.update();
+      worldCard.update();
       workPanel.update();
       craftPanel.update();
       buildMenu.update();
@@ -227,10 +256,10 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
     world,
     view,
     debug: data.debug,
-    onHex(hex) {
-      const scene = game.scene.getScene('world') as WorldScene | null;
-      if (scene) scene.selected = scene.selected === hex ? -1 : hex;
-    },
+    plan,
+    selected: () => worldCard.selected,
+    onHex: (hex) => worldCard.hex(hex),
+    onGroup: (id) => worldCard.group(id),
   };
   game.scene.add('world', WorldScene, true, worldData);
 }

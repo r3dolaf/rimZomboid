@@ -94,7 +94,7 @@ export function hexToward(atlas: Atlas, from: number, side: MapSide, dist: numbe
 }
 
 /** El hexágono de un mapa: la base o el de su sitio. */
-function hexOfMap(base: World, mapId: number): number | null {
+export function hexOfMap(base: World, mapId: number): number | null {
   if (mapId === 0) return base.common.atlas.base;
   return base.common.expedition.sites.find((x) => x.id === mapId)?.hex ?? null;
 }

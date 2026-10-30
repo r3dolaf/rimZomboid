@@ -1,9 +1,11 @@
 // Partida larga sin pantalla: solo IA, a toda velocidad. Comprueba que nada se rompe.
 // Las de antes de H4b, sin zombis (prueban lo suyo); las de H4b, al final, con zombis.
 import { describe, expect, test } from 'vitest';
-import { FAINT_UNTIL, TICKS_PER_DAY, TICKS_PER_HOUR } from '../src/sim/balance';
+import { ACTIVE_SITES_MAX, FAINT_UNTIL, TICKS_PER_DAY, TICKS_PER_HOUR } from '../src/sim/balance';
 import { isBag, wornBags } from '../src/sim/bags';
-import { forEachPieceList } from '../src/sim/clothes';
+import { forEachPieceList, forEachTravelerPieceList } from '../src/sim/clothes';
+import { activeSiteIds, canGo } from '../src/sim/expeditions';
+import { allMaps, stepGame } from '../src/sim/game';
 import { gameTime } from '../src/sim/clock';
 import { checkInvariants } from '../src/sim/invariants';
 import { step } from '../src/sim/step';
@@ -25,7 +27,8 @@ import {
   type ZombieLevel,
 } from '../src/sim/types';
 import { regionOf } from '../src/sim/path/astar';
-import { withoutZombies } from '../src/sim/testing/fixtures';
+import { addSurvivor, moveTo, withoutZombies } from '../src/sim/testing/fixtures';
+import { discoverSite, siteMap } from '../src/sim/sites';
 import { createWorld, tileOf } from '../src/sim/world';
 import { targetContainerId } from '../src/sim/work';
 
@@ -394,7 +397,7 @@ test.each([1, 2, 3])(
   240_000,
 );
 
-/** Armas en todo el mundo: solo aparecen en los cuerpos y desaparecen al pudrirse (H4d). */
+/** Armas en un mapa: solo aparecen en los cuerpos y desaparecen al pudrirse (H4d). */
 function allWeapons(w: World): number {
   const kinds = WEAPONS; // con la palanca y el machete (H4d)
   const people = [...w.survivors, ...(w.stranger?.survivors ?? [])];
@@ -411,6 +414,27 @@ function allWeapons(w: World): number {
   });
   return n;
 }
+
+/**
+ * H5c1: armas en todo el juego (la base, los sitios y los que viajan). Aparecen en los cuerpos y
+ * en el botín de los sitios; se pierden al pudrirse, quemarse un sitio o morir por el camino.
+ */
+function gameWeapons(base: World): number {
+  let n = allMaps(base).reduce((a, m) => a + allWeapons(m), 0);
+  for (const t of base.common.expedition.travels)
+    for (const s of t.members)
+      for (const k of WEAPONS) n += s.carrying[k] + (s.equipped === k ? 1 : 0);
+  forEachTravelerPieceList(base, (list) => {
+    for (const p of list) if (isBag(p)) for (const k of WEAPONS) n += p.items[k];
+  });
+  return n;
+}
+
+/** Las armas que debería haber: las del principio, más las que han aparecido, menos las perdidas. */
+const weaponsDue = (w: World, start: number) => {
+  const log = w.common.weaponLog;
+  return start + log.fromCorpses + log.fromSites - log.rotted;
+};
 
 // H4b: un juego por narrador, cada uno con una opción de Zombis (los 3 narradores y las 3 opciones).
 const ZOMBIE_GAMES: [NarratorStyle, ZombieLevel][] = [
@@ -518,7 +542,7 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
     for (const h of w.houses) issue(w, { type: 'designateHouse', houseId: h.id, on: true });
     clothSetup(w);
     const r = createRng(17);
-    const weapons = allWeapons(w);
+    const weapons = gameWeapons(w);
     const startLevels = new Map(w.survivors.map((s) => [s.id, skillSum(s)]));
     const wasDressing = new Map<number, boolean>();
     let ms = 0;
@@ -535,7 +559,7 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
         const last = w.common.log.at(-1);
         drill(w, i);
         const t0 = performance.now();
-        step(w);
+        stepGame(w); // como en el juego (H5c1): con los avisos de sitios
         ms += performance.now() - t0;
         const problems = checkInvariants(w);
         if (problems.length > 0) expect(problems, `tick ${w.tick}`).toEqual([]);
@@ -575,8 +599,7 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
           expect(moved.has(s.id), `día ${day}: ${s.name} no se ha movido`).toBe(true);
       }
       // Las de los cuerpos (H4d) entran al morir el zombi y salen si el cuerpo se pudre.
-      const log = w.common.weaponLog;
-      expect(allWeapons(w), `día ${day}: armas`).toBe(weapons + log.fromCorpses - log.rotted);
+      expect(gameWeapons(w), `día ${day}: armas`).toBe(weaponsDue(w, weapons));
     }
     // Límite generoso (en local va por 0,1–0,2 ms por tick).
     expect(ms / (DAYS * TICKS_PER_DAY), 'ms por tick').toBeLessThan(1);
@@ -596,6 +619,137 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
         'las habilidades han subido',
       ).toBeGreaterThan(still.reduce((n, s) => n + startLevels.get(s.id)!, 0));
   }, 600_000);
+});
+
+/** H5c1: lo que pasa en las partidas con expediciones. */
+const tripTotals = {
+  explores: 0,
+  sent: 0,
+  arrived: 0,
+  returned: 0,
+  sitesFound: 0,
+  foundOnSites: 0,
+  dead: 0,
+  maxActive: 0,
+  survived: [] as number[],
+};
+
+/**
+ * H5c1: el jugador de las expediciones, cada mañana: los que llevan dos días en un sitio vuelven;
+ * si hay un sitio por visitar, manda a uno o dos con comida y vendas (siempre se queda alguien
+ * libre); si no, manda a uno a explorar (cada día hacia un lado).
+ */
+function expeditionPlan(base: World, day: number, since: Map<number, number>): void {
+  const ex = base.common.expedition;
+  for (const m of base.siteMaps) {
+    if (m.world.survivors.length === 0) {
+      since.delete(m.siteId);
+      continue;
+    }
+    if (!since.has(m.siteId)) since.set(m.siteId, base.tick);
+    if (base.tick - since.get(m.siteId)! >= 2 * TICKS_PER_DAY)
+      issue(base, { type: 'returnHome', siteId: m.siteId });
+  }
+  const busy = new Set(ex.travels.flatMap((t) => [...t.pending, ...t.members.map((s) => s.id)]));
+  const free = base.survivors.filter((s) => canGo(s) && !busy.has(s.id) && s.health > 60);
+  const active = activeSiteIds(base);
+  const target = ex.sites
+    .filter((x) => x.state === 'known' && !active.has(x.id))
+    .sort((a, b) => a.hours - b.hours)[0];
+  if (target && free.length >= 2) {
+    const items = {
+      food: Math.min(4, base.storage.items.food),
+      bandage: Math.min(2, base.storage.items.bandage),
+    };
+    // Dos si se puede; siempre se queda alguien libre (así hay varios sitios a la vez).
+    const survivorIds = free.slice(0, Math.min(2, free.length - 1)).map((s) => s.id);
+    issue(base, { type: 'sendExpedition', siteId: target.id, survivorIds, items });
+    tripTotals.sent++;
+  } else if (free.length >= 2 && !ex.travels.some((t) => t.kind === 'explore')) {
+    issue(base, { type: 'explore', side: (day % 4) as 0 | 1 | 2 | 3, survivorIds: [free[0]!.id] });
+    tripTotals.explores++;
+  }
+}
+
+test.each([1, 2])(
+  `semilla %i: ${DAYS} días con expediciones (explorar, ir, saquear, volver) — sin romper nada, las armas cuadran y cada tick va rápido`,
+  (seed) => {
+    const w = createWorld(seed, 'balanced', 'normal');
+    for (const h of w.houses) issue(w, { type: 'designateHouse', houseId: h.id, on: true });
+    const r = createRng(23);
+    const weapons = gameWeapons(w);
+    const since = new Map<number, number>();
+    let ms = 0;
+    for (let day = 1; day <= DAYS && !w.common.over; day++) {
+      expeditionPlan(w, day, since);
+      for (let i = 0; i < TICKS_PER_DAY; i++) {
+        // Las decisiones de todos los mapas (las de los atrapados, en su sitio).
+        for (const m of allMaps(w)) {
+          const d = m.decisions[0];
+          if (d && !m.orders.some((o) => o.type === 'decide'))
+            issue(m, { type: 'decide', decisionId: d.id, option: answer(r, d) });
+        }
+        const last = w.common.log.at(-1);
+        const t0 = performance.now();
+        stepGame(w);
+        ms += performance.now() - t0;
+        const problems = checkInvariants(w);
+        if (problems.length > 0) expect(problems, `tick ${w.tick}`).toEqual([]);
+        for (const e of w.common.log.slice(last ? w.common.log.lastIndexOf(last) + 1 : 0)) {
+          if (e.kind === 'expeditionArrived') {
+            if (e.site) tripTotals.arrived++;
+            else tripTotals.returned++;
+          }
+          if (e.kind === 'siteFound') tripTotals.sitesFound++;
+          if (e.kind === 'found' && e.mapId !== undefined) tripTotals.foundOnSites++;
+        }
+        tripTotals.maxActive = Math.max(tripTotals.maxActive, activeSiteIds(w).size);
+      }
+      expect(gameWeapons(w), `día ${day}: armas`).toBe(weaponsDue(w, weapons));
+    }
+    // Con varios mapas a la vez, cada tick sigue yendo rápido (en local, unas décimas de ms).
+    expect(ms / (w.tick || 1), 'ms por tick').toBeLessThan(1.5);
+    tripTotals.survived.push(w.common.over ? gameTime(w.common.over.tick).day : DAYS);
+    tripTotals.dead += w.common.dead.length;
+  },
+  600_000,
+);
+
+test('con 4 sitios con gente a la vez, cada tick sigue yendo rápido y todo cuadra', () => {
+  const w = createWorld(4, 'balanced', 'normal');
+  while (w.survivors.length < ACTIVE_SITES_MAX) addSurvivor(w, w.storage.tiles[0]!);
+  const kinds = ['village', 'farm', 'warehouse', 'gas'] as const;
+  kinds.forEach((kind, i) => {
+    const info = discoverSite(w, {
+      how: 'roadMap',
+      side: (i % 4) as 0 | 1 | 2 | 3,
+      special: null,
+    })!;
+    info.kind = kind;
+    moveTo(w, siteMap(w, info), w.survivors[0]!);
+  });
+  expect(activeSiteIds(w).size).toBe(ACTIVE_SITES_MAX);
+  let ms = 0;
+  for (let i = 0; i < TICKS_PER_DAY; i++) {
+    const t0 = performance.now();
+    stepGame(w);
+    ms += performance.now() - t0;
+  }
+  expect(checkInvariants(w)).toEqual([]);
+  console.log('H5c1, ms por tick con 4 sitios:', (ms / TICKS_PER_DAY).toFixed(3));
+  // Límite generoso (en local va por 0,7 ms: unas 4 veces la base sola).
+  expect(ms / TICKS_PER_DAY, 'ms por tick').toBeLessThan(4);
+}, 120_000);
+
+test('con expediciones se explora, se descubren sitios, se va, se saquea allí y se vuelve', () => {
+  if (DAYS < 10) return;
+  console.log('H5c1, en las partidas con expediciones:', tripTotals);
+  expect(tripTotals.explores, 'exploraciones').toBeGreaterThan(0);
+  expect(tripTotals.sitesFound, 'sitios descubiertos').toBeGreaterThan(0);
+  expect(tripTotals.sent, 'grupos mandados').toBeGreaterThan(0);
+  expect(tripTotals.arrived, 'llegadas a un sitio').toBeGreaterThan(0);
+  expect(tripTotals.foundOnSites, 'cosas encontradas en los sitios').toBeGreaterThan(0);
+  expect(tripTotals.returned, 'vueltas a la base').toBeGreaterThan(0);
 });
 
 test.each([1, 2, 3])(

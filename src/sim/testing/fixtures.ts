@@ -122,7 +122,7 @@ export function emptyWorld(width: number, height: number): World {
       rainUntil: 0, // H5b
       bagLog: { found: 0, dropped: 0, recovered: 0 },
       woodLog: { start: 0, chopped: 0, recovered: 0, spent: 0, wasted: 0 },
-      weaponLog: { fromCorpses: 0, rotted: 0 },
+      weaponLog: { fromCorpses: 0, fromSites: 0, rotted: 0 },
       nextWoundId: 1,
       dead: [],
       over: null,

@@ -103,7 +103,7 @@ test('al empezar: todas las ventanas con cortinas abiertas, sin pedidos y con la
   expect(windows.length).toBeGreaterThan(0);
   expect([...w.curtains].sort((a, b) => a - b)).toEqual(windows);
   expect(w.bills).toEqual([]);
-  expect(w.common.weaponLog).toEqual({ fromCorpses: 0, rotted: 0 });
+  expect(w.common.weaponLog).toEqual({ fromCorpses: 0, fromSites: 0, rotted: 0 });
   expect(checkInvariants(w)).toEqual([]);
 });
 

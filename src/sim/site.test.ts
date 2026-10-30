@@ -3,6 +3,7 @@
 import { expect, test } from 'vitest';
 import { SITE_SIZE, SITE_ZOMBIES, TICKS_PER_DAY, VILLAGE_SIZE } from './balance';
 import { checkInvariants } from './invariants';
+import { WEAPONS } from './jobs/weapons';
 import { generateSite } from './map/site';
 import { getTile } from './map/grid';
 import { findPath } from './path/astar';
@@ -75,6 +76,9 @@ test('el mundo de un sitio: su mapa, la caja común, edificios marcados, hoguera
   expect(base.common.woodLog.start).toBe(
     before + w.containers.reduce((n, c) => n + c.items.wood, 0),
   );
+  // Las armas del botín del sitio, en sus cuentas (para que cuadren en la partida larga).
+  const weapons = w.containers.reduce((n, c) => n + WEAPONS.reduce((k, x) => k + c.items[x], 0), 0);
+  expect(base.common.weaponLog.fromSites).toBe(weapons);
   expect(checkInvariants(base)).toEqual([]);
 });
 

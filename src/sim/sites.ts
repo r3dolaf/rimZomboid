@@ -80,6 +80,11 @@ export function siteMap(base: World, info: SiteInfo): World {
   fillFindings(g.houses, containers, clothesRng);
   for (const c of containers) c.designated = true; // al llegar, todo marcado para saquear
   base.common.woodLog.start += containers.reduce((n, c) => n + c.items.wood, 0);
+  // Y las armas del botín (para que cuadren las cuentas de todo el juego).
+  base.common.weaponLog.fromSites += containers.reduce(
+    (n, c) => n + WEAPONS.reduce((k, x) => k + c.items[x], 0),
+    0,
+  );
   for (const h of g.houses)
     if (nextFloat(rng) < BUILDINGS[h.kind as keyof typeof BUILDINGS].locked)
       setTile(g.grid, h.door.x, h.door.y, Tile.LockedDoor);

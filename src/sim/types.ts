@@ -732,7 +732,8 @@ export interface Common {
   /** `wasted`: la que se pierde al fallar al construir (H4c). */
   woodLog: { start: number; chopped: number; recovered: number; spent: number; wasted: number };
   /** Armas que salen de los cuerpos y que se pudren con ellos (para que las cuentas cuadren). */
-  weaponLog: { fromCorpses: number; rotted: number };
+  /** Armas que aparecen (en los cuerpos y en el botín de los sitios, H5c1) y que se pierden. */
+  weaponLog: { fromCorpses: number; fromSites: number; rotted: number };
   nextWoundId: number;
   /** Los colonos que han muerto: quién, el día y de qué. */
   dead: { id: number; name: string; day: number; cause: DeathCause }[];

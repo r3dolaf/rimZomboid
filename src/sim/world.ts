@@ -201,7 +201,7 @@ export function createWorld(
         spent: 0,
         wasted: 0,
       },
-      weaponLog: { fromCorpses: 0, rotted: 0 },
+      weaponLog: { fromCorpses: 0, fromSites: 0, rotted: 0 },
       nextWoundId: 1,
       dead: [],
       over: null,

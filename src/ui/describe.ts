@@ -17,6 +17,7 @@ import { BODY_PARTS, painOf, partHp } from '../sim/body';
 import { layersOn, zoneBlock } from '../sim/clothes';
 import { mainsOn } from '../sim/water';
 import { allMaps, mapById } from '../sim/game';
+import { routeHours } from '../sim/atlas/route';
 import { gameTime } from '../sim/clock';
 import { ITEM_KINDS, weightOf, type Inventory, type ItemKind } from '../sim/items';
 import { BAG_SLOTS, bagsIn, effectiveKeep, effectiveList, effectivePinned } from '../sim/bags';
@@ -109,7 +110,8 @@ export function siteThe(base: World, siteId: number | null): string {
 
 /** Un viaje (H5c1 §7): «Viajando a la granja del norte · faltan 3 h», «Explorando el este · …». */
 export function travelText(base: World, t: Travel): string {
-  const hours = Math.ceil(t.hoursLeft);
+  // Lo que falta para el siguiente hexágono y, desde él, el resto de la ruta (H5c2).
+  const hours = Math.ceil(t.hoursLeft + routeHours(base.common.atlas, t.path.slice(t.at + 1)));
   if (t.kind === 'explore') return es.maps.exploring(es.sites.sides[t.side], hours);
   return (t.kind === 'go' ? es.maps.going : es.maps.back)(siteThe(base, t.siteId), hours);
 }

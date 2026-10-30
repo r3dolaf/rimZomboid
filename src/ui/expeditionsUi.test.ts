@@ -3,7 +3,8 @@
 // quién y lista de cosas), explorar y «Volver», con lo pedido en pausa.
 import { expect, test, vi } from 'vitest';
 import { createTimeController } from '../game/timeController';
-import { ACTIVE_SITES_MAX, TICKS_PER_DAY } from '../sim/balance';
+import { ACTIVE_SITES_MAX, EXPLORE_DIST, TICKS_PER_DAY } from '../sim/balance';
+import { hexToward } from '../sim/expeditions';
 import { ordersSystem } from '../sim/orders';
 import { addSurvivor, emptyWorld, moveTo, siteForTest } from '../sim/testing/fixtures';
 import type { SiteInfo, World } from '../sim/types';
@@ -115,6 +116,7 @@ test('formar un grupo: sitio, quién y lista con + y −; salir lo pide (y en pa
   q('expedition-send').click();
   expect(w.orders).toContainEqual({
     type: 'sendExpedition',
+    from: 0,
     siteId: 1,
     survivorIds: [ana.id],
     items: { food: 5 },
@@ -141,6 +143,10 @@ test('no se puede marcar a quien no puede ir; como mucho 4 sitios con gente a la
       kind: 'go',
       siteId: i,
       side: 0,
+      target: 0,
+      waypoints: [],
+      path: [0],
+      at: 0,
       members: [],
       hoursLeft: 3,
       pending: [],
@@ -169,7 +175,8 @@ test('explorar: un lado y uno o dos (no más)', () => {
   panel.update();
   expect(q<HTMLInputElement>(`explore-member-${carla.id}`).disabled).toBe(true);
   q('explore-send').click();
-  expect(w.orders).toContainEqual({ type: 'explore', side: 3, survivorIds: [ana!.id, bea.id] });
+  const target = hexToward(w.common.atlas, w.common.atlas.base, 3, EXPLORE_DIST);
+  expect(w.orders).toContainEqual({ type: 'explore', target, survivorIds: [ana!.id, bea.id] });
   panel.update();
   expect(q('expeditions-travels').textContent).toContain('explorar el este');
 });

@@ -1,6 +1,7 @@
 // Ayudas para los tests de la simulación.
 import { newAtlas, newExpedition } from '../world';
 import { hexesWithin } from '../atlas/hex';
+import { findRoute } from '../atlas/route';
 import { bagFields, wornBags } from '../bags';
 import { newGarment, piecesGone } from '../clothes';
 import { ATLAS_SIZE, ATLAS_START_SEEN, DEFAULT_OUTFITS } from '../balance';
@@ -20,6 +21,7 @@ import {
   type World,
   type Atlas,
   type Terrain,
+  type Travel,
 } from '../types';
 
 /** Una prenda nueva con ese id (para la ropa de serie de la fixture). */
@@ -325,4 +327,36 @@ export function addWorldSites(w: World, seed = 1): void {
   w.common.atlas = atlas;
   w.common.expedition.sites = sites;
   w.common.expedition.nextSiteId = sites.length + 1;
+}
+
+/**
+ * Un viaje de prueba (H5c2) de `from` a `to` por la ruta, ya a un paso del final: le faltan
+ * `hoursLeft` horas para llegar.
+ */
+export function travelFor(
+  w: World,
+  t: {
+    kind: Travel['kind'];
+    from: number;
+    to: number;
+    members: Survivor[];
+    hoursLeft: number;
+    siteId?: number | null;
+    id?: number;
+  },
+): Travel {
+  const path = findRoute(w.common.atlas, t.from, t.to) ?? [t.from, t.to];
+  return {
+    id: t.id ?? 50,
+    kind: t.kind,
+    siteId: t.siteId ?? null,
+    target: t.to,
+    waypoints: [],
+    path,
+    at: Math.max(0, path.length - 2),
+    hoursLeft: t.hoursLeft,
+    side: 0,
+    members: t.members,
+    pending: [],
+  };
 }

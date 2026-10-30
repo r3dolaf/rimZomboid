@@ -1223,12 +1223,9 @@ export const SITE_BURN_PER_DAY = 0.02;
 export const SITE_HORDE_PER_DAY = 0.03;
 export const SITE_HORDE_ZOMBIES = 10;
 
-/** Explorar (H5c1 §3): un día de luz fuera; un 2.º sitio con 0,3 + 0,05 × Saquear (del mejor);
- * vuelven con un arañazo o un corte 1 de cada 5 veces si va uno solo, 1 de cada 10 si van dos. */
-export const EXPLORE_HOURS = 14;
+/** Explorar (H5c1 §3; H5c2: ir a un hexágono y volver): como mucho 2; vuelven con un arañazo o un
+ * corte 1 de cada 5 veces si va uno solo, 1 de cada 10 si van dos. */
 export const EXPLORE_MAX = 2;
-export const EXPLORE_SECOND_BASE = 0.3;
-export const EXPLORE_SECOND_PER_LEVEL = 0.05;
 export const EXPLORE_WOUND = { alone: 0.2, pair: 0.1 } as const;
 /** Latas que se lleva cada uno para el día de exploración (si hay en el almacén). */
 export const EXPLORE_FOOD = 1;
@@ -1256,3 +1253,5 @@ export const ATLAS_START_SEEN = 3;
 export const TRAVEL_SEEN = 1;
 export const EXPLORE_RADIUS = 3;
 export const ROADMAP_RADIUS = 5;
+/** Explorar hacia un lado desde el panel (H5c2): a cuántos hexágonos de la base. */
+export const EXPLORE_DIST = 6;

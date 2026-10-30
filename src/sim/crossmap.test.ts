@@ -161,14 +161,20 @@ test('quien no puede ir (descansando por dolor o fiebre) no se queda en la lista
   }
   bea.health = 5; // le duele tanto que descansa (sin analgésico)
   bea.action = { type: 'rest' };
-  issue(base, { type: 'sendExpedition', siteId: 7, survivorIds: [ana.id, bea.id], items: {} });
+  issue(base, {
+    type: 'sendExpedition',
+    from: 0,
+    siteId: 7,
+    survivorIds: [ana.id, bea.id],
+    items: {},
+  });
   ordersSystem(base);
   expect(bea.trip).toBeNull();
   const travel = base.common.expedition.travels[0]!;
   expect(travel.pending).toEqual([ana.id]);
   // Si deja de poder después de la orden (fiebre con «Que descanse»), sale de la lista.
   const carla = base.survivors.find((s) => s.name === 'Carla')!;
-  issue(base, { type: 'explore', side: 1, survivorIds: [carla.id] });
+  issue(base, { type: 'explore', target: base.common.atlas.base + 5, survivorIds: [carla.id] });
   ordersSystem(base);
   carla.fever = {
     cause: 'flu',

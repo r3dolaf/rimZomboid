@@ -692,16 +692,30 @@ export interface SiteInfo {
 }
 
 /**
- * Un viaje (H5c1 §4): ida a un sitio, vuelta a la base o explorar hacia un lado; quiénes van (con
- * todo lo suyo) y las horas de luz que les faltan.
+ * Un viaje (H5c1 §4; H5c2 §4): a un sitio, a la base o a explorar un hexágono (y volver); quiénes van
+ * (con todo lo suyo) y su ruta por el mundo, hexágono a hexágono.
  */
 export interface Travel {
   id: number;
+  /** go: a un sitio; back: a la base; explore: a un hexágono y luego a la base. */
   kind: 'go' | 'back' | 'explore';
+  /** El sitio al que van (go), o `null`. */
   siteId: number | null;
-  side: MapSide;
-  members: Survivor[];
+  /** El hexágono al que van (el del sitio, el de la base o la zona a explorar). */
+  target: number;
+  /** Las paradas que ha puesto el jugador, en orden. */
+  waypoints: number[];
+  /** La ruta, desde el hexágono del que salieron hasta `target`. */
+  path: number[];
+  /** Por qué hexágono de la ruta van. */
+  at: number;
+  /** Horas de luz que faltan para entrar en el siguiente hexágono. */
   hoursLeft: number;
+  /** El lado del mapa por el que salen (hacia el primer paso de la ruta). */
+  side: MapSide;
+  /** Explorar: ya han mirado la zona y vuelven. */
+  explored?: boolean;
+  members: Survivor[];
   /** Los que aún tienen que salir del mapa (el viaje empieza cuando han salido todos). */
   pending: number[];
 }

@@ -1,13 +1,21 @@
 // H5c1 §4: formar el grupo, prepararse en el almacén con la lista del grupo y salir por el borde.
 import { expect, test } from 'vitest';
-import { ACTIVE_SITES_MAX } from './balance';
+import { ACTIVE_SITES_MAX, HEX_HOURS } from './balance';
+import { sideFrom } from './atlas/hex';
 import { exitTile } from './expeditions';
 import { checkInvariants } from './invariants';
 import { issue, ordersSystem } from './orders';
 import { discoverSite } from './sites';
 import { step } from './step';
 import { activeMaps, stepGame } from './game';
-import { addSurvivor, addWorldSites, emptyWorld, moveTo, siteForTest } from './testing/fixtures';
+import {
+  addSurvivor,
+  addWorldSites,
+  emptyWorld,
+  moveTo,
+  siteForTest,
+  travelFor,
+} from './testing/fixtures';
 import { Tile, type World } from './types';
 
 /** La base de 20×20 con suelo, el almacén en (5, 5), Ana y Bea sin más que hacer. */
@@ -42,7 +50,7 @@ test('la casilla de salida: la del borde de ese lado más cerca de la puerta', (
 test('mandar un grupo: se reparten la lista; los que no pueden ir, no van; sitios conocidos', () => {
   const w = world();
   const [ana, bea] = w.survivors;
-  issue(w, { type: 'sendExpedition', siteId: 99, survivorIds: [ana!.id], items: {} });
+  issue(w, { type: 'sendExpedition', from: 0, siteId: 99, survivorIds: [ana!.id], items: {} });
   ordersSystem(w);
   expect(ana!.trip).toBeNull(); // ese sitio no existe
   addWorldSites(w); // H5c2: los sitios del mundo, ocultos
@@ -50,6 +58,7 @@ test('mandar un grupo: se reparten la lista; los que no pueden ir, no van; sitio
   bea!.action = { type: 'downed', until: 1e9 };
   issue(w, {
     type: 'sendExpedition',
+    from: 0,
     siteId: site.id,
     survivorIds: [ana!.id, bea!.id],
     items: { food: 5 },
@@ -58,14 +67,19 @@ test('mandar un grupo: se reparten la lista; los que no pueden ir, no van; sitio
   expect(bea!.trip).toBeNull(); // derribada
   expect(ana!.trip).toMatchObject({ stage: 'prepare', items: { food: 5 } });
   const travel = w.common.expedition.travels[0]!;
+  const { atlas } = w.common;
   expect(travel).toMatchObject({
     kind: 'go',
     siteId: site.id,
-    side: 0,
+    target: site.hex,
+    at: 0,
     members: [],
     pending: [ana!.id],
   });
-  expect(travel.hoursLeft).toBe(site.hours);
+  expect(travel.path[0]).toBe(atlas.base);
+  expect(travel.path.at(-1)).toBe(site.hex);
+  expect(travel.side).toBe(sideFrom(atlas, travel.path[0]!, travel.path[1]!));
+  expect(travel.hoursLeft).toBe(HEX_HOURS.field); // el primer hexágono, de campo
 });
 
 test('se prepara en el almacén (su «Llevar siempre» y su parte de la lista), va al borde y sale', () => {
@@ -75,6 +89,7 @@ test('se prepara en el almacén (su «Llevar siempre» y su parte de la lista), 
   const site = discoverSite(w, { how: 'note', side: 0 })!;
   issue(w, {
     type: 'sendExpedition',
+    from: 0,
     siteId: site.id,
     survivorIds: [ana!.id, bea!.id],
     items: { food: 5 },
@@ -97,7 +112,7 @@ test('como mucho 4 sitios con gente o de camino a la vez', () => {
     const s = addSurvivor(w, { x: 3, y: 3 }, `P${i}`);
     if (i === 0) addWorldSites(w);
     const site = discoverSite(w, { how: 'smoke' })!;
-    issue(w, { type: 'sendExpedition', siteId: site.id, survivorIds: [s.id], items: {} });
+    issue(w, { type: 'sendExpedition', from: 0, siteId: site.id, survivorIds: [s.id], items: {} });
     ordersSystem(w);
   }
   expect(w.common.expedition.travels).toHaveLength(ACTIVE_SITES_MAX);
@@ -135,8 +150,11 @@ test('volver: cargan del campamento primero comida, vendas, analgésicos y armas
   for (let i = 0; i < 400 && site.survivors.length > 0; i++) stepGame(w);
   expect(site.survivors).toEqual([]);
   const t = w.common.expedition.travels[0]!;
-  expect(t).toMatchObject({ kind: 'back', siteId: 7, side: 0, pending: [] });
-  expect(t.hoursLeft).toBe(3);
+  const { atlas } = w.common;
+  expect(t).toMatchObject({ kind: 'back', siteId: null, target: atlas.base, pending: [] });
+  expect(t.path[0]).toBe(300);
+  expect(t.side).toBe(sideFrom(atlas, 300, t.path[1]!));
+  expect(t.hoursLeft).toBe(HEX_HOURS.field);
   const carried = (k: 'food' | 'bandage' | 'painkillers' | 'machete' | 'wood') =>
     t.members.reduce((n, s) => n + s.carrying[k], 0);
   expect(carried('bandage')).toBe(3);
@@ -152,15 +170,17 @@ test('volver: cargan del campamento primero comida, vendas, analgésicos y armas
 test('otro grupo al mismo sitio se junta con los que hay', () => {
   const { w, site } = inSite();
   const carla = addSurvivor(w, { x: 9, y: 9 }, 'Carla');
-  w.common.expedition.travels.push({
-    id: 90,
-    kind: 'go',
-    siteId: 7,
-    side: 0,
-    members: [carla],
-    hoursLeft: 0.001,
-    pending: [],
-  });
+  w.common.expedition.travels.push(
+    travelFor(w, {
+      kind: 'go',
+      from: w.common.atlas.base,
+      to: 300,
+      siteId: 7,
+      members: [carla],
+      hoursLeft: 0.001,
+      id: 90,
+    }),
+  );
   w.survivors = w.survivors.filter((s) => s !== carla);
   w.tick = 1000; // de día
   stepGame(w);

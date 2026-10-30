@@ -12,6 +12,7 @@ import {
   ZOMBIE_HEALTH,
   BAGS,
 } from './balance';
+import { hexDistance } from './atlas/hex';
 import { BAG_SLOTS, bagsIn, isBag, wornBags } from './bags';
 import { clashes, coversOf, forEachPieceList, forEachTravelerPieceList } from './clothes';
 import { ITEM_KINDS, weightOf, type Inventory } from './items';
@@ -69,7 +70,10 @@ export function checkInvariants(w: World): string[] {
   return problems;
 }
 
-/** El mapa del mundo (H5c2): tamaños que cuadran y cada sitio en un hexágono propio y válido. */
+/**
+ * El mapa del mundo (H5c2): tamaños que cuadran, cada sitio en un hexágono propio y válido, y cada
+ * viaje por una ruta de vecino en vecino que acaba en su destino.
+ */
 function checkAtlas(w: World, problems: string[]): void {
   const { atlas, expedition } = w.common;
   const n = atlas.width * atlas.height;
@@ -93,6 +97,21 @@ function checkAtlas(w: World, problems: string[]): void {
       problems.push(`${who}: en el agua (${s.hex})`);
     if (used.has(s.hex)) problems.push(`${who}: otro sitio en su hexágono ${s.hex}`);
     used.add(s.hex);
+  }
+  for (const t of expedition.travels) {
+    const who = `viaje ${t.id}`;
+    if (!t.path.every((i) => Number.isInteger(i) && i >= 0 && i < n)) {
+      problems.push(`${who}: ruta fuera del mundo`);
+      continue;
+    }
+    if (!Number.isInteger(t.at) || t.at < 0 || t.at >= t.path.length)
+      problems.push(`${who}: en el paso ${t.at}, fuera de su ruta de ${t.path.length}`);
+    if (t.path.at(-1) !== t.target) problems.push(`${who}: la ruta no acaba en su destino`);
+    for (let k = 1; k < t.path.length; k++)
+      if (hexDistance(atlas, t.path[k - 1]!, t.path[k]!) !== 1)
+        problems.push(`${who}: la ruta salta de ${t.path[k - 1]} a ${t.path[k]}`);
+    if (!(t.hoursLeft >= 0) || !Number.isFinite(t.hoursLeft))
+      problems.push(`${who}: le quedan ${t.hoursLeft} h`);
   }
 }
 

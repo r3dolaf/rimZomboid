@@ -1,6 +1,9 @@
 // Expediciones (spec H5c1 §4): mandar un grupo a un sitio, prepararse en el almacén con la lista
 // del grupo, ir al borde de ese lado y salir del mapa; el viaje empieza cuando han salido todos.
-import { ACTIVE_SITES_MAX, EXPLORE_FOOD, EXPLORE_HOURS, EXPLORE_MAX } from './balance';
+import { ACTIVE_SITES_MAX, EXPLORE_FOOD, EXPLORE_MAX, HEX_HOURS } from './balance';
+import { hexIndex, hexOf, sideFrom } from './atlas/hex';
+import { findRoute, hexHours } from './atlas/route';
+import type { ExpeditionOrder } from './orders';
 import { stashOne, takeInto, unloadAt } from './bags';
 import { WEAPONS } from './jobs/weapons';
 import { armFactor } from './body';
@@ -11,7 +14,7 @@ import { takeSupplies } from './jobs/supplies';
 import { isWalkable } from './map/grid';
 import { regionOf } from './path/astar';
 import { pick } from './rng';
-import type { Action, MapSide, Point, Survivor, Travel, World } from './types';
+import type { Action, Atlas, MapSide, Point, Survivor, Travel, World } from './types';
 import { tileOf } from './world';
 
 /**
@@ -77,46 +80,128 @@ function shares(
   return out;
 }
 
-/** La orden de mandar un grupo (§4), desde la base. Las que no valen no hacen nada. */
-export function applyExpeditionOrder(
-  w: World,
-  o:
-    | {
-        type: 'sendExpedition';
-        siteId: number;
-        survivorIds: number[];
-        items: Partial<Record<ItemKind, number>>;
-      }
-    | { type: 'returnHome'; siteId: number }
-    | { type: 'explore'; side: MapSide; survivorIds: number[] },
-): void {
-  if (w.mapId !== 0) return;
-  if (o.type === 'returnHome') return returnHome(w, o.siteId);
-  if (o.type === 'explore') return explore(w, o.side, o.survivorIds);
-  const site = w.common.expedition.sites.find((x) => x.id === o.siteId && x.state === 'known');
-  if (!site) return;
-  const active = activeSiteIds(w);
-  if (!active.has(site.id) && active.size >= ACTIVE_SITES_MAX) return;
-  const members = o.survivorIds
-    .map((id) => w.survivors.find((s) => s.id === id))
-    .filter((s): s is Survivor => s !== undefined && canGo(s, w));
-  if (members.length === 0) return;
-  const travel: Travel = {
-    id: w.common.nextId++,
-    kind: 'go',
-    siteId: site.id,
-    side: site.side,
+/**
+ * Un hexágono a `dist` pasos de `from` hacia ese lado (0 norte, 1 sur, 2 oeste, 3 este), sin salir
+ * del mundo: para explorar hacia un lado desde el panel (H5c2).
+ */
+export function hexToward(atlas: Atlas, from: number, side: MapSide, dist: number): number {
+  const { col, row } = hexOf(atlas, from);
+  const c = side === 2 ? col - dist : side === 3 ? col + dist : col;
+  const r = side === 0 ? row - dist : side === 1 ? row + dist : row;
+  const clampC = Math.max(0, Math.min(atlas.width - 1, c));
+  const clampR = Math.max(0, Math.min(atlas.height - 1, r));
+  return hexIndex(atlas, clampC, clampR);
+}
+
+/** El hexágono de un mapa: la base o el de su sitio. */
+function hexOfMap(base: World, mapId: number): number | null {
+  if (mapId === 0) return base.common.atlas.base;
+  return base.common.expedition.sites.find((x) => x.id === mapId)?.hex ?? null;
+}
+
+/**
+ * Un viaje nuevo de `from` a `target` por la ruta (con paradas), o `null` si no hay camino. Sale por
+ * el lado del primer paso.
+ */
+export function newTravel(
+  base: World,
+  kind: Travel['kind'],
+  siteId: number | null,
+  from: number,
+  target: number,
+  waypoints: readonly number[] = [],
+): Travel | null {
+  const { atlas } = base.common;
+  const n = atlas.width * atlas.height;
+  if (![from, target, ...waypoints].every((i) => Number.isInteger(i) && i >= 0 && i < n))
+    return null;
+  const path = findRoute(atlas, from, target, waypoints);
+  if (!path) return null;
+  return {
+    id: base.common.nextId++,
+    kind,
+    siteId,
+    target,
+    waypoints: [...waypoints],
+    path,
+    at: 0,
+    hoursLeft: path.length > 1 ? firstHours(atlas, path[1]!) : 0,
+    side: path.length > 1 ? sideFrom(atlas, path[0]!, path[1]!) : 0,
     members: [],
-    hoursLeft: site.hours,
-    pending: members.map((s) => s.id),
+    pending: [],
   };
-  w.common.expedition.travels.push(travel);
-  const parts = shares(o.items, members.length);
+}
+
+/** Lo que se cree que cuesta entrar en el primer hexágono (si es agua escondida, ya se verá). */
+const firstHours = (atlas: Atlas, i: number) =>
+  Number.isFinite(hexHours(atlas, i)) ? hexHours(atlas, i) : HEX_HOURS.field;
+
+/** Les da su parte del viaje: se preparan y salen. */
+function board(
+  base: World,
+  t: Travel,
+  members: Survivor[],
+  items?: Partial<Record<ItemKind, number>>,
+) {
+  t.pending = members.map((s) => s.id);
+  base.common.expedition.travels.push(t);
+  const parts = items ? shares(items, members.length) : members.map(() => ({}));
   members.forEach((s, i) => {
-    s.trip = { travelId: travel.id, stage: 'prepare', items: parts[i]! };
+    s.trip = { travelId: t.id, stage: 'prepare', items: parts[i]! };
     s.action = { type: 'idle', ticksLeft: 0 };
     s.path = [];
   });
+}
+
+/** Las órdenes de expedición (§4; H5c2 §5), desde la base. Las que no valen no hacen nada. */
+export function applyExpeditionOrder(w: World, o: ExpeditionOrder): void {
+  if (w.mapId !== 0) return;
+  if (o.type === 'returnHome') return returnHome(w, o.siteId, o.waypoints);
+  if (o.type === 'explore') return explore(w, o.target, o.survivorIds, o.waypoints);
+  if (o.type === 'redirectTravel') return redirect(w, o.travelId, o.siteId, o.waypoints);
+  const site = w.common.expedition.sites.find((x) => x.id === o.siteId && x.state === 'known');
+  const from = o.from === 0 ? w : w.siteMaps.find((m) => m.siteId === o.from)?.world;
+  const fromHex = hexOfMap(w, o.from);
+  if (!site || !from || fromHex === null || o.from === site.id) return;
+  const active = activeSiteIds(w);
+  if (!active.has(site.id) && active.size >= ACTIVE_SITES_MAX) return;
+  const members = o.survivorIds
+    .map((id) => from.survivors.find((s) => s.id === id))
+    .filter((s): s is Survivor => s !== undefined && canGo(s, from));
+  if (members.length === 0) return;
+  const t = newTravel(w, 'go', site.id, fromHex, site.hex, o.waypoints);
+  if (!t) return;
+  // Desde la base, con la lista del almacén; desde un sitio, cargan lo del campamento.
+  board(w, t, members, o.from === 0 ? o.items : undefined);
+}
+
+/** Cambia el destino de un viaje (a un sitio conocido o a la base) desde donde vayan. */
+function redirect(
+  base: World,
+  travelId: number,
+  siteId: number | null,
+  waypoints: readonly number[] = [],
+): void {
+  const ex = base.common.expedition;
+  const t = ex.travels.find((x) => x.id === travelId);
+  if (!t) return;
+  const site =
+    siteId === null ? null : ex.sites.find((x) => x.id === siteId && x.state === 'known');
+  if (siteId !== null && !site) return;
+  const target = site ? site.hex : base.common.atlas.base;
+  const here = t.path[t.at]!;
+  const path = findRoute(base.common.atlas, here, target, waypoints);
+  if (!path) return;
+  t.kind = site ? 'go' : 'back';
+  t.siteId = site ? site.id : null;
+  t.target = target;
+  t.waypoints = [...waypoints];
+  t.explored = undefined;
+  // Si aún no han salido, salen por el lado del nuevo primer paso; si ya van, siguen desde aquí.
+  if (t.at === 0 && path.length > 1) t.side = sideFrom(base.common.atlas, path[0]!, path[1]!);
+  t.path = path;
+  t.at = 0;
+  t.hoursLeft = path.length > 1 ? firstHours(base.common.atlas, path[1]!) : 0;
 }
 
 const travelOf = (w: World, s: Survivor) =>
@@ -137,8 +222,8 @@ export function tripJob(s: Survivor, w: World): Action | null {
 
 /** En el almacén: descarga, coge lo suyo («Llevar siempre», sus bolsas) y su parte de la lista. */
 export function startPrepareTrip(s: Survivor, w: World): Action {
-  const t = travelOf(w, s);
-  if (s.trip && t?.kind === 'back') {
+  if (s.trip && w.mapId !== 0) {
+    // Desde un sitio (H5c2: vuelvan o vayan a otro), cargan lo del campamento.
     loadForTrip(w, s);
     s.trip.stage = 'exit';
   } else if (s.trip) {
@@ -202,27 +287,14 @@ export function departuresSystem(w: World): void {
 }
 
 /** «Volver» (§4): todos los del sitio se cargan lo que puedan del campamento y salen. */
-function returnHome(base: World, siteId: number): void {
+function returnHome(base: World, siteId: number, waypoints: readonly number[] = []): void {
   const info = base.common.expedition.sites.find((x) => x.id === siteId);
   const site = base.siteMaps.find((m) => m.siteId === siteId)?.world;
   if (!info || !site) return;
   const members = site.survivors.filter((s) => canGo(s, site));
   if (members.length === 0) return;
-  const travel: Travel = {
-    id: base.common.nextId++,
-    kind: 'back',
-    siteId,
-    side: info.side,
-    members: [],
-    hoursLeft: info.hours,
-    pending: members.map((s) => s.id),
-  };
-  base.common.expedition.travels.push(travel);
-  for (const s of members) {
-    s.trip = { travelId: travel.id, stage: 'prepare', items: {} };
-    s.action = { type: 'idle', ticksLeft: 0 };
-    s.path = [];
-  }
+  const t = newTravel(base, 'back', null, info.hex, base.common.atlas.base, waypoints);
+  if (t) board(base, t, members);
 }
 
 /**
@@ -239,26 +311,19 @@ export function loadForTrip(w: World, s: Survivor): void {
 }
 
 /** Explorar (§3): 1 o 2 salen hacia un lado y están fuera un día de luz. */
-function explore(base: World, side: MapSide, ids: number[]): void {
+function explore(
+  base: World,
+  target: number,
+  ids: number[],
+  waypoints: readonly number[] = [],
+): void {
   const members = ids
     .map((id) => base.survivors.find((s) => s.id === id))
     .filter((s): s is Survivor => s !== undefined && canGo(s, base))
     .slice(0, EXPLORE_MAX);
   if (members.length === 0) return;
-  const travel: Travel = {
-    id: base.common.nextId++,
-    kind: 'explore',
-    siteId: null,
-    side,
-    members: [],
-    hoursLeft: EXPLORE_HOURS,
-    pending: members.map((s) => s.id),
-  };
-  base.common.expedition.travels.push(travel);
-  for (const s of members) {
-    // Un día fuera: cada uno se lleva su lata (H5c1, tras la sonda de equilibrio).
-    s.trip = { travelId: travel.id, stage: 'prepare', items: { food: EXPLORE_FOOD } };
-    s.action = { type: 'idle', ticksLeft: 0 };
-    s.path = [];
-  }
+  const t = newTravel(base, 'explore', null, base.common.atlas.base, target, waypoints);
+  if (!t) return;
+  // Un día fuera, o más: cada uno se lleva su lata (H5c1, tras la sonda de equilibrio).
+  board(base, t, members, { food: EXPLORE_FOOD * members.length });
 }

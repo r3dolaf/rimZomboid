@@ -1,10 +1,16 @@
 // Partida larga sin pantalla: solo IA, a toda velocidad. Comprueba que nada se rompe.
 // Las de antes de H4b, sin zombis (prueban lo suyo); las de H4b, al final, con zombis.
 import { describe, expect, test } from 'vitest';
-import { ACTIVE_SITES_MAX, FAINT_UNTIL, TICKS_PER_DAY, TICKS_PER_HOUR } from '../src/sim/balance';
+import {
+  ACTIVE_SITES_MAX,
+  EXPLORE_DIST,
+  FAINT_UNTIL,
+  TICKS_PER_DAY,
+  TICKS_PER_HOUR,
+} from '../src/sim/balance';
 import { isBag, wornBags } from '../src/sim/bags';
 import { forEachPieceList, forEachTravelerPieceList } from '../src/sim/clothes';
-import { activeSiteIds, canGo } from '../src/sim/expeditions';
+import { activeSiteIds, canGo, hexToward } from '../src/sim/expeditions';
 import { allMaps, stepGame } from '../src/sim/game';
 import { gameTime } from '../src/sim/clock';
 import { checkInvariants } from '../src/sim/invariants';
@@ -665,10 +671,12 @@ function expeditionPlan(base: World, day: number, since: Map<number, number>): v
     };
     // Dos si se puede; siempre se queda alguien libre (así hay varios sitios a la vez).
     const survivorIds = free.slice(0, Math.min(2, free.length - 1)).map((s) => s.id);
-    issue(base, { type: 'sendExpedition', siteId: target.id, survivorIds, items });
+    issue(base, { type: 'sendExpedition', from: 0, siteId: target.id, survivorIds, items });
     tripTotals.sent++;
   } else if (free.length >= 2 && !ex.travels.some((t) => t.kind === 'explore')) {
-    issue(base, { type: 'explore', side: (day % 4) as 0 | 1 | 2 | 3, survivorIds: [free[0]!.id] });
+    const { atlas } = base.common;
+    const zone = hexToward(atlas, atlas.base, (day % 4) as 0 | 1 | 2 | 3, EXPLORE_DIST + day);
+    issue(base, { type: 'explore', target: zone, survivorIds: [free[0]!.id] });
     tripTotals.explores++;
   }
 }

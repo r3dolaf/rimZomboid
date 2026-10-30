@@ -8,7 +8,6 @@ import { applyDraftOrder } from './draft';
 import { setMedical } from './jobs/medical';
 import { applyOutfitOrder } from './outfits';
 import type {
-  MapSide,
   BagKind,
   Bill,
   BuildKind,
@@ -61,15 +60,24 @@ export type Order =
   | { type: 'setOutfitHandBag'; outfitId: number; on: boolean }
   // Listas de las bolsas y «Llevar siempre» (H5b2 §3)
   | BagListOrder
-  // Expediciones (H5c1 §4)
+  // Expediciones (H5c1 §4; H5c2 §5: desde cualquier mapa, a un hexágono, con paradas)
+  | ExpeditionOrder;
+
+/** Las órdenes de expedición (se dan a la base, que ve todos los mapas). */
+export type ExpeditionOrder =
   | {
       type: 'sendExpedition';
+      /** El mapa del que salen (0, la base; o el id de un sitio). */
+      from: number;
       siteId: number;
       survivorIds: number[];
       items: Partial<Record<ItemKind, number>>;
+      waypoints?: number[];
     }
-  | { type: 'returnHome'; siteId: number }
-  | { type: 'explore'; side: MapSide; survivorIds: number[] };
+  | { type: 'returnHome'; siteId: number; waypoints?: number[] }
+  | { type: 'explore'; target: number; survivorIds: number[]; waypoints?: number[] }
+  /** A otro sitio (o a la base, `null`) desde donde vayan. */
+  | { type: 'redirectTravel'; travelId: number; siteId: number | null; waypoints?: number[] };
 
 /** Encola una orden; se aplica al principio del siguiente tick. */
 export function issue(w: World, order: Order): void {
@@ -234,6 +242,7 @@ export function ordersSystem(w: World): void {
       case 'sendExpedition':
       case 'returnHome':
       case 'explore':
+      case 'redirectTravel':
         applyExpeditionOrder(w, o);
         break;
     }

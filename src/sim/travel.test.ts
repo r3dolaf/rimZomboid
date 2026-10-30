@@ -1,23 +1,17 @@
 // H5c1 §4: viajar (solo de día; de noche duermen), comer y vendarse con lo suyo, morir por el
-// camino, y llegar a un sitio o volver a la base.
+// camino, y llegar a un sitio o volver a la base. (Explorar ida y vuelta: journey.test.)
 import { expect, test } from 'vitest';
-import {
-  EXPLORE_FOOD,
-  EXPLORE_HOURS,
-  EXPLORE_WOUND,
-  TICKS_PER_DAY,
-  TICKS_PER_HOUR,
-} from './balance';
+import { EXPLORE_DIST, EXPLORE_FOOD, EXPLORE_WOUND, TICKS_PER_HOUR } from './balance';
 import { issue } from './orders';
 import { createRng } from './rng';
 import { dayStart } from './clock';
 import { newBag } from './bags';
 import { allAsleep } from './colony';
-import { exitTile } from './expeditions';
+import { exitTile, hexToward } from './expeditions';
 import { allColonists, mapById, stepGame } from './game';
 import { checkInvariants } from './invariants';
 import { discoverSite } from './sites';
-import { addWorldSites, emptyWorld } from './testing/fixtures';
+import { addWorldSites, emptyWorld, travelFor } from './testing/fixtures';
 import { Tile, type Survivor, type Travel, type World } from './types';
 
 function world(): World {
@@ -30,20 +24,23 @@ function world(): World {
   return w;
 }
 
-/** Ana sale de viaje (como si ya hubiera dejado el mapa). */
+/**
+ * Ana va de viaje (como si ya hubiera dejado el mapa), a `hours` de entrar en el último hexágono:
+ * al sitio, a la base (desde el norte) o a 4 hexágonos al este.
+ */
 function onTheRoad(w: World, kind: Travel['kind'], hours: number, siteId: number | null): Survivor {
   const ana = w.survivors[0]!;
   w.survivors = [];
   ana.pos = { x: -10, y: -10 };
-  w.common.expedition.travels.push({
-    id: 50,
-    kind,
-    siteId,
-    side: 0,
-    members: [ana],
-    hoursLeft: hours,
-    pending: [],
-  });
+  const { atlas } = w.common;
+  const site = w.common.expedition.sites.find((x) => x.id === siteId);
+  const [from, to] =
+    kind === 'back'
+      ? [hexToward(atlas, atlas.base, 0, 3), atlas.base]
+      : [atlas.base, site ? site.hex : hexToward(atlas, atlas.base, 3, 4)];
+  w.common.expedition.travels.push(
+    travelFor(w, { kind, from, to, siteId, members: [ana], hoursLeft: hours }),
+  );
   return ana;
 }
 
@@ -141,33 +138,6 @@ test('quien muere por el camino se pierde con lo que llevaba; sin nadie más, se
   expect(w.common.over).not.toBeNull();
 });
 
-test('explorar: 1 o 2 salen hacia un lado, están fuera un día de luz y vuelven con sitios de ese lado', () => {
-  expect([EXPLORE_HOURS, EXPLORE_WOUND.alone, EXPLORE_WOUND.pair]).toEqual([14, 0.2, 0.1]);
-  const w = world();
-  w.storage.tiles = [{ x: 5, y: 5 }];
-  const ana = w.survivors[0]!;
-  ana.carrying.bandage = 2;
-  ana.needs = { hunger: 100, sleep: 100, mood: 60, social: 100 };
-  for (const k of Object.keys(ana.work) as (keyof typeof ana.work)[]) ana.work[k] = false;
-  issue(w, { type: 'explore', side: 2, survivorIds: [ana.id, 999] });
-  at(w, 1, 7);
-  for (let i = 0; i < 300 && w.survivors.length > 0; i++) stepGame(w);
-  const t = w.common.expedition.travels[0]!;
-  expect(t).toMatchObject({ kind: 'explore', siteId: null, side: 2, members: [ana] });
-  expect(t.hoursLeft).toBe(EXPLORE_HOURS);
-  for (let i = 0; i < 2 * TICKS_PER_DAY && w.common.expedition.travels.length > 0; i++) stepGame(w);
-  expect(w.survivors).toEqual([ana]); // ha vuelto
-  const sites = w.common.expedition.sites.filter((x) => x.state === 'known');
-  expect(sites.length).toBeGreaterThanOrEqual(1);
-  expect(sites.length).toBeLessThanOrEqual(2);
-  for (const s of sites) expect(s.side).toBe(2);
-  expect(w.common.log.find((e) => e.kind === 'siteFound')).toMatchObject({
-    how: 'explore',
-    survivorId: ana.id,
-  });
-  expect(checkInvariants(w)).toEqual([]);
-});
-
 test('quien sale a explorar se lleva una lata para el día (si hay)', () => {
   expect(EXPLORE_FOOD).toBe(1);
   const w = world();
@@ -177,7 +147,8 @@ test('quien sale a explorar se lleva una lata para el día (si hay)', () => {
   ana.carrying.food = 0;
   ana.needs = { hunger: 100, sleep: 100, mood: 60, social: 100 };
   for (const k of Object.keys(ana.work) as (keyof typeof ana.work)[]) ana.work[k] = false;
-  issue(w, { type: 'explore', side: 2, survivorIds: [ana.id] });
+  const target = hexToward(w.common.atlas, w.common.atlas.base, 2, EXPLORE_DIST);
+  issue(w, { type: 'explore', target, survivorIds: [ana.id] });
   at(w, 1, 7);
   for (let i = 0; i < 300 && w.survivors.length > 0; i++) stepGame(w);
   expect(w.common.expedition.travels[0]!.members).toEqual([ana]);
@@ -185,7 +156,8 @@ test('quien sale a explorar se lleva una lata para el día (si hay)', () => {
   expect(w.storage.items.food).toBe(3 - EXPLORE_FOOD);
 });
 
-test('explorar tiene riesgo: a veces vuelven con un arañazo o un corte (más si va uno solo)', () => {
+test('explorar tiene riesgo: al llegar, a veces un arañazo o un corte (más si va uno solo)', () => {
+  expect([EXPLORE_WOUND.alone, EXPLORE_WOUND.pair]).toEqual([0.2, 0.1]);
   let hurt = 0;
   for (let seed = 1; seed <= 60; seed++) {
     const w = world();

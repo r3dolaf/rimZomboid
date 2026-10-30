@@ -1,6 +1,7 @@
 import { es } from '../i18n/es';
-import { ACTIVE_SITES_MAX, EXPLORE_MAX, TICKS_PER_DAY } from '../sim/balance';
-import { activeSiteIds, canGo } from '../sim/expeditions';
+import { ACTIVE_SITES_MAX, EXPLORE_DIST, EXPLORE_MAX, TICKS_PER_DAY } from '../sim/balance';
+import { sideFrom } from '../sim/atlas/hex';
+import { activeSiteIds, canGo, hexToward } from '../sim/expeditions';
 import { allMaps } from '../sim/game';
 import { ITEM_KINDS, type ItemKind } from '../sim/items';
 import { issue, type Order } from '../sim/orders';
@@ -127,12 +128,14 @@ export function mountExpeditionsPanel(
       const ids = w.survivors.filter((s) => members.has(s.id)).map((s) => s.id);
       const list: Partial<Record<ItemKind, number>> = {};
       for (const k of ITEM_KINDS) if ((items[k] ?? 0) > 0) list[k] = items[k];
-      issue(w, { type: 'sendExpedition', siteId, survivorIds: ids, items: list });
+      issue(w, { type: 'sendExpedition', from: 0, siteId, survivorIds: ids, items: list });
       members.clear();
       items = {};
     } else if (b.dataset.act === 'explore') {
       const ids = w.survivors.filter((s) => explorers.has(s.id)).map((s) => s.id);
-      issue(w, { type: 'explore', side, survivorIds: ids });
+      const { atlas } = w.common;
+      const target = hexToward(atlas, atlas.base, side, EXPLORE_DIST);
+      issue(w, { type: 'explore', target, survivorIds: ids });
       explorers.clear();
     } else if (b.dataset.bag === 'group' && b.dataset.item) {
       const k = b.dataset.item as ItemKind;
@@ -248,7 +251,7 @@ export function mountExpeditionsPanel(
         }
         const names = listNames(o.survivorIds.map(nameOf));
         return o.type === 'explore'
-          ? `${names} · ${t.orderedExplore(es.sites.sides[o.side])}`
+          ? `${names} · ${t.orderedExplore(es.sites.sides[sideFrom(w.common.atlas, w.common.atlas.base, o.target)])}`
           : `${names} · ${t.ordered(siteThe(w, o.siteId))}`;
       }),
     ];

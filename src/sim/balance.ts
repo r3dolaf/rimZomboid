@@ -1232,3 +1232,5 @@ export const EXPLORE_MAX = 2;
 export const EXPLORE_SECOND_BASE = 0.3;
 export const EXPLORE_SECOND_PER_LEVEL = 0.05;
 export const EXPLORE_WOUND = { alone: 0.2, pair: 0.1 } as const;
+/** Latas que se lleva cada uno para el día de exploración (si hay en el almacén). */
+export const EXPLORE_FOOD = 1;

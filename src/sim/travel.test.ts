@@ -1,7 +1,13 @@
 // H5c1 §4: viajar (solo de día; de noche duermen), comer y vendarse con lo suyo, morir por el
 // camino, y llegar a un sitio o volver a la base.
 import { expect, test } from 'vitest';
-import { EXPLORE_HOURS, EXPLORE_WOUND, TICKS_PER_DAY, TICKS_PER_HOUR } from './balance';
+import {
+  EXPLORE_FOOD,
+  EXPLORE_HOURS,
+  EXPLORE_WOUND,
+  TICKS_PER_DAY,
+  TICKS_PER_HOUR,
+} from './balance';
 import { issue } from './orders';
 import { createRng } from './rng';
 import { dayStart } from './clock';
@@ -159,6 +165,23 @@ test('explorar: 1 o 2 salen hacia un lado, están fuera un día de luz y vuelven
     survivorId: ana.id,
   });
   expect(checkInvariants(w)).toEqual([]);
+});
+
+test('quien sale a explorar se lleva una lata para el día (si hay)', () => {
+  expect(EXPLORE_FOOD).toBe(1);
+  const w = world();
+  w.storage.tiles = [{ x: 5, y: 5 }];
+  w.storage.items.food = 3;
+  const ana = w.survivors[0]!;
+  ana.carrying.food = 0;
+  ana.needs = { hunger: 100, sleep: 100, mood: 60, social: 100 };
+  for (const k of Object.keys(ana.work) as (keyof typeof ana.work)[]) ana.work[k] = false;
+  issue(w, { type: 'explore', side: 2, survivorIds: [ana.id] });
+  at(w, 1, 7);
+  for (let i = 0; i < 300 && w.survivors.length > 0; i++) stepGame(w);
+  expect(w.common.expedition.travels[0]!.members).toEqual([ana]);
+  expect(ana.carrying.food).toBe(EXPLORE_FOOD);
+  expect(w.storage.items.food).toBe(3 - EXPLORE_FOOD);
 });
 
 test('explorar tiene riesgo: a veces vuelven con un arañazo o un corte (más si va uno solo)', () => {

@@ -1,6 +1,6 @@
 // Expediciones (spec H5c1 §4): mandar un grupo a un sitio, prepararse en el almacén con la lista
 // del grupo, ir al borde de ese lado y salir del mapa; el viaje empieza cuando han salido todos.
-import { ACTIVE_SITES_MAX, EXPLORE_HOURS, EXPLORE_MAX } from './balance';
+import { ACTIVE_SITES_MAX, EXPLORE_FOOD, EXPLORE_HOURS, EXPLORE_MAX } from './balance';
 import { stashOne, takeInto, unloadAt } from './bags';
 import { WEAPONS } from './jobs/weapons';
 import { detach } from './death';
@@ -244,7 +244,8 @@ function explore(base: World, side: MapSide, ids: number[]): void {
   };
   base.common.expedition.travels.push(travel);
   for (const s of members) {
-    s.trip = { travelId: travel.id, stage: 'prepare', items: {} };
+    // Un día fuera: cada uno se lleva su lata (H5c1, tras la sonda de equilibrio).
+    s.trip = { travelId: travel.id, stage: 'prepare', items: { food: EXPLORE_FOOD } };
     s.action = { type: 'idle', ticksLeft: 0 };
     s.path = [];
   }

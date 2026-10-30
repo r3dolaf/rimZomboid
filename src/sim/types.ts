@@ -710,6 +710,26 @@ export interface Trip {
   items: Partial<Record<ItemKind, number>>;
 }
 
+/** El terreno de un hexágono del mapa del mundo (H5c2 §1). */
+export type Terrain = 'field' | 'forest' | 'hills' | 'water';
+
+/**
+ * El mapa del mundo (H5c2 §1): hexágonos en filas (índice fila × ancho + columna), con su terreno,
+ * carreteras (sobre el agua, puentes), pueblos y niebla; y el hexágono de la base.
+ */
+export interface Atlas {
+  width: number;
+  height: number;
+  terrain: Terrain[];
+  /** 1 si pasa una carretera. */
+  road: number[];
+  /** 1 si es un pueblo. */
+  town: number[];
+  /** 1 si se conoce (sin niebla). */
+  seen: number[];
+  base: number;
+}
+
 /** Las expediciones (H5c1): sitios conocidos, viajes en curso y su propio azar. */
 export interface Expedition {
   sites: SiteInfo[];

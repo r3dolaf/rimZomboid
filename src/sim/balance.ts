@@ -1234,3 +1234,15 @@ export const EXPLORE_SECOND_PER_LEVEL = 0.05;
 export const EXPLORE_WOUND = { alone: 0.2, pair: 0.1 } as const;
 /** Latas que se lleva cada uno para el día de exploración (si hay en el almacén). */
 export const EXPLORE_FOOD = 1;
+
+/** El mapa del mundo (H5c2 §1): hexágonos, terreno, ríos, pueblos y carreteras. */
+export const ATLAS_SALT = 0x6e0a71;
+export const ATLAS_SIZE = { width: 41, height: 31 } as const;
+export const ATLAS_FOREST = 0.25; // parte del mundo con bosque…
+export const ATLAS_HILLS = 0.12; // …y con colinas
+export const ATLAS_BLOB: [number, number] = [6, 18]; // pasos de cada mancha
+export const ATLAS_RIVERS: [number, number] = [1, 2];
+export const ATLAS_TOWNS: [number, number] = [4, 6];
+export const TOWN_MIN_DIST = 6; // entre pueblos y de la base
+/** Lo que cuesta pasar por cada terreno al trazar las carreteras (el agua, con puente). */
+export const ROAD_BUILD_COST = { field: 1, forest: 2, hills: 3, water: 6, road: 0.3 } as const;

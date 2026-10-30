@@ -296,11 +296,14 @@ export const es = {
   /** «Cama — 6 tablas (tienes 12)» (H5c1 §8). */
   buildOption: (name: string, wood: number | string, have: number) =>
     `${name} — ${wood} ${wood === 1 ? 'tabla' : 'tablas'} (tienes ${have})`,
-  buildGroups: {
-    furniture: 'Muebles',
-    walls: 'Muros y puertas',
-    fix: 'Arreglar',
-    windows: 'Ventanas',
+  buildGroups: { furniture: 'Muebles', walls: 'Muros y puertas', fix: 'Arreglar' },
+  /** El menú del clic derecho (H5c1 §8). */
+  contextMenu: {
+    drawCurtains: 'Correr cortinas',
+    openCurtains: 'Abrir cortinas',
+    cancel: 'Cancelar plano',
+    withCurtains: (name: string, n: number, have: number) =>
+      `${name} — ${n} ${n === 1 ? 'juego' : 'juegos'} de cortinas (tienes ${have})`,
   },
   /** Qué hace cada cosa, abajo del menú. */
   buildDesc: {

@@ -8,19 +8,10 @@ import './panels.css';
 const GROUPS: readonly { title: keyof typeof es.buildGroups; kinds: readonly BuildKind[] }[] = [
   { title: 'furniture', kinds: ['bed', 'table', 'campfire', 'tub'] },
   { title: 'walls', kinds: ['woodWall', 'woodDoor'] },
-  // Reparar elige el plano según la casilla (spec H4b §4.2).
+  // Reparar elige el plano según la casilla (spec H4b §4.2). Lo de las ventanas, con el clic
+  // derecho (H5c1 §8).
   { title: 'fix', kinds: ['repair'] },
-  // H4d: «Cortinas» también elige: correrlas o abrirlas, o colgar unas si no hay.
-  { title: 'windows', kinds: ['board', 'unboard', 'curtains', 'takeDownCurtains', 'smashWindow'] },
 ];
-
-/** Lo que no gasta madera (H4d): solo el nombre. */
-const NAME_ONLY: ReadonlySet<BuildKind> = new Set([
-  'unboard',
-  'curtains',
-  'takeDownCurtains',
-  'smashWindow',
-]);
 
 /**
  * Menú de la herramienta Construir (spec H4a §5): qué se coloca al hacer clic en el mapa, por
@@ -71,9 +62,7 @@ export function mountBuildMenu(
       for (const { kind, b } of buttons) {
         b.classList.toggle('selected', opts.tool.buildKind === kind);
         const wood = kind === 'repair' ? es.repairWood : BUILD[kind].wood;
-        const text = NAME_ONLY.has(kind)
-          ? es.buildMenu[kind]
-          : es.buildOption(es.buildMenu[kind], wood, have);
+        const text = es.buildOption(es.buildMenu[kind], wood, have);
         if (b.textContent !== text) b.textContent = text;
       }
       const text = es.buildDesc[opts.tool.buildKind];

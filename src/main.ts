@@ -12,6 +12,7 @@ import { createWorld } from './sim/world';
 import { allColonists } from './sim/game';
 import { mountBuildMenu } from './ui/buildMenu';
 import { mountCards } from './ui/cards';
+import { mountContextMenu } from './ui/contextMenu';
 import { mountCraftPanel } from './ui/craftPanel';
 import { mountEndScreen } from './ui/endScreen';
 import { mountExpeditionsPanel } from './ui/expeditionsPanel';
@@ -109,6 +110,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
   const storagePanel = mountStoragePanel(ui, viewed(view, { open: storageOpen }));
   const outfitsPanel = mountOutfitsPanel(ui, { world, open: outfitsOpen });
   const expeditionsPanel = mountExpeditionsPanel(ui, { world, open: expeditionsOpen });
+  const contextMenu = mountContextMenu(ui, viewed(view, {})); // clic derecho (H5c1 §8)
   // Al caer la colonia (H5 §9): otra partida con el mismo narrador y zombis, o a la portada.
   const endScreen = mountEndScreen(ui, {
     world,
@@ -136,6 +138,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
 
   // Al cambiar de mapa, nada elegido ni herramienta (las casas y camas son de cada mapa).
   view.onChange(() => {
+    contextMenu.close();
     selection.set(null);
     houseSelection.set(null);
     bedSelection.set(null);
@@ -151,6 +154,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
   // Esc cierra por capas: primero la herramienta, luego el panel de Trabajos o el de Fabricar, la
   // ficha de la casa y la del superviviente.
   bindEscape(window, [
+    () => contextMenu.close(),
     () => tool.active && (tool.set(null), true),
     () => workOpen.value && (workOpen.set(false), true),
     () => craftOpen.value && (craftOpen.set(false), true),
@@ -188,6 +192,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
     tool,
     debug: new URLSearchParams(location.search).get('debug') === '1',
     openCraft: () => craftOpen.set(true),
+    openContext: (tile, screen) => contextMenu.open(tile, screen),
     onFrame: () => {
       tabs.update(); // primero: si el sitio que se ve se ha quedado vacío, a la base
       const here = view.world;

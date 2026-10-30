@@ -25,12 +25,6 @@ test('el menú Construir solo se ve con la herramienta y elige qué construir', 
     'Muro — 2 tablas (tienes 7)',
     'Puerta — 4 tablas (tienes 7)',
     'Reparar — 1–3 tablas (tienes 7)',
-    'Tapiar — 3 tablas (tienes 7)',
-    // Sin madera (H4d): solo el nombre.
-    'Quitar tablas',
-    'Cortinas',
-    'Descolgar cortinas',
-    'Romper ventana',
   ]);
   (root.querySelector('[data-testid="build-bed"]') as HTMLButtonElement).click();
   expect(tool.buildKind).toBe('bed');

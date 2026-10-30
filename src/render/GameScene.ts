@@ -142,6 +142,8 @@ export interface GameSceneData {
   onFrame?: () => void;
   /** Clic en una mesa (H4d): abre el panel Fabricar. */
   openCraft?: () => void;
+  /** Clic derecho que no es una orden (H5c1 §8): el menú de esa casilla, donde se ha pulsado. */
+  openContext?: (tile: Point, screen: Point) => void;
 }
 
 /** Dibuja el mundo. Solo lee el estado de la simulación; nunca decide nada del juego. */
@@ -159,6 +161,7 @@ export class GameScene extends Phaser.Scene {
   private tool!: Tool;
   private onFrame?: () => void;
   private openCraft?: () => void;
+  private openContext?: (tile: Point, screen: Point) => void;
   private actors!: Phaser.GameObjects.Graphics;
   /** Globos sobre la cabeza, uno por superviviente que lo lleva (se reutilizan). */
   private bubbleLayer!: Phaser.GameObjects.Container;
@@ -222,6 +225,7 @@ export class GameScene extends Phaser.Scene {
     this.tool = data.tool;
     this.onFrame = data.onFrame;
     this.openCraft = data.openCraft;
+    this.openContext = data.openContext;
     if (data.debug) this.exposeDebug();
   }
 
@@ -676,7 +680,10 @@ export class GameScene extends Phaser.Scene {
       this.visible[Math.floor(z.pos.y) * w.grid.width + Math.floor(z.pos.x)] === 1;
     const at = { x: p.worldX / TILE_PX, y: p.worldY / TILE_PX };
     const order = commandAt(w, this.selection.ids, at, seen);
-    if (order) issue(w, order);
+    if (order) return issue(w, order);
+    const ev = p.event as MouseEvent | undefined;
+    const screen = { x: ev?.clientX ?? p.x, y: ev?.clientY ?? p.y };
+    this.openContext?.(this.tileAt(p), screen);
   }
 
   /**

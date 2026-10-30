@@ -85,13 +85,13 @@ test('panel Fabricar con sus pedidos, prioridades en Trabajos y correr unas cort
   await expect(cell).toHaveText('4');
   await page.keyboard.press('Escape');
 
-  // Construir (B) → Cortinas, en una ventana de la base.
-  await page.keyboard.press('b');
-  await page.getByTestId('build-curtains').click();
+  // Clic derecho en una ventana de la base (H5c1 §8) → Correr cortinas.
   const win = await baseWindow(page);
   expect(win).not.toBeNull();
-  await page.mouse.click(win!.screen.x, win!.screen.y);
-  await page.keyboard.press('Escape');
+  await page.mouse.click(win!.screen.x, win!.screen.y, { button: 'right' });
+  await expect(page.getByTestId('context-menu')).toBeVisible();
+  await page.getByTestId('ctx-curtains').click();
+  await expect(page.getByTestId('context-menu')).toBeHidden();
 
   // Al reanudar se aplican el pedido, la prioridad y el plano; alguien corre las cortinas.
   await page.locator('[data-speed="3"]').click();

@@ -46,7 +46,7 @@ export function activeSiteIds(base: World): Set<number> {
 }
 
 /** ¿Puede irse? (No derribado, ni en crisis, ni en modo combate, ni ya de viaje.) */
-const canGo = (s: Survivor) =>
+export const canGo = (s: Survivor) =>
   s.trip === null && !s.drafted && s.action.type !== 'downed' && s.action.type !== 'crisis';
 
 /** Reparte la lista del grupo entre ellos: lo mismo a cada uno; lo que sobra, a los primeros. */

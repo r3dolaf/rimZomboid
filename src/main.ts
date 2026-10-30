@@ -14,6 +14,7 @@ import { mountBuildMenu } from './ui/buildMenu';
 import { mountCards } from './ui/cards';
 import { mountCraftPanel } from './ui/craftPanel';
 import { mountEndScreen } from './ui/endScreen';
+import { mountExpeditionsPanel } from './ui/expeditionsPanel';
 import { siegeText } from './ui/describe';
 import { mountGroupPanel } from './ui/groupPanel';
 import { bindEscape } from './ui/escape';
@@ -70,8 +71,9 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
   const noticesOpen = createFlag(); // el menú de Avisos (H4e)
   const storageOpen = createFlag(); // el panel de Almacén (H5)
   const outfitsOpen = createFlag(); // el panel Atuendos (H5b)
+  const expeditionsOpen = createFlag(); // el panel Expediciones (H5c1)
   // Los paneles salen en el mismo sitio: abrir uno cierra los otros.
-  const panels = [workOpen, craftOpen, noticesOpen, storageOpen, outfitsOpen];
+  const panels = [workOpen, craftOpen, noticesOpen, storageOpen, outfitsOpen, expeditionsOpen];
   for (const f of panels) f.onChange((on) => on && panels.forEach((o) => o !== f && o.set(false)));
   const prefs = createPrefsStore();
   const toggles = { toggleWork: workOpen.toggle, toggleCraft: craftOpen.toggle };
@@ -89,6 +91,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
     toggleNotices: noticesOpen.toggle,
     toggleStorage: storageOpen.toggle,
     toggleOutfits: outfitsOpen.toggle,
+    toggleExpeditions: expeditionsOpen.toggle,
   });
   // H5c1: las pestañas de mapa; lo de cada mapa (arriba, Almacén, Fabricar, Trabajos, fichas)
   // es del que se ve; las tarjetas, el registro y los avisos, de todos.
@@ -105,6 +108,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
   const noticeMenu = mountNoticeMenu(ui, { prefs, open: noticesOpen });
   const storagePanel = mountStoragePanel(ui, viewed(view, { open: storageOpen }));
   const outfitsPanel = mountOutfitsPanel(ui, { world, open: outfitsOpen });
+  const expeditionsPanel = mountExpeditionsPanel(ui, { world, open: expeditionsOpen });
   // Al caer la colonia (H5 §9): otra partida con el mismo narrador y zombis, o a la portada.
   const endScreen = mountEndScreen(ui, {
     world,
@@ -153,6 +157,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
     () => noticesOpen.value && (noticesOpen.set(false), true),
     () => storageOpen.value && (storageOpen.set(false), true),
     () => outfitsOpen.value && (outfitsOpen.set(false), true),
+    () => expeditionsOpen.value && (expeditionsOpen.set(false), true),
     () => houseSelection.id !== null && (houseSelection.set(null), true),
     () => bedSelection.id !== null && (bedSelection.set(null), true),
     () => selection.ids.length > 0 && (selection.set(null), true),
@@ -203,6 +208,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
       noticeMenu.update();
       storagePanel.update();
       outfitsPanel.update();
+      expeditionsPanel.update();
       workPanel.update();
       craftPanel.update();
       buildMenu.update();

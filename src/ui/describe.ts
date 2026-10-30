@@ -34,6 +34,7 @@ import type {
   SiteInfo,
   Survivor,
   Tone,
+  Travel,
   World,
   Wound,
   Zombie,
@@ -89,20 +90,25 @@ export function mapThe(w: World): string {
   return site ? siteName(site).the : es.maps.base;
 }
 
+/** Un sitio por su id, con artículo («la granja del norte»). */
+export function siteThe(base: World, siteId: number | null): string {
+  const site = siteId === null ? undefined : siteById(base, siteId);
+  return site ? siteName(site).the : es.maps.base;
+}
+
+/** Un viaje (H5c1 §7): «Viajando a la granja del norte · faltan 3 h», «Explorando el este · …». */
+export function travelText(base: World, t: Travel): string {
+  const hours = Math.ceil(t.hoursLeft);
+  if (t.kind === 'explore') return es.maps.exploring(es.sites.sides[t.side], hours);
+  return (t.kind === 'go' ? es.maps.going : es.maps.back)(siteThe(base, t.siteId), hours);
+}
+
 /** Dónde está un colono (H5c1 §7): en la base, en un sitio, de viaje o explorando. */
 export function whereText(base: World, id: number): string {
-  const the = (siteId: number | null) => {
-    const site = siteId === null ? undefined : siteById(base, siteId);
-    return site ? siteName(site).the : es.maps.base;
-  };
   const t = base.common.expedition.travels.find((x) => x.members.some((s) => s.id === id));
-  if (t) {
-    const hours = Math.ceil(t.hoursLeft);
-    if (t.kind === 'explore') return es.maps.exploring(es.sites.sides[t.side], hours);
-    return (t.kind === 'go' ? es.maps.going : es.maps.back)(the(t.siteId), hours);
-  }
+  if (t) return travelText(base, t);
   const m = allMaps(base).find((x) => x.survivors.some((s) => s.id === id));
-  return !m || m.mapId === 0 ? es.maps.inBase : es.maps.inSite(the(m.mapId));
+  return !m || m.mapId === 0 ? es.maps.inBase : es.maps.inSite(siteThe(base, m.mapId));
 }
 
 /** "Ana (zombi)" si el zombi fue alguien (H5); si no, `null`. */

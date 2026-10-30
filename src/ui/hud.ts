@@ -31,6 +31,8 @@ export function mountHud(
     toggleOutfits?: () => void;
     /** El menú de Avisos (H4e). */
     toggleNotices?: () => void;
+    /** El panel Expediciones (H5c1). */
+    toggleExpeditions?: () => void;
   },
 ): {
   update(
@@ -128,6 +130,10 @@ export function mountHud(
     opts.toggleOutfits?.(),
   );
   outfits.hidden = !opts.toggleOutfits;
+  const expeditions = button('hud-expeditions', es.expeditions.button, es.expeditions.hint, () =>
+    opts.toggleExpeditions?.(),
+  );
+  expeditions.hidden = !opts.toggleExpeditions;
   const notices = button('hud-notices', es.noticesButton, es.noticesButtonHint, () =>
     opts.toggleNotices?.(),
   );
@@ -171,6 +177,7 @@ export function mountHud(
     work,
     craft,
     outfits,
+    expeditions,
     notices,
     zombies,
     siege,

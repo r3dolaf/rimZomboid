@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 // H5b §8: la ropa en pantalla.
 import { expect, test } from 'vitest';
+import { BILL_DEFAULT_TARGET } from '../sim/balance';
 import { newGarment } from '../sim/clothes';
 import { emptyInventory } from '../sim/items';
 import { logEvent, type LogEntry } from '../sim/log';
@@ -209,7 +210,10 @@ test('Fabricar: Remendar, Reforzar, Descoser ropa y Lavar ropa, con "siempre que
   panel.update();
   const bill = effectiveBillsOf(w)[0]!;
   const mode = root.querySelector(`[data-testid="bill-${bill.id}-mode"]`) as HTMLSelectElement;
-  expect([...mode.options].map((o) => o.textContent)).toEqual(['siempre que haya', 'veces']);
+  expect([...mode.options].map((o) => o.textContent)).toEqual([
+    'Siempre que haya',
+    `Hacer ${BILL_DEFAULT_TARGET} veces`,
+  ]);
   expect(mode.value).toBe('always');
   expect((root.querySelector(`[data-testid="bill-${bill.id}-target"]`) as HTMLElement).hidden).toBe(
     true,
@@ -224,9 +228,14 @@ test('Fabricar: Remendar, Reforzar, Descoser ropa y Lavar ropa, con "siempre que
 
 test('Construir: el barreño (4 tablas); en el mapa, su agua y la de las cisternas al pasar el ratón', () => {
   const root = document.createElement('div');
-  mountBuildMenu(root, { tool: createTool() });
-  expect(root.querySelector('[data-testid="build-tub"]')!.textContent).toBe('Barreño · 4');
   const w = emptyWorld(5, 5);
+  const tool = createTool();
+  const menu = mountBuildMenu(root, { tool, world: w });
+  tool.toggle('build');
+  menu.update();
+  expect(root.querySelector('[data-testid="build-tub"]')!.textContent).toBe(
+    'Barreño — 4 tablas (tienes 0)',
+  );
   expect(furnitureLabel(w, { id: 1, kind: 'tub', pos: { x: 0, y: 0 }, water: 12 })).toBe(
     'Barreño: 12 / 20 litros',
   );

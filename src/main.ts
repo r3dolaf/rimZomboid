@@ -104,7 +104,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
   const log = mountLog(ui, { world });
   const workPanel = mountWorkPanel(ui, viewed(view, { open: workOpen }));
   const craftPanel = mountCraftPanel(ui, viewed(view, { open: craftOpen }));
-  const buildMenu = mountBuildMenu(ui, { tool });
+  const buildMenu = mountBuildMenu(ui, viewed(view, { tool }));
   const noticeMenu = mountNoticeMenu(ui, { prefs, open: noticesOpen });
   const storagePanel = mountStoragePanel(ui, viewed(view, { open: storageOpen }));
   const outfitsPanel = mountOutfitsPanel(ui, { world, open: outfitsOpen });

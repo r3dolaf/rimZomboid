@@ -65,9 +65,9 @@ test('un botón por receta; añadir se ve al momento aunque esté en pausa', () 
   open.set(true);
   panel.update();
   expect(q('craft-add-bandages').textContent).toBe('+ Vendas');
-  expect(q('craft-add-curtains').textContent).toBe('+ Cortinas');
+  expect(q('craft-add-curtains').textContent).toBe('+ Coser cortinas'); // H5c1
   expect(q('craft-add-unpick').textContent).toBe('+ Deshacer cortinas');
-  expect(q('craft-add-curtains').title).toBe('3 telas, 2 usos de hilo y una aguja');
+  expect(q('craft-line-curtains').textContent).toContain('3 telas y 2 usos de hilo, con aguja'); // H5c1
   expect(q('craft-empty').hidden).toBe(false);
   q('craft-add-bandages').click();
   expect(world.orders).toContainEqual({ type: 'addBill', recipe: 'bandages' });
@@ -89,7 +89,10 @@ test('cada fila: modo, − N +, ↑ ↓ y ✕ dan su orden; "hechos x/N" en los 
   open.set(true);
   panel.update();
   const mode = q(`bill-${a.id}-mode`) as HTMLSelectElement;
-  expect([...mode.options].map((o) => o.textContent)).toEqual(['hasta tener', 'veces']);
+  expect([...mode.options].map((o) => o.textContent)).toEqual([
+    `Hasta tener ${BILL_DEFAULT_TARGET} vendas`,
+    `Hacer ${BILL_DEFAULT_TARGET} veces`,
+  ]);
   mode.value = 'count';
   mode.dispatchEvent(new Event('change'));
   q(`bill-${a.id}-more`).click();

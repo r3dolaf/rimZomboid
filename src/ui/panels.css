@@ -460,6 +460,29 @@
   border-color: #e08a2c;
   color: #111;
 }
+/* Por grupos (H5c1 §8), con la frase de lo elegido abajo. */
+.build-menu .build-group {
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.build-menu .build-group h3 {
+  width: 110px;
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: right;
+  opacity: 0.7;
+}
+.build-menu .build-desc {
+  flex-basis: 100%;
+  margin: 2px 0 0;
+  text-align: center;
+  font-size: 12px;
+  opacity: 0.85;
+}
 
 .work-panel {
   position: fixed;
@@ -602,13 +625,35 @@
   background: none;
 }
 .craft-panel .craft-add {
+  margin-top: 8px;
+}
+/* Por grupos (H5c1 §8): cada receta con su botón, «usa → da · dónde · tiempo» y el porqué. */
+.craft-panel .craft-group h3 {
+  margin: 8px 0 3px;
+  font-size: 13px;
+  opacity: 0.85;
+}
+.craft-panel .craft-recipe {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
+  align-items: baseline;
+  gap: 2px 8px;
+  padding: 2px 0;
 }
 .craft-panel .craft-add button {
   padding: 3px 8px;
+}
+.craft-panel .craft-recipe .line {
+  font-size: 12px;
+  opacity: 0.8;
+}
+.craft-panel .craft-recipe .why {
+  flex-basis: 100%;
+  font-size: 12px;
+  color: #f2a869;
+}
+.craft-panel .craft-recipe .why[hidden] {
+  display: none;
 }
 
 /* Modo combate (H4e): el botón de la ficha y de la lista de varios. */

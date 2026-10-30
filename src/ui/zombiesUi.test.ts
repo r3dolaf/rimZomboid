@@ -139,13 +139,13 @@ test('panel de Trabajos: postura con un desplegable por colono (en la columna Pe
   expect(sel.value).toBe('flee');
 });
 
-test('menú Construir: Reparar (1–3 de madera)', () => {
+test('menú Construir: Reparar (1–3 tablas)', () => {
   const root = document.createElement('div');
   const tool = createTool();
-  const menu = mountBuildMenu(root, { tool });
+  const menu = mountBuildMenu(root, { tool, world: emptyWorld(5, 5) });
   tool.set('build');
   menu.update();
-  expect(q(root, 'build-repair').textContent).toBe('Reparar · 1–3');
+  expect(q(root, 'build-repair').textContent).toBe('Reparar — 1–3 tablas (tienes 0)');
   expect(q(root, 'build-fixDoor')).toBeNull(); // la elige Reparar sola
 });
 

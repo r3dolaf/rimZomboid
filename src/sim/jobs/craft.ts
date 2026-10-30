@@ -92,6 +92,35 @@ export function pieceFor(w: World, r: Recipe): Garment | null {
 /** ¿Hay sobre qué trabajar? (Las que no son sobre prendas, siempre.) */
 const hasPiece = (w: World, r: Recipe) => r.piece === undefined || pieceFor(w, r) !== null;
 
+/** Por qué no se puede hacer ahora una receta (H5c1 §8), lo primero que habría que arreglar. */
+export type CraftBlock =
+  | { kind: 'station'; station: 'table' | 'tub' }
+  | { kind: 'water' }
+  | { kind: 'tool'; tool: 'needle' | 'knife' }
+  | { kind: 'input'; item: ItemKind; missing: number }
+  | { kind: 'material' }
+  | { kind: 'piece'; piece: NonNullable<Recipe['piece']> };
+
+/** Lo que falta para la receta (mueble, agua, herramienta, materiales, prenda), o `null`. */
+export function craftBlocker(w: World, r: Recipe): CraftBlock | null {
+  const station = r.station ?? 'table';
+  if (!w.furniture.some((f) => f.kind === station)) return { kind: 'station', station };
+  if (!w.furniture.some((f) => isStation(r, f))) return { kind: 'water' };
+  if (
+    r.tool !== null &&
+    !w.survivors.some((s) => hasTool(s, w, r)) &&
+    w.storage.items[r.tool] === 0
+  )
+    return { kind: 'tool', tool: r.tool };
+  for (const [item, n] of entries(r.input))
+    if (w.storage.items[item] < n)
+      return { kind: 'input', item, missing: n - w.storage.items[item] };
+  if (r.material !== undefined && !MATERIALS.some((m) => w.storage.items[m] >= r.material!))
+    return { kind: 'material' };
+  if (r.piece !== undefined && !pieceFor(w, r)) return { kind: 'piece', piece: r.piece };
+  return null;
+}
+
 /** ¿Toca hacer el pedido? (contando lo que ya se está haciendo y lo que va camino del almacén) */
 export function billWanted(w: World, b: Bill): boolean {
   if (b.mode === 'always') return true; // H5b: mientras haya prenda (lo mira quien lo coge)

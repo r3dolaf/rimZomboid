@@ -14,6 +14,7 @@ interface Debug {
     seen: number[];
   };
   tileToScreen(x: number, y: number): { x: number; y: number };
+  centerOnTile(x: number, y: number): void;
 }
 
 const WINDOW = 5; // Tile.Window
@@ -22,22 +23,28 @@ const CURTAINED = 12; // Tile.CurtainedWindow
 const world = (page: Page) =>
   page.evaluate(() => (window as unknown as { rimzomboid: Debug }).rimzomboid.world);
 
-/** Una ventana de la base con cortinas, vista y sin paneles encima. */
+/** Una ventana de la base con cortinas, con la cámara centrada en ella (lejos de los menús). */
 async function baseWindow(page: Page) {
-  return page.evaluate((WINDOW) => {
-    const { world, tileToScreen } = (window as unknown as { rimzomboid: Debug }).rimzomboid;
+  const tile = await page.evaluate((WINDOW) => {
+    const { world, centerOnTile } = (window as unknown as { rimzomboid: Debug }).rimzomboid;
     const r = world.base.rect;
-    const vp = { w: window.innerWidth, h: window.innerHeight };
     for (let y = r.y; y < r.y + r.h; y++)
       for (let x = r.x; x < r.x + r.w; x++) {
         const i = y * world.grid.width + x;
-        const s = tileToScreen(x, y);
-        const free = s.x > 20 && s.y > 80 && s.x < vp.w - 320 && s.y < vp.h - 200;
-        if (world.grid.tiles[i] === WINDOW && world.curtains.includes(i) && world.seen[i] && free)
-          return { tile: { x, y }, screen: s };
+        if (world.grid.tiles[i] === WINDOW && world.curtains.includes(i) && world.seen[i]) {
+          centerOnTile(x, y);
+          return { x, y };
+        }
       }
     return null;
   }, WINDOW);
+  if (!tile) return null;
+  await page.waitForTimeout(200); // la cámara se mueve en el siguiente fotograma
+  const screen = await page.evaluate(
+    ({ x, y }) => (window as unknown as { rimzomboid: Debug }).rimzomboid.tileToScreen(x, y),
+    tile,
+  );
+  return { tile, screen };
 }
 
 test('panel Fabricar con sus pedidos, prioridades en Trabajos y correr unas cortinas', async ({

@@ -140,7 +140,7 @@ export const es = {
       fail: 'hacer las vendas',
     },
     curtains: {
-      name: 'Cortinas',
+      name: 'Coser cortinas', // H5c1 §8: que se vea que se cosen
       doing: 'Cosiendo unas cortinas',
       done: 'ha cosido unas cortinas',
       fail: 'coser las cortinas',
@@ -198,17 +198,48 @@ export const es = {
   craftNoTable: 'Hace falta una mesa',
   craftEmpty: 'Sin pedidos: añade uno abajo',
   craftAdd: (name: string) => `+ ${name}`,
-  /** Lo que gasta y lo que hace falta, para la ayuda del botón de añadir. */
-  craftNeeds: {
-    bandages: '1 tela',
-    curtains: '3 telas, 2 usos de hilo y una aguja',
-    unpick: '1 juego de cortinas y un cuchillo',
-    mend: 'una prenda con agujeros, 1 uso de hilo, 1 tela, retal o tira y una aguja',
-    pad: 'una prenda, 1 uso de hilo, 1 tela, retal o tira y una aguja',
-    unpickGarment: 'una prenda destrozada y un cuchillo',
-    wash: 'una prenda sucia o con sangre y 2 litros de agua en el barreño',
-    sewBag: '4 telas, 2 usos de hilo y una aguja',
-  } satisfies Record<RecipeId, string>,
+  /** Fabricar por grupos (H5c1 §8). */
+  craftGroups: { heal: 'Curar', cloth: 'Tela y cortinas', clothes: 'Ropa', bags: 'Bolsas' },
+  /** Cada receta: «usa → da · dónde · tiempo». */
+  craftLine: (uses: string, gives: string, where: string, time: string) =>
+    `${uses} → ${gives} · ${where} · ${time}`,
+  craftWith: { needle: 'con aguja', knife: 'con cuchillo' },
+  craftPiece: {
+    holed: 'una prenda con agujeros',
+    paddable: 'una prenda',
+    destroyed: 'una prenda destrozada',
+    dirty: 'una prenda sucia o con sangre',
+  },
+  craftMaterial: (n: number) => `${n} tela, retal o tira`,
+  craftWater: (liters: number) => `${liters} litros de agua`,
+  craftGives: {
+    mend: 'la prenda remendada',
+    pad: 'la prenda reforzada',
+    unpickGarment: 'telas, retales o tiras',
+    wash: 'la prenda limpia',
+  } as Partial<Record<RecipeId, string>>,
+  stations: { table: 'mesa', tub: 'barreño' },
+  /** "15 min", "1 h", "1 h 30 min". */
+  duration: (min: number) =>
+    min < 60
+      ? `${min} min`
+      : min % 60 === 0
+        ? `${min / 60} h`
+        : `${Math.floor(min / 60)} h ${min % 60} min`,
+  /** Por qué no se puede ahora (H5c1 §8). */
+  craftWhy: {
+    station: { table: 'Hace falta una mesa', tub: 'Hace falta un barreño' },
+    water: 'Hace falta un barreño con agua',
+    tool: { needle: 'Falta una aguja', knife: 'Falta un cuchillo' },
+    input: (what: string, n: number) => `${n === 1 ? 'Falta' : 'Faltan'} ${what}`,
+    material: 'Falta tela, retal o tira',
+    piece: {
+      holed: 'No hay ropa con agujeros en el almacén',
+      paddable: 'No hay ropa que reforzar en el almacén',
+      destroyed: 'No hay ropa destrozada en el almacén',
+      dirty: 'No hay ropa sucia en el almacén',
+    },
+  },
   /** En el registro, con la prenda (H5b): "Ana ha remendado la chaqueta vaquera". */
   garmentDone: {
     mend: (the: string) => `ha remendado ${the}`,
@@ -216,7 +247,12 @@ export const es = {
     unpickGarment: (the: string) => `ha descosido ${the}`,
     wash: (the: string) => `ha lavado ${the}`,
   } as Partial<Record<RecipeId, (the: string) => string>>,
-  billModes: { until: 'hasta tener', count: 'veces', always: 'siempre que haya' },
+  /** Los modos de un pedido, dichos claro (H5c1 §8). */
+  billModes: {
+    until: (n: number, what: string) => `Hasta tener ${n} ${what}`,
+    count: (n: number) => `Hacer ${n} ${n === 1 ? 'vez' : 'veces'}`,
+    always: 'Siempre que haya',
+  },
   billDone: (n: number, total: number) => `hechos ${n}/${total}`,
   billLess: 'Uno menos',
   billMore: 'Uno más',
@@ -257,7 +293,33 @@ export const es = {
     smashWindow: 'Romper ventana',
     tub: 'Barreño', // H5b
   } satisfies Record<BuildKind, string>,
-  buildOption: (name: string, wood: number | string) => `${name} · ${wood}`,
+  /** «Cama — 6 tablas (tienes 12)» (H5c1 §8). */
+  buildOption: (name: string, wood: number | string, have: number) =>
+    `${name} — ${wood} ${wood === 1 ? 'tabla' : 'tablas'} (tienes ${have})`,
+  buildGroups: {
+    furniture: 'Muebles',
+    walls: 'Muros y puertas',
+    fix: 'Arreglar',
+    windows: 'Ventanas',
+  },
+  /** Qué hace cada cosa, abajo del menú. */
+  buildDesc: {
+    bed: 'Una cama: se duerme mejor que en el suelo y cada uno tiene la suya',
+    table: 'Una mesa: hace falta para fabricar (vendas, cortinas, ropa, bolsas)',
+    campfire: 'Una hoguera: de noche alumbra y anima a quien está cerca (y la ven los zombis)',
+    tub: 'Un barreño: recoge el agua de la lluvia y sirve para lavar la ropa',
+    woodWall: 'Un muro de madera: arrastra para hacer una fila',
+    woodDoor: 'Una puerta de madera, en un hueco o en una fila de muros',
+    board: 'Tapiar una ventana con tablas: aguanta a los zombis',
+    unboard: 'Quitar las tablas de una ventana (se recupera la madera)',
+    repair:
+      'Reparar lo dañado (muros, puertas, tablas) o arreglar una puerta rota; arrastra para muchas cosas seguidas',
+    fixDoor: 'Arreglar una puerta rota',
+    curtains: 'Correr o abrir las cortinas; si no hay, colgar unas',
+    takeDownCurtains: 'Descolgar las cortinas (vuelven al almacén)',
+    hangCurtains: 'Colgar unas cortinas',
+    smashWindow: 'Romper una ventana para entrar (hace ruido)',
+  } satisfies Record<BuildKind, string>,
   repairWood: '1–3',
   buildMenuHint:
     'Clic en el mapa para colocar; arrastrar para una fila de muros; clic en un plano para cancelarlo',
@@ -444,6 +506,23 @@ export const es = {
     duffel: 'bolsa de deporte',
     hikingPack: 'mochila de excursión',
   } satisfies Record<BagKind, string>,
+  /** Una bolsa o varias: «bolsa de tela», «bolsas de tela». */
+  bagsMany: (kind: BagKind, many: boolean) =>
+    many
+      ? {
+          fannyPack: 'riñoneras',
+          clothBag: 'bolsas de tela',
+          schoolBag: 'mochilas escolares',
+          duffel: 'bolsas de deporte',
+          hikingPack: 'mochilas de excursión',
+        }[kind]
+      : {
+          fannyPack: 'riñonera',
+          clothBag: 'bolsa de tela',
+          schoolBag: 'mochila escolar',
+          duffel: 'bolsa de deporte',
+          hikingPack: 'mochila de excursión',
+        }[kind],
   woundVerb: {
     scratch: 'ha arañado',
     cut: 'le ha hecho un corte',

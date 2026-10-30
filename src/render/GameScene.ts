@@ -42,6 +42,7 @@ import { buildingTitle, furnitureLabel, pileLabel, zombieLabel } from '../ui/des
 import { pileAt } from '../sim/piles';
 import { mainsOn } from '../sim/water';
 import { visibleTiles } from '../sim/vision';
+import { discoverSite } from '../sim/sites';
 import type { MapView } from '../ui/mapView';
 import type { Selection } from '../ui/selection';
 import type { Tool, ToolMode } from '../ui/tool';
@@ -1071,6 +1072,7 @@ export class GameScene extends Phaser.Scene {
     (window as unknown as { rimzomboid: unknown }).rimzomboid = {
       world: this.base,
       view: this.view, // H5c1: qué mapa se ve
+      discoverSite: (o: Parameters<typeof discoverSite>[1]) => discoverSite(this.base, o),
       tileToScreen,
       forceEvent,
       canPlace: (kind: BuildKind, x: number, y: number) => canPlace(this.world, kind, { x, y }),

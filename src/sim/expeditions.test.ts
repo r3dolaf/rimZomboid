@@ -143,7 +143,14 @@ function inSite(): { w: World; site: World } {
 
 test('volver: cargan del campamento primero comida, vendas, analgésicos y armas, salen y viajan', () => {
   const { w, site } = inSite();
-  Object.assign(site.storage.items, { food: 30, bandage: 3, painkillers: 1, machete: 1, wood: 10 });
+  Object.assign(site.storage.items, {
+    food: 30,
+    bandage: 3,
+    painkillers: 1,
+    antibiotics: 2, // H6a: lo primero
+    machete: 1,
+    wood: 10,
+  });
   w.common.woodLog.start += 10;
   w.common.weaponLog.fromCorpses += 1;
   issue(w, { type: 'returnHome', siteId: 7 });
@@ -155,8 +162,9 @@ test('volver: cargan del campamento primero comida, vendas, analgésicos y armas
   expect(t.path[0]).toBe(300);
   expect(t.side).toBe(sideFrom(atlas, 300, t.path[1]!));
   expect(t.hoursLeft).toBe(HEX_HOURS.field);
-  const carried = (k: 'food' | 'bandage' | 'painkillers' | 'machete' | 'wood') =>
+  const carried = (k: 'food' | 'bandage' | 'painkillers' | 'antibiotics' | 'machete' | 'wood') =>
     t.members.reduce((n, s) => n + s.carrying[k], 0);
+  expect(carried('antibiotics')).toBe(2);
   expect(carried('bandage')).toBe(3);
   expect(carried('painkillers')).toBe(1);
   expect(carried('machete') + t.members.filter((s) => s.equipped === 'machete').length).toBe(1);

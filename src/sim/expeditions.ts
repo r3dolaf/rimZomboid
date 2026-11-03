@@ -325,7 +325,7 @@ function returnHome(base: World, siteId: number, waypoints: readonly number[] = 
  * Lo que se carga primero al volver (comida, medicinas y armas; luego lo demás), lo ligero y
  * valioso delante: si no, la comida llenaba las manos y se quedaban las armas.
  */
-const LOAD_FIRST: readonly ItemKind[] = ['bandage', 'painkillers', ...WEAPONS, 'food'];
+const LOAD_FIRST: readonly ItemKind[] = ['antibiotics', 'bandage', 'painkillers', ...WEAPONS, 'food'];
 
 /** En el campamento, de vuelta: se carga lo que pueda, por ese orden (las bolsas, en la mano). */
 export function loadForTrip(w: World, s: Survivor): void {

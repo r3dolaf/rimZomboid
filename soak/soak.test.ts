@@ -635,6 +635,7 @@ const tripTotals = {
   sent: 0,
   siteToSite: 0, // H5c2
   redirected: 0, // H5c2
+  road: {} as Record<string, number>, // H5c3: lo que pasa por el camino
   arrived: 0,
   returned: 0,
   sitesFound: 0,
@@ -735,6 +736,8 @@ test.each([1, 2])(
             else tripTotals.returned++;
           }
           if (e.kind === 'siteFound') tripTotals.sitesFound++;
+          if (e.kind.startsWith('road'))
+            tripTotals.road[e.kind] = (tripTotals.road[e.kind] ?? 0) + 1;
           if (e.kind === 'found' && e.mapId !== undefined) tripTotals.foundOnSites++;
         }
         tripTotals.maxActive = Math.max(tripTotals.maxActive, activeSiteIds(w).size);
@@ -786,6 +789,12 @@ test('con expediciones se explora, se descubren sitios, se va, se saquea allí y
   expect(tripTotals.returned, 'vueltas a la base').toBeGreaterThan(0);
   expect(tripTotals.siteToSite, 'de un sitio a otro (H5c2)').toBeGreaterThan(0);
   expect(tripTotals.redirected, 'cambios de destino (H5c2)').toBeGreaterThan(0);
+  const road = tripTotals.road;
+  expect(road.roadZombies ?? 0, 'zombis por el camino (H5c3)').toBeGreaterThan(0);
+  expect(
+    (road.roadLoot ?? 0) + (road.roadForage ?? 0),
+    'cosas por el camino (H5c3)',
+  ).toBeGreaterThan(0);
 });
 
 test.each([1, 2, 3])(

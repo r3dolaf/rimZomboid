@@ -33,6 +33,7 @@ import {
   Tile,
   type BuildKind,
   type MapSide,
+  type RoadKind,
   type ContainerKind,
   type Point,
   type Survivor,
@@ -45,6 +46,7 @@ import { mainsOn } from '../sim/water';
 import { visibleTiles } from '../sim/vision';
 import { discoverSite } from '../sim/sites';
 import { hexToward } from '../sim/expeditions';
+import { roadEvent } from '../sim/road/events';
 import type { MapView } from '../ui/mapView';
 import type { Selection } from '../ui/selection';
 import type { Tool, ToolMode } from '../ui/tool';
@@ -1086,6 +1088,11 @@ export class GameScene extends Phaser.Scene {
       view: this.view, // H5c1: qué mapa se ve
       discoverSite: (o: Parameters<typeof discoverSite>[1]) => discoverSite(this.base, o),
       siteNear: (id: number, side: MapSide, dist: number) => this.siteNear(id, side, dist),
+      // H5c3: que pase algo por el camino a ese viaje (en el hexágono en que está).
+      roadEvent: (travelId: number, kind: RoadKind) => {
+        const t = this.base.common.expedition.travels.find((x) => x.id === travelId);
+        if (t) roadEvent(this.base, t, t.path[t.at]!, kind);
+      },
       tileToScreen,
       forceEvent,
       canPlace: (kind: BuildKind, x: number, y: number) => canPlace(this.world, kind, { x, y }),

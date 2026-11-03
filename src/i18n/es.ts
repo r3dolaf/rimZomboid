@@ -640,6 +640,7 @@ export const es = {
   /** Lados del mapa (0 norte, 1 sur, 2 oeste, 3 este). */
   sides: ['norte', 'sur', 'oeste', 'este'],
   notices: {
+    infectionCured: 'Se le pasa la infección', // H6a
     roadZombies: 'Zombis en el camino', // H5c3
     roadJoined: 'Alguien se une por el camino',
     roadJoinerLeft: 'Sigue su camino',
@@ -682,6 +683,8 @@ export const es = {
     wanderersSighted: 'Horda errante',
     strangersFled: 'Huyen',
   },
+  /** H6a: «Antibióticos y que descanse (quedan 2)». */
+  antibioticsLeft: (label: string, n: number) => `${label} (quedan ${n})`,
   decisions: {
     theft: {
       title: 'Raciones robadas',
@@ -698,7 +701,12 @@ export const es = {
       title: 'Fiebre',
       text: (who: string) => `${who} tiene fiebre. ¿Qué hacéis?`,
       worse: (who: string) => `${who} está peor. ¿Qué hacéis?`,
-      options: ['Que descanse', 'Que se vaya', 'Acabar con su sufrimiento'],
+      options: [
+        'Que descanse',
+        'Que se vaya',
+        'Acabar con su sufrimiento',
+        'Antibióticos y que descanse', // H6a
+      ],
     },
     stranger: {
       title: 'Alguien se acerca',
@@ -778,6 +786,7 @@ export const es = {
     crowbar: ['palanca', 'palancas'],
     machete: ['machete', 'machetes'],
     painkillers: ['analgésico', 'analgésicos'],
+    antibiotics: ['antibiótico', 'antibióticos'],
     denim: ['retal de vaquero', 'retales de vaquero'],
     leather: ['tira de cuero', 'tiras de cuero'],
     bucket: ['cubo vacío', 'cubos vacíos'],
@@ -907,6 +916,8 @@ export const es = {
         ? `${who} ${many ? 'atraviesan' : 'atraviesa'} una horda de ${zombies} zombis ${where}: ${out}`
         : `${who} ${many ? 'se cruzan' : 'se cruza'} con ${zombies} zombis ${where}: ${out}`;
     },
+    antibiotics: (who: string) => `${who} toma antibióticos`, // H6a
+    infectionCured: (who: string) => `A ${who} se le pasa la infección`,
     roadJoined: (who: string, group: string) => `${who} se une a ${group} por el camino`,
     roadJoinerLeft: (who: string, full: boolean) =>
       full ? `${who} no cabe en la colonia y sigue su camino` : `${who} sigue su camino`,

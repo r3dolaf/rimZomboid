@@ -87,6 +87,7 @@ test('invariantes: planos con madera de más, montones raros, marcas que no son 
       crowbar: 0,
       machete: 0,
       painkillers: 0,
+      antibiotics: 0,
       denim: 0,
       leather: 0,
       bucket: 0,

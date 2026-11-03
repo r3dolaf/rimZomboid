@@ -35,6 +35,7 @@ const ITEMS: readonly LootItem[] = [
   'crowbar',
   'machete',
   'painkillers', // H5: el último, para no cambiar el reparto de lo de antes más que lo justo
+  'antibiotics', // H6a: igual
   'denim', // H5b
   'leather',
   'waterBottle',
@@ -56,6 +57,7 @@ const HOME: Record<LootItem, readonly ContainerKind[]> = {
   crowbar: ['crate'],
   wood: ['crate'],
   painkillers: ['medicine'],
+  antibiotics: ['medicine'],
   denim: ['wardrobe'],
   leather: ['wardrobe'],
   waterBottle: ['fridge'],

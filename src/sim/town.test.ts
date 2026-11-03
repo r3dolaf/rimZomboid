@@ -39,6 +39,7 @@ test('botín por tipo (spec §4): rangos y, para lo de "a veces", la probabilida
     knife: { chance: 0.25 },
     bat: { chance: 0.15 },
     painkillers: { chance: 1 / 3 }, // H5
+    antibiotics: { chance: 0.03 }, // H6a
     waterBottle: { chance: 0.5 }, // H5b
     roadMap: { chance: 0.1 }, // H5c1
     note: { chance: 0.05 },
@@ -55,6 +56,7 @@ test('botín por tipo (spec §4): rangos y, para lo de "a veces", la probabilida
     bandage: [12, 18],
     needle: [1, 1],
     painkillers: [6, 10],
+    antibiotics: { chance: 0.3 }, // H6a
   });
   expect(LOOT.hardware).toEqual({
     bandage: [0, 2],

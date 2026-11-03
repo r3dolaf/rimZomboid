@@ -391,7 +391,11 @@ export interface Survivor {
   painkillerUntil: number;
   painkillerWanted: boolean;
   /** Infección oculta (H5 §7.1): desde cuándo y cuándo muere de ella; el jugador no la ve. */
-  infection: { at: number; deathAt: number } | null;
+  /**
+   * La infección (H5), oculta. H6a: si fue de un mordisco (entonces no la curan los antibióticos) y si
+   * ya se tomó antibióticos por ella (de viaje, para no tomar otro).
+   */
+  infection: { at: number; deathAt: number; bite?: boolean; treated?: boolean } | null;
   /** La ropa que lleva puesta (H5b §2; no cuenta como carga). */
   worn: Garment[];
   /** Su prenda favorita y la que odia (H5b §5), distintas. */

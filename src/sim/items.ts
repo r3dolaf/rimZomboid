@@ -17,6 +17,7 @@ export type ItemKind =
   | 'machete'
   // H5
   | 'painkillers'
+  | 'antibiotics' // H6a
   // H5b: retal de vaquero, tira de cuero, cubos y botellas de agua.
   | 'denim'
   | 'leather'
@@ -44,6 +45,7 @@ export const ITEM_KINDS: readonly ItemKind[] = [
   'crowbar',
   'machete',
   'painkillers',
+  'antibiotics',
   'denim',
   'leather',
   'bucket',
@@ -76,6 +78,7 @@ export function emptyInventory(): Inventory {
     crowbar: 0,
     machete: 0,
     painkillers: 0,
+    antibiotics: 0,
     denim: 0,
     leather: 0,
     bucket: 0,

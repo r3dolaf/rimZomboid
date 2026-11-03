@@ -142,6 +142,7 @@ export const NOTICE_GROUPS: readonly {
       'returned',
       'strangerDied',
       'feverGone',
+      'infectionCured', // H6a
     ],
   },
 ];

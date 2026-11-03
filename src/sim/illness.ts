@@ -16,12 +16,14 @@ import {
   TICKS_PER_DAY,
   TICKS_PER_HOUR,
 } from './balance';
+import { has, spend } from './bags';
 import { knockDown } from './body';
 import { banish } from './death';
 import { addDecision } from './decisions';
 import { lyingDown } from './jobs/medical';
 import { logEvent } from './log';
 import { nextFloat } from './rng';
+import type { Inventory } from './items';
 import type { Decision, Fever, Survivor, World } from './types';
 
 const H = TICKS_PER_HOUR;
@@ -134,13 +136,47 @@ export function illnessSystem(w: World): void {
 /** ¿Está tan grave que no puede levantarse? */
 export const tooIllToStand = (s: Survivor) => s.fever?.stage === 'grave';
 
+/** Los antibióticos que tiene a mano: los suyos y los del almacén de su mapa (H6a). */
+export function antibioticsAt(w: World, s: Survivor): number {
+  return has(s, 'antibiotics') + w.storage.items.antibiotics;
+}
+
+/**
+ * Toma un antibiótico (H6a §1): primero el suyo, si no, del almacén. Cura la infección de un arañazo
+ * o un corte si aún no han empezado las náuseas; la de un mordisco, la tardía y la gripe, no.
+ */
+export function takeAntibiotics(w: World, s: Survivor, store: Inventory | null): boolean {
+  if (spend(s, 'antibiotics') === 0) {
+    if (!store || store.antibiotics === 0) return false;
+    store.antibiotics--;
+  }
+  logEvent(w, { kind: 'antibiotics', survivorId: s.id });
+  const inf = s.infection;
+  if (!inf) return true;
+  inf.treated = true;
+  if (inf.bite || w.tick - inf.at >= INFECTION_NAUSEA_HOURS * H) return true;
+  s.infection = null;
+  if (s.fever?.cause === 'infection') {
+    s.fever = null;
+    w.mercy = w.mercy.filter((id) => id !== s.id);
+    dropFeverDecisions(w, s);
+  }
+  logEvent(w, { kind: 'infectionCured', survivorId: s.id });
+  return true;
+}
+
 /**
  * El aviso de fiebre: 0, Que descanse (por defecto); 1, Que se vaya; 2, Acabar con su
- * sufrimiento (H5 §7.4).
+ * sufrimiento (H5 §7.4); 3, Antibióticos y que descanse (H6a; si no hay, como la 0).
  */
-export function resolveFever(w: World, d: Decision, option: 0 | 1 | 2): void {
+export function resolveFever(w: World, d: Decision, option: 0 | 1 | 2 | 3): void {
   const s = w.survivors.find((x) => x.id === d.survivorIds[0]);
   if (!s?.fever) return;
+  if (option === 3) {
+    takeAntibiotics(w, s, w.storage.items);
+    if (!s.fever) return; // curado
+    option = 0;
+  }
   if (option === 0) {
     w.mercy = w.mercy.filter((id) => id !== s.id); // que descanse en vez de lo otro
     if (s.fever.rest) return;

@@ -133,6 +133,7 @@ export const ITEM_WEIGHT_KG = {
   crowbar: 2,
   machete: 1,
   painkillers: 0.05, // H5
+  antibiotics: 0.05, // H6a
   // H5b: retales, tiras, cubos y botellas.
   denim: 0.2,
   leather: 0.2,
@@ -669,6 +670,7 @@ export type LootItem =
   | 'thread'
   | 'needle'
   | 'painkillers'
+  | 'antibiotics'
   | 'denim'
   | 'leather'
   | 'waterBottle'
@@ -689,6 +691,7 @@ export const LOOT: Record<LootKind, Partial<Record<LootItem, LootAmount>>> = {
     knife: { chance: 0.25 },
     bat: { chance: 0.15 },
     painkillers: { chance: 1 / 3 },
+    antibiotics: { chance: 0.03 }, // H6a: en el pueblo, casi nada
     waterBottle: { chance: 0.5 }, // H5b
     roadMap: { chance: 0.1 }, // H5c1
     note: { chance: 0.05 },
@@ -700,7 +703,13 @@ export const LOOT: Record<LootKind, Partial<Record<LootItem, LootAmount>>> = {
     painkillers: [0, 2],
     waterBottle: [6, 12],
   },
-  pharmacy: { food: [0, 4], bandage: [12, 18], needle: [1, 1], painkillers: [6, 10] },
+  pharmacy: {
+    food: [0, 4],
+    bandage: [12, 18],
+    needle: [1, 1],
+    painkillers: [6, 10],
+    antibiotics: { chance: 0.3 }, // H6a: en el pueblo, alguno a veces
+  },
   hardware: {
     bandage: [0, 2],
     wood: [16, 24],

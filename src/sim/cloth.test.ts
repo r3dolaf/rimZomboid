@@ -33,6 +33,7 @@ test('objetos nuevos: tela, cortinas, hilo (por usos), aguja, palanca y machete,
     'crowbar',
     'machete',
     'painkillers', // H5
+    'antibiotics', // H6a
     // H5b
     'denim',
     'leather',

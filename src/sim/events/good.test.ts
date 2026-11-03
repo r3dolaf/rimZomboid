@@ -235,6 +235,7 @@ test('alijo en una casa ya saqueada: una despensa escondida que vuelve a estar p
       crowbar: 0,
       machete: 0,
       painkillers: 0,
+      antibiotics: 0,
       denim: 0,
       leather: 0,
       bucket: 0,

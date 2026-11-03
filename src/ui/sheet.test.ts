@@ -100,6 +100,7 @@ test('muestra lo que lleva encima y su peso', () => {
     crowbar: 0,
     machete: 0,
     painkillers: 0,
+    antibiotics: 0,
     denim: 0,
     leather: 0,
     bucket: 0,

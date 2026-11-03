@@ -17,6 +17,9 @@ import type {
 
 /** Suceso del registro: solo datos; la interfaz los convierte en texto. */
 export type LogEvent =
+  // Antibióticos (H6a): quién los toma y si se le pasa la infección.
+  | { kind: 'antibiotics'; survivorId: number }
+  | { kind: 'infectionCured'; survivorId: number }
   // El camino (H5c3 §2): zombis sueltos (quién salió herido y de qué), botín y comida encontrados.
   | {
       kind: 'roadZombies';

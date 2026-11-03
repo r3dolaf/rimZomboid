@@ -81,7 +81,15 @@ test('una decisión: aviso con sus botones (la fiebre, tres), pausa, sin ✕, y 
   expect(el.querySelector('[data-testid="notice-close"]')).toBeNull();
   expect(time.speed).toBe(0);
   const buttons = [...el.querySelectorAll('button')].map((b) => b.textContent);
-  expect(buttons).toEqual(['Que descanse', 'Que se vaya', 'Acabar con su sufrimiento']);
+  expect(buttons).toEqual([
+    'Que descanse',
+    'Que se vaya',
+    'Acabar con su sufrimiento',
+    'Antibióticos y que descanse (quedan 0)', // H6a: sin ninguno, apagado
+  ]);
+  expect(
+    (el.querySelector('[data-testid="decision-option-3"]') as HTMLButtonElement).disabled,
+  ).toBe(true);
   const rest = el.querySelector('[data-testid="decision-option-0"]') as HTMLButtonElement;
   rest.click();
   expect(world.orders).toContainEqual({ type: 'decide', decisionId: d.id, option: 0 });
@@ -122,6 +130,7 @@ test('desconocidos: nombres, rasgos y lo que llevan; Aceptar da la orden', () =>
     crowbar: 0,
     machete: 0,
     painkillers: 0,
+    antibiotics: 0,
     denim: 0,
     leather: 0,
     bucket: 0,

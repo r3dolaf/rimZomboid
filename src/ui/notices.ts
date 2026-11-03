@@ -2,6 +2,7 @@ import type { TimeController } from '../game/timeController';
 import { es } from '../i18n/es';
 import { BIRTHDAY_CANS, TICKS_PER_DAY } from '../sim/balance';
 import { decisionAnswered } from '../sim/decisions';
+import { antibioticsAt } from '../sim/illness';
 import { allMaps } from '../sim/game';
 import type { DecisionOption } from '../sim/events/resolve';
 import type { LogEntry } from '../sim/log';
@@ -195,6 +196,15 @@ export function mountNotices(
         if (x.el.hidden !== answered) x.el.hidden = answered;
         if (d.kind === 'birthday')
           x.buttons[0]!.disabled = x.map.storage.items.food < BIRTHDAY_CANS;
+        // H6a: los antibióticos que quedan (los suyos y los del almacén); sin ninguno, apagado.
+        const pills = x.buttons[3];
+        const sick = x.map.survivors.find((s) => s.id === d.survivorIds[0]);
+        if (d.kind === 'fever' && pills && sick) {
+          const n = antibioticsAt(x.map, sick);
+          const label = es.antibioticsLeft(es.decisions.fever.options[3]!, n);
+          if (pills.textContent !== label) pills.textContent = label;
+          pills.disabled = n === 0;
+        }
       }
     },
   };

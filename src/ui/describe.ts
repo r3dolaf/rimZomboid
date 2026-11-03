@@ -694,6 +694,12 @@ function logSentence(e: LogEntry, w: World, here: World): string {
         e.horde,
       );
       break;
+    case 'antibiotics':
+      text = l.antibiotics(name(e.survivorId));
+      break;
+    case 'infectionCured':
+      text = l.infectionCured(name(e.survivorId));
+      break;
     case 'roadJoined':
       text = l.roadJoined(e.name, listNames(e.names));
       break;
@@ -832,6 +838,8 @@ export function noticeFor(e: LogEntry): NoticeInfo | null {
       };
     case 'roadJoined':
       return { tone: 'good', title: t.roadJoined, focusId: null };
+    case 'infectionCured': // H6a
+      return { tone: 'good', title: t.infectionCured, focusId: e.survivorId };
     case 'roadJoinerLeft':
       return { tone: 'mixed', title: t.roadJoinerLeft, focusId: null };
     case 'strangerLeft':

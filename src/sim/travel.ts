@@ -10,6 +10,7 @@ import {
   SLEEP_DRAIN_PER_TICK,
   SLEEP_GAIN_PER_TICK,
   EXPLORE_RADIUS,
+  INFECTION_FEVER_HOURS,
   EXPLORE_WOUND,
   TICKS_PER_HOUR,
   TRAVEL_DAY,
@@ -30,6 +31,7 @@ import { rollRoad } from './road/roll';
 import { sideFrom } from './atlas/hex';
 import { findRoute, hexHours } from './atlas/route';
 import { addWound, BODY_PARTS } from './body';
+import { takeAntibiotics } from './illness';
 import { nextFloat, pick } from './rng';
 import type { DeathCause, MapSide, Point, Survivor, Travel, World } from './types';
 
@@ -130,6 +132,10 @@ function travelerTick(base: World, t: Travel, s: Survivor, night: boolean): void
     bleeding.bleeding = false;
     bleeding.cleanUntil = base.tick + BANDAGE_CLEAN_HOURS * TICKS_PER_HOUR;
   }
+  // Con lo que ya sería fiebre, quien lleva antibióticos toma uno (una vez por infección; H6a).
+  const inf = s.infection;
+  if (inf && !inf.treated && base.tick - inf.at >= INFECTION_FEVER_HOURS * TICKS_PER_HOUR)
+    if (has(s, 'antibiotics') > 0) takeAntibiotics(base, s, null);
   bloodTick(base, s);
   if (s.infection && base.tick >= s.infection.deathAt) s.dying ??= 'infection';
   if (s.dying) roadDeath(base, t, s, s.dying);

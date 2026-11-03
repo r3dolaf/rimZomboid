@@ -8,7 +8,7 @@ import { resolveHorde } from '../road/horde';
 import { resolveJoiner } from '../road/joiner';
 import type { Decision, World } from '../types';
 
-export type DecisionOption = 0 | 1 | 2;
+export type DecisionOption = 0 | 1 | 2 | 3;
 
 /** La que se aplica si nadie contesta: la 1 (no hacer nada), salvo la fiebre, Que descanse. */
 export const DEFAULT_OPTION: Record<Decision['kind'], DecisionOption> = {

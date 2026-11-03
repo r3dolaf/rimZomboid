@@ -102,9 +102,11 @@ export function knockDown(w: World, s: Survivor): void {
  */
 function infect(w: World, s: Survivor, kind: WoundKind): void {
   const chance = WOUNDS[kind].infect;
+  // H6a: un mordisco sobre una infección de arañazo la vuelve de mordisco (ya no la curan).
+  if (s.infection && kind === 'bite') s.infection.bite = true;
   if (s.infection || chance === 0 || (chance < 1 && nextFloat(w.zombieRng) >= chance)) return;
   const hours = nextInt(w.zombieRng, INFECTION_DEATH_HOURS_MIN, INFECTION_DEATH_HOURS_MAX);
-  s.infection = { at: w.tick, deathAt: w.tick + hours * TICKS_PER_HOUR };
+  s.infection = { at: w.tick, deathAt: w.tick + hours * TICKS_PER_HOUR, bite: kind === 'bite' };
 }
 
 /** Le deja una herida; si el dolor le deja a 0, cae derribado. */

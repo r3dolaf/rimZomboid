@@ -2,6 +2,7 @@
 import { expect, test } from 'vitest';
 import { ACTIVE_SITES_MAX, HEX_HOURS } from './balance';
 import { sideFrom } from './atlas/hex';
+import { hexHours } from './atlas/route';
 import { exitTile } from './expeditions';
 import { checkInvariants } from './invariants';
 import { issue, ordersSystem } from './orders';
@@ -79,7 +80,7 @@ test('mandar un grupo: se reparten la lista; los que no pueden ir, no van; sitio
   expect(travel.path[0]).toBe(atlas.base);
   expect(travel.path.at(-1)).toBe(site.hex);
   expect(travel.side).toBe(sideFrom(atlas, travel.path[0]!, travel.path[1]!));
-  expect(travel.hoursLeft).toBe(HEX_HOURS.field); // el primer hexágono, de campo
+  expect(travel.hoursLeft).toBe(hexHours(atlas, travel.path[1]!)); // el primer hexágono
 });
 
 test('se prepara en el almacén (su «Llevar siempre» y su parte de la lista), va al borde y sale', () => {

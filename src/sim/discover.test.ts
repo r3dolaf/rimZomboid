@@ -91,3 +91,18 @@ test('las comprobaciones del juego: cada sitio en un hexágono propio, dentro de
   b!.hex = -3;
   expect(checkInvariants(w).some((p) => p.includes('fuera del mundo'))).toBe(true);
 });
+
+test('lo que da especialidad no falta (H6a): un pueblecito y una nave junto a cada pueblo, y gasolineras', () => {
+  for (const seed of [1, 2, 3, 4, 5, 6]) {
+    const w = createWorld(seed);
+    const { atlas, expedition } = w.common;
+    const towns = atlas.town.flatMap((v, i) => (v === 1 && i !== atlas.base ? [i] : []));
+    const count = (k: string) => expedition.sites.filter((s) => s.kind === k).length;
+    expect(count('village'), `semilla ${seed}`).toBeGreaterThanOrEqual(towns.length - 1);
+    expect(count('warehouse'), `semilla ${seed}`).toBeGreaterThanOrEqual(towns.length - 1);
+    expect(count('gas'), `semilla ${seed}`).toBeGreaterThanOrEqual(4);
+    for (const s of expedition.sites.filter((x) => x.kind === 'village'))
+      expect(hexesWithin(atlas, s.hex, 1).some((i) => atlas.town[i] === 1)).toBe(true);
+    expect(checkInvariants(w)).toEqual([]);
+  }
+});

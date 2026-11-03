@@ -1320,6 +1320,8 @@ export const HEX_HOURS = { road: 0.5, field: 1, forest: 1.5, hills: 2 } as const
 /** Los sitios del mundo (H5c2 §2): cuántos, lejos de la base y separados entre sí. */
 export const SITES_SALT = 0x5173a;
 export const ATLAS_SITES: [number, number] = [40, 60];
+/** H6a: gasolineras en la carretera, de entrada (además de las que salgan al azar). */
+export const ATLAS_GAS: [number, number] = [4, 6];
 export const SITE_MIN_DIST = 4; // de la base (así al empezar no se ve ninguno)
 export const SITE_SPACING = 2; // entre sitios
 /** La niebla (H5c2 §3): lo que se ve al empezar, al viajar, al explorar y con un mapa. */

@@ -27,6 +27,7 @@ import { catchUp, reveal, siteMap } from './sites';
 import { roadEvent } from './road/events';
 import { endRoadWaits } from './road/joiner';
 import { giveBed } from './systems/strangers';
+import { addDecision } from './decisions';
 import { rollRoad } from './road/roll';
 import { sideFrom } from './atlas/hex';
 import { findRoute, hexHours } from './atlas/route';
@@ -168,6 +169,9 @@ function enterMap(w: World, members: Survivor[], at: Point): void {
     w.survivors.push(s);
     // Quien se unió por el camino (H5c3) tiene cama al llegar a la base, si la hay.
     if (w.mapId === 0 && s.bedId === null) giveBed(w, s);
+    // Con fiebre sin decidir, su aviso otra vez (al salir se quitó): H6a, para los antibióticos.
+    if (s.fever && !s.fever.rest)
+      addDecision(w, 'fever', [s.id], s.fever.stage === 'fever' ? {} : { worse: true });
   }
 }
 

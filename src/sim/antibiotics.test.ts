@@ -10,7 +10,7 @@ import { illnessSystem, startFever } from './illness';
 import { checkInvariants } from './invariants';
 import { issue, ordersSystem } from './orders';
 import { emptyWorld, travelFor } from './testing/fixtures';
-import type { World } from './types';
+import { Tile, type World } from './types';
 
 const H = TICKS_PER_HOUR;
 
@@ -123,4 +123,43 @@ test('de viaje, quien lleva antibióticos y ya tendría fiebre toma uno (solo un
   expect(ana.infection).not.toBeNull();
   for (let i = 0; i < H; i++) stepGame(w);
   expect(ana.carrying.antibiotics).toBe(1); // no vuelve a tomar
+});
+
+test('quien llega con fiebre sin decidir vuelve a tener su aviso (para darle antibióticos a tiempo)', () => {
+  const w = emptyWorld(10, 10);
+  const { atlas } = w.common;
+  w.narrator.nextEventAt = 1e9;
+  w.grid.tiles.fill(Tile.Floor);
+  const ana = w.survivors[0]!;
+  w.survivors = [];
+  w.tick = dayStart(2) + 9 * H;
+  ana.infection = {
+    at: w.tick - (INFECTION_FEVER_HOURS + 2) * H,
+    deathAt: w.tick + 40 * H,
+    bite: false,
+  };
+  ana.fever = {
+    cause: 'infection',
+    since: w.tick - 2 * H,
+    stage: 'fever',
+    rest: false,
+    restTicks: 0,
+    badLuck: false,
+    checks: 0,
+  };
+  const t = travelFor(w, {
+    kind: 'back',
+    from: hexToward(atlas, atlas.base, 0, 3),
+    to: atlas.base,
+    members: [ana],
+    hoursLeft: 0.001,
+  });
+  t.nextEventAt = 1e12;
+  w.common.expedition.travels.push(t);
+  stepGame(w);
+  expect(w.survivors).toContain(ana);
+  expect(w.decisions.filter((d) => d.kind === 'fever' && d.survivorIds[0] === ana.id)).toHaveLength(
+    1,
+  );
+  expect(checkInvariants(w)).toEqual([]);
 });

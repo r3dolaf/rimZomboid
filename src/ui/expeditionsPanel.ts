@@ -40,7 +40,10 @@ function siteState(base: World, info: SiteInfo, people: number): string[] {
   if (info.state === 'lost') return [t.hours(info.hours), t.lost];
   const out = [
     t.hours(info.hours),
-    es.maps.specialty[info.kind], // H6a: lo que suele haber
+    // H6a: lo que suele haber (un alijo o un sitio peligroso no son como los de su tipo).
+    ...(info.special === 'stash' || info.special === 'dangerous'
+      ? []
+      : [es.maps.specialty[info.kind]]),
     info.visited ? t.visited : t.notVisited,
   ];
   const going = base.common.expedition.travels.some((x) => x.kind === 'go' && x.siteId === info.id);

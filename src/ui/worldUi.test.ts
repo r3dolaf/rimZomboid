@@ -414,7 +414,7 @@ test('la pestaña del mundo sigue al final cuando aparece la de un sitio nuevo',
 });
 
 test('lo que suele haber en cada sitio, en su ficha y en la lista de Expediciones (H6a)', () => {
-  const { base, farm, card, q } = cardGame();
+  const { base, farm, gas, card, q } = cardGame();
   card.hex(farm.hex);
   card.update();
   expect(q('world-card')!.textContent).toContain('mucha comida');
@@ -425,6 +425,12 @@ test('lo que suele haber en cada sitio, en su ficha y en la lista de Expedicione
   panel.update();
   expect(root.querySelector('[data-testid="site-4"]')!.textContent).toContain('mucha comida');
   expect(root.querySelector('[data-testid="site-5"]')!.textContent).toContain(
-    'latas y algún botiquín',
+    'latas y algún antibiótico',
   );
+  // Un sitio especial (un alijo, uno peligroso) no tiene la especialidad de su tipo: no se dice.
+  farm.special = 'stash';
+  card.hex(gas.hex);
+  card.hex(farm.hex);
+  card.update();
+  expect(q('world-card')!.textContent).not.toContain('mucha comida');
 });

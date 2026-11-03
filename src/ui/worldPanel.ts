@@ -124,7 +124,10 @@ export function mountWorldCard(
         ...(route
           ? [t.far(hexDistance(atlas, atlas.base, hex), Math.round(routeHours(atlas, route)))]
           : []),
-        ...(site ? [es.maps.specialty[site.kind]] : []), // H6a: lo que suele haber
+        // H6a: lo que suele haber (un alijo o un sitio peligroso no son como los de su tipo).
+        ...(site && site.special !== 'stash' && site.special !== 'dangerous'
+          ? [es.maps.specialty[site.kind]]
+          : []),
         ...(people > 0 ? [es.expeditions.people(people)] : []),
         ...(site?.state === 'lost' ? [es.expeditions.lost] : []),
       ],

@@ -456,7 +456,7 @@ export const es = {
     specialty: {
       house: 'un poco de todo',
       farm: 'mucha comida',
-      gas: 'latas y algún botiquín',
+      gas: 'latas y algún antibiótico',
       warehouse: 'armas y herramientas',
       village: 'farmacia: antibióticos y vendas',
     } satisfies Record<SiteKind, string>,

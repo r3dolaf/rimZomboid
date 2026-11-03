@@ -106,7 +106,14 @@ function travelerTick(base: World, t: Travel, s: Survivor, night: boolean): void
     s.action = { type: 'idle', ticksLeft: 0 };
     n.sleep = clamp(n.sleep - SLEEP_DRAIN_PER_TICK);
   }
-  if (n.hunger < EAT_BELOW && spend(s, 'food') === 1) n.hunger = clamp(n.hunger + EAT_RESTORE);
+  // Con hambre, de lo suyo; si no le queda, de lo del compañero que más lleva (H5c3 §3).
+  if (n.hunger < EAT_BELOW) {
+    const giver =
+      has(s, 'food') > 0
+        ? s
+        : t.members.reduce((a, b) => (has(b, 'food') > has(a, 'food') ? b : a));
+    if (spend(giver, 'food') === 1) n.hunger = clamp(n.hunger + EAT_RESTORE);
+  }
   const bleeding = s.wounds.find((wd) => wd.bleeding);
   if (bleeding && has(s, 'bandage') > 0) {
     spend(s, 'bandage');

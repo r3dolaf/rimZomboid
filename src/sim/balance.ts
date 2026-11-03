@@ -1229,6 +1229,8 @@ export const EXPLORE_MAX = 2;
 export const EXPLORE_WOUND = { alone: 0.2, pair: 0.1 } as const;
 /** Latas que se lleva cada uno para el día de exploración (si hay en el almacén). */
 export const EXPLORE_FOOD = 1;
+/** H5c3 §3: latas de más por persona en la comida propuesta para un viaje. */
+export const TRIP_FOOD_MARGIN = 1;
 
 /** El mapa del mundo (H5c2 §1): hexágonos, terreno, ríos, pueblos y carreteras. */
 export const ATLAS_SALT = 0x6e0a71;

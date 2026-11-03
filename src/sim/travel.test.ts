@@ -138,11 +138,11 @@ test('quien muere por el camino se pierde con lo que llevaba; sin nadie más, se
   expect(w.common.over).not.toBeNull();
 });
 
-test('quien sale a explorar se lleva una lata para el día (si hay)', () => {
+test('quien sale a explorar se lleva la comida de ida y vuelta, si la hay (H5c3)', () => {
   expect(EXPLORE_FOOD).toBe(1);
   const w = world();
   w.storage.tiles = [{ x: 5, y: 5 }];
-  w.storage.items.food = 3;
+  w.storage.items.food = 3; // menos de lo que haría falta
   const ana = w.survivors[0]!;
   ana.carrying.food = 0;
   ana.needs = { hunger: 100, sleep: 100, mood: 60, social: 100 };
@@ -152,8 +152,8 @@ test('quien sale a explorar se lleva una lata para el día (si hay)', () => {
   at(w, 1, 7);
   for (let i = 0; i < 300 && w.survivors.length > 0; i++) stepGame(w);
   expect(w.common.expedition.travels[0]!.members).toEqual([ana]);
-  expect(ana.carrying.food).toBe(EXPLORE_FOOD);
-  expect(w.storage.items.food).toBe(3 - EXPLORE_FOOD);
+  expect(ana.carrying.food).toBe(3); // todo lo que había
+  expect(w.storage.items.food).toBe(0);
 });
 
 test('explorar tiene riesgo: al llegar, a veces un arañazo o un corte (más si va uno solo)', () => {

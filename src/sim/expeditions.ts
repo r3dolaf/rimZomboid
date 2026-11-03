@@ -2,7 +2,8 @@
 // del grupo, ir al borde de ese lado y salir del mapa; el viaje empieza cuando han salido todos.
 import { ACTIVE_SITES_MAX, EXPLORE_FOOD, EXPLORE_MAX, HEX_HOURS } from './balance';
 import { hexIndex, hexOf, sideFrom } from './atlas/hex';
-import { findRoute, hexHours } from './atlas/route';
+import { findRoute, hexHours, routeHours } from './atlas/route';
+import { tripFood } from './road/food';
 import type { ExpeditionOrder } from './orders';
 import { stashOne, takeInto, unloadAt } from './bags';
 import { WEAPONS } from './jobs/weapons';
@@ -338,6 +339,7 @@ function explore(
   if (members.length === 0) return;
   const t = newTravel(base, 'explore', null, base.common.atlas.base, target, waypoints);
   if (!t) return;
-  // Un día fuera, o más: cada uno se lleva su lata (H5c1, tras la sonda de equilibrio).
-  board(base, t, members, { food: EXPLORE_FOOD * members.length });
+  // Cada uno, la comida de ida y vuelta (H5c3 §3; como mínimo su lata, como en H5c1).
+  const food = Math.max(EXPLORE_FOOD, tripFood(routeHours(base.common.atlas, t.path), true));
+  board(base, t, members, { food: food * members.length });
 }

@@ -114,3 +114,22 @@ Sobre H5c2 (spec `2026-10-30-h5c2-mapa-mundo-design.md`) y H5c1 (`2026-10-30-h5c
 - **Navegador:** una horda en el camino, contestada desde la ficha del grupo.
 - **Sonda de equilibrio:** con y sin expediciones, como en H5c2. Las cifras se ajustan si hace falta
   y se apuntan aquí (§6) y en la hoja de ruta.
+
+## 6. Equilibrio y cambios tras la revisión
+
+- **Sonda:** 36 semillas, narrador Equilibrado y zombis normales, saqueando todo el pueblo durante
+  30 días y contestando con sensatez (rodear la horda, aceptar a quien pide unirse). Las expediciones
+  se usan con cabeza, como en H5c2, y llevan la comida propuesta.
+  - **Sin expediciones:** la colonia cae de media hacia el día 20 y 12 de 36 llegan al día 30.
+  - **Con expediciones:** igual, hacia el día 20 y 13 de 36.
+  - Por el camino pasó algo menos de un suceso por partida (se manda un grupo por partida, de
+    media): botín 11, comida 7, zombis 6, alguien se unió 5, se fue 1 y una horda rodeada.
+  - Lo que mata sigue siendo la infección de los arañazos y la sangre. No se cambian cifras.
+- **Cambios tras la revisión:**
+  - Si alguien muere mientras su grupo espera ante una horda, la decisión sigue con los demás.
+  - Si se cambia de destino mientras se espera ante una horda y la nueva ruta no pasa por ella ni
+    al lado, siguen sin más; si pasa, siguen esperando.
+  - En el último hexágono del viaje no sale nada que pida respuesta (salvo en la zona a explorar),
+    y no sale una horda mientras alguien espera para unirse.
+  - Quien se une por el camino trabaja como uno más (sus trabajos de serie y el primer atuendo),
+    cuenta como unido al final de la partida y tiene cama al llegar a la base.

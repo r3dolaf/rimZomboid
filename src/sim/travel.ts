@@ -47,7 +47,8 @@ export function travelSystem(base: World): void {
       endRoadWaits(base, t);
       continue;
     }
-    if (!day || t.waiting !== undefined) continue;
+    // De noche, esperando una respuesta o en tormenta (H5c3), no se avanza.
+    if (!day || t.waiting !== undefined || base.tick < base.common.stormUntil) continue;
     t.hoursLeft -= 1 / TICKS_PER_HOUR;
     while (t.hoursLeft <= 1e-9 && base.common.expedition.travels.includes(t)) step(base, t);
   }

@@ -117,7 +117,12 @@ function checkAtlas(w: World, problems: string[]): void {
       problems.push(`${who}: le quedan ${t.hoursLeft} h`);
     if (t.waiting !== undefined && !w.decisions.some((d) => d.id === t.waiting))
       problems.push(`${who}: espera una decisión que no está (${t.waiting})`);
+    if (t.joiner && !w.decisions.some((d) => d.kind === 'joiner' && d.travelId === t.id))
+      problems.push(`${who}: ${t.joiner.name} pide unirse sin decisión`);
   }
+  for (const d of w.decisions)
+    if (d.travelId !== undefined && !expedition.travels.some((t) => t.id === d.travelId))
+      problems.push(`decisión ${d.id} (${d.kind}): de un viaje que no está (${d.travelId})`);
 }
 
 /**

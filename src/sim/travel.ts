@@ -23,6 +23,8 @@ import { exitTile } from './expeditions';
 import { WEAPONS } from './jobs/weapons';
 import { logEvent } from './log';
 import { catchUp, reveal, siteMap } from './sites';
+import { roadEvent } from './road/events';
+import { rollRoad } from './road/roll';
 import { sideFrom } from './atlas/hex';
 import { findRoute, hexHours } from './atlas/route';
 import { addWound, BODY_PARTS } from './body';
@@ -62,6 +64,9 @@ function step(base: World, t: Travel): void {
   }
   t.at++;
   reveal(base, next, TRAVEL_SEEN, 'seen', t.members[0]?.id);
+  // Lo que pasa por el camino (H5c3 §1).
+  const road = rollRoad(base, t, next);
+  if (road) roadEvent(base, t, next, road);
   if (t.at >= t.path.length - 1) return arrive(base, t);
   const after = t.path[t.at + 1]!;
   const h = hexHours(atlas, after);

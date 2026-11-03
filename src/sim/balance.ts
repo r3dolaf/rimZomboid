@@ -1243,6 +1243,39 @@ export const ROAD_WEIGHTS = {
 } as const;
 /** Junto a un pueblo (a 1 hexágono o menos), de más. */
 export const ROAD_TOWN_BONUS = { zombies: 3, horde: 1 } as const;
+/** H5c3 §2: zombis sueltos por el camino. */
+export const ROAD_ZOMBIES: [number, number] = [2, 5];
+/**
+ * El riesgo de cada uno al pelear por el camino: `base` por zombi por persona, menos `perLevel` por
+ * nivel de pelea y `armed` con arma, entre `min` y `max`; `bite`, la parte de mordiscos; `xp`, la
+ * práctica de pelea.
+ */
+export const ROAD_FIGHT = {
+  base: 0.25,
+  perLevel: 0.02,
+  armed: 0.1,
+  min: 0.03,
+  max: 0.8,
+  bite: 0.3,
+  xp: 150,
+} as const;
+/** Botín abandonado: cuántas cosas y cuáles, con su peso. */
+export const ROAD_LOOT: {
+  count: [number, number];
+  kinds: readonly (readonly [ItemKind, number])[];
+} = {
+  count: [1, 3],
+  kinds: [
+    ['food', 4],
+    ['bandage', 2],
+    ['cloth', 2],
+    ['painkillers', 1],
+    ['knife', 0.5],
+    ['bat', 0.5],
+  ],
+};
+/** Latas que se encuentran buscando comida. */
+export const ROAD_FORAGE: [number, number] = [1, 2];
 /** H5c3 §3: latas de más por persona en la comida propuesta para un viaje. */
 export const TRIP_FOOD_MARGIN = 1;
 

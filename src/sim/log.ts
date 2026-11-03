@@ -1,5 +1,5 @@
 import { LOG_MAX } from './balance';
-import type { Inventory } from './items';
+import type { Inventory, ItemKind } from './items';
 import type {
   SiteInfo,
   BagKind,
@@ -9,6 +9,7 @@ import type {
   GarmentKind,
   MapSide,
   RecipeId,
+  RoadGround,
   SkillId,
   World,
   WoundKind,
@@ -16,6 +17,23 @@ import type {
 
 /** Suceso del registro: solo datos; la interfaz los convierte en texto. */
 export type LogEvent =
+  // El camino (H5c3 §2): zombis sueltos (quién salió herido y de qué), botín y comida encontrados.
+  | {
+      kind: 'roadZombies';
+      names: string[];
+      zombies: number;
+      hurt: { name: string; wound: 'scratch' | 'bite' }[];
+      ground: RoadGround;
+    }
+  | {
+      kind: 'roadLoot';
+      names: string[];
+      car: boolean;
+      items: Partial<Record<ItemKind, number>>;
+      /** Algo se quedó: no cabía. */
+      left: boolean;
+    }
+  | { kind: 'roadForage'; names: string[]; food: number; ground: RoadGround }
   // Expediciones (H5c1): un sitio nuevo y cómo se supo (quién lo encontró, si fue explorando).
   | {
       kind: 'siteFound';

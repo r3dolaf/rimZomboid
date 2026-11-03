@@ -19,7 +19,7 @@ import { mainsOn } from '../sim/water';
 import { allMaps, mapById } from '../sim/game';
 import { routeHours } from '../sim/atlas/route';
 import { gameTime } from '../sim/clock';
-import { ITEM_KINDS, weightOf, type Inventory, type ItemKind } from '../sim/items';
+import { emptyInventory, ITEM_KINDS, weightOf, type Inventory, type ItemKind } from '../sim/items';
 import { BAG_SLOTS, bagsIn, effectiveKeep, effectiveList, effectivePinned } from '../sim/bags';
 import type { LogEntry } from '../sim/log';
 import type { MoodModifier } from '../sim/mood';
@@ -683,6 +683,27 @@ function logSentence(e: LogEntry, w: World, here: World): string {
         e.names.length > 1,
         e.site ? siteText(e.site) : null,
       );
+      break;
+    case 'roadZombies':
+      text = l.roadZombies(
+        listNames(e.names),
+        e.names.length > 1,
+        e.zombies,
+        l.roadWhere[e.ground],
+        e.hurt,
+      );
+      break;
+    case 'roadLoot':
+      text = l.roadLoot(
+        listNames(e.names),
+        e.names.length > 1,
+        e.car,
+        formatItems({ ...emptyInventory(), ...e.items }),
+        e.left,
+      );
+      break;
+    case 'roadForage':
+      text = l.roadForage(listNames(e.names), e.names.length > 1, e.food, l.roadWhere[e.ground]);
       break;
     case 'siteFound':
       text = l.siteFound(

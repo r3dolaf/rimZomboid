@@ -21,6 +21,7 @@ import type {
   Stance,
   TraitId,
   RecipeId,
+  RoadGround,
   SkillId,
   WorkType,
   WoundKind,
@@ -862,6 +863,37 @@ export const es = {
         overrun: `Una horda ha llegado a ${where}`,
         silent: `Ya no responden: ${where}`,
       })[change] ?? where,
+    // El camino (H5c3): «Ana y Luis se cruzan con 3 zombis en el bosque: Luis se lleva un arañazo».
+    roadZombies: (
+      who: string,
+      many: boolean,
+      zombies: number,
+      where: string,
+      hurt: { name: string; wound: 'scratch' | 'bite' }[],
+    ) => {
+      const what = { scratch: 'un arañazo', bite: 'un mordisco' };
+      const out =
+        hurt.length === 0
+          ? 'salen sin un rasguño'
+          : hurt
+              .map((h, i) =>
+                i === 0 ? `${h.name} se lleva ${what[h.wound]}` : `${h.name}, ${what[h.wound]}`,
+              )
+              .join('; ');
+      return `${who} ${many ? 'se cruzan' : 'se cruza'} con ${zombies} zombis ${where}: ${out}`;
+    },
+    roadLoot: (who: string, many: boolean, car: boolean, found: string, left: boolean) =>
+      `${who} ${many ? 'registran' : 'registra'} ${car ? 'un coche abandonado' : 'una casa abandonada'}: ${
+        found === '' ? 'no les cabe nada' : found
+      }${left && found !== '' ? ' (lo demás no cabe)' : ''}`,
+    roadForage: (who: string, many: boolean, food: number, where: string) =>
+      `${who} ${many ? 'encuentran' : 'encuentra'} comida ${where}: ${food === 1 ? '1 lata' : `${food} latas`}`,
+    roadWhere: {
+      field: 'en el campo',
+      forest: 'en el bosque',
+      hills: 'en las colinas',
+      road: 'en la carretera',
+    } satisfies Record<RoadGround, string>,
     expeditionArrived: (who: string, many: boolean, where: string | null) => {
       const verb = many ? 'han' : 'ha';
       return where === null

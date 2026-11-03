@@ -728,6 +728,8 @@ export interface Travel {
 
 /** Lo que puede pasar por el camino (H5c3 §2). */
 export type RoadKind = 'zombies' | 'horde' | 'loot' | 'joiner' | 'forage';
+/** El terreno de un suceso del camino (la carretera o un puente, «road»). */
+export type RoadGround = 'field' | 'forest' | 'hills' | 'road';
 
 /** Su parte de una expedición (H5c1 §4): prepararse en el almacén o ir a la salida. */
 export interface Trip {

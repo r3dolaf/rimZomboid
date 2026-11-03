@@ -1,7 +1,12 @@
 // H6a §1: los antibióticos curan la infección de un arañazo o un corte si se dan a tiempo (antes de
 // las náuseas); no la de un mordisco ni la gripe. Se dan con la decisión de la fiebre; de viaje, solos.
 import { expect, test } from 'vitest';
-import { INFECTION_FEVER_HOURS, INFECTION_NAUSEA_HOURS, TICKS_PER_HOUR } from './balance';
+import {
+  GRAVE_HOURS,
+  INFECTION_FEVER_HOURS,
+  INFECTION_NAUSEA_HOURS,
+  TICKS_PER_HOUR,
+} from './balance';
 import { addWound } from './body';
 import { dayStart } from './clock';
 import { hexToward } from './expeditions';
@@ -53,8 +58,18 @@ test('a tiempo, la infección de un arañazo se cura: sin infección ni fiebre, 
   expect(checkInvariants(w)).toEqual([]);
 });
 
-test('tarde, o de un mordisco, no curan: se gasta y descansa, nada más', () => {
+test('con náuseas aún curan; muy grave ya no (H6a, tras la sonda: hasta que esté muy grave)', () => {
+  const sick = infected(INFECTION_NAUSEA_HOURS + 1);
+  sick.w.storage.items.antibiotics = 1;
+  issue(sick.w, { type: 'decide', decisionId: fever(sick.w).id, option: 3 });
+  ordersSystem(sick.w);
+  expect(sick.ana.infection).toBeNull();
+  expect(sick.ana.fever).toBeNull();
+});
+
+test('tarde (muy grave), o de un mordisco, no curan: se gasta y descansa, nada más', () => {
   const late = infected(INFECTION_NAUSEA_HOURS + 1);
+  late.ana.infection!.deathAt = late.w.tick + (GRAVE_HOURS - 1) * H; // ya muy grave
   late.w.storage.items.antibiotics = 1;
   issue(late.w, { type: 'decide', decisionId: fever(late.w).id, option: 3 });
   ordersSystem(late.w);

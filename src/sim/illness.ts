@@ -143,7 +143,7 @@ export function antibioticsAt(w: World, s: Survivor): number {
 
 /**
  * Toma un antibiótico (H6a §1): primero el suyo, si no, del almacén. Cura la infección de un arañazo
- * o un corte si aún no han empezado las náuseas; la de un mordisco, la tardía y la gripe, no.
+ * o un corte si aún no está muy grave; la de un mordisco, la tardía y la gripe, no.
  */
 export function takeAntibiotics(w: World, s: Survivor, store: Inventory | null): boolean {
   if (spend(s, 'antibiotics') === 0) {
@@ -154,7 +154,8 @@ export function takeAntibiotics(w: World, s: Survivor, store: Inventory | null):
   const inf = s.infection;
   if (!inf) return true;
   inf.treated = true;
-  if (inf.bite || w.tick - inf.at >= INFECTION_NAUSEA_HOURS * H) return true;
+  // A tiempo: hasta que está muy grave (las últimas GRAVE_HOURS horas; tras la sonda de H6a).
+  if (inf.bite || w.tick >= inf.deathAt - GRAVE_HOURS * H) return true;
   s.infection = null;
   if (s.fever?.cause === 'infection') {
     s.fever = null;

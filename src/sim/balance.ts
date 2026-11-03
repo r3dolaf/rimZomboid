@@ -1229,6 +1229,20 @@ export const EXPLORE_MAX = 2;
 export const EXPLORE_WOUND = { alone: 0.2, pair: 0.1 } as const;
 /** Latas que se lleva cada uno para el día de exploración (si hay en el almacén). */
 export const EXPLORE_FOOD = 1;
+// H5c3 §1: lo que pasa por el camino. De media, un suceso por día de viaje (14 h de luz).
+export const ROAD_EVENT_PER_HOUR = 1 / 14;
+export const ROAD_STYLE = { calm: 0.6, balanced: 1, chaotic: 1.5 } as const;
+/** Horas sin otro suceso en ese viaje tras uno. */
+export const ROAD_EVENT_GAP = 3;
+/** Qué toca, según el hexágono en que entran (la carretera o un puente, «road»). */
+export const ROAD_WEIGHTS = {
+  field: { zombies: 3, horde: 1, loot: 2, joiner: 1, forage: 3 },
+  forest: { zombies: 5, horde: 1, loot: 1, joiner: 1, forage: 3 },
+  hills: { zombies: 3, horde: 1, loot: 1, joiner: 1, forage: 1 },
+  road: { zombies: 2, horde: 2, loot: 4, joiner: 2, forage: 0 },
+} as const;
+/** Junto a un pueblo (a 1 hexágono o menos), de más. */
+export const ROAD_TOWN_BONUS = { zombies: 3, horde: 1 } as const;
 /** H5c3 §3: latas de más por persona en la comida propuesta para un viaje. */
 export const TRIP_FOOD_MARGIN = 1;
 

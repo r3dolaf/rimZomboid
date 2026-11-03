@@ -717,10 +717,17 @@ export interface Travel {
   side: MapSide;
   /** Explorar: ya han mirado la zona y vuelven. */
   explored?: boolean;
+  /** H5c3: hasta cuándo no les pasa nada más por el camino (respiro tras un suceso). */
+  nextEventAt?: number;
+  /** H5c3: la decisión que esperan (una horda delante) para seguir. */
+  waiting?: number;
   members: Survivor[];
   /** Los que aún tienen que salir del mapa (el viaje empieza cuando han salido todos). */
   pending: number[];
 }
+
+/** Lo que puede pasar por el camino (H5c3 §2). */
+export type RoadKind = 'zombies' | 'horde' | 'loot' | 'joiner' | 'forage';
 
 /** Su parte de una expedición (H5c1 §4): prepararse en el almacén o ir a la salida. */
 export interface Trip {

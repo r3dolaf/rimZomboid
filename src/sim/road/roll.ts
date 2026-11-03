@@ -46,7 +46,7 @@ export function roadWeights(base: World, t: Travel, hex: number): Record<RoadKin
     w.horde = 0;
     w.joiner = 0;
   }
-  if (colonySize(base) >= COLONY_MAX) w.joiner = 0;
+  if (t.joiner || colonySize(base) >= COLONY_MAX) w.joiner = 0;
   return w;
 }
 

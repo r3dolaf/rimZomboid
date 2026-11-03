@@ -28,6 +28,8 @@ export type LogEvent =
       horde?: boolean;
     }
   | { kind: 'roadHorde'; names: string[]; around: boolean }
+  | { kind: 'roadJoined'; name: string; names: string[] }
+  | { kind: 'roadJoinerLeft'; name: string; full: boolean }
   | {
       kind: 'roadLoot';
       names: string[];

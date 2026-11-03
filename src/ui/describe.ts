@@ -694,6 +694,12 @@ function logSentence(e: LogEntry, w: World, here: World): string {
         e.horde,
       );
       break;
+    case 'roadJoined':
+      text = l.roadJoined(e.name, listNames(e.names));
+      break;
+    case 'roadJoinerLeft':
+      text = l.roadJoinerLeft(e.name, e.full);
+      break;
     case 'roadHorde':
       text = l.roadHorde(listNames(e.names), e.names.length > 1);
       break;

@@ -656,10 +656,10 @@ export interface Narrator {
 /** Algo que el jugador tiene que decidir; si no contesta antes de `expiresAt`, se aplica la opción por defecto. */
 export interface Decision {
   id: number;
-  kind: 'theft' | 'birthday' | 'fever' | 'stranger' | 'horde';
+  kind: 'theft' | 'birthday' | 'fever' | 'stranger' | 'horde' | 'joiner';
   survivorIds: number[];
   expiresAt: number;
-  /** H5c3: el viaje que espera esta respuesta (horda) y el hexágono de la horda. */
+  /** H5c3: el viaje de esta decisión (horda o quien pide unirse) y el hexágono de la horda. */
   travelId?: number;
   hex?: number;
   /** Robo: si el sospechoso es el culpable de verdad. */
@@ -724,6 +724,8 @@ export interface Travel {
   nextEventAt?: number;
   /** H5c3: la decisión que esperan (una horda delante) para seguir. */
   waiting?: number;
+  /** H5c3: quien pide unirse, junto al grupo, hasta que la base conteste. */
+  joiner?: Survivor;
   members: Survivor[];
   /** Los que aún tienen que salir del mapa (el viaje empieza cuando han salido todos). */
   pending: number[];

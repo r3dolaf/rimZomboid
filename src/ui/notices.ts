@@ -18,6 +18,7 @@ const DECISION_TONE: Record<Decision['kind'], Tone> = {
   fever: 'bad',
   stranger: 'mixed',
   horde: 'bad', // H5c3
+  joiner: 'mixed',
 };
 
 /**

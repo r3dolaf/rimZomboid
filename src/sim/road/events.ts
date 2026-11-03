@@ -9,6 +9,7 @@ import { logEvent } from '../log';
 import { nextFloat, nextInt, pick } from '../rng';
 import { practice } from '../skills';
 import { startHorde } from './horde';
+import { startJoiner } from './joiner';
 import type { Atlas, RoadGround, RoadKind, Survivor, Travel, World } from '../types';
 
 /** El terreno de `hex` para los sucesos (la carretera o un puente, «road»). */
@@ -99,6 +100,7 @@ export function roadForage(base: World, t: Travel, hex: number): void {
 export function roadEvent(base: World, t: Travel, hex: number, kind: RoadKind): void {
   const rng = base.common.expedition.rng;
   if (kind === 'horde') startHorde(base, t);
+  else if (kind === 'joiner') startJoiner(base, t);
   else if (kind === 'zombies')
     roadZombies(base, t, hex, nextInt(rng, ROAD_ZOMBIES[0], ROAD_ZOMBIES[1]));
   else if (kind === 'loot') roadLoot(base, t, hex);

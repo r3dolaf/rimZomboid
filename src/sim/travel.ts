@@ -24,6 +24,7 @@ import { WEAPONS } from './jobs/weapons';
 import { logEvent } from './log';
 import { catchUp, reveal, siteMap } from './sites';
 import { roadEvent } from './road/events';
+import { endRoadWaits } from './road/joiner';
 import { rollRoad } from './road/roll';
 import { sideFrom } from './atlas/hex';
 import { findRoute, hexHours } from './atlas/route';
@@ -43,7 +44,7 @@ export function travelSystem(base: World): void {
     if (t.members.length === 0) {
       base.common.expedition.travels = base.common.expedition.travels.filter((x) => x !== t);
       // Lo que esperaba ese viaje se va con él (H5c3).
-      base.decisions = base.decisions.filter((d) => d.travelId !== t.id);
+      endRoadWaits(base, t);
       continue;
     }
     if (!day || t.waiting !== undefined) continue;
@@ -170,6 +171,8 @@ export function arrive(base: World, t: Travel): void {
   const ex = base.common.expedition;
   const names = t.members.map((s) => s.name);
   if (t.kind === 'explore' && !t.explored) return exploreHere(base, t);
+  if (t.kind !== 'go' || ex.sites.find((x) => x.id === t.siteId)?.state === 'known')
+    endRoadWaits(base, t); // llegan: quien pedía unirse se va (H5c3)
   if (t.kind === 'go') {
     const info = ex.sites.find((x) => x.id === t.siteId);
     if (!info || info.state !== 'known') {

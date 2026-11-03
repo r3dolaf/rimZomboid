@@ -5,6 +5,7 @@ import { resolveBirthday } from './birthday';
 import { resolveTheft } from './theft';
 import { resolveFever } from '../illness';
 import { resolveHorde } from '../road/horde';
+import { resolveJoiner } from '../road/joiner';
 import type { Decision, World } from '../types';
 
 export type DecisionOption = 0 | 1 | 2;
@@ -16,6 +17,7 @@ export const DEFAULT_OPTION: Record<Decision['kind'], DecisionOption> = {
   birthday: 1,
   fever: 0,
   horde: 0, // H5c3: rodear
+  joiner: 1, // H5c3: se va
 };
 
 /** `timedOut`, si nadie contestó y se aplica la de por defecto. */
@@ -34,6 +36,7 @@ const RESOLVERS: Record<Decision['kind'], Resolver> = {
   birthday: (w, d, option) => resolveBirthday(w, d, option === 0 ? 0 : 1),
   fever: (w, d, option) => resolveFever(w, d, option),
   horde: (w, d, option) => resolveHorde(w, d, option === 0 ? 0 : 1),
+  joiner: (w, d, option) => resolveJoiner(w, d, option === 0 ? 0 : 1),
 };
 
 /** Quita la decisión y aplica la opción elegida. */

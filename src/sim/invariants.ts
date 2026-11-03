@@ -42,7 +42,10 @@ const BUILDING_KINDS: ReadonlySet<BuildingKind> = new Set(Object.keys(BUILDINGS)
 export function checkInvariants(w: World): string[] {
   const maps = w.mapId === 0 ? [w, ...w.siteMaps.map((m) => m.world)] : [w];
   const problems: string[] = [];
-  const travelers = w.common.expedition.travels.flatMap((t) => t.members);
+  // (Con quien pide unirse por el camino, H5c3.)
+  const travelers = w.common.expedition.travels.flatMap((t) =>
+    t.joiner ? [...t.members, t.joiner] : t.members,
+  );
   const everyone = [...maps.flatMap((m) => m.survivors), ...travelers];
   const everyoneIds = new Set(everyone.map((s) => s.id));
   if (everyoneIds.size !== everyone.length) problems.push('id repetido entre mapas');
@@ -241,7 +244,11 @@ function checkMap(w: World, everyone: readonly Survivor[], allBeds: readonly Bed
     if (ids.has(d.id) || strangerIds.has(d.id))
       problems.push(`${d.name} (#${d.id}): ha muerto y sigue en el mundo`);
   // (Las del camino, H5c3: los de su viaje.)
-  const travelers = new Set(w.common.expedition.travels.flatMap((t) => t.members.map((s) => s.id)));
+  const travelers = new Set(
+    w.common.expedition.travels.flatMap((t) =>
+      [...t.members, ...(t.joiner ? [t.joiner] : [])].map((s) => s.id),
+    ),
+  );
   for (const d of w.decisions)
     for (const id of d.survivorIds)
       if (!ids.has(id) && !strangerIds.has(id) && !(d.travelId !== undefined && travelers.has(id)))

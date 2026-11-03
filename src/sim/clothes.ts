@@ -364,7 +364,7 @@ export function forEachTravelerPieceList(
       if (isBag(p)) each(p.items.pieces, () => `dentro de la bolsa #${p.id} (${where()})`);
   };
   for (const t of w.common.expedition.travels)
-    for (const s of t.members) {
+    for (const s of t.joiner ? [...t.members, t.joiner] : t.members) {
       each(s.carrying.pieces, () => `carga de ${s.name} (de viaje)`);
       each(s.worn, () => `ropa de ${s.name} (de viaje)`, true);
       each(wornBags(s), () => `bolsas de ${s.name} (de viaje)`);

@@ -700,6 +700,11 @@ export const es = {
       text: (who: string) => `${who}: hay una horda delante. ¿La rodeáis o la atravesáis?`,
       options: ['Rodear (más horas)', 'Atravesar (más riesgo)'],
     },
+    joiner: {
+      title: 'Alguien en el camino',
+      text: (who: string) => `${who} pide unirse al grupo.`,
+      options: ['Aceptar', 'Rechazar'],
+    },
   } satisfies Record<
     Decision['kind'],
     {
@@ -891,6 +896,9 @@ export const es = {
         ? `${who} ${many ? 'atraviesan' : 'atraviesa'} una horda de ${zombies} zombis ${where}: ${out}`
         : `${who} ${many ? 'se cruzan' : 'se cruza'} con ${zombies} zombis ${where}: ${out}`;
     },
+    roadJoined: (who: string, group: string) => `${who} se une a ${group} por el camino`,
+    roadJoinerLeft: (who: string, full: boolean) =>
+      full ? `${who} no cabe en la colonia y sigue su camino` : `${who} sigue su camino`,
     roadHorde: (who: string, many: boolean) =>
       `${who} ${many ? 'rodean' : 'rodea'} una horda: el camino será más largo`,
     roadLoot: (who: string, many: boolean, car: boolean, found: string, left: boolean) =>

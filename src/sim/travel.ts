@@ -42,9 +42,11 @@ export function travelSystem(base: World): void {
     for (const s of [...t.members]) travelerTick(base, t, s, !day);
     if (t.members.length === 0) {
       base.common.expedition.travels = base.common.expedition.travels.filter((x) => x !== t);
+      // Lo que esperaba ese viaje se va con él (H5c3).
+      base.decisions = base.decisions.filter((d) => d.travelId !== t.id);
       continue;
     }
-    if (!day) continue;
+    if (!day || t.waiting !== undefined) continue;
     t.hoursLeft -= 1 / TICKS_PER_HOUR;
     while (t.hoursLeft <= 1e-9 && base.common.expedition.travels.includes(t)) step(base, t);
   }

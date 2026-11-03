@@ -2,18 +2,19 @@
 import { DECISION_TICKS } from './balance';
 import type { Decision, World } from './types';
 
-/** Añade una decisión pendiente que caduca en DECISION_TICKS. */
+/** Añade una decisión pendiente que caduca en `ticks` (DECISION_TICKS si no se dice). */
 export function addDecision(
   w: World,
   kind: Decision['kind'],
   survivorIds: number[],
-  extra: Partial<Pick<Decision, 'guilty' | 'worse'>> = {},
+  extra: Partial<Pick<Decision, 'guilty' | 'worse' | 'travelId' | 'hex'>> = {},
+  ticks: number = DECISION_TICKS,
 ): Decision {
   const d: Decision = {
     id: w.common.nextId++,
     kind,
     survivorIds,
-    expiresAt: w.tick + DECISION_TICKS,
+    expiresAt: w.tick + ticks,
     ...extra,
   };
   w.decisions.push(d);

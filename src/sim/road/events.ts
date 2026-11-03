@@ -8,6 +8,7 @@ import type { ItemKind } from '../items';
 import { logEvent } from '../log';
 import { nextFloat, nextInt, pick } from '../rng';
 import { practice } from '../skills';
+import { startHorde } from './horde';
 import type { Atlas, RoadGround, RoadKind, Survivor, Travel, World } from '../types';
 
 /** El terreno de `hex` para los sucesos (la carretera o un puente, «road»). */
@@ -27,7 +28,7 @@ export function fightRisk(s: Survivor, zombies: number, people: number): number 
 }
 
 /** Pelean con `n` zombis: cada uno puede salir herido (arañazo o mordisco); todos practican. */
-export function roadZombies(base: World, t: Travel, hex: number, n: number): void {
+export function roadZombies(base: World, t: Travel, hex: number, n: number, horde = false): void {
   const rng = base.common.expedition.rng;
   const hurt: { name: string; wound: 'scratch' | 'bite' }[] = [];
   for (const s of t.members) {
@@ -43,6 +44,7 @@ export function roadZombies(base: World, t: Travel, hex: number, n: number): voi
     zombies: n,
     hurt,
     ground: roadGround(base.common.atlas, hex),
+    ...(horde ? { horde: true } : {}),
   });
 }
 
@@ -93,10 +95,12 @@ export function roadForage(base: World, t: Travel, hex: number): void {
   });
 }
 
-/** Lo que pasa al entrar en `hex` (la horda y quien pide unirse, en sus tareas). */
+/** Lo que pasa al entrar en `hex`. */
 export function roadEvent(base: World, t: Travel, hex: number, kind: RoadKind): void {
   const rng = base.common.expedition.rng;
-  if (kind === 'zombies') roadZombies(base, t, hex, nextInt(rng, ROAD_ZOMBIES[0], ROAD_ZOMBIES[1]));
+  if (kind === 'horde') startHorde(base, t);
+  else if (kind === 'zombies')
+    roadZombies(base, t, hex, nextInt(rng, ROAD_ZOMBIES[0], ROAD_ZOMBIES[1]));
   else if (kind === 'loot') roadLoot(base, t, hex);
   else if (kind === 'forage') roadForage(base, t, hex);
 }

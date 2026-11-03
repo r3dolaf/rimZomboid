@@ -24,7 +24,10 @@ export type LogEvent =
       zombies: number;
       hurt: { name: string; wound: 'scratch' | 'bite' }[];
       ground: RoadGround;
+      /** Atravesando una horda. */
+      horde?: boolean;
     }
+  | { kind: 'roadHorde'; names: string[]; around: boolean }
   | {
       kind: 'roadLoot';
       names: string[];

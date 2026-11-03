@@ -16,12 +16,16 @@ export function hexHours(atlas: Atlas, i: number): number {
 export const plannedHours = (atlas: Atlas, i: number) =>
   atlas.seen[i] === 1 ? hexHours(atlas, i) : HEX_HOURS.field;
 
-/** La ruta de `from` a `to` pasando por `waypoints` en orden (los extremos incluidos), o `null`. */
+/**
+ * La ruta de `from` a `to` pasando por `waypoints` en orden (los extremos incluidos), o `null`. Sin
+ * entrar en los hexágonos de `blocked` (H5c3: rodear una horda).
+ */
 export function findRoute(
   atlas: Atlas,
   from: number,
   to: number,
   waypoints: readonly number[] = [],
+  blocked?: ReadonlySet<number>,
 ): number[] | null {
   const stops = [from, ...waypoints, to];
   const route = [from];
@@ -30,7 +34,7 @@ export function findRoute(
       atlas,
       stops[k - 1]!,
       stops[k]!,
-      (i) => plannedHours(atlas, i),
+      (i) => (blocked?.has(i) && i !== from ? Infinity : plannedHours(atlas, i)),
       HEX_HOURS.road,
     );
     if (!leg) return null;

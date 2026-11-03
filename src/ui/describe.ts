@@ -691,7 +691,11 @@ function logSentence(e: LogEntry, w: World, here: World): string {
         e.zombies,
         l.roadWhere[e.ground],
         e.hurt,
+        e.horde,
       );
+      break;
+    case 'roadHorde':
+      text = l.roadHorde(listNames(e.names), e.names.length > 1);
       break;
     case 'roadLoot':
       text = l.roadLoot(

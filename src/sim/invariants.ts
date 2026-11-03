@@ -112,6 +112,8 @@ function checkAtlas(w: World, problems: string[]): void {
         problems.push(`${who}: la ruta salta de ${t.path[k - 1]} a ${t.path[k]}`);
     if (!(t.hoursLeft >= 0) || !Number.isFinite(t.hoursLeft))
       problems.push(`${who}: le quedan ${t.hoursLeft} h`);
+    if (t.waiting !== undefined && !w.decisions.some((d) => d.id === t.waiting))
+      problems.push(`${who}: espera una decisión que no está (${t.waiting})`);
   }
 }
 
@@ -238,9 +240,11 @@ function checkMap(w: World, everyone: readonly Survivor[], allBeds: readonly Bed
   for (const d of w.common.dead)
     if (ids.has(d.id) || strangerIds.has(d.id))
       problems.push(`${d.name} (#${d.id}): ha muerto y sigue en el mundo`);
+  // (Las del camino, H5c3: los de su viaje.)
+  const travelers = new Set(w.common.expedition.travels.flatMap((t) => t.members.map((s) => s.id)));
   for (const d of w.decisions)
     for (const id of d.survivorIds)
-      if (!ids.has(id) && !strangerIds.has(id))
+      if (!ids.has(id) && !strangerIds.has(id) && !(d.travelId !== undefined && travelers.has(id)))
         problems.push(`decisión ${d.id} (${d.kind}): el superviviente #${id} no existe`);
   for (const v of [
     w.narrator.nextEventAt,

@@ -656,9 +656,12 @@ export interface Narrator {
 /** Algo que el jugador tiene que decidir; si no contesta antes de `expiresAt`, se aplica la opción por defecto. */
 export interface Decision {
   id: number;
-  kind: 'theft' | 'birthday' | 'fever' | 'stranger';
+  kind: 'theft' | 'birthday' | 'fever' | 'stranger' | 'horde';
   survivorIds: number[];
   expiresAt: number;
+  /** H5c3: el viaje que espera esta respuesta (horda) y el hexágono de la horda. */
+  travelId?: number;
+  hex?: number;
   /** Robo: si el sospechoso es el culpable de verdad. */
   guilty?: boolean;
   /** Fiebre (H5): el segundo aviso, "está peor". */

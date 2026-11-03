@@ -1274,6 +1274,10 @@ export const ROAD_LOOT: {
     ['bat', 0.5],
   ],
 };
+/** Horas para contestar una decisión del camino (si no, la de por defecto). */
+export const ROAD_DECISION_HOURS = 2;
+/** Zombis al atravesar una horda. */
+export const ROAD_HORDE: [number, number] = [6, 10];
 /** Latas que se encuentran buscando comida. */
 export const ROAD_FORAGE: [number, number] = [1, 2];
 /** H5c3 §3: latas de más por persona en la comida propuesta para un viaje. */

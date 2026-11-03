@@ -105,6 +105,8 @@ export interface WorldGroup {
   y: number;
   people: number;
   label: string;
+  /** H5c3: esperan una respuesta (una horda delante o alguien que pide unirse). */
+  waiting: boolean;
 }
 
 /** Los grupos que ya han salido, entre su hexágono y el siguiente según lo que les falta. */
@@ -129,6 +131,7 @@ export function worldGroups(base: World): WorldGroup[] {
         y: a.y + (b.y - a.y) * frac,
         people: t.members.length,
         label: t.members.map((s) => s.name).join(', '),
+        waiting: t.waiting !== undefined || t.joiner !== undefined,
       };
     });
 }

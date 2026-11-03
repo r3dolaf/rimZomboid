@@ -488,6 +488,10 @@ export const es = {
     cancel: 'Cancelar',
     noRoute: 'No hay camino',
     stopsHint: 'Arrastra la ruta para poner una parada; botón derecho sobre una parada, quitarla',
+    // H5c3: un grupo que espera.
+    waitingHorde: 'Esperando: una horda delante',
+    joinerWants: (who: string) => `${who} quiere unirse`,
+    storm: 'Esperando a que pase la tormenta',
   },
   expeditions: {
     button: 'Expediciones',
@@ -519,6 +523,10 @@ export const es = {
     from: 'Desde',
     to: 'A',
     fromSite: 'Desde un sitio cargan lo que puedan del campamento.',
+    // H5c3: la comida propuesta para el viaje.
+    foodNeed: (hours: number, cans: number) =>
+      `Para este viaje (unas ${hours} h de camino por trayecto): unas ${cans} latas por persona`,
+    foodShort: 'Os falta comida para el viaje',
     onMap: 'Ver en el mapa',
     zoneOnMap: 'La zona elegida en el mapa',
     chooseSite: 'Elige un sitio…',
@@ -632,6 +640,9 @@ export const es = {
   /** Lados del mapa (0 norte, 1 sur, 2 oeste, 3 este). */
   sides: ['norte', 'sur', 'oeste', 'este'],
   notices: {
+    roadZombies: 'Zombis en el camino', // H5c3
+    roadJoined: 'Alguien se une por el camino',
+    roadJoinerLeft: 'Sigue su camino',
     waterCut: 'Se ha cortado el agua', // H5b
     skillUp: 'Mejora',
     // H5

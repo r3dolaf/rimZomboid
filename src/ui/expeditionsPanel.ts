@@ -1,7 +1,9 @@
 import { es } from '../i18n/es';
 import { ACTIVE_SITES_MAX, EXPLORE_DIST, EXPLORE_MAX, TICKS_PER_DAY } from '../sim/balance';
 import { sideFrom } from '../sim/atlas/hex';
+import { findRoute, routeHours } from '../sim/atlas/route';
 import { activeSiteIds, canGo, hexOfMap, hexToward } from '../sim/expeditions';
+import { tripFood } from '../sim/road/food';
 import { allMaps } from '../sim/game';
 import { ITEM_KINDS, type ItemKind } from '../sim/items';
 import { issue, type Order } from '../sim/orders';
@@ -94,6 +96,8 @@ export function mountExpeditionsPanel(
   let siteId: number | null = null;
   const members = new Set<number>();
   let items: Partial<Record<ItemKind, number>> = {};
+  /** Si el jugador ha cambiado la comida (H5c3): entonces ya no se propone hasta otro destino. */
+  let foodTouched = false;
   let side: MapSide = 0;
   /** La zona a explorar elegida en el mapa del mundo; si no, hacia `side`. */
   let zone: number | null = null;
@@ -139,6 +143,21 @@ export function mountExpeditionsPanel(
     planned = key;
     opts.plan?.set(ends?.[0] ?? null, ends?.[1] ?? null);
   };
+  /** Las horas de ruta hasta el destino elegido (con las paradas planeadas) y la comida por persona. */
+  const tripPlan = (): { hours: number; need: number } | null => {
+    const w = base();
+    const { atlas } = w.common;
+    const site = known().find((s) => s.id === siteId);
+    if (!site) return null;
+    const p = opts.plan;
+    const route =
+      p && p.from === atlas.base && p.to === site.hex
+        ? p.route(atlas)
+        : findRoute(atlas, atlas.base, site.hex);
+    if (!route) return null;
+    const hours = routeHours(atlas, route);
+    return { hours, need: tripFood(hours, true) };
+  };
   /** Las paradas de la ruta planeada, si va de `a` a `b`. */
   const stops = (a: number | null, b: number): { waypoints?: number[] } => {
     const p = opts.plan;
@@ -173,6 +192,7 @@ export function mountExpeditionsPanel(
     const w = base();
     if (b.dataset.act === 'pick') {
       siteId = Number(b.dataset.site);
+      foodTouched = false;
       focus = 'send';
     } else if (b.dataset.act === 'map') opts.onShowHex?.(Number(b.dataset.hex));
     else if (b.dataset.act === 'return')
@@ -206,6 +226,7 @@ export function mountExpeditionsPanel(
       explorers.clear();
     } else if (b.dataset.bag === 'group' && b.dataset.item) {
       const k = b.dataset.item as ItemKind;
+      if (k === 'food') foodTouched = true;
       const n = (items[k] ?? 0) + Number(b.dataset.delta);
       items[k] = Math.max(0, Math.min(w.storage.items[k], n));
     } else return;
@@ -215,6 +236,7 @@ export function mountExpeditionsPanel(
     const e = ev.target as HTMLSelectElement;
     if (e.dataset.testid === 'expedition-site') {
       siteId = e.value ? Number(e.value) : null;
+      foodTouched = false;
       focus = 'send';
     } else if (e.dataset.testid === 'expedition-from') {
       from = Number(e.value);
@@ -228,6 +250,7 @@ export function mountExpeditionsPanel(
       focus = 'explore';
     } else if (e.dataset.bag === 'group' && e.value) {
       const k = e.value as ItemKind;
+      if (k === 'food') foodTouched = true;
       if ((items[k] ?? 0) === 0) items[k] = Math.min(1, base().storage.items[k]);
     }
   });
@@ -370,8 +393,14 @@ export function mountExpeditionsPanel(
     const dests = known().filter((s) => s.id !== from);
     if (siteId !== null && !dests.some((s) => s.id === siteId)) siteId = null;
     const limited = siteId !== null && !allowed(siteId);
+    // H5c3: la comida del viaje (ida y vuelta) para los que van, si no la ha tocado el jugador.
+    const trip = from === 0 ? tripPlan() : null;
+    if (trip && !foodTouched) items.food = Math.min(w.storage.items.food, trip.need * members.size);
+    const short = trip !== null && (items.food ?? 0) < trip.need * members.size;
     const view = {
       from,
+      trip,
+      short,
       froms: peopled().map((x) => [x.siteId, mapName(w, x.siteId)]),
       siteId,
       sites: dests.map((s) => [s.id, mapName(w, s.id)]),
@@ -409,6 +438,10 @@ export function mountExpeditionsPanel(
     send.dataset.act = 'send';
     send.dataset.testid = 'expedition-send';
     send.disabled = siteId === null || members.size === 0 || limited;
+    const food = el('div', undefined, 'muted');
+    food.dataset.testid = 'expedition-food';
+    if (trip) food.append(el('p', t.foodNeed(Math.round(trip.hours), trip.need)));
+    if (short) food.append(el('p', t.foodShort, 'warn'));
     form.replaceChildren(
       el('h3', t.groupTitle),
       el('p', t.from, 'label'),
@@ -418,7 +451,7 @@ export function mountExpeditionsPanel(
       el('p', t.who, 'label'),
       checkboxes('member', members, false, out, m),
       ...(from === 0
-        ? [el('p', t.items, 'label'), listEditor(listRows(items), 'group', 'expedition')]
+        ? [el('p', t.items, 'label'), listEditor(listRows(items), 'group', 'expedition'), food]
         : [el('p', t.fromSite, 'muted')]),
       limit,
       send,
@@ -484,6 +517,7 @@ export function mountExpeditionsPanel(
     },
     chooseSite(id) {
       siteId = id;
+      foodTouched = false;
       if (from === id) from = 0;
       focus = 'send';
     },

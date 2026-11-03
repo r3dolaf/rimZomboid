@@ -6,7 +6,9 @@ import { hexDistance } from '../sim/atlas/hex';
 import { findRoute, routeHours } from '../sim/atlas/route';
 import { canRedirect } from '../sim/expeditions';
 import { issue } from '../sim/orders';
-import type { World } from '../sim/types';
+import { decisionAnswered } from '../sim/decisions';
+import type { DecisionOption } from '../sim/events/resolve';
+import type { Decision, Travel, World } from '../sim/types';
 import { listNames, siteName, travelText } from './describe';
 import type { MapView } from './mapView';
 import type { RoutePlan } from './routePlan';
@@ -75,6 +77,18 @@ export function mountWorldCard(
     showing = next;
   };
 
+  /** Lo que espera un grupo (H5c3): sus decisiones (sin contestar aún) y la tormenta. */
+  const waits = (tr: Travel) => {
+    const out: { text: string; decision?: Decision }[] = [];
+    const open = (d: Decision | undefined) => (d && !decisionAnswered(base, d.id) ? d : undefined);
+    const horde = open(base.decisions.find((d) => d.kind === 'horde' && d.travelId === tr.id));
+    if (horde) out.push({ text: t.waitingHorde, decision: horde });
+    const joiner = open(base.decisions.find((d) => d.kind === 'joiner' && d.travelId === tr.id));
+    if (joiner && tr.joiner) out.push({ text: t.joinerWants(tr.joiner.name), decision: joiner });
+    if (base.tick < base.common.stormUntil) out.push({ text: t.storm });
+    return out;
+  };
+
   const button = (text: string, testid: string, act: () => void, title?: string) => {
     const b = el('button', text);
     b.type = 'button';
@@ -135,6 +149,7 @@ export function mountWorldCard(
               names: listNames(travel(s.travelId)!.members.map((x) => x.name)),
               text: travelText(base, travel(s.travelId)!),
               home: travel(s.travelId)!.kind !== 'back' && !travel(s.travelId)!.explored,
+              waits: waits(travel(s.travelId)!),
               hours:
                 s.kind === 'redirect' && s.to !== null
                   ? (() => {
@@ -178,6 +193,22 @@ export function mountWorldCard(
     }
     const tr = travel(s.travelId)!;
     out.push(el('p', travelText(base, tr)));
+    // Lo que espera (H5c3): una horda delante o quien pide unirse, con los botones de la decisión;
+    // o la tormenta.
+    for (const w of waits(tr)) {
+      out.push(el('p', w.text, 'muted'));
+      if (!w.decision) continue;
+      const d = w.decision;
+      const answer = el('div', undefined, 'buttons');
+      es.decisions[d.kind].options.forEach((label, i) =>
+        answer.append(
+          button(label, `world-card-${d.kind === 'horde' ? 'decide' : 'join'}-${i}`, () =>
+            issue(base, { type: 'decide', decisionId: d.id, option: i as DecisionOption }),
+          ),
+        ),
+      );
+      out.push(answer);
+    }
     const row = el('div', undefined, 'buttons');
     if (s.kind === 'group') {
       row.append(

@@ -83,6 +83,8 @@ export class WorldScene extends Phaser.Scene {
     { icon: Phaser.GameObjects.Text; label: Phaser.GameObjects.Text }
   >();
   private groupTexts = new Map<number, Phaser.GameObjects.Text>();
+  /** «❗» sobre los grupos que esperan una respuesta (H5c3). */
+  private warnTexts = new Map<number, Phaser.GameObjects.Text>();
   private hover = -1;
   /** Dónde se pulsó (en pantalla): soltar cerca es un clic; lejos, arrastrar la cámara. */
   private downAt: Point | null = null;
@@ -274,12 +276,20 @@ export class WorldScene extends Phaser.Scene {
       }
       if (t.text !== `${grp.people}`) t.setText(`${grp.people}`);
       t.setPosition(grp.x, grp.y);
-    }
-    for (const [id, t] of this.groupTexts)
-      if (!groups.has(id)) {
-        t.destroy();
-        this.groupTexts.delete(id);
+      let warn = this.warnTexts.get(grp.travelId);
+      if (grp.waiting && !warn) {
+        warn = this.add.text(0, 0, '❗', { fontSize: '10px' }).setOrigin(0.5, 1).setDepth(1);
+        warn.setResolution(4);
+        this.warnTexts.set(grp.travelId, warn);
       }
+      warn?.setVisible(grp.waiting).setPosition(grp.x, grp.y - GROUP_RADIUS);
+    }
+    for (const texts of [this.groupTexts, this.warnTexts])
+      for (const [id, t] of texts)
+        if (!groups.has(id)) {
+          t.destroy();
+          texts.delete(id);
+        }
   }
 
   /** La ruta planeada, con sus paradas y las horas al final (y el punto que se arrastra). */

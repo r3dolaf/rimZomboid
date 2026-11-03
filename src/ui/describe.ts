@@ -708,7 +708,9 @@ function logSentence(e: LogEntry, w: World, here: World): string {
         listNames(e.names),
         e.names.length > 1,
         e.car,
-        formatItems({ ...emptyInventory(), ...e.items }),
+        Object.values(e.items).some((n) => n > 0)
+          ? formatItems({ ...emptyInventory(), ...e.items })
+          : '',
         e.left,
       );
       break;
@@ -820,6 +822,18 @@ export function noticeFor(e: LogEntry): NoticeInfo | null {
       return { tone: 'mixed', title: t.theftIgnored, focusId: e.suspectId };
     case 'strangerAccepted':
       return { tone: 'good', title: t.strangerAccepted, focusId: null };
+    // El camino (H5c3): rojo si hay un mordisco; sin heridos, solo en el registro.
+    case 'roadZombies':
+      if (e.hurt.length === 0) return null;
+      return {
+        tone: e.hurt.some((h) => h.wound === 'bite') ? 'bad' : 'mixed',
+        title: t.roadZombies,
+        focusId: null,
+      };
+    case 'roadJoined':
+      return { tone: 'good', title: t.roadJoined, focusId: null };
+    case 'roadJoinerLeft':
+      return { tone: 'mixed', title: t.roadJoinerLeft, focusId: null };
     case 'strangerLeft':
       return { tone: 'mixed', title: t.strangerLeft, focusId: null };
     // Zombis (H4b §8)

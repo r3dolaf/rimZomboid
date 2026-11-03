@@ -6,8 +6,8 @@ import { allMaps } from '../sim/game';
 import type { DecisionOption } from '../sim/events/resolve';
 import type { LogEntry } from '../sim/log';
 import { issue } from '../sim/orders';
-import type { Decision, Tone, World } from '../sim/types';
-import { formatItems, logText, mapName, noticeFor, personName } from './describe';
+import type { Decision, Survivor, Tone, World } from '../sim/types';
+import { formatItems, listNames, logText, mapName, noticeFor, personName } from './describe';
 import { pauses, shows, type NoticePrefs } from './noticePrefs';
 import './panels.css';
 
@@ -121,17 +121,26 @@ export function mountNotices(
   /** Una decisión del mapa `w` (la base o un sitio): se contesta allí. */
   function addDecision(d: Decision, w: World): void {
     const t = es.decisions[d.kind];
+    // Las del camino (H5c3), de un viaje: el grupo, o quien pide unirse.
+    const travel = w.common.expedition.travels.find((x) => x.id === d.travelId);
+    const newcomer = (s: Survivor) => [
+      t.text(s.name),
+      s.traits.map((tr) => es.traits[tr].name).join(', '),
+      es.strangerCarrying(formatItems(s.carrying)),
+    ];
     const lines =
       d.kind === 'stranger'
         ? (w.stranger?.survivors ?? [])
             .filter((s) => d.survivorIds.includes(s.id))
-            .flatMap((s) => [
-              t.text(s.name),
-              s.traits.map((tr) => es.traits[tr].name).join(', '),
-              es.strangerCarrying(formatItems(s.carrying)),
-            ])
-        : [(d.worse && t.worse ? t.worse : t.text)(name(d.survivorIds[0]!))];
-    const focusId = d.kind === 'stranger' ? null : d.survivorIds[0]!;
+            .flatMap(newcomer)
+        : d.kind === 'joiner'
+          ? travel?.joiner
+            ? newcomer(travel.joiner)
+            : []
+          : d.kind === 'horde'
+            ? [t.text(listNames((travel?.members ?? []).map((s) => s.name)))]
+            : [(d.worse && t.worse ? t.worse : t.text)(name(d.survivorIds[0]!))];
+    const focusId = d.travelId !== undefined || d.kind === 'stranger' ? null : d.survivorIds[0]!;
     const title = w.mapId === 0 ? t.title : `${mapName(w, w.mapId)}: ${t.title}`;
     const el = card(DECISION_TONE[d.kind], title, lines, focusId);
     el.classList.add('decision');

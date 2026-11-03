@@ -75,7 +75,14 @@ export function createPrefsStore(storage: Store | null = local()): PrefsStore {
   };
 }
 
-const DECISIONS: readonly Decision['kind'][] = ['theft', 'birthday', 'fever', 'stranger'];
+const DECISIONS: readonly Decision['kind'][] = [
+  'theft',
+  'birthday',
+  'fever',
+  'stranger',
+  'horde', // H5c3
+  'joiner',
+];
 
 /** Los tipos de aviso por grupos, en el orden del menú. */
 export const NOTICE_GROUPS: readonly {
@@ -102,9 +109,14 @@ export const NOTICE_GROUPS: readonly {
       'strangerAccepted',
       'strangerLeft',
       'waterCut', // H5b
+      'roadJoined', // H5c3
+      'roadJoinerLeft',
     ],
   },
-  { id: 'zombies', kinds: ['downed', 'zombiesInBase', 'zombieSighted', 'broken', 'fled'] },
+  {
+    id: 'zombies',
+    kinds: ['downed', 'zombiesInBase', 'zombieSighted', 'broken', 'fled', 'roadZombies'],
+  },
   {
     id: 'hordes',
     kinds: [
@@ -136,6 +148,7 @@ export const NOTICE_GROUPS: readonly {
 
 /** Los que pueden salir rojos (por defecto pausan): para marcar la casilla Pausa del menú. */
 export const CAN_BE_RED: ReadonlySet<string> = new Set([
+  'roadZombies', // H5c3: con un mordisco
   'jealousy',
   'clash',
   'grief',

@@ -1059,3 +1059,8 @@ body.with-map-tabs .work-panel {
   gap: 6px;
   margin-top: 8px;
 }
+
+/* H5c3: falta comida para el viaje. */
+.expeditions-panel .warn {
+  color: #e0a040;
+}

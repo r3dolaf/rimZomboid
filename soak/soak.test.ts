@@ -43,9 +43,9 @@ const DAYS = Number(process.env.SOAK_DAYS || 30);
 /** Descansando o derribado (H5): no moverse en todo el día no es estar bloqueado. */
 const lying = (s: Survivor) => s.action.type === 'rest' || s.action.type === 'downed';
 
-/** Una respuesta al azar (la fiebre, H5, tiene tres opciones). */
+/** Una respuesta al azar (la fiebre, H5, tiene tres opciones; con los antibióticos, H6a, cuatro). */
 const answer = (r: ReturnType<typeof createRng>, d: Decision) =>
-  nextInt(r, 0, d.kind === 'fever' ? 2 : 1) as 0 | 1 | 2;
+  nextInt(r, 0, d.kind === 'fever' ? 3 : 1) as 0 | 1 | 2 | 3;
 
 test('SOAK_DAYS es un número de días válido', () => {
   expect(Number.isInteger(DAYS) && DAYS > 0).toBe(true);

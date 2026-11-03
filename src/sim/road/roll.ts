@@ -42,7 +42,9 @@ export function roadWeights(base: World, t: Travel, hex: number): Record<RoadKin
     w.zombies += ROAD_TOWN_BONUS.zombies;
     w.horde += ROAD_TOWN_BONUS.horde;
   }
-  if (t.waiting !== undefined) {
+  // Nada que pida respuesta mientras se espera otra, ni al llegar (salvo a la zona a explorar).
+  const last = t.at >= t.path.length - 1 && !(t.kind === 'explore' && !t.explored);
+  if (t.waiting !== undefined || t.joiner || last) {
     w.horde = 0;
     w.joiner = 0;
   }

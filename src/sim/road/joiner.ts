@@ -1,12 +1,14 @@
 // Alguien pide unirse por el camino (spec H5c3 §2): una persona nueva, como el desconocido de la base,
 // espera junto al grupo (que no se para) a que la base conteste. Aceptar: se une al grupo (si cabe en
 // la colonia); rechazar o sin respuesta: se va con lo suyo.
-import { COLONY_MAX, ROAD_DECISION_HOURS, TICKS_PER_HOUR } from '../balance';
+import { CHAT_EVERY_MAX, COLONY_MAX, ROAD_DECISION_HOURS, TICKS_PER_HOUR } from '../balance';
 import { wornBags } from '../bags';
 import { piecesGone } from '../clothes';
 import { addDecision } from '../decisions';
 import { logEvent } from '../log';
+import { nextInt } from '../rng';
 import { newStranger } from '../systems/strangers';
+import { defaultWork } from '../world';
 import type { Decision, Travel, World } from '../types';
 import { colonySize } from './roll';
 
@@ -39,6 +41,11 @@ export function resolveJoiner(base: World, d: Decision, option: 0 | 1): void {
   if (colonySize(base) + 1 > COLONY_MAX) return leaves(base, t, true);
   const s = t.joiner;
   t.joiner = undefined;
+  // Como quien se acepta en la base: sus trabajos, el primer atuendo y cuenta como unido.
+  s.work = defaultWork(s.traits);
+  s.outfitId = base.common.outfits[0]!.id;
+  s.nextChatAt = base.tick + nextInt(base.common.expedition.rng, 0, CHAT_EVERY_MAX);
+  base.common.stats.joined.push(s.name);
   logEvent(base, { kind: 'roadJoined', name: s.name, names: t.members.map((x) => x.name) });
   t.members.push(s);
 }

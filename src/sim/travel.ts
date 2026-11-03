@@ -25,6 +25,7 @@ import { logEvent } from './log';
 import { catchUp, reveal, siteMap } from './sites';
 import { roadEvent } from './road/events';
 import { endRoadWaits } from './road/joiner';
+import { giveBed } from './systems/strangers';
 import { rollRoad } from './road/roll';
 import { sideFrom } from './atlas/hex';
 import { findRoute, hexHours } from './atlas/route';
@@ -137,6 +138,9 @@ function travelerTick(base: World, t: Travel, s: Survivor, night: boolean): void
 /** Muere por el camino: se pierde con todo lo que llevaba (en las cuentas); los demás se enteran. */
 function roadDeath(base: World, t: Travel, s: Survivor, cause: DeathCause): void {
   t.members = t.members.filter((x) => x !== s);
+  // Las decisiones del camino de su grupo siguen con los demás (H5c3).
+  for (const d of base.decisions)
+    if (d.travelId === t.id) d.survivorIds = d.survivorIds.filter((id) => id !== s.id);
   const c = base.common;
   piecesGone(base, [...s.worn, ...s.carrying.pieces, ...wornBags(s)]);
   c.woodLog.wasted += s.carrying.wood;
@@ -156,6 +160,8 @@ function enterMap(w: World, members: Survivor[], at: Point): void {
     s.action = { type: 'idle', ticksLeft: 0 };
     s.path = [];
     w.survivors.push(s);
+    // Quien se unió por el camino (H5c3) tiene cama al llegar a la base, si la hay.
+    if (w.mapId === 0 && s.bedId === null) giveBed(w, s);
   }
 }
 

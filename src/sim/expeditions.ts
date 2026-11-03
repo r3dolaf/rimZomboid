@@ -1,7 +1,7 @@
 // Expediciones (spec H5c1 §4): mandar un grupo a un sitio, prepararse en el almacén con la lista
 // del grupo, ir al borde de ese lado y salir del mapa; el viaje empieza cuando han salido todos.
 import { ACTIVE_SITES_MAX, EXPLORE_FOOD, EXPLORE_MAX, HEX_HOURS } from './balance';
-import { hexIndex, hexOf, sideFrom } from './atlas/hex';
+import { hexesWithin, hexIndex, hexOf, sideFrom } from './atlas/hex';
 import { findRoute, hexHours, routeHours } from './atlas/route';
 import { tripFood } from './road/food';
 import type { ExpeditionOrder } from './orders';
@@ -217,6 +217,15 @@ function redirect(
   t.path = path;
   t.at = 0;
   t.hoursLeft = path.length > 1 ? firstHours(base.common.atlas, path[1]!) : 0;
+  // Esperando ante una horda (H5c3): si la nueva ruta no pasa por ella ni al lado, siguen sin más.
+  const horde = base.decisions.find((d) => d.id === t.waiting && d.kind === 'horde');
+  if (horde?.hex !== undefined) {
+    const zone = new Set(hexesWithin(base.common.atlas, horde.hex, 1));
+    if (!path.slice(1).some((i) => zone.has(i))) {
+      t.waiting = undefined;
+      base.decisions = base.decisions.filter((d) => d !== horde);
+    }
+  }
 }
 
 const travelOf = (w: World, s: Survivor) =>

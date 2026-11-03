@@ -252,6 +252,20 @@ export function leaveStrangers(w: World, run = false): void {
   }
 }
 
+/** Una cama en la base: primero una construida que esté libre (H4a); si no, uno de los sitios de serie. */
+export function giveBed(w: World, s: Survivor): void {
+  const spare = w.beds.find((b) => b.ownerId === null && b.medical !== true);
+  const free = baseLayout(w.base).beds.find((p) => freeFloor(w, p));
+  if (spare) {
+    spare.ownerId = s.id;
+    s.bedId = spare.id;
+  } else if (free) {
+    const id = w.common.nextId++; // único en todos los mapas (H5c1)
+    w.beds.push({ id, pos: free, ownerId: s.id });
+    s.bedId = id;
+  }
+}
+
 /** Se unen a la colonia (con cama mientras quede). Si no caben todos, no entra nadie y se van. */
 export function acceptStrangers(w: World): void {
   const st = w.stranger;
@@ -268,17 +282,7 @@ export function acceptStrangers(w: World): void {
     s.work = defaultWork(s.traits);
     s.outfitId = w.common.outfits[0]!.id; // H5b: el primer atuendo
     s.nextChatAt = w.tick + nextInt(w.rng, 0, CHAT_EVERY_MAX);
-    // Primero una cama construida que esté libre (H4a); si no, uno de los sitios de serie.
-    const spare = w.beds.find((b) => b.ownerId === null && b.medical !== true);
-    const free = baseLayout(w.base).beds.find((p) => freeFloor(w, p));
-    if (spare) {
-      spare.ownerId = s.id;
-      s.bedId = spare.id;
-    } else if (free) {
-      const id = w.common.nextId++; // único en todos los mapas (H5c1)
-      w.beds.push({ id, pos: free, ownerId: s.id });
-      s.bedId = id;
-    }
+    giveBed(w, s);
     w.survivors.push(s);
   }
   w.stranger = null;

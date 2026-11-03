@@ -60,3 +60,25 @@ Lo aprobado por el usuario:
   - Objetivo con expediciones: hacia el día 25.
   - Si no se llega, se ajustan las cantidades de `SITE_LOOT` y se apunta aquí (§4) y en la hoja de
     ruta.
+
+## 4. Equilibrio y cambios tras la sonda y la revisión
+
+- **El mundo, con sus especialidades:** la sonda mostró que casi no había pueblecitos, naves ni
+  gasolineras (0–4 pueblecitos por mundo). Ahora se colocan primero un pueblecito al lado de cada
+  pueblo y una nave a 2 hexágonos, y 4–6 gasolineras en la carretera (`ATLAS_GAS`); el resto, al
+  azar como antes.
+- **Antibióticos en los sitios:** farmacia 4–6, gasolinera 1–2, casa 0–1. Al volver, son lo primero
+  que se carga.
+- **Sonda** (36 semillas, Equilibrado y normal, contestando con sensatez y dando antibióticos si
+  hay; con expediciones, yendo a por antibióticos cuando quedan menos de 2):
+  - **Sin expediciones:** cae hacia el día 19,7; 10 de 36 llegan al día 30.
+  - **Con expediciones:** hacia el día 20,9; 13 de 36 llegan al día 30.
+  - **No se llega al objetivo (día 25).** La mitad de las infecciones son de mordisco, que no se
+    curan. Muchos antibióticos se gastan en gripes, mordiscos o tarde: de media se toman 2,9 por
+    partida y curan 0,7.
+  - Para mejorar más habría que tocar otra cosa (menos mordiscos, más tiempo para dar los
+    antibióticos o que frenen también el mordisco): se le plantea al usuario.
+- **Cambios tras la revisión:**
+  - Quien cambia de mapa con fiebre sin decidir recupera su aviso al llegar.
+  - Los sitios especiales (alijo, peligroso) no anuncian la especialidad de su tipo.
+  - La gasolinera dice «latas y algún antibiótico».

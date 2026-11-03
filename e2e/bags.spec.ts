@@ -56,6 +56,7 @@ async function giveBag(page: Page, kind: string, where: 'back' | 'storage'): Pro
         'crowbar',
         'machete',
         'painkillers',
+        'antibiotics', // H6a
         'denim',
         'leather',
         'bucket',

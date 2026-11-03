@@ -97,7 +97,7 @@ test('pestaña Salud con sus heridas y Dar analgésico; una cama se hace de hosp
   expect(errores).toEqual([]);
 });
 
-test('aviso de fiebre con tres opciones; filtros del registro; panel de Almacén', async ({
+test('aviso de fiebre con cuatro opciones (H6a: antibióticos); filtros del registro; panel de Almacén', async ({
   page,
 }) => {
   const errores = watchErrors(page);
@@ -113,6 +113,7 @@ test('aviso de fiebre con tres opciones; filtros del registro; panel de Almacén
     'Que descanse',
     'Que se vaya',
     'Acabar con su sufrimiento',
+    /^Antibióticos y que descanse \(quedan \d+\)$/, // H6a
   ]);
   await fever.getByTestId('decision-option-0').click();
   await expect(fever).toBeHidden();

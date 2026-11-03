@@ -14,7 +14,7 @@ interface Debug {
   world: {
     survivors: Survivor[];
     siteMaps: { siteId: number; world: { survivors: Survivor[]; zombies: unknown[] } }[];
-    common: { expedition: { sites: { id: number }[] } };
+    common: { expedition: { sites: { id: number }[]; travels: { nextEventAt?: number }[] } };
   };
   view: { mapId: number };
   discoverSite(o: { how: string; side?: number; special?: null }): { id: number } | null;
@@ -48,6 +48,8 @@ async function nearTheEdge(page: Page, siteId: number | null) {
             siteId === null
               ? w.survivors
               : (w.siteMaps.find((m) => m.siteId === siteId)?.world.survivors ?? []);
+          // Sin sucesos del camino (H5c3): una decisión pausaría el juego y aquí no se prueba eso.
+          for (const t of w.common.expedition.travels) t.nextEventAt = 1e12;
           const s = list.find((x) => x.trip?.stage === 'exit' && x.action.type === 'moveTo');
           const t = s?.action.target;
           if (!s || !t) return false;

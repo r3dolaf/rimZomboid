@@ -16,7 +16,9 @@ interface Debug {
     orders: { type: string; waypoints?: number[] }[];
     common: {
       atlas: { base: number; width: number };
-      expedition: { travels: { id: number; kind: string; members: unknown[] }[] };
+      expedition: {
+        travels: { id: number; kind: string; members: unknown[]; nextEventAt?: number }[];
+      };
     };
   };
   discoverSite(o: { how: string; side?: number; special?: null }): { id: number } | null;
@@ -85,6 +87,8 @@ test('mapa del mundo: mandar un grupo desde la ficha, con una parada, y hacerle 
     .poll(
       () =>
         debug(page, (d) => {
+          // Sin sucesos del camino (H5c3): una decisión pausaría el juego.
+          for (const t of d.world.common.expedition.travels) t.nextEventAt = 1e12;
           const s = d.world.survivors.find((x) => x.trip?.stage === 'exit' && x.action.target);
           if (s) {
             const t = s.action.target!;

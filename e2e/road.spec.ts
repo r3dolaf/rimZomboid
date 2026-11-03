@@ -16,7 +16,14 @@ interface Debug {
     common: {
       log: { kind: string; horde?: boolean }[];
       expedition: {
-        travels: { id: number; members: unknown[]; waiting?: number; at: number; path: number[] }[];
+        travels: {
+          id: number;
+          members: unknown[];
+          waiting?: number;
+          at: number;
+          path: number[];
+          nextEventAt?: number;
+        }[];
       };
     };
   };
@@ -65,6 +72,8 @@ test('el camino: una horda delante; se contesta desde la ficha del grupo y la at
     .poll(
       () =>
         debug(page, (d) => {
+          // Solo la horda que se pone a mano (H5c3): sin otros sucesos.
+          for (const t of d.world.common.expedition.travels) t.nextEventAt = 1e12;
           const s = d.world.survivors.find((x) => x.trip?.stage === 'exit' && x.action.target);
           if (s) {
             const t = s.action.target!;

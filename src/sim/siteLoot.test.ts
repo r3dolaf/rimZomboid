@@ -39,7 +39,7 @@ test('el pueblecito siempre tiene farmacia', () => {
 test('en un pueblecito hay antibióticos; en la nave, armas; en la granja, mucha comida (y las cuentas cuadran)', () => {
   const base = emptyWorld(10, 10);
   const village = siteMap(base, info(1, 'village'));
-  expect(SITE_LOOT.pharmacy?.antibiotics).toEqual([3, 5]);
+  expect(SITE_LOOT.pharmacy?.antibiotics).toEqual([4, 6]);
   expect(total(village, 'antibiotics')).toBeGreaterThanOrEqual(3);
   const warehouse = siteMap(base, info(2, 'warehouse'));
   const weapons = warehouse.containers.reduce(

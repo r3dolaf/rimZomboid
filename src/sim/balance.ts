@@ -766,11 +766,11 @@ export const LOOT: Record<LootKind, Partial<Record<LootItem, LootAmount>>> = {
  * especialidad de cada tipo de sitio.
  */
 export const SITE_LOOT: Partial<Record<LootKind, Partial<Record<LootItem, LootAmount>>>> = {
-  pharmacy: { antibiotics: [3, 5], bandage: [4, 8] },
-  gas: { food: [6, 12], antibiotics: { chance: 0.4 } },
+  pharmacy: { antibiotics: [4, 6], bandage: [4, 8] },
+  gas: { food: [6, 12], antibiotics: [1, 2] },
   farm: { food: [10, 20] },
   warehouse: { crowbar: [1, 2], machete: [1, 2], knife: [1, 2], hatchet: [0, 1], thread: [1, 2] },
-  house: { food: [1, 3], antibiotics: { chance: 0.15 } },
+  house: { food: [1, 3], antibiotics: [0, 1] },
 };
 
 // Heridas (H5 §2)

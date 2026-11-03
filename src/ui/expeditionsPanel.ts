@@ -38,7 +38,11 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, text?: string, cls?: 
 function siteState(base: World, info: SiteInfo, people: number): string[] {
   const t = es.expeditions;
   if (info.state === 'lost') return [t.hours(info.hours), t.lost];
-  const out = [t.hours(info.hours), info.visited ? t.visited : t.notVisited];
+  const out = [
+    t.hours(info.hours),
+    es.maps.specialty[info.kind], // H6a: lo que suele haber
+    info.visited ? t.visited : t.notVisited,
+  ];
   const going = base.common.expedition.travels.some((x) => x.kind === 'go' && x.siteId === info.id);
   if (people > 0) out.push(t.people(people));
   else if (going) out.push(t.onTheWay);

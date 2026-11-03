@@ -452,6 +452,14 @@ export const es = {
       dangerous: { name: 'Sitio peligroso', the: 'el sitio peligroso' },
     } satisfies Partial<Record<SiteSpecial, { name: string; the: string }>>,
     sides: ['del norte', 'del sur', 'del oeste', 'del este'] as const,
+    // H6a: lo que suele haber en cada tipo de sitio.
+    specialty: {
+      house: 'un poco de todo',
+      farm: 'mucha comida',
+      gas: 'latas y algún botiquín',
+      warehouse: 'armas y herramientas',
+      village: 'farmacia: antibióticos y vendas',
+    } satisfies Record<SiteKind, string>,
     tab: (name: string, n: number) => `${name} · ${n}`,
     worldTab: '🌍 Mundo',
     inBase: 'En la base',

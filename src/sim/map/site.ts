@@ -55,8 +55,9 @@ function buildingsFor(kind: SiteKind, special: SiteSpecial | null, rng: RngState
     case 'warehouse':
       return ['warehouse'];
     case 'village': {
+      // H6a: siempre con farmacia (antibióticos y vendas), y una tienda más.
       const houses = Array.from({ length: nextInt(rng, 4, 6) }, () => 'house' as const);
-      return [...houses, pick(rng, ['supermarket', 'pharmacy', 'clothes'] as const)];
+      return [...houses, 'pharmacy', pick(rng, ['supermarket', 'clothes'] as const)];
     }
   }
 }

@@ -124,6 +124,7 @@ export function mountWorldCard(
         ...(route
           ? [t.far(hexDistance(atlas, atlas.base, hex), Math.round(routeHours(atlas, route)))]
           : []),
+        ...(site ? [es.maps.specialty[site.kind]] : []), // H6a: lo que suele haber
         ...(people > 0 ? [es.expeditions.people(people)] : []),
         ...(site?.state === 'lost' ? [es.expeditions.lost] : []),
       ],

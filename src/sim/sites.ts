@@ -20,6 +20,7 @@ import {
   SITE_ZOMBIES,
   ZOMBIE_LEVEL_MULT,
   ROADMAP_RADIUS,
+  SITE_LOOT,
 } from './balance';
 import { placeBlueprint } from './build';
 import { emptyInventory, ITEM_KINDS } from './items';
@@ -68,6 +69,18 @@ export function siteMap(base: World, info: SiteInfo): World {
   const rng = createRng(seed);
   const g = generateSite(info.kind, info.special, info.side, rng);
   const containers = placeContainers(g.houses, g.furniture, rng);
+  // La especialidad de cada sitio (H6a §2): botín de más según el edificio.
+  for (const h of g.houses) {
+    if (h.kind === 'base') continue;
+    const extra = SITE_LOOT[h.kind];
+    if (extra)
+      fillBuilding(
+        h.kind,
+        containers.filter((c) => c.houseId === h.id),
+        rng,
+        extra,
+      );
+  }
   // El alijo, con el doble de botín.
   if (info.special === 'stash')
     for (const h of g.houses)

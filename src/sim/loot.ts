@@ -104,9 +104,13 @@ export function placeContainers(
  * de los suyos al azar. Primero se sortean las cantidades y después se reparten, así lo que hay
  * no depende de qué muebles tenga.
  */
-export function fillBuilding(kind: LootKind, cs: Container[], rng: RngState): void {
+export function fillBuilding(
+  kind: LootKind,
+  cs: Container[],
+  rng: RngState,
+  spec: Partial<Record<LootItem, LootAmount>> = LOOT[kind],
+): void {
   if (cs.length === 0) return;
-  const spec = LOOT[kind];
   const amounts = ITEMS.map((item) => [item, roll(rng, spec[item])] as const);
   for (const [item, n] of amounts) {
     const pool = placesFor(cs, item);

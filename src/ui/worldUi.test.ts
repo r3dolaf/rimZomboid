@@ -412,3 +412,19 @@ test('la pestaña del mundo sigue al final cuando aparece la de un sitio nuevo',
   );
   expect(ids).toEqual(['map-tab-0', 'map-tab-4', `map-tab-${WORLD_MAP}`]);
 });
+
+test('lo que suele haber en cada sitio, en su ficha y en la lista de Expediciones (H6a)', () => {
+  const { base, farm, card, q } = cardGame();
+  card.hex(farm.hex);
+  card.update();
+  expect(q('world-card')!.textContent).toContain('mucha comida');
+  const root = document.createElement('div');
+  const open = createFlag();
+  open.set(true);
+  const panel = mountExpeditionsPanel(root, { world: base, open });
+  panel.update();
+  expect(root.querySelector('[data-testid="site-4"]')!.textContent).toContain('mucha comida');
+  expect(root.querySelector('[data-testid="site-5"]')!.textContent).toContain(
+    'latas y algún botiquín',
+  );
+});

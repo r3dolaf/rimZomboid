@@ -200,3 +200,17 @@ test('no desaparece mientras alguien va a registrarlo: se va cuando ya nadie lo 
   corpsesSystem(w);
   expect(w.containers).not.toContain(c);
 });
+
+test('la madera que se deja en el cuerpo de un zombi no se pudre con él: queda en el suelo', () => {
+  // Al coger una bolsa de un cuerpo, lo que lleva dentro puede quedarse en él (soak H6c).
+  const w = world();
+  const c = kill(w, 4, 6);
+  c.items.wood = 4;
+  w.common.woodLog.start += 4;
+  expect(checkInvariants(w)).toEqual([]);
+  w.tick = c.until!;
+  corpsesSystem(w);
+  expect(w.containers).not.toContain(c);
+  expect(w.piles.reduce((n, p) => n + p.items.wood, 0)).toBe(4);
+  expect(checkInvariants(w)).toEqual([]);
+});

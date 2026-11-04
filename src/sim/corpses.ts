@@ -69,6 +69,8 @@ export function corpsesSystem(w: World): void {
     else {
       w.common.weaponLog.rotted += weaponsIn(c);
       piecesGone(w, c.items.pieces); // H5b: su ropa se pudre con él
+      // La madera no se pudre (H6c): la que alguien dejó en él (al coger una bolsa), al suelo.
+      if (c.items.wood > 0) dropPile(w, c.pos, { ...emptyInventory(), wood: c.items.wood });
     }
   }
   if (gone) w.containers = w.containers.filter((c) => !due(c));

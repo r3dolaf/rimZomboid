@@ -25,8 +25,8 @@ Lo aprobado por el usuario:
   - Se puede elegir si hay alguno en el almacén de ese mapa o lo lleva el enfermo. Si no hay, el
     botón sale apagado.
   - Gasta uno (primero el que lleve encima) y manda descansar, como «Que descanse».
-  - Si la fiebre es de una infección de arañazo o corte y aún no han pasado
-    `INFECTION_NAUSEA_HOURS` (24 h) desde la herida, la infección se cura y se le pasa la fiebre.
+  - Si la fiebre es de una infección de arañazo o corte y aún no está muy grave (§4: al principio,
+    hasta las náuseas), la infección se cura y se le pasa la fiebre.
   - Si es de mordisco, llega tarde o es gripe, no hace nada más.
   - Registro: «Ana toma antibióticos» y, si cura, «A Ana se le pasa la infección».
 - **De viaje:** quien lleve antibióticos y tenga una infección que ya daría fiebre
@@ -78,6 +78,10 @@ Lo aprobado por el usuario:
     partida y curan 0,7.
   - Para mejorar más habría que tocar otra cosa (menos mordiscos, más tiempo para dar los
     antibióticos o que frenen también el mordisco): se le plantea al usuario.
+- **Después, a petición del usuario (D):** los antibióticos curan hasta que la infección está muy
+  grave (las últimas `GRAVE_HOURS` horas), no solo hasta las náuseas. En la sonda no cambia nada que
+  se note: con expediciones, día 20,7 y 13 de 36; sin ellas, día 19,7 y 10 de 36. Lo que falta no
+  es tiempo, sino tener antibióticos cuando hacen falta (y los mordiscos).
 - **Cambios tras la revisión:**
   - Quien cambia de mapa con fiebre sin decidir recupera su aviso al llegar.
   - Los sitios especiales (alijo, peligroso) no anuncian la especialidad de su tipo.

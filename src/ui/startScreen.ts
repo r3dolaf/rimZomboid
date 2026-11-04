@@ -1,6 +1,8 @@
 import { seedFromText } from '../game/seed';
 import { es } from '../i18n/es';
+import type { SaveMeta } from '../sim/save';
 import type { NarratorStyle, ZombieLevel } from '../sim/types';
+import { importInput } from './saveStore';
 import './start.css';
 
 const STYLES: readonly NarratorStyle[] = ['calm', 'balanced', 'chaotic'];
@@ -13,8 +15,13 @@ export function mountStartScreen(
     seed: number;
     randomSeed: () => number;
     onStart(seed: number, style: NarratorStyle, zombies: ZombieLevel): void;
+    /** H6b: la partida guardada, si hay, para «Continuar». */
+    saved?: SaveMeta | null;
+    onContinue?: () => void;
+    /** H6b: «Importar partida» desde un archivo. */
+    onImport?: (text: string) => void;
   },
-): { remove(): void } {
+): { remove(): void; say(text: string): void } {
   const screen = document.createElement('div');
   screen.className = 'start';
   screen.dataset.testid = 'start';
@@ -108,8 +115,32 @@ export function mountStartScreen(
     opts.onStart(n, style, zombies);
   });
 
-  panel.append(title, subtitle, choose, cards, zombiesRow, seedRow, go);
+  // H6b: seguir la partida guardada (arriba), o importar una (abajo).
+  const top: HTMLElement[] = [];
+  const bottom: HTMLElement[] = [];
+  if (opts.saved && opts.onContinue) {
+    const cont = document.createElement('button');
+    cont.type = 'button';
+    cont.className = 'start-go start-continue';
+    cont.textContent = es.game.continue(opts.saved.day);
+    cont.dataset.testid = 'start-continue';
+    cont.addEventListener('click', () => opts.onContinue?.());
+    top.push(cont);
+  }
+  if (opts.onImport) {
+    const label = document.createElement('label');
+    label.className = 'start-import';
+    label.append(
+      document.createTextNode(`${es.game.importStart} `),
+      importInput('start-import', opts.onImport),
+    );
+    bottom.push(label);
+  }
+  const message = document.createElement('p');
+  message.className = 'start-message';
+  message.dataset.testid = 'start-message';
+  panel.append(title, subtitle, ...top, choose, cards, zombiesRow, seedRow, go, ...bottom, message);
   screen.append(panel);
   root.append(screen);
-  return { remove: () => screen.remove() };
+  return { remove: () => screen.remove(), say: (text) => (message.textContent = text) };
 }

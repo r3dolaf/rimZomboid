@@ -46,7 +46,10 @@ test('guardar y cargar: la misma partida y, al seguir, el mismo futuro', () => {
 test('con sitios y viajes: los sitios comparten otra vez la caja común de la base', () => {
   const w = createWorld(3);
   const site = discoverSite(w, { how: 'roadMap', special: null })!;
-  const ids = w.survivors.filter((s) => canGo(s, w)).slice(0, 2).map((s) => s.id);
+  const ids = w.survivors
+    .filter((s) => canGo(s, w))
+    .slice(0, 2)
+    .map((s) => s.id);
   issue(w, { type: 'sendExpedition', from: 0, siteId: site.id, survivorIds: ids, items: {} });
   for (let i = 0; i < 2 * TICKS_PER_DAY && w.siteMaps.length === 0; i++) stepGame(w);
   const text = saveGame(w, meta);

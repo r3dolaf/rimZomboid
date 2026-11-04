@@ -691,6 +691,24 @@ export const es = {
     wanderersSighted: 'Horda errante',
     strangersFled: 'Huyen',
   },
+  // Guardar y cargar la partida (H6b).
+  game: {
+    button: 'Partida',
+    hint: 'Guardar, cargar, exportar o importar la partida',
+    title: 'Partida',
+    save: 'Guardar ahora',
+    saved: 'Partida guardada',
+    saveFailed: 'No se ha podido guardar',
+    load: 'Cargar la guardada',
+    loadWarning: '¿Seguro? Se pierde lo que no esté guardado.',
+    loadConfirm: 'Sí, cargar',
+    export: 'Exportar a un archivo',
+    import: 'Importar un archivo:',
+    broken: 'Ese archivo no es una partida de rimZomboid',
+    version: 'Esa partida es de otra versión del juego y no se puede cargar',
+    continue: (day: number) => `Continuar (día ${day})`,
+    importStart: 'Importar partida:',
+  },
   /** H6a: «Antibióticos y que descanse (quedan 2)». */
   antibioticsLeft: (label: string, n: number) => `${label} (quedan ${n})`,
   decisions: {

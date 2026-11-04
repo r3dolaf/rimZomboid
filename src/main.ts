@@ -7,7 +7,11 @@ import { GameScene, type GameSceneData } from './render/GameScene';
 import { WorldScene, type WorldSceneData } from './render/WorldScene';
 import { gameTime } from './sim/clock';
 import { zombiesInSight } from './sim/danger';
-import type { NarratorStyle, ZombieLevel } from './sim/types';
+import type { NarratorStyle, World, ZombieLevel } from './sim/types';
+import { loadGame, saveGame, type SaveMeta } from './sim/save';
+import { es } from './i18n/es';
+import { mountGamePanel } from './ui/gamePanel';
+import { createSaveStore, downloadFile, exportName, savedMeta } from './ui/saveStore';
 import { issue } from './sim/orders';
 import { createWorld } from './sim/world';
 import { allColonists } from './sim/game';
@@ -42,28 +46,65 @@ import { mountWorkPanel } from './ui/workPanel';
 
 const ui = document.getElementById('hud')!;
 
-// Con semilla en la dirección se entra directo (al recargar o con un enlace compartido);
-// sin ella, la portada para elegir narrador y semilla.
-if (new URLSearchParams(location.search).has('seed')) {
-  start(
-    parseSeed(location.search, randomSeed),
-    parseNarrator(location.search) ?? 'balanced',
-    parseZombies(location.search) ?? 'normal',
-  );
-} else {
-  const screen = mountStartScreen(ui, {
-    seed: randomSeed(),
-    randomSeed,
-    onStart(seed, style, zombies) {
-      history.replaceState(null, '', startUrl(location.search, seed, style, zombies));
-      screen.remove();
-      start(seed, style, zombies);
-    },
-  });
+const store = createSaveStore(); // H6b: la partida guardada en el navegador
+
+/** La dirección para seguir la partida guardada (sin semilla; con lo demás, como `debug`). */
+function loadUrl(): string {
+  const p = new URLSearchParams(location.search);
+  for (const k of ['seed', 'narrator', 'zombies']) p.delete(k);
+  p.set('load', '1');
+  return `${location.pathname}?${p.toString()}`;
 }
 
-function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
-  const world = createWorld(seed, style, zombies); // la base, que guarda los sitios (H5c1)
+/** Empieza la partida guardada; `false` si no hay o no sirve. */
+function startSaved(text: string | null): boolean {
+  const got = text === null ? null : loadGame(text);
+  if (!got || 'error' in got) return false;
+  start(got.meta.seed, got.meta.narrator, got.meta.zombies, got.world);
+  return true;
+}
+
+// Con `load` se sigue la partida guardada (H6b); con semilla se entra directo (al recargar o con un
+// enlace compartido); si no, la portada para elegir narrador y semilla (o seguir la guardada).
+const params = new URLSearchParams(location.search);
+if (!(params.has('load') && startSaved(store.read()))) {
+  if (params.has('seed')) {
+    start(
+      parseSeed(location.search, randomSeed),
+      parseNarrator(location.search) ?? 'balanced',
+      parseZombies(location.search) ?? 'normal',
+    );
+  } else {
+    const saved = store.read();
+    const screen = mountStartScreen(ui, {
+      seed: randomSeed(),
+      randomSeed,
+      onStart(seed, style, zombies) {
+        history.replaceState(null, '', startUrl(location.search, seed, style, zombies));
+        screen.remove();
+        start(seed, style, zombies);
+      },
+      saved: savedMeta(saved),
+      onContinue() {
+        history.replaceState(null, '', loadUrl());
+        screen.remove();
+        startSaved(saved);
+      },
+      onImport(text) {
+        const got = loadGame(text);
+        if ('error' in got) return screen.say(es.game[got.error]);
+        store.write(text); // si no deja, se juega igual (pero no se podrá «Continuar»)
+        history.replaceState(null, '', loadUrl());
+        screen.remove();
+        startSaved(text);
+      },
+    });
+  }
+}
+
+function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?: World): void {
+  // La base, que guarda los sitios (H5c1); o la de una partida guardada (H6b).
+  const world = loaded ?? createWorld(seed, style, zombies);
   const view = createMapView(world); // el mapa que se ve
   const time = createTimeController();
   const selection = createSelection();
@@ -76,8 +117,17 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
   const storageOpen = createFlag(); // el panel de Almacén (H5)
   const outfitsOpen = createFlag(); // el panel Atuendos (H5b)
   const expeditionsOpen = createFlag(); // el panel Expediciones (H5c1)
+  const gameOpen = createFlag(); // el panel Partida (H6b)
   // Los paneles salen en el mismo sitio: abrir uno cierra los otros.
-  const panels = [workOpen, craftOpen, noticesOpen, storageOpen, outfitsOpen, expeditionsOpen];
+  const panels = [
+    workOpen,
+    craftOpen,
+    noticesOpen,
+    storageOpen,
+    outfitsOpen,
+    expeditionsOpen,
+    gameOpen,
+  ];
   for (const f of panels) f.onChange((on) => on && panels.forEach((o) => o !== f && o.set(false)));
   const prefs = createPrefsStore();
   const toggles = { toggleWork: workOpen.toggle, toggleCraft: craftOpen.toggle };
@@ -96,6 +146,31 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
     toggleStorage: storageOpen.toggle,
     toggleOutfits: outfitsOpen.toggle,
     toggleExpeditions: expeditionsOpen.toggle,
+    toggleGame: gameOpen.toggle,
+  });
+  // H6b: guardar (solo cada mañana y a mano), cargar, exportar e importar.
+  if (loaded) time.setSpeed(0); // la partida cargada empieza en pausa
+  const meta = (): SaveMeta => ({
+    day: gameTime(world.tick).day,
+    seed,
+    narrator: style,
+    zombies,
+    savedAt: new Date().toISOString(),
+  });
+  const save = () => store.write(saveGame(world, meta()));
+  let savedDay = 0;
+  const gamePanel = mountGamePanel(ui, {
+    open: gameOpen,
+    hasSave: () => store.read() !== null,
+    onSave: save,
+    onLoad: () => location.assign(loadUrl()),
+    onExport: () => downloadFile(exportName(meta()), saveGame(world, meta())),
+    onImport(text) {
+      const got = loadGame(text);
+      if ('error' in got) return gamePanel.say(es.game[got.error]);
+      if (!store.write(text)) return gamePanel.say(es.game.saveFailed);
+      location.assign(loadUrl());
+    },
   });
   // H5c1: las pestañas de mapa; lo de cada mapa (arriba, Almacén, Fabricar, Trabajos, fichas)
   // es del que se ve; las tarjetas, el registro y los avisos, de todos.
@@ -191,6 +266,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
     () => storageOpen.value && (storageOpen.set(false), true),
     () => outfitsOpen.value && (outfitsOpen.set(false), true),
     () => expeditionsOpen.value && (expeditionsOpen.set(false), true),
+    () => gameOpen.value && (gameOpen.set(false), true),
     () => houseSelection.id !== null && (houseSelection.set(null), true),
     () => bedSelection.id !== null && (bedSelection.set(null), true),
     () => selection.ids.length > 0 && (selection.set(null), true),
@@ -244,6 +320,13 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel): void {
       outfitsPanel.update();
       expeditionsPanel.update();
       worldCard.update();
+      gamePanel.update();
+      // Cada mañana (a las 6), se guarda sola; si no se puede, lo dice el panel (H6b).
+      const now = gameTime(world.tick);
+      if (now.hour >= 6 && now.day > savedDay) {
+        savedDay = now.day;
+        if (!save()) gamePanel.say(es.game.saveFailed);
+      }
       workPanel.update();
       craftPanel.update();
       buildMenu.update();

@@ -33,6 +33,8 @@ export function mountHud(
     toggleNotices?: () => void;
     /** El panel Expediciones (H5c1). */
     toggleExpeditions?: () => void;
+    /** H6b: el panel «Partida». */
+    toggleGame?: () => void;
   },
 ): {
   update(
@@ -134,6 +136,8 @@ export function mountHud(
     opts.toggleExpeditions?.(),
   );
   expeditions.hidden = !opts.toggleExpeditions;
+  const game = button('hud-game', es.game.button, es.game.hint, () => opts.toggleGame?.());
+  game.hidden = !opts.toggleGame;
   const notices = button('hud-notices', es.noticesButton, es.noticesButtonHint, () =>
     opts.toggleNotices?.(),
   );
@@ -178,6 +182,7 @@ export function mountHud(
     craft,
     outfits,
     expeditions,
+    game,
     notices,
     zombies,
     siege,

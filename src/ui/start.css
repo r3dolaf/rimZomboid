@@ -140,3 +140,18 @@
   font: inherit;
   cursor: pointer;
 }
+
+/* H6b: seguir la partida guardada e importar una. */
+.start-continue {
+  margin-bottom: 12px;
+}
+.start-import {
+  display: block;
+  margin-top: 12px;
+  font-size: 13px;
+  color: #aaa;
+}
+.start-message {
+  min-height: 1em;
+  color: #e0a040;
+}

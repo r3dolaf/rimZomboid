@@ -45,15 +45,19 @@ export function zombieSees(w: World, z: Zombie, p: Point): boolean {
 /** ¿Lo puede ver un zombi? Los derribados, no (spec H4b §5). */
 export const visibleToZombies = (s: Survivor) => s.action.type !== 'downed';
 
-/** Colonos y desconocidos (H4e: también van a por ellos). */
+/** Colonos y desconocidos (H4e: también van a por ellos); y quien se va (H6c). */
 function people(w: World): Survivor[] {
-  return w.stranger ? [...w.survivors, ...w.stranger.survivors] : w.survivors;
+  return [...w.survivors, ...(w.stranger?.survivors ?? []), ...w.leaving];
 }
 
-/** El colono o desconocido con ese id, si sigue en el mapa. */
+/** El colono, desconocido o quien se va con ese id, si sigue en el mapa. */
 export function personById(w: World, id: number | null): Survivor | undefined {
   if (id === null) return undefined;
-  return w.survivors.find((s) => s.id === id) ?? w.stranger?.survivors.find((s) => s.id === id);
+  return (
+    w.survivors.find((s) => s.id === id) ??
+    w.stranger?.survivors.find((s) => s.id === id) ??
+    w.leaving.find((s) => s.id === id)
+  );
 }
 
 /** La persona más cercana que ve, o `null`. */

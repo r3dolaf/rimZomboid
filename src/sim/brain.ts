@@ -20,7 +20,7 @@ import { nextFloat, pick } from './rng';
 import { equipFromPack } from './jobs/weapons';
 import { findWork, isWorking, stillWorthIt } from './work';
 import { mercyDecision } from './death';
-import { restDecision, selfCare } from './jobs/medical';
+import { inBase, restDecision, selfCare } from './jobs/medical';
 import type { Action, BrainId, Survivor, World } from './types';
 import { tileOf } from './world';
 
@@ -131,10 +131,15 @@ function wantsToSleep(s: Survivor, w: World): boolean {
   return s.needs.sleep < limit && !zombieInSight(w, s, WAKE_RANGE);
 }
 
-/** Come de lo que lleva encima si puede; si no, va al almacén si queda comida. */
+/**
+ * Come: en la base, primero del almacén (H6c: lo de la mochila, para cuando no hay); fuera, de lo
+ * que lleva encima; si no lleva, va al almacén si queda comida.
+ */
 function eatSomething(s: Survivor, w: World): Action | null {
+  const store = w.storage.items.food > 0;
+  if (store && inBase(w, s)) return goEat(w);
   if (has(s, 'food') > 0) return { type: 'eat', ticksLeft: EAT_TICKS, fromPack: true };
-  if (w.storage.items.food > 0) return goEat(w);
+  if (store) return goEat(w);
   return null;
 }
 

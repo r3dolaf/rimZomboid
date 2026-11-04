@@ -57,6 +57,8 @@ Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al p
 
 **Hechos en H6a (Equilibrio, la primera parte de H6):** antibióticos (curan la infección de un arañazo o un corte a tiempo; se dan con la decisión de la fiebre; de viaje, solos) y sitios con especialidad (el pueblecito con farmacia; un pueblecito y una nave junto a cada pueblo y gasolineras en la carretera). Con expediciones se aguanta algo más (día 20,9 frente a 19,7; 13 de 36 al día 30 frente a 10), pero no se llega al día 25: la mitad de las infecciones son de mordisco y faltan antibióticos cuando hacen falta (darlos hasta que esté muy grave no cambió nada). Después: guardar y cargar la partida (H6b) y el resto de H6.
 
+**Hechos en H6b (Guardar y cargar):** la partida se guarda en el navegador sola cada mañana y con el panel «Partida» (guardar, cargar, exportar e importar un archivo); «Continuar (día N)» en la portada; recargar la página sigue la partida guardada. Una partida cargada sigue exactamente igual, tick a tick. Queda: el resto de H6 (depuración F3 y los pendientes).
+
 **Para H6 (pulido), de H5:**
 
 - Equilibrio (6 semillas, Equilibrado/normal, saqueando todo desde el principio, con mesa y "vendas hasta 10", marcando los cuerpos, sin defender): con las cifras de la spec la colonia caía en 2–3 días; tras el ajuste (spec §13), cae los días 10–20 (la mitad, hacia el 13). Las primeras muertes llegan los días 4–7, sobre todo por infección (de arañazos más que de mordiscos) y luego desangrados cuando se acaban las vendas. Se pelea mucho: 80–260 zombis matados y 90–185 heridas por partida. El usuario pidió "1–2 semanas" saqueando todo sin defenderse.

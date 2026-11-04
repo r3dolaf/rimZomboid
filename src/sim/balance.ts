@@ -43,6 +43,8 @@ export const NO_PATH_RETRY_TICKS = 10;
 export const NEED_START_MIN = 60;
 export const NEED_START_MAX = 100;
 export const START_FOOD = 10; // ~3 días; el resto hay que saquearlo (H3)
+/** H6d: antibióticos en el almacén al empezar (lo decide la sonda, entre 1 y 3). */
+export const START_ANTIBIOTICS = 2;
 export const MOOD_BASE = 50;
 export const HUNGER_PER_DAY = 70;
 export const HUNGER_PER_TICK = HUNGER_PER_DAY / TICKS_PER_DAY;

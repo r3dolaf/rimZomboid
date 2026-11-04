@@ -1,10 +1,12 @@
 // H6a §1: los antibióticos curan la infección de un arañazo o un corte si se dan a tiempo (antes de
 // las náuseas); no la de un mordisco ni la gripe. Se dan con la decisión de la fiebre; de viaje, solos.
 import { expect, test } from 'vitest';
+import { createWorld } from './world';
 import {
   GRAVE_HOURS,
   INFECTION_FEVER_HOURS,
   INFECTION_NAUSEA_HOURS,
+  START_ANTIBIOTICS,
   TICKS_PER_HOUR,
 } from './balance';
 import { addWound } from './body';
@@ -177,4 +179,11 @@ test('quien llega con fiebre sin decidir vuelve a tener su aviso (para darle ant
     1,
   );
   expect(checkInvariants(w)).toEqual([]);
+});
+
+test('se empieza con algunos antibióticos en el almacén (H6d)', () => {
+  expect(START_ANTIBIOTICS).toBeGreaterThanOrEqual(1);
+  expect(START_ANTIBIOTICS).toBeLessThanOrEqual(3);
+  for (const seed of [1, 2, 3])
+    expect(createWorld(seed).storage.items.antibiotics).toBe(START_ANTIBIOTICS);
 });

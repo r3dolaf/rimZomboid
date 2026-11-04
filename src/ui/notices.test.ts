@@ -93,6 +93,7 @@ test('desaparecen al cabo de un día y como mucho hay 5', () => {
 test('una decisión: aviso con sus botones (la fiebre, tres), pausa, sin ✕, y se oculta al contestar', () => {
   const { root, world, time, notices } = setup();
   const s = world.survivors[0]!;
+  world.storage.items.antibiotics = 0; // sin ninguno (se empieza con START_ANTIBIOTICS, H6d)
   const d = addDecision(world, 'fever', [s.id]);
   notices.update();
   const el = root.querySelector('[data-testid="decision-fever"]') as HTMLElement;

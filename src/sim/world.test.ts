@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest';
+import { START_ANTIBIOTICS } from './balance';
 import { emptyInventory } from './items';
 import { contains } from './geom';
 import { checkInvariants } from './invariants';
@@ -65,7 +66,7 @@ test('3 camas sobre suelo de la base, cada una con su dueño', () => {
   for (const b of w.beds) expect(getTile(w.grid, b.pos.x, b.pos.y)).toBe(Tile.Floor);
 });
 
-test('almacén de 2 casillas junto a la puerta, con 10 latas', () => {
+test('almacén de 2 casillas junto a la puerta, con 10 latas y los antibióticos del principio (H6d)', () => {
   const w = createWorld(10);
   const r = w.base.rect;
   expect(w.storage.tiles).toEqual([
@@ -73,7 +74,11 @@ test('almacén de 2 casillas junto a la puerta, con 10 latas', () => {
     { x: r.x + 8, y: r.y + r.h - 2 },
   ]);
   for (const t of w.storage.tiles) expect(getTile(w.grid, t.x, t.y)).toBe(Tile.Floor);
-  expect(w.storage.items).toEqual({ ...emptyInventory(), food: 10 });
+  expect(w.storage.items).toEqual({
+    ...emptyInventory(),
+    food: 10,
+    antibiotics: START_ANTIBIOTICS,
+  });
 });
 
 test('los supervivientes empiezan sin cargar nada (salvo sus 2 vendas, H5)', () => {

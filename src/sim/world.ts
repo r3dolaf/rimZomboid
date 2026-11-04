@@ -14,6 +14,7 @@ import {
   LOCKED_DOOR_SALT,
   NEED_START_MAX,
   NEED_START_MIN,
+  START_ANTIBIOTICS,
   START_FOOD,
   START_OPINION_MAX,
   START_OPINION_MIN,
@@ -162,7 +163,7 @@ export function createWorld(
   }));
   const storage: Storage = {
     tiles: layout.storage,
-    items: { ...emptyInventory(), food: START_FOOD },
+    items: { ...emptyInventory(), food: START_FOOD, antibiotics: START_ANTIBIOTICS },
   };
 
   // Después de los supervivientes, para no cambiar partidas anteriores con la misma semilla.

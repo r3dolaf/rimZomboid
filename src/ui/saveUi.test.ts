@@ -8,6 +8,8 @@ import { createFlag } from './flag';
 import { mountGamePanel } from './gamePanel';
 import { createSaveStore, exportName, savedMeta } from './saveStore';
 import { mountStartScreen } from './startScreen';
+import { mountStoragePanel } from './storagePanel';
+import { newGarment } from '../sim/clothes';
 
 const meta: SaveMeta = {
   day: 4,
@@ -115,4 +117,27 @@ test('la portada: «Continuar (día N)» si hay partida guardada, e «Importar p
   const none = document.createElement('div');
   mountStartScreen(none, { seed: 1, randomSeed: () => 2, onStart: () => {} });
   expect(none.querySelector('[data-testid="start-continue"]')).toBeNull();
+});
+
+test('Almacén: «Tirar» por cada tipo de prenda guardada; pedido, se apaga (H6c)', () => {
+  const w = emptyWorld(10, 10);
+  w.storage.items.pieces.push(
+    newGarment(w.common, 'tshirt'),
+    newGarment(w.common, 'tshirt'),
+    newGarment(w.common, 'jeans'),
+  );
+  const root = document.createElement('div');
+  const open = createFlag();
+  open.set(true);
+  const panel = mountStoragePanel(root, { world: w, open });
+  panel.update();
+  const b = root.querySelector('[data-testid="discard-tshirt"]') as HTMLButtonElement;
+  expect(b.textContent).toContain('(2)');
+  expect(root.querySelector('[data-testid="discard-jeans"]')).not.toBeNull();
+  b.click();
+  expect(w.orders).toContainEqual({ type: 'discardGarments', kind: 'tshirt' });
+  panel.update();
+  expect((root.querySelector('[data-testid="discard-tshirt"]') as HTMLButtonElement).disabled).toBe(
+    true,
+  );
 });

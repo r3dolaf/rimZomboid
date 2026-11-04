@@ -90,6 +90,8 @@ export const es = {
   clothesUi: {
     /** Concordancia con la prenda: "rota", "rotos"… según su artículo. */
     torn: (end: string, where: string) => `rot${end} por ${where}`,
+    /** H6c: «Tirar: Camiseta (2)». */
+    discard: (name: string, n: number) => `Tirar: ${name} (${n})`,
     patch: (material: string, where: string) => `parche de ${material} en ${where}`,
     pad: (material: string, where: string) => `refuerzo de ${material} en ${where}`,
     dirty: (end: string) => `suci${end}`,

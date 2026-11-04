@@ -1,4 +1,5 @@
-import { applyBagListOrder, type BagListOrder } from './bags';
+import { applyBagListOrder, isBag, type BagListOrder } from './bags';
+import { piecesGone } from './clothes';
 import { applyDebugOrder, type DebugOrder } from './debug';
 import { applyExpeditionOrder } from './expeditions';
 import { isEmpty, type ItemKind } from './items';
@@ -23,6 +24,7 @@ import type {
 /** Lo que pide el jugador. La interfaz solo cambia el mundo mediante órdenes. */
 export type Order =
   | DebugOrder // H6c: las trampas de F3
+  | { type: 'discardGarments'; kind: GarmentKind } // H6c: tirar la ropa de un tipo del almacén
   | { type: 'designateHouse'; houseId: number; on: boolean }
   | { type: 'designateContainer'; containerId: number; on: boolean }
   | { type: 'setWork'; survivorId: number; work: WorkType; enabled: boolean }
@@ -190,6 +192,13 @@ export function ordersSystem(w: World): void {
       case 'debug':
         applyDebugOrder(w, o);
         break;
+      case 'discardGarments': {
+        const items = w.storage.items;
+        const out = items.pieces.filter((p) => !isBag(p) && p.kind === o.kind);
+        items.pieces = items.pieces.filter((p) => !out.includes(p));
+        piecesGone(w, out);
+        break;
+      }
       case 'markTree':
         markTree(w, o.x, o.y, o.on);
         break;

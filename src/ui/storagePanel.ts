@@ -3,7 +3,8 @@ import { bagsIn, effectiveList, garments } from '../sim/bags';
 import { attachListHandlers, listEditor } from './bagsPane';
 import { ITEM_KINDS } from '../sim/items';
 import { bagName, formatItems, garmentText, listRows } from './describe';
-import type { World } from '../sim/types';
+import { issue } from '../sim/orders';
+import type { GarmentKind, World } from '../sim/types';
 import type { Flag } from './flag';
 import './panels.css';
 
@@ -61,7 +62,20 @@ export function mountStoragePanel(
   bags.dataset.testid = 'storage-bags';
   attachListHandlers(bags, opts.world, () => undefined);
   let bagsShown = '';
-  panel.append(head, materials, list, clothesTitle, clothes, bagsTitle, bags);
+  // H6c: «Tirar» la ropa de un tipo (la del almacén, no la puesta).
+  const discard = document.createElement('div');
+  discard.className = 'discard buttons';
+  discard.dataset.testid = 'clothes-discard';
+  let discardShown = '';
+  discard.addEventListener('click', (ev) => {
+    const b = (ev.target as HTMLElement).closest('button');
+    const kind = b?.dataset.discard as GarmentKind | undefined;
+    if (!b || !kind) return;
+    issue(opts.world, { type: 'discardGarments', kind });
+    b.disabled = true;
+    b.blur();
+  });
+  panel.append(head, materials, list, clothesTitle, clothes, discard, bagsTitle, bags);
   root.append(panel);
 
   return {
@@ -96,6 +110,29 @@ export function mountStoragePanel(
             inside.textContent = b.inside;
             box.append(title, inside, listEditor(listRows(b.list), String(b.id), `bag-${b.id}`));
             return box;
+          }),
+        );
+      }
+      // «Tirar» por tipo, con cuántas hay; lo ya pedido, apagado.
+      const byKind = new Map<GarmentKind, number>();
+      for (const g of garments(opts.world.storage.items.pieces))
+        byKind.set(g.kind, (byKind.get(g.kind) ?? 0) + 1);
+      const asked = new Set(
+        opts.world.orders.flatMap((o) => (o.type === 'discardGarments' ? [o.kind] : [])),
+      );
+      const kinds = [...byKind].map(([k, n]) => [k, n, asked.has(k)] as const);
+      const dKey = JSON.stringify(kinds);
+      if (dKey !== discardShown) {
+        discardShown = dKey;
+        discard.replaceChildren(
+          ...kinds.map(([k, n, done]) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.dataset.discard = k;
+            b.dataset.testid = `discard-${k}`;
+            b.textContent = es.clothesUi.discard(es.garments[k].name, n);
+            b.disabled = done;
+            return b;
           }),
         );
       }

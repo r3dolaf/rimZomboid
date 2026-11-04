@@ -83,10 +83,15 @@ function fits(r: Recipe, g: Garment): boolean {
   return destroyed(g) && Object.keys(GARMENTS[g.kind].unpick).length > 0;
 }
 
-/** La primera prenda del almacén que le sirve a la receta (H5b), o `null`. */
+/**
+ * La primera prenda del almacén que le sirve a la receta (H5b), o `null`. Reforzar, solo la que
+ * permite algún atuendo (H6c): si no, se pasaba el día reforzando lo que nadie se pondría.
+ */
 export function pieceFor(w: World, r: Recipe): Garment | null {
   if (r.piece === undefined) return null;
-  return garments(w.storage.items.pieces).find((g) => fits(r, g)) ?? null;
+  const wanted = (g: Garment) =>
+    r.piece !== 'paddable' || w.common.outfits.some((o) => o.allowed.includes(g.kind));
+  return garments(w.storage.items.pieces).find((g) => fits(r, g) && wanted(g)) ?? null;
 }
 
 /** ¿Hay sobre qué trabajar? (Las que no son sobre prendas, siempre.) */

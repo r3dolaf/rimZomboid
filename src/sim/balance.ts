@@ -761,6 +761,10 @@ export const LOOT: Record<LootKind, Partial<Record<LootItem, LootAmount>>> = {
   },
 };
 
+// H6c §1: las trampas del modo depuración.
+export const DEBUG_GIVE = 10;
+export const DEBUG_KILL_RADIUS = 20;
+
 /**
  * H6a §2: botín de más en los sitios del mundo, según el edificio (se suma al de `LOOT`): la
  * especialidad de cada tipo de sitio.

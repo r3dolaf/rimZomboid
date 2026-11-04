@@ -1,4 +1,5 @@
 import { applyBagListOrder, type BagListOrder } from './bags';
+import { applyDebugOrder, type DebugOrder } from './debug';
 import { applyExpeditionOrder } from './expeditions';
 import { isEmpty, type ItemKind } from './items';
 import { resolveDecision } from './events/resolve';
@@ -21,6 +22,7 @@ import type {
 
 /** Lo que pide el jugador. La interfaz solo cambia el mundo mediante órdenes. */
 export type Order =
+  | DebugOrder // H6c: las trampas de F3
   | { type: 'designateHouse'; houseId: number; on: boolean }
   | { type: 'designateContainer'; containerId: number; on: boolean }
   | { type: 'setWork'; survivorId: number; work: WorkType; enabled: boolean }
@@ -184,6 +186,9 @@ export function ordersSystem(w: World): void {
       }
       case 'decide':
         resolveDecision(w, o.decisionId, o.option);
+        break;
+      case 'debug':
+        applyDebugOrder(w, o);
         break;
       case 'markTree':
         markTree(w, o.x, o.y, o.on);

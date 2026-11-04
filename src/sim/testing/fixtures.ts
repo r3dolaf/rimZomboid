@@ -139,6 +139,7 @@ export function emptyWorld(width: number, height: number): World {
       expedition: newExpedition(1),
       atlas: plainAtlas(),
       departed: [],
+      usedNames: ['Ana'],
     },
     mapId: 0,
     siteMaps: [],

@@ -148,7 +148,8 @@ export function roadEnds(w: World): Point[] {
 
 /**
  * Nombres que nadie de la colonia (ni quien espera) lleva ya: en este mapa, en los sitios (desde la
- * base), de viaje (H5c1) o en `taken`.
+ * base), de viaje (H5c1) o en `taken`. Primero los que no ha llevado nadie en la partida (H6c §2.9);
+ * si ya no queda ninguno, cualquiera de esos.
  */
 export function freeNames(w: World, taken: readonly string[] = []): string[] {
   const maps = [w, ...w.siteMaps.map((m) => m.world)];
@@ -160,7 +161,9 @@ export function freeNames(w: World, taken: readonly string[] = []): string[] {
     ]),
     ...w.common.expedition.travels.flatMap((t) => t.members.map((s) => s.name)),
   ]);
-  return NAMES.filter((n) => !used.has(n));
+  const now = NAMES.filter((n) => !used.has(n));
+  const never = now.filter((n) => !w.common.usedNames.includes(n));
+  return never.length > 0 ? never : now;
 }
 
 /** Un desconocido en `start` que va hacia la puerta, con lo que lleve encima (sin un nombre de `taken`). */
@@ -233,6 +236,7 @@ export function newStranger(w: World, start: Point, taken: readonly string[] = [
   s.needs.mood = moodTarget(s, w.tick, w.base.rect);
   s.stance = defaultStance(s.traits);
   s.skills = rollSkills(skillRng(w.seed, s.id), s.traits);
+  w.common.usedNames.push(s.name); // H6c §2.9: ya no se repite
   return s;
 }
 

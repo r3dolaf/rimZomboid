@@ -6,6 +6,8 @@ import { bagAllowed, bagRoom, isBag, personal, wornBags } from './bags';
 import { armFactor } from './body';
 import { capacityKg } from './skills';
 import { foodDays } from './colony';
+import { isNight } from './clock';
+import { contains } from './geom';
 import { buildJob, buildStillWorth } from './jobs/build';
 import { chopJob, chopStillWorth, returnAxeJob } from './jobs/chop';
 import { pryJob, pryStillWorth } from './jobs/pry';
@@ -31,11 +33,13 @@ export function targetContainerId(s: Survivor): number | null {
   return null;
 }
 
-function available(c: Container, s: Survivor): boolean {
+/** Los cuerpos de fuera de la base, solo de día (H6c §2.10): de noche hay más zombis. */
+function available(c: Container, s: Survivor, w: World): boolean {
   return (
     c.designated &&
     !(c.searched && isEmpty(c.items)) &&
-    (c.reservedBy === null || c.reservedBy === s.id)
+    (c.reservedBy === null || c.reservedBy === s.id) &&
+    !(c.kind === 'corpse' && isNight(w.tick) && !contains(w.base.rect, c.pos))
   );
 }
 
@@ -75,7 +79,7 @@ function nearestContainer(s: Survivor, w: World): Container | null {
   let best: Container | null = null;
   let bestD = Infinity;
   for (const c of w.containers) {
-    if (!available(c, s) || !canTakeSomething(c, s, w)) continue;
+    if (!available(c, s, w) || !canTakeSomething(c, s, w)) continue;
     if (regionOf(w.grid, c.pos.x, c.pos.y) !== region) continue;
     const d = (c.pos.x - sx) ** 2 + (c.pos.y - sy) ** 2;
     if (d < bestD) {
@@ -241,7 +245,7 @@ export function stillWorthIt(s: Survivor, w: World): boolean {
   const id = targetContainerId(s);
   if (id === null || s.action.type === 'search') return true;
   const c = w.containers.find((x) => x.id === id);
-  return c !== undefined && s.work.loot && available(c, s) && canTakeSomething(c, s, w);
+  return c !== undefined && s.work.loot && available(c, s, w) && canTakeSomething(c, s, w);
 }
 
 /** Libera las reservas de quien ya no va a ese contenedor. */

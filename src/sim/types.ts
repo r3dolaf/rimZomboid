@@ -825,6 +825,8 @@ export interface Common {
    * demás mapas se enteran al final del tick (`farewellsSystem`, desde la base).
    */
   departed: { id: number; how: 'died' | 'banished'; mapId: number | null }[];
+  /** Los nombres que ha llevado alguien en la partida (H6c §2.9): no se repiten mientras queden. */
+  usedNames: string[];
 }
 
 export interface World {

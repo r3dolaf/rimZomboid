@@ -71,6 +71,17 @@ export function loadGame(
       if (typeof m?.siteId !== 'number' || !m.world?.grid) return { error: 'broken' };
       m.world.common = c;
     }
+    // Las guardadas antes de H6c no recuerdan los nombres: valen los de quien hay o hubo.
+    if (!Array.isArray(c.usedNames as unknown))
+      c.usedNames = [
+        ...new Set([
+          ...(c.dead ?? []).map((d) => d.name),
+          ...[world, ...world.siteMaps.map((m) => m.world)].flatMap((m) =>
+            m.survivors.map((s) => s.name),
+          ),
+          ...c.expedition.travels.flatMap((t) => t.members.map((s) => s.name)),
+        ]),
+      ];
     if (checkInvariants(world).length > 0) return { error: 'broken' };
     return { world, meta: file.meta };
   } catch {

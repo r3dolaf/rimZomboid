@@ -231,6 +231,7 @@ export function createWorld(
       expedition: { ...newExpedition(seed), sites, nextSiteId: sites.length + 1 },
       atlas,
       departed: [],
+      usedNames: survivors.map((s) => s.name), // H6c
     },
     mapId: 0,
     siteMaps: [],

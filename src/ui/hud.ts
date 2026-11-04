@@ -79,18 +79,22 @@ export function mountHud(
   const food = document.createElement('span');
   food.className = 'hud-food';
   food.dataset.testid = 'hud-food';
+  food.title = es.hudTitles.food;
 
   const bandages = document.createElement('span');
   bandages.className = 'hud-bandages';
   bandages.dataset.testid = 'hud-bandages';
+  bandages.title = es.hudTitles.bandages;
 
   const painkillers = document.createElement('span');
   painkillers.className = 'hud-painkillers';
   painkillers.dataset.testid = 'hud-painkillers';
+  painkillers.title = es.hudTitles.painkillers;
 
   const wood = document.createElement('span');
   wood.className = 'hud-wood';
   wood.dataset.testid = 'hud-wood';
+  wood.title = es.hudTitles.wood;
 
   const button = (testid: string, text: string, hint: string, onClick: () => void) => {
     const b = document.createElement('button');
@@ -143,10 +147,7 @@ export function mountHud(
   );
   notices.hidden = !opts.toggleNotices;
 
-  const seed = document.createElement('span');
-  seed.className = 'hud-seed';
-  seed.dataset.testid = 'hud-seed';
-  seed.textContent = es.seed(opts.seed);
+  // (La semilla está en el panel Partida, H6c: en la barra no cabía.)
 
   const weather = document.createElement('span');
   weather.className = 'hud-weather';
@@ -157,6 +158,7 @@ export function mountHud(
   const zombies = document.createElement('span');
   zombies.className = 'hud-zombies';
   zombies.dataset.testid = 'hud-zombies';
+  zombies.title = es.hudTitles.zombies;
 
   // Cuenta atrás del asedio (H4e), en rojo.
   const siege = document.createElement('span');
@@ -164,10 +166,7 @@ export function mountHud(
   siege.dataset.testid = 'hud-siege';
   siege.hidden = true;
 
-  const narrator = document.createElement('span');
-  narrator.className = 'hud-narrator';
-  narrator.dataset.testid = 'hud-narrator';
-  narrator.textContent = es.narratorLabel(es.narrators[opts.narrator ?? 'balanced'].name);
+  // (El narrador está en el panel Partida, H6c, como la semilla.)
 
   bar.append(
     time,
@@ -187,8 +186,6 @@ export function mountHud(
     zombies,
     siege,
     weather,
-    narrator,
-    seed,
   );
   root.append(bar);
 

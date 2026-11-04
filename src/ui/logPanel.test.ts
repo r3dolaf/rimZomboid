@@ -2,6 +2,7 @@
 import { expect, test } from 'vitest';
 import { logEvent } from '../sim/log';
 import { createWorld } from '../sim/world';
+import { emptyWorld } from '../sim/testing/fixtures';
 import { buildingThe, formatItems, formatLogEntry } from './describe';
 import { LOG_CATEGORIES, LOG_CATEGORY, mountLog } from './logPanel';
 
@@ -251,4 +252,17 @@ test('los filtros van abajo del registro, después de la lista (siempre a mano)'
     'ol.',
     'div.log-filters',
   ]);
+});
+
+test('el registro se ve desde el principio, vacío: «Aún no ha pasado nada» (H6c)', () => {
+  const w = emptyWorld(5, 5);
+  w.common.log = [];
+  const root = document.createElement('div');
+  const log = mountLog(root, { world: w });
+  log.update();
+  const panel = root.querySelector('[data-testid="log"]') as HTMLElement;
+  expect(panel.hidden).toBe(false);
+  expect(root.querySelector('[data-testid="log-empty"]')!.textContent).toBe(
+    'Aún no ha pasado nada',
+  );
 });

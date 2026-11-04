@@ -9,11 +9,11 @@ test('formatDayTime rellena con ceros', () => {
   expect(formatDayTime({ day: 3, hour: 7, minute: 5 })).toBe('Día 3, 07:05');
 });
 
-test('el HUD muestra la semilla y marca la velocidad activa', () => {
+test('el HUD marca la velocidad activa (la semilla está en el panel Partida, H6c)', () => {
   const root = document.createElement('div');
   const time = createTimeController();
   mountHud(root, { seed: 42, time });
-  expect(root.querySelector('[data-testid="hud-seed"]')!.textContent).toBe('Semilla: 42');
+  expect(root.querySelector('[data-testid="hud-seed"]')).toBeNull();
   expect(root.querySelector('[data-speed="1"]')!.classList.contains('active')).toBe(true);
   (root.querySelector('[data-speed="3"]') as HTMLButtonElement).click();
   expect(time.speed).toBe(3);
@@ -106,8 +106,9 @@ test('muestra la comida del almacén', () => {
       pieces: [],
     },
   );
-  expect(root.querySelector('[data-testid="hud-food"]')!.textContent).toBe('Comida: 12');
-  expect(root.querySelector('[data-testid="hud-bandages"]')!.textContent).toBe('Vendas: 3');
+  expect(root.querySelector('[data-testid="hud-food"]')!.textContent).toBe('🥫 12');
+  expect(root.querySelector('[data-testid="hud-bandages"]')!.textContent).toBe('🩹 3');
+  expect((root.querySelector('[data-testid="hud-food"]') as HTMLElement).title).toBe('Comida');
 });
 
 test('los botones Saquear, Talar y Construir activan su herramienta (solo una a la vez)', () => {
@@ -160,15 +161,15 @@ test('muestra la madera del almacén y el botón Trabajos abre el panel', () => 
       pieces: [],
     },
   );
-  expect(root.querySelector('[data-testid="hud-wood"]')!.textContent).toBe('Madera: 7');
+  expect(root.querySelector('[data-testid="hud-wood"]')!.textContent).toBe('🪵 7');
   (root.querySelector('[data-testid="hud-work"]') as HTMLButtonElement).click();
   expect(toggleWork).toHaveBeenCalledTimes(1);
 });
 
-test('muestra el narrador y la tormenta mientras dura', () => {
+test('muestra la tormenta mientras dura (el narrador, en el panel Partida, H6c)', () => {
   const root = document.createElement('div');
   const hud = mountHud(root, { seed: 1, time: createTimeController(), narrator: 'chaotic' });
-  expect(root.querySelector('[data-testid="hud-narrator"]')!.textContent).toBe('Narrador: Caótico');
+  expect(root.querySelector('[data-testid="hud-narrator"]')).toBeNull();
   const weather = root.querySelector('[data-testid="hud-weather"]') as HTMLElement;
   const stock = {
     food: 1,

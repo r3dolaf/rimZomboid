@@ -9,7 +9,18 @@ test('el juego carga sin errores y responde a la velocidad', async ({ page }) =>
 
   await page.goto('/?seed=4242');
   await expect(page.locator('canvas')).toBeVisible();
-  await expect(page.getByTestId('hud-seed')).toHaveText('Semilla: 4242');
+  // H6c: la semilla, en el panel Partida; y a 1280 px la barra de arriba cabe entera.
+  await page.getByTestId('hud-game').click();
+  await expect(page.getByTestId('game-seed')).toHaveText('Semilla: 4242');
+  await page.getByTestId('hud-game').click();
+  await page.setViewportSize({ width: 1280, height: 720 });
+  const overflow = await page.evaluate(() => {
+    const bar =
+      document.querySelector('.hud-bar') ??
+      document.querySelector('[data-testid="hud-time"]')!.parentElement!;
+    return bar.scrollWidth - bar.clientWidth;
+  });
+  expect(overflow).toBeLessThanOrEqual(0);
 
   const t0 = await page.getByTestId('hud-time').textContent();
   await page.locator('[data-speed="3"]').click();

@@ -52,6 +52,7 @@ test('el panel «Partida»: guardar, cargar (confirmando), exportar e importar',
   const calls: string[] = [];
   const panel = mountGamePanel(root, {
     open,
+    seed: 42,
     hasSave: () => true,
     onSave: () => (calls.push('save'), true),
     onLoad: () => calls.push('load'),
@@ -60,6 +61,8 @@ test('el panel «Partida»: guardar, cargar (confirmando), exportar e importar',
   });
   panel.update();
   const q = (id: string) => root.querySelector(`[data-testid="${id}"]`) as HTMLElement;
+  expect(q('game-seed').textContent).toBe('Semilla: 42'); // H6c: aquí, no en la barra
+  expect(q('game-narrator').textContent).toBe('Narrador: Equilibrado');
   q('game-save').click();
   expect(calls).toEqual(['save']);
   expect(q('game-status').textContent).toBe('Partida guardada');
@@ -82,6 +85,7 @@ test('el panel dice si no se ha podido guardar, y sin partida guardada no deja c
   open.set(true);
   const panel = mountGamePanel(root, {
     open,
+    seed: 1,
     hasSave: () => false,
     onSave: () => false,
     onLoad: () => {},

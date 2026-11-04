@@ -22,7 +22,8 @@ test('portada: elegir Caótico y Empezar; la dirección lleva el narrador', asyn
   await expect(start).toBeHidden();
   await expect(page).toHaveURL(/seed=4242/);
   await expect(page).toHaveURL(/narrador=caotico/);
-  await expect(page.getByTestId('hud-narrator')).toHaveText('Narrador: Caótico');
+  await page.getByTestId('hud-game').click(); // H6c: el narrador, en el panel Partida
+  await expect(page.getByTestId('game-narrator')).toHaveText('Narrador: Caótico');
   await expect(page.locator('[data-testid^="card-"]')).toHaveCount(3);
   expect(errores).toEqual([]);
 });

@@ -39,9 +39,17 @@ export const es = {
   title: 'rimZomboid',
   dayTime: (day: number, hour: number, minute: number) => `Día ${day}, ${pad(hour)}:${pad(minute)}`,
   seed: (s: number) => `Semilla: ${s}`,
-  food: (n: number) => `Comida: ${n}`,
-  bandages: (n: number) => `Vendas: ${n}`,
-  painkillers: (n: number) => `Analgésicos: ${n}`,
+  // H6c: con icono, para que la barra de arriba quepa (el nombre, al pasar el ratón).
+  food: (n: number) => `🥫 ${n}`,
+  bandages: (n: number) => `🩹 ${n}`,
+  painkillers: (n: number) => `💊 ${n}`,
+  hudTitles: {
+    food: 'Comida',
+    bandages: 'Vendas',
+    painkillers: 'Analgésicos',
+    wood: 'Madera',
+    zombies: 'Zombis a la vista',
+  },
   lootTool: 'Saquear',
   chopTool: 'Talar',
   chopToolHint: 'Marcar árboles para talar: clic o arrastrar (T)',
@@ -49,7 +57,7 @@ export const es = {
   buildToolHint: 'Construir con madera (B)',
   workPanel: 'Trabajos',
   workPanelHint: 'Quién hace qué (J)',
-  wood: (n: number) => `Madera: ${n}`,
+  wood: (n: number) => `🪵 ${n}`,
   inHand: (what: string) => `En la mano: ${what}`,
   /** Trabajos, en el orden del panel. */
   works: {
@@ -350,7 +358,7 @@ export const es = {
     ZombieLevel,
     string
   >,
-  zombiesInSight: (n: number) => `Zombis a la vista: ${n}`,
+  zombiesInSight: (n: number) => `🧟 ${n}`,
   health: 'Salud',
   stanceTitle: 'Postura',
   stances: { fight: 'Pelear', flee: 'Huir', decide: 'Decidir' } satisfies Record<Stance, string>,
@@ -693,6 +701,7 @@ export const es = {
     wanderersSighted: 'Horda errante',
     strangersFled: 'Huyen',
   },
+  logEmpty: 'Aún no ha pasado nada', // H6c
   // El modo depuración, F3 (H6c).
   debug: {
     title: 'Depuración (F3)',

@@ -175,6 +175,8 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
   });
   const gamePanel = mountGamePanel(ui, {
     open: gameOpen,
+    seed,
+    narrator: style,
     hasSave: () => store.read() !== null,
     onSave: save,
     onLoad: () => location.assign(loadHere()),

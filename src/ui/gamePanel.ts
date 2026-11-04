@@ -1,6 +1,7 @@
 // El panel «Partida» (spec H6b §2): guardar ahora, cargar la guardada (confirmando), exportar a un
 // archivo e importar uno.
 import { es } from '../i18n/es';
+import type { NarratorStyle } from '../sim/types';
 import type { Flag } from './flag';
 import { importInput } from './saveStore';
 import './panels.css';
@@ -9,6 +10,9 @@ export function mountGamePanel(
   root: HTMLElement,
   opts: {
     open: Flag;
+    /** H6c: la semilla y el narrador de la partida (antes, en la barra de arriba). */
+    seed: number;
+    narrator?: NarratorStyle;
     hasSave: () => boolean;
     /** Guarda; `false` si no se ha podido. */
     onSave: () => boolean;
@@ -64,7 +68,15 @@ export function mountGamePanel(
   const row = document.createElement('div');
   row.className = 'buttons';
   row.append(save, load, confirm, exp, label);
-  panel.append(head, row, status);
+  const seed = document.createElement('p');
+  seed.className = 'muted';
+  seed.dataset.testid = 'game-seed';
+  seed.textContent = es.seed(opts.seed);
+  const narrator = document.createElement('p');
+  narrator.className = 'muted';
+  narrator.dataset.testid = 'game-narrator';
+  narrator.textContent = es.narratorLabel(es.narrators[opts.narrator ?? 'balanced'].name);
+  panel.append(head, seed, narrator, row, status);
   root.append(panel);
   return {
     update() {

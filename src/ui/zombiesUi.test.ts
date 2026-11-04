@@ -53,7 +53,7 @@ test('HUD: "Zombis a la vista: N"', () => {
   const hud = mountHud(root, { seed: 1, time: createTimeController() });
   const w = createWorld(3);
   hud.update({ day: 1, hour: 8, minute: 0 }, w.storage.items, false, 4);
-  expect(q(root, 'hud-zombies').textContent).toBe('Zombis a la vista: 4');
+  expect(q(root, 'hud-zombies').textContent).toBe('🧟 4');
 });
 
 test('zombis a la vista: los que ve algún colono, en línea recta', () => {

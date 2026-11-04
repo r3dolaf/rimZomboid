@@ -35,7 +35,7 @@ test('portada: opción Zombis; un zombi junto a un colono se ve en el HUD; postu
     const w = (window as unknown as { rimzomboid: Debug }).rimzomboid.world;
     w.zombies = [];
   });
-  await expect(page.getByTestId('hud-zombies')).toHaveText('Zombis a la vista: 0');
+  await expect(page.getByTestId('hud-zombies')).toHaveText('🧟 0');
   await page.evaluate(() => {
     const w = (window as unknown as { rimzomboid: Debug }).rimzomboid.world;
     const s = w.survivors[0]!;
@@ -53,7 +53,7 @@ test('portada: opción Zombis; un zombi junto a un colono se ve en el HUD; postu
       hordeId: null, // H4e
     });
   });
-  await expect(page.getByTestId('hud-zombies')).toHaveText('Zombis a la vista: 1');
+  await expect(page.getByTestId('hud-zombies')).toHaveText('🧟 1');
 
   // Panel de Trabajos: la postura del primero pasa a Huir.
   const id = (await world(page)).survivors[0]!.id;

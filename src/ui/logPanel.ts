@@ -222,16 +222,22 @@ export function mountLog(root: HTMLElement, opts: { world: World }): { update():
       if (key === shownKey) return;
       shownKey = key;
       const atBottom = panel.scrollTop + panel.clientHeight >= panel.scrollHeight - 4;
+      // Vacío al empezar, se ve igual (H6c): «Aún no ha pasado nada».
+      const empty = document.createElement('li');
+      empty.className = 'muted';
+      empty.dataset.testid = 'log-empty';
+      empty.textContent = es.logEmpty;
       list.replaceChildren(
-        ...log.map((e) => {
-          const li = document.createElement('li');
-          li.textContent = formatLogEntry(e, opts.world);
-          li.dataset.category = LOG_CATEGORY[e.kind];
-          return li;
-        }),
+        ...(log.length === 0
+          ? [empty]
+          : log.map((e) => {
+              const li = document.createElement('li');
+              li.textContent = formatLogEntry(e, opts.world);
+              li.dataset.category = LOG_CATEGORY[e.kind];
+              return li;
+            })),
       );
       applyFilters();
-      panel.hidden = log.length === 0;
       if (atBottom) panel.scrollTop = panel.scrollHeight;
     },
   };

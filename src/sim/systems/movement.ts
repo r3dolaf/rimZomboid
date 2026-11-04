@@ -22,7 +22,12 @@ import { startChopActivity } from '../jobs/chop';
 import { startHaulActivity } from '../jobs/haul';
 import { startHealActivity } from '../jobs/heal';
 import { startMercy } from '../death';
-import { startPainkillerActivity, takeBandages, takePainkiller } from '../jobs/medical';
+import {
+  startFeedActivity,
+  startPainkillerActivity,
+  takeBandages,
+  takePainkiller,
+} from '../jobs/medical';
 import { startCraftActivity } from '../jobs/craft';
 import { startPryActivity } from '../jobs/pry';
 import { startSwapWeapon } from '../jobs/weapons';
@@ -168,6 +173,9 @@ function startActivity(s: Survivor, activity: Activity, w: World): Action {
     case 'fetchPainkiller':
     case 'givePainkiller':
       return startPainkillerActivity(s, w, activity);
+    case 'fetchFood': // H6c
+    case 'giveFood':
+      return startFeedActivity(s, w, activity);
     case 'rest':
       return { type: 'rest' };
     case 'mercy':

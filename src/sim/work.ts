@@ -194,6 +194,8 @@ const WORK_ACTIONS: ReadonlySet<string> = new Set([
   'packBag',
   'fetchPainkiller',
   'givePainkiller',
+  'fetchFood', // H6c
+  'giveFood',
 ]);
 
 /** ¿Está trabajando (o yendo a trabajar)? */
@@ -219,7 +221,9 @@ export function stillWorthIt(s: Survivor, w: World): boolean {
     what === 'dropOff' ||
     what === 'bandage' ||
     what === 'fetchPainkiller' ||
-    what === 'givePainkiller'
+    what === 'givePainkiller' ||
+    what === 'fetchFood' ||
+    what === 'giveFood'
   )
     return healStillWorth(s, w);
   if (what === 'chop' || what === 'takeAxe' || what === 'storeAxe') return chopStillWorth(s, w);

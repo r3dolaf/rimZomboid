@@ -964,6 +964,7 @@ export const es = {
         : `${who} ${many ? 'se cruzan' : 'se cruza'} con ${zombies} zombis ${where}: ${out}`;
     },
     antibiotics: (who: string) => `${who} toma antibióticos`, // H6a
+    fed: (who: string, other: string) => `${who} da de comer a ${other}`, // H6c
     infectionCured: (who: string) => `A ${who} se le pasa la infección`,
     roadJoined: (who: string, group: string) => `${who} se une a ${group} por el camino`,
     roadJoinerLeft: (who: string, full: boolean) =>

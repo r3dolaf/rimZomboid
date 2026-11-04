@@ -6,6 +6,8 @@ import {
   BANDAGE_CLEAN_HOURS,
   BANDAGE_RANGE,
   BANDAGE_TICKS,
+  EAT_BELOW,
+  EAT_RESTORE,
   ITEM_WEIGHT_KG,
   PAINKILLER_HOURS,
   REST_BELOW,
@@ -292,6 +294,70 @@ export function startPainkillerActivity(
   spend(s, 'painkillers');
   painkillerTaken(w, p);
   logEvent(w, { kind: 'painkiller', survivorId: s.id, otherId: p.id });
+  return idle;
+}
+
+/** H6c: ¿hay que llevarle de comer? Derribado y con hambre. */
+const needsFood = (p: Survivor) => p.action.type === 'downed' && p.needs.hunger < EAT_BELOW;
+
+/** A quién lleva una lata (o va a por ella), o `null`. */
+function foodTargetId(s: Survivor): number | null {
+  const a = s.action;
+  const then = a.type === 'moveTo' ? a.then : undefined;
+  return then?.type === 'fetchFood' || then?.type === 'giveFood' ? then.patientId : null;
+}
+
+const goGiveFood = (p: Survivor): Action => ({
+  type: 'moveTo',
+  target: tileOf(p.pos),
+  then: { type: 'giveFood', patientId: p.id },
+});
+
+/** Sanar (H6c): llevar una lata del almacén a un derribado con hambre. */
+export function feedJob(s: Survivor, w: World): Action | null {
+  const p = w.survivors.find(
+    (o) => o !== s && needsFood(o) && !w.survivors.some((x) => x !== s && foodTargetId(x) === o.id),
+  );
+  if (!p) return null;
+  if (has(s, 'food') > 0) return goGiveFood(p);
+  if (w.storage.items.food === 0 || !reachesStorage(w, s)) return null;
+  return {
+    type: 'moveTo',
+    target: pick(w.rng, w.storage.tiles),
+    then: { type: 'fetchFood', patientId: p.id },
+  };
+}
+
+/** ¿Sigue teniendo sentido llevársela? */
+export function feedStillWorth(w: World, patientId: number): boolean {
+  const p = w.survivors.find((x) => x.id === patientId);
+  return p !== undefined && needsFood(p);
+}
+
+/** En el almacén: coge una lata y se la lleva; junto al derribado: se la da. */
+export function startFeedActivity(
+  s: Survivor,
+  w: World,
+  activity: { type: 'fetchFood' | 'giveFood'; patientId: number },
+): Action {
+  const idle: Action = { type: 'idle', ticksLeft: 0 };
+  const p = w.survivors.find((x) => x.id === activity.patientId);
+  if (activity.type === 'fetchFood') {
+    if (has(s, 'food') === 0) {
+      if (w.storage.items.food === 0 || room(s, 'food') === 0) return idle;
+      w.storage.items.food--;
+      s.carrying.food++;
+    }
+    if (!p || !needsFood(p)) return idle;
+    const path = findPath(w.grid, tileOf(s.pos), tileOf(p.pos));
+    if (!path) return idle;
+    s.path = path;
+    return goGiveFood(p);
+  }
+  if (!p || !needsFood(p) || has(s, 'food') === 0 || !near(s, p)) return idle;
+  spend(s, 'food');
+  p.needs.hunger = Math.min(100, p.needs.hunger + EAT_RESTORE);
+  logEvent(w, { kind: 'fed', survivorId: s.id, otherId: p.id });
   return idle;
 }
 

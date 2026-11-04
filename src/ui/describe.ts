@@ -697,6 +697,9 @@ function logSentence(e: LogEntry, w: World, here: World): string {
     case 'antibiotics':
       text = l.antibiotics(name(e.survivorId));
       break;
+    case 'fed':
+      text = l.fed(name(e.survivorId), name(e.otherId));
+      break;
     case 'infectionCured':
       text = l.infectionCured(name(e.survivorId));
       break;

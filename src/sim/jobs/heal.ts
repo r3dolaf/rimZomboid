@@ -17,6 +17,8 @@ import {
   freeHospitalBed,
   painkillerJob,
   painkillerStillWorth,
+  feedJob,
+  feedStillWorth,
   startBandage,
   startBandageActivity,
 } from './medical';
@@ -103,7 +105,7 @@ function rescueJob(s: Survivor, w: World): Action | null {
  * nada que hacer.
  */
 export function healJob(s: Survivor, w: World): Action | null {
-  return rescueJob(s, w) ?? painkillerJob(s, w) ?? bandageJob(s, w);
+  return rescueJob(s, w) ?? painkillerJob(s, w) ?? bandageJob(s, w) ?? feedJob(s, w);
 }
 
 /** Rescate mandado en modo combate: sin mirar si hay zombis cerca. */
@@ -120,6 +122,8 @@ export function healStillWorth(s: Survivor, w: World): boolean {
   if (then.type === 'bandage') return s.work.heal && bandageStillWorth(s, w, then.patientId);
   if (then.type === 'fetchPainkiller' || then.type === 'givePainkiller')
     return s.work.heal && painkillerStillWorth(s, w, then.patientId);
+  if (then.type === 'fetchFood' || then.type === 'giveFood')
+    return s.work.heal && feedStillWorth(w, then.patientId);
   if (then.type !== 'rescue') return true;
   const d = w.survivors.find((x) => x.id === then.downedId);
   return d !== undefined && s.work.heal && rescuable(w, d, s) && !zombiesNear(w, d);

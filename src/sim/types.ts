@@ -286,6 +286,9 @@ export type Activity =
   | { type: 'takePainkiller' }
   | { type: 'fetchPainkiller'; patientId: number }
   | { type: 'givePainkiller'; patientId: number }
+  // H6c: llevar una lata a un derribado con hambre (ir a por ella y dársela).
+  | { type: 'fetchFood'; patientId: number }
+  | { type: 'giveFood'; patientId: number }
   // Vestirse (H5b §4): en el almacén, ponerse lo mejor y quitarse lo que no toca.
   | { type: 'dress' }
   // Llenar el barreño (H5b §6): coger agua o un cubo en el almacén, llenarlo en una fuente y vaciarlo.

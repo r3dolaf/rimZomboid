@@ -82,6 +82,7 @@ export const LOG_CATEGORY: Record<LogEvent['kind'], LogCategory> = {
   feverRest: 'health',
   feverGone: 'health',
   antibiotics: 'health', // H6a
+  fed: 'health', // H6c
   infectionCured: 'health',
   died: 'health',
   strangerDied: 'health',

@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { draftToggle } from './game/command';
-import { parseNarrator, parseSeed, parseZombies, randomSeed, startUrl } from './game/seed';
+import { loadUrl, parseNarrator, parseSeed, parseZombies, randomSeed, startUrl } from './game/seed';
 import { createTimeController } from './game/timeController';
 import { BACKGROUND } from './render/colors';
 import { GameScene, type GameSceneData } from './render/GameScene';
@@ -12,6 +12,7 @@ import { loadGame, saveGame, type SaveMeta } from './sim/save';
 import { es } from './i18n/es';
 import { mountGamePanel } from './ui/gamePanel';
 import { createSaveStore, downloadFile, exportName, savedMeta } from './ui/saveStore';
+import { createAutosave } from './ui/autosave';
 import { issue } from './sim/orders';
 import { createWorld } from './sim/world';
 import { allColonists } from './sim/game';
@@ -49,12 +50,7 @@ const ui = document.getElementById('hud')!;
 const store = createSaveStore(); // H6b: la partida guardada en el navegador
 
 /** La dirección para seguir la partida guardada (sin semilla; con lo demás, como `debug`). */
-function loadUrl(): string {
-  const p = new URLSearchParams(location.search);
-  for (const k of ['seed', 'narrator', 'zombies']) p.delete(k);
-  p.set('load', '1');
-  return `${location.pathname}?${p.toString()}`;
-}
+const loadHere = () => `${location.pathname}${loadUrl(location.search)}`;
 
 /** Empieza la partida guardada; `false` si no hay o no sirve. */
 function startSaved(text: string | null): boolean {
@@ -86,7 +82,7 @@ if (!(params.has('load') && startSaved(store.read()))) {
       },
       saved: savedMeta(saved),
       onContinue() {
-        history.replaceState(null, '', loadUrl());
+        history.replaceState(null, '', loadHere());
         screen.remove();
         startSaved(saved);
       },
@@ -94,7 +90,7 @@ if (!(params.has('load') && startSaved(store.read()))) {
         const got = loadGame(text);
         if ('error' in got) return screen.say(es.game[got.error]);
         store.write(text); // si no deja, se juega igual (pero no se podrá «Continuar»)
-        history.replaceState(null, '', loadUrl());
+        history.replaceState(null, '', loadHere());
         screen.remove();
         startSaved(text);
       },
@@ -157,19 +153,33 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
     zombies,
     savedAt: new Date().toISOString(),
   });
-  const save = () => store.write(saveGame(world, meta()));
-  let savedDay = 0;
+  // Tras guardar, recargar la página sigue la partida guardada (y no empieza otra encima).
+  const save = () => {
+    if (!store.write(saveGame(world, meta()))) return false;
+    history.replaceState(null, '', loadHere());
+    return true;
+  };
+  const autosave = createAutosave({
+    startDay: gameTime(world.tick).day,
+    save,
+    onSaved: () => {},
+    // Si no se puede, se dice (abriendo el panel): si no, se creería guardada.
+    onFail: () => {
+      gameOpen.set(true);
+      gamePanel.say(es.game.saveFailed);
+    },
+  });
   const gamePanel = mountGamePanel(ui, {
     open: gameOpen,
     hasSave: () => store.read() !== null,
     onSave: save,
-    onLoad: () => location.assign(loadUrl()),
+    onLoad: () => location.assign(loadHere()),
     onExport: () => downloadFile(exportName(meta()), saveGame(world, meta())),
     onImport(text) {
       const got = loadGame(text);
       if ('error' in got) return gamePanel.say(es.game[got.error]);
       if (!store.write(text)) return gamePanel.say(es.game.saveFailed);
-      location.assign(loadUrl());
+      location.assign(loadHere());
     },
   });
   // H5c1: las pestañas de mapa; lo de cada mapa (arriba, Almacén, Fabricar, Trabajos, fichas)
@@ -321,12 +331,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
       expeditionsPanel.update();
       worldCard.update();
       gamePanel.update();
-      // Cada mañana (a las 6), se guarda sola; si no se puede, lo dice el panel (H6b).
-      const now = gameTime(world.tick);
-      if (now.hour >= 6 && now.day > savedDay) {
-        savedDay = now.day;
-        if (!save()) gamePanel.say(es.game.saveFailed);
-      }
+      autosave.tick(gameTime(world.tick)); // cada mañana, se guarda sola (H6b)
       workPanel.update();
       craftPanel.update();
       buildMenu.update();

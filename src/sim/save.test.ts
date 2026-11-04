@@ -75,3 +75,18 @@ test('una versión distinta o un archivo que no es una partida no se cargan (y s
   expect(loadGame('hola')).toEqual({ error: 'broken' });
   expect(loadGame('{"version":1}')).toEqual({ error: 'broken' });
 });
+
+test('un archivo a medias (con versión y algo de forma) tampoco se carga, y nunca rompe', () => {
+  expect(loadGame('{"version":1,"meta":{},"world":{"common":{},"grid":{}}}')).toEqual({
+    error: 'broken',
+  });
+  const w = createWorld(1);
+  const good = JSON.parse(saveGame(w, meta)) as { world: { siteMaps: unknown } };
+  good.world.siteMaps = {};
+  expect(loadGame(JSON.stringify(good))).toEqual({ error: 'broken' });
+  good.world.siteMaps = [{}];
+  expect(loadGame(JSON.stringify(good))).toEqual({ error: 'broken' });
+  const badMeta = JSON.parse(saveGame(w, meta)) as { meta: { day: unknown } };
+  badMeta.meta.day = 'x';
+  expect(loadGame(JSON.stringify(badMeta))).toEqual({ error: 'broken' });
+});

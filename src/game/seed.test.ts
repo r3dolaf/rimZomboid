@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { parseNarrator, parseSeed, randomSeed, startUrl } from './seed';
+import { loadUrl, parseNarrator, parseSeed, randomSeed, startUrl } from './seed';
 
 const fb = () => 999;
 
@@ -39,4 +39,11 @@ test('startUrl conserva lo demás y pone semilla y narrador', () => {
     '?debug=1&seed=42&narrador=caotico&zombis=normal',
   );
   expect(startUrl('', 7, 'calm')).toBe('?seed=7&narrador=tranquilo&zombis=normal');
+});
+
+test('H6b: empezar una partida nueva quita «load» de la dirección; seguir la guardada pone solo «load»', () => {
+  expect(startUrl('?load=1&debug=1', 42, 'calm')).not.toContain('load');
+  expect(loadUrl('?semilla=1&seed=5&narrador=calma&zombis=pocos&debug=1')).toBe(
+    '?semilla=1&debug=1&load=1',
+  );
 });

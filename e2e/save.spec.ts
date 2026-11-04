@@ -25,6 +25,10 @@ test('guardar, volver a la portada y «Continuar»: la misma partida', async ({ 
   await expect(page.getByTestId('game-status')).toHaveText('Partida guardada');
   const before = await state(page);
 
+  // Recargar la página (F5) sigue la partida guardada, no empieza otra encima.
+  await page.reload();
+  await expect.poll(() => state(page)).toEqual(before);
+
   await page.goto('/?debug=1');
   await expect(page.getByTestId('start-continue')).toHaveText(/^Continuar \(día \d+\)$/);
   await page.getByTestId('start-continue').click();

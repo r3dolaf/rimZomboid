@@ -52,6 +52,14 @@ export function parseZombies(search: string): ZombieLevel | null {
  * La dirección de una partida: conserva lo que hubiera (p. ej. `debug`) y pone semilla, narrador
  * y zombis.
  */
+/** H6b: la dirección para seguir la partida guardada (sin semilla; con lo demás, como `debug`). */
+export function loadUrl(search: string): string {
+  const p = new URLSearchParams(search);
+  for (const k of ['seed', 'narrador', 'zombis']) p.delete(k);
+  p.set('load', '1');
+  return `?${p.toString()}`;
+}
+
 export function startUrl(
   search: string,
   seed: number,
@@ -59,6 +67,7 @@ export function startUrl(
   zombies: ZombieLevel = 'normal',
 ): string {
   const p = new URLSearchParams(search);
+  p.delete('load'); // H6b: una partida nueva, no la guardada
   p.set('seed', String(seed));
   p.set('narrador', NARRATOR_PARAM[style]);
   p.set('zombis', ZOMBIES_PARAM[zombies]);

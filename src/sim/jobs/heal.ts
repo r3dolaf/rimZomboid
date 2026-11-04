@@ -1,9 +1,8 @@
 // Sanar (spec H4e §4): rescatar a los derribados (llevarlos en brazos a una cama o a la base). Lo
 // de vendar está en medical.ts (H5).
 import { has } from '../bags';
-import { RESCUE_REACH, RESCUE_SAFE_RANGE } from '../balance';
+import { RESCUE_REACH } from '../balance';
 import { baseFloor } from '../base';
-import { seenByColony } from '../danger';
 import { contains } from '../geom';
 import { logEvent } from '../log';
 import { findPath, regionOf } from '../path/astar';
@@ -21,6 +20,7 @@ import {
   feedStillWorth,
   startBandage,
   startBandageActivity,
+  zombiesNear,
 } from './medical';
 
 const sameTile = (a: Point, b: Point) => a.x === b.x && a.y === b.y;
@@ -65,14 +65,6 @@ function rescuable(w: World, d: Survivor, by: Survivor): boolean {
   if (a.type !== 'downed' || a.inBed || a.carriedBy !== undefined) return false;
   if (w.survivors.some((o) => o !== by && rescueTargetId(o) === d.id)) return false;
   return rescueSpot(w, d) !== null;
-}
-
-/** ¿Ve algún colono un zombi a RESCUE_SAFE_RANGE casillas o menos del derribado? */
-function zombiesNear(w: World, d: Survivor): boolean {
-  const r2 = RESCUE_SAFE_RANGE * RESCUE_SAFE_RANGE;
-  return w.zombies.some(
-    (z) => (z.pos.x - d.pos.x) ** 2 + (z.pos.y - d.pos.y) ** 2 <= r2 && seenByColony(w, z),
-  );
 }
 
 const goRescue = (d: Survivor): Action => ({

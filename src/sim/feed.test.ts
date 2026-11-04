@@ -2,9 +2,12 @@
 import { expect, test } from 'vitest';
 import { EAT_BELOW } from './balance';
 import { checkInvariants } from './invariants';
+import { healStillWorth } from './jobs/heal';
+import { feedJob } from './jobs/medical';
 import { step } from './step';
-import { addSurvivor, emptyWorld } from './testing/fixtures';
+import { addSurvivor, emptyWorld, encloseTile } from './testing/fixtures';
 import { Tile } from './types';
+import { newZombie } from './zombies/spawn';
 
 function world() {
   const w = emptyWorld(20, 20);
@@ -42,4 +45,26 @@ test('si ya no está derribado (o no tiene hambre), no se la llevan', () => {
   bea.needs.hunger = 90;
   for (let i = 0; i < 300; i++) step(w);
   expect(w.storage.items.food).toBe(3);
+});
+
+// Revisión final: como rescatar, nada de ir a donde hay zombis ni a quien no se puede llegar.
+
+test('no le llevan la lata si se ven zombis cerca del derribado (y si aparecen, lo dejan)', () => {
+  const { w, ana, bea } = world();
+  expect(feedJob(ana, w)).not.toBeNull();
+  ana.action = feedJob(ana, w)!;
+  expect(healStillWorth(ana, w)).toBe(true);
+  w.zombies.push(newZombie(w, { x: 13, y: 12 }));
+  expect(feedJob(ana, w)).toBeNull();
+  expect(healStillWorth(ana, w)).toBe(false);
+  void bea;
+});
+
+test('ni a quien está fuera de la base ni a quien no se puede llegar', () => {
+  const out = world();
+  out.w.base.rect = { x: 0, y: 0, w: 10, h: 10 };
+  expect(feedJob(out.ana, out.w)).toBeNull();
+  const shut = world();
+  encloseTile(shut.w, { x: 12, y: 12 });
+  expect(feedJob(shut.ana, shut.w)).toBeNull();
 });

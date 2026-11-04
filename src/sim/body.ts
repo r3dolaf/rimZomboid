@@ -80,7 +80,9 @@ export function refreshHealth(w: World, s: Survivor): void {
 
 /** Cae derribado (lo que estuviera haciendo se corta) y sale del modo combate. */
 export function knockDown(w: World, s: Survivor): void {
-  if (s.action.type === 'downed') return;
+  // Quien se va no cae (H6c): sigue andando hasta el borde con sus heridas; si no, se quedaba sin
+  // camino y desaparecía allí mismo, a medio mapa.
+  if (s.action.type === 'downed' || w.leaving.includes(s)) return;
   // Si estaba acostado en una cama (durmiendo o descansando), sigue en ella (H5 §6).
   const a = s.action;
   const t = tileOf(s.pos);

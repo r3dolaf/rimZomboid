@@ -3,6 +3,7 @@
 import { expect, test } from 'vitest';
 import { EAT_BELOW, NIGHT_START_HOUR, START_HOUR, TICKS_PER_HOUR } from './balance';
 import { isNight } from './clock';
+import { knockDown } from './body';
 import { banish } from './death';
 import { emptyInventory } from './items';
 import { NAMES } from './names';
@@ -142,4 +143,23 @@ test('si se hace de noche de camino a un cuerpo de fuera, lo deja', () => {
   expect(stillWorthIt(ana, w)).toBe(true);
   w.tick = NIGHT;
   expect(stillWorthIt(ana, w)).toBe(false);
+});
+
+test('a quien se va no le derriban: sigue andando, herido, hasta el borde (no desaparece a medio mapa)', () => {
+  const w = emptyWorld(30, 30);
+  w.seen.fill(1);
+  w.grid.tiles.fill(Tile.Floor);
+  w.narrator.nextEventAt = 1e9;
+  const bea = addSurvivor(w, { x: 20, y: 20 }, 'Bea');
+  w.survivors[0]!.pos = { x: 2.5, y: 2.5 };
+  banish(w, bea);
+  bea.path = Array.from({ length: 20 }, (_, i) => ({ x: 19 - i, y: 20 }));
+  knockDown(w, bea);
+  expect(bea.action.type).not.toBe('downed');
+  step(w);
+  expect(w.leaving).toContain(bea);
+  expect(w.returning).toHaveLength(0);
+  for (let i = 0; i < 2000 && w.leaving.length > 0; i++) step(w);
+  expect(w.returning).toHaveLength(1);
+  expect(w.returning[0]!.pos).toEqual({ x: 0, y: 20 });
 });

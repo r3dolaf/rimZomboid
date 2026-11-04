@@ -12,11 +12,13 @@ import {
   PAINKILLER_HOURS,
   REST_BELOW,
   REST_UNTIL,
+  RESCUE_SAFE_RANGE,
   TICKS_PER_HOUR,
   WOUNDS,
 } from '../balance';
 import { baseFloor } from '../base';
 import { armFactor, canWalk } from '../body';
+import { seenByColony } from '../danger';
 import { contains } from '../geom';
 import { weightOf, type ItemKind } from '../items';
 import { logEvent } from '../log';
@@ -297,8 +299,27 @@ export function startPainkillerActivity(
   return idle;
 }
 
-/** H6c: ¿hay que llevarle de comer? Derribado y con hambre. */
-const needsFood = (p: Survivor) => p.action.type === 'downed' && p.needs.hunger < EAT_BELOW;
+/** ¿Ve algún colono un zombi a RESCUE_SAFE_RANGE casillas o menos del derribado? */
+export function zombiesNear(w: World, d: Survivor): boolean {
+  const r2 = RESCUE_SAFE_RANGE * RESCUE_SAFE_RANGE;
+  return w.zombies.some(
+    (z) => (z.pos.x - d.pos.x) ** 2 + (z.pos.y - d.pos.y) ** 2 <= r2 && seenByColony(w, z),
+  );
+}
+
+/**
+ * H6c: ¿hay que llevarle de comer? Derribado, con hambre, en la base y sin zombis a la vista cerca
+ * (como para rescatarle: fuera, primero le rescatan).
+ */
+const needsFood = (w: World, p: Survivor) =>
+  p.action.type === 'downed' && p.needs.hunger < EAT_BELOW && inBase(w, p) && !zombiesNear(w, p);
+
+/** ¿Están en la misma zona (se puede llegar de uno a otro)? */
+function sameRegion(w: World, a: Survivor, b: Survivor): boolean {
+  const ta = tileOf(a.pos);
+  const tb = tileOf(b.pos);
+  return regionOf(w.grid, ta.x, ta.y) === regionOf(w.grid, tb.x, tb.y);
+}
 
 /** A quién lleva una lata (o va a por ella), o `null`. */
 function foodTargetId(s: Survivor): number | null {
@@ -316,7 +337,11 @@ const goGiveFood = (p: Survivor): Action => ({
 /** Sanar (H6c): llevar una lata del almacén a un derribado con hambre. */
 export function feedJob(s: Survivor, w: World): Action | null {
   const p = w.survivors.find(
-    (o) => o !== s && needsFood(o) && !w.survivors.some((x) => x !== s && foodTargetId(x) === o.id),
+    (o) =>
+      o !== s &&
+      needsFood(w, o) &&
+      sameRegion(w, s, o) &&
+      !w.survivors.some((x) => x !== s && foodTargetId(x) === o.id),
   );
   if (!p) return null;
   if (has(s, 'food') > 0) return goGiveFood(p);
@@ -331,7 +356,7 @@ export function feedJob(s: Survivor, w: World): Action | null {
 /** ¿Sigue teniendo sentido llevársela? */
 export function feedStillWorth(w: World, patientId: number): boolean {
   const p = w.survivors.find((x) => x.id === patientId);
-  return p !== undefined && needsFood(p);
+  return p !== undefined && needsFood(w, p);
 }
 
 /** En el almacén: coge una lata y se la lleva; junto al derribado: se la da. */
@@ -348,13 +373,13 @@ export function startFeedActivity(
       w.storage.items.food--;
       s.carrying.food++;
     }
-    if (!p || !needsFood(p)) return idle;
+    if (!p || !needsFood(w, p)) return idle;
     const path = findPath(w.grid, tileOf(s.pos), tileOf(p.pos));
     if (!path) return idle;
     s.path = path;
     return goGiveFood(p);
   }
-  if (!p || !needsFood(p) || has(s, 'food') === 0 || !near(s, p)) return idle;
+  if (!p || !needsFood(w, p) || has(s, 'food') === 0 || !near(s, p)) return idle;
   spend(s, 'food');
   p.needs.hunger = Math.min(100, p.needs.hunger + EAT_RESTORE);
   logEvent(w, { kind: 'fed', survivorId: s.id, otherId: p.id });

@@ -691,6 +691,27 @@ export const es = {
     wanderersSighted: 'Horda errante',
     strangersFled: 'Huyen',
   },
+  // El modo depuración, F3 (H6c).
+  debug: {
+    title: 'Depuración (F3)',
+    perf: (fps: number, ms: string) => `${fps} fps · ${ms} ms por tick`,
+    counts: (people: number, zombies: number, travels: number) =>
+      `${people} colonos · ${zombies} zombis · ${travels} viajes`,
+    none: 'Elige a un colono para verlo por dentro',
+    needs: (hunger: number, sleep: number, mood: number, blood: number, health: number) =>
+      `hambre ${hunger}, sueño ${sleep}, ánimo ${mood}, sangre ${blood}, salud ${health}`,
+    action: (type: string, target: string, steps: number) =>
+      `hace ${type} hacia ${target} (${steps} pasos)`,
+    infected: (bite: boolean, hours: number) =>
+      `infectado (${bite ? 'mordisco' : 'arañazo'}), muere en ${hours} h`,
+    healthy: 'sin infección',
+    reveal: 'Ver todo',
+    give: 'Dar 10 latas, vendas y antibióticos',
+    kill: 'Matar zombis cerca',
+    heal: 'Curar al elegido',
+    hour: 'Pasar 1 hora',
+    day: 'Pasar 1 día',
+  },
   // Guardar y cargar la partida (H6b).
   game: {
     button: 'Partida',

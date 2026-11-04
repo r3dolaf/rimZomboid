@@ -49,6 +49,7 @@ import { hexToward } from '../sim/expeditions';
 import { roadEvent } from '../sim/road/events';
 import type { MapView } from '../ui/mapView';
 import type { Selection } from '../ui/selection';
+import type { Flag } from '../ui/flag';
 import type { Tool, ToolMode } from '../ui/tool';
 import {
   BAR_BACK,
@@ -110,6 +111,7 @@ import {
   MEDICINE_CROSS,
   PUMP_BODY,
   PUMP_TOP,
+  DEBUG_PATH,
 } from './colors';
 import { bubbleIcon } from './bubbles';
 import { skyAlpha } from './daylight';
@@ -145,6 +147,9 @@ export interface GameSceneData {
   /** Con `?debug=1`: expone `window.rimzomboid` para los tests de navegador. */
   debug?: boolean;
   onFrame?: () => void;
+  /** H6c: el modo depuración (dibuja el camino del elegido) y lo que mide de rendimiento. */
+  debugOpen?: Flag;
+  perf?: { fps: number; msPerTick: number };
   /** Clic en una mesa (H4d): abre el panel Fabricar. */
   openCraft?: () => void;
   /** Clic derecho que no es una orden (H5c1 §8): el menú de esa casilla, donde se ha pulsado. */
@@ -165,6 +170,8 @@ export class GameScene extends Phaser.Scene {
   private bedSelection!: Selection;
   private tool!: Tool;
   private onFrame?: () => void;
+  private debugOpen?: Flag;
+  private perf?: { fps: number; msPerTick: number };
   private openCraft?: () => void;
   private openContext?: (tile: Point, screen: Point) => void;
   private actors!: Phaser.GameObjects.Graphics;
@@ -229,6 +236,8 @@ export class GameScene extends Phaser.Scene {
     this.bedSelection = data.bedSelection;
     this.tool = data.tool;
     this.onFrame = data.onFrame;
+    this.debugOpen = data.debugOpen;
+    this.perf = data.perf;
     this.openCraft = data.openCraft;
     this.openContext = data.openContext;
     if (data.debug) this.exposeDebug();
@@ -263,7 +272,15 @@ export class GameScene extends Phaser.Scene {
 
   update(_now: number, dtMs: number): void {
     this.clock.setAllAsleep(allAsleep(this.base));
-    runTicks(this.base, this.clock.advance(dtMs), this.onProblems);
+    const ticks = this.clock.advance(dtMs);
+    const t0 = performance.now();
+    runTicks(this.base, ticks, this.onProblems);
+    // H6c: lo que mide el modo depuración (suavizado).
+    if (this.perf) {
+      if (dtMs > 0) this.perf.fps = this.perf.fps * 0.9 + (1000 / dtMs) * 0.1;
+      if (ticks > 0)
+        this.perf.msPerTick = this.perf.msPerTick * 0.9 + ((performance.now() - t0) / ticks) * 0.1;
+    }
     // Con la pestaña del mundo (H5c2) el juego sigue, pero este mapa ni se ve ni atiende al ratón.
     const hidden = this.view.atlas;
     if (this.sys.isVisible() === hidden) this.sys.setVisible(!hidden);
@@ -278,6 +295,7 @@ export class GameScene extends Phaser.Scene {
     this.drawFurniture();
     this.drawBuilding();
     this.drawActors();
+    if (this.debugOpen?.value) this.drawDebugPath();
     this.drawBubbles();
     this.drawZombieNames();
     this.drawWaterLabel();
@@ -380,6 +398,20 @@ export class GameScene extends Phaser.Scene {
       }
     }
     this.map.refresh();
+  }
+
+  /** H6c: el camino del colono elegido, con el modo depuración abierto. */
+  private drawDebugPath(): void {
+    const s = this.world.survivors.find((x) => x.id === this.selection.ids[0]);
+    if (!s || s.path.length === 0) return;
+    const g = this.actors;
+    g.lineStyle(1, DEBUG_PATH, 0.9);
+    let from = { x: s.pos.x * TILE_PX, y: s.pos.y * TILE_PX };
+    for (const p of s.path) {
+      const to = { x: (p.x + 0.5) * TILE_PX, y: (p.y + 0.5) * TILE_PX };
+      g.lineBetween(from.x, from.y, to.x, to.y);
+      from = to;
+    }
   }
 
   private drawActors(): void {

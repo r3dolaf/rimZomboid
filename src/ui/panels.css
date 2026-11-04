@@ -1099,3 +1099,33 @@ body.with-map-tabs .work-panel {
   color: #9a9a9a;
   min-height: 1em;
 }
+
+/* El modo depuración, F3 (H6c). */
+.debug-panel {
+  position: absolute;
+  left: 12px;
+  bottom: 140px;
+  width: 340px;
+  padding: 8px 10px;
+  background: rgba(10, 30, 20, 0.92);
+  border: 1px solid #2f6a4a;
+  border-radius: 6px;
+  color: #cfe8d8;
+  pointer-events: auto;
+  font:
+    12px/1.35 ui-monospace,
+    monospace;
+}
+.debug-panel h2 {
+  margin: 0 0 4px;
+  font-size: 13px;
+}
+.debug-panel p {
+  margin: 2px 0;
+}
+.debug-panel .buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}

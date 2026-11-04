@@ -11,11 +11,13 @@ import type { NarratorStyle, World, ZombieLevel } from './sim/types';
 import { loadGame, saveGame, type SaveMeta } from './sim/save';
 import { es } from './i18n/es';
 import { mountGamePanel } from './ui/gamePanel';
+import { mountDebugPanel } from './ui/debugPanel';
+import { TICKS_PER_HOUR } from './sim/balance';
 import { createSaveStore, downloadFile, exportName, savedMeta } from './ui/saveStore';
 import { createAutosave } from './ui/autosave';
 import { issue } from './sim/orders';
 import { createWorld } from './sim/world';
-import { allColonists } from './sim/game';
+import { allColonists, stepGame } from './sim/game';
 import { mountBuildMenu } from './ui/buildMenu';
 import { mountCards } from './ui/cards';
 import { mountContextMenu } from './ui/contextMenu';
@@ -114,6 +116,8 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
   const outfitsOpen = createFlag(); // el panel Atuendos (H5b)
   const expeditionsOpen = createFlag(); // el panel Expediciones (H5c1)
   const gameOpen = createFlag(); // el panel Partida (H6b)
+  const debugOpen = createFlag(); // el modo depuración, F3 (H6c)
+  const perf = { fps: 60, msPerTick: 0 };
   // Los paneles salen en el mismo sitio: abrir uno cierra los otros.
   const panels = [
     workOpen,
@@ -224,6 +228,17 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
     },
   });
   const contextMenu = mountContextMenu(ui, viewed(view, {})); // clic derecho (H5c1 §8)
+  // H6c: el modo depuración (F3): pasar el tiempo de golpe avanza la partida como lo haría el reloj.
+  const debugPanel = mountDebugPanel(ui, {
+    world,
+    view,
+    open: debugOpen,
+    selection,
+    perf: () => perf,
+    onSkip(hours) {
+      for (let i = 0; i < hours * TICKS_PER_HOUR && !world.common.over; i++) stepGame(world);
+    },
+  });
   // Al caer la colonia (H5 §9): otra partida con el mismo narrador y zombis, o a la portada.
   const endScreen = mountEndScreen(ui, {
     world,
@@ -287,7 +302,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
       document.body.classList.toggle(`tool-${m}`, mode === m);
   });
 
-  bindTimeKeys(window, time, tool, { ...toggles, toggleDraft });
+  bindTimeKeys(window, time, tool, { ...toggles, toggleDraft, toggleDebug: debugOpen.toggle });
 
   const game = new Phaser.Game({
     type: Phaser.AUTO,
@@ -306,6 +321,8 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
     bedSelection,
     tool,
     debug: new URLSearchParams(location.search).get('debug') === '1',
+    debugOpen,
+    perf,
     openCraft: () => craftOpen.set(true),
     openContext: (tile, screen) => contextMenu.open(tile, screen),
     onFrame: () => {
@@ -331,6 +348,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
       expeditionsPanel.update();
       worldCard.update();
       gamePanel.update();
+      debugPanel.update();
       autosave.tick(gameTime(world.tick)); // cada mañana, se guarda sola (H6b)
       workPanel.update();
       craftPanel.update();

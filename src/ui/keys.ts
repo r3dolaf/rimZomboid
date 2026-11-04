@@ -9,7 +9,13 @@ export function bindTimeKeys(
   target: EventTarget,
   time: TimeController,
   tool?: Tool,
-  extra: { toggleWork?: () => void; toggleCraft?: () => void; toggleDraft?: () => void } = {},
+  extra: {
+    toggleWork?: () => void;
+    toggleCraft?: () => void;
+    toggleDraft?: () => void;
+    /** H6c: F3, el modo depuración. */
+    toggleDebug?: () => void;
+  } = {},
 ): void {
   target.addEventListener('keydown', (ev) => {
     const e = ev as KeyboardEvent;
@@ -30,6 +36,9 @@ export function bindTimeKeys(
       extra.toggleCraft?.();
     } else if (e.code === 'KeyR') {
       extra.toggleDraft?.();
+    } else if (e.code === 'F3' && extra.toggleDebug) {
+      e.preventDefault(); // (F3 busca en la página)
+      extra.toggleDebug();
     } else if (e.key === '1' || e.key === '2' || e.key === '3') {
       time.setSpeed(Number(e.key) as Speed);
     }

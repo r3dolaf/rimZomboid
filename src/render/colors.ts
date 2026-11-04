@@ -139,3 +139,6 @@ export const ATLAS_SPECIAL = '#ffd34d';
 /** La ruta que se planea y sus paradas. */
 export const ATLAS_ROUTE = 0xffffff;
 export const ATLAS_STOP = 0xf28c28;
+
+/** H6c: el camino del colono elegido en el modo depuración. */
+export const DEBUG_PATH = 0x66ff99;

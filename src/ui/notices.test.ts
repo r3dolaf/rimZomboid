@@ -47,6 +47,26 @@ test('uno bueno no pausa; lo que no es del narrador no deja aviso', () => {
   expect(time.speed).toBe(1);
 });
 
+test('provisiones en la puerta y un buen día dejan aviso verde con su texto (H6c)', () => {
+  const { world, time, notices, all } = setup();
+  logEvent(world, { kind: 'supplies', food: 3, bandage: 1 });
+  logEvent(world, { kind: 'goodDay' });
+  logEvent(world, { kind: 'supplies', food: 2, bandage: 0 });
+  notices.update();
+  expect(all()).toHaveLength(3);
+  for (const n of all()) expect(n.classList.contains('good')).toBe(true);
+  const text = all()
+    .map((n) => n.textContent)
+    .join(' | ');
+  expect(text).toContain('Provisiones en la puerta');
+  expect(text).toContain('Alguien ha dejado provisiones en la puerta: 3 latas y 1 venda');
+  expect(text).toContain('Un buen día');
+  expect(text).toContain('Hace un buen día: todos están de mejor ánimo');
+  expect(text).toContain('puerta: 2 latas');
+  expect(text).not.toContain('2 latas y');
+  expect(time.speed).toBe(1);
+});
+
 test('pulsar el aviso enfoca al colono; la ✕ lo cierra', () => {
   const { root, world, onFocus, notices, all } = setup();
   const s = world.survivors[1]!;

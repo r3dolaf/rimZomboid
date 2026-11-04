@@ -93,6 +93,7 @@ export const MEMORY_EFFECTS = {
   ruinedBirthday: { value: -10, hours: 24 },
   forgottenBirthday: { value: -8, hours: 48 },
   storm: { value: -6, hours: 18 },
+  goodDay: { value: 6, hours: 12 }, // H6c
   ateAtTable: { value: 3, hours: 6 },
   byTheFire: { value: 4, hours: 1 },
   downed: { value: -15, hours: 24 },
@@ -292,6 +293,14 @@ export const BIRTHDAY_RUIN_CHANCE = 0.3;
 export const BIRTHDAY_RUIN_OPINION = 15;
 export const CACHE_CANS_MIN = 3;
 export const CACHE_CANS_MAX = 6;
+// Provisiones en la puerta y Un buen día (H6c §2.8): se repiten pasada la espera.
+export const SUPPLIES_FOOD_MIN = 2;
+export const SUPPLIES_FOOD_MAX = 4;
+export const SUPPLIES_BANDAGE_CHANCE = 0.5;
+export const SUPPLIES_BANDAGES_MIN = 1;
+export const SUPPLIES_BANDAGES_MAX = 2;
+export const SUPPLIES_COOLDOWN_DAYS = 4;
+export const GOOD_DAY_COOLDOWN_DAYS = 3;
 // Tormenta y gripe (H3c §3.3)
 export const STORM_HOURS_MIN = 8;
 export const STORM_HOURS_MAX = 12;

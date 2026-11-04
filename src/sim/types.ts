@@ -206,6 +206,7 @@ export type MemoryId =
   | 'ruinedBirthday'
   | 'forgottenBirthday'
   | 'storm'
+  | 'goodDay' // H6c
   // Muebles (H4a)
   | 'ateAtTable'
   | 'byTheFire'
@@ -647,7 +648,10 @@ export type EventId =
   | 'siege'
   | 'wanderers'
   // Lluvia (H5b)
-  | 'rain';
+  | 'rain'
+  // Sucesos buenos (H6c)
+  | 'supplies'
+  | 'goodDay';
 
 /** El narrador (spec H3c §2): cuándo y de qué tono pasan cosas. */
 export interface Narrator {

@@ -3,6 +3,7 @@ import { cacheEvent } from './cache';
 import { clashEvent } from './clash';
 import { fluEvent } from './flu';
 import { foodFightEvent } from './foodFight';
+import { goodDayEvent } from './goodDay';
 import { gossipEvent } from './gossip';
 import { griefEvent } from './grief';
 import { jealousyEvent } from './jealousy';
@@ -11,6 +12,7 @@ import { rainEvent } from './rain';
 import { siegeEvent } from './siege';
 import { stormEvent } from './storm';
 import { strangersEvent } from './strangers';
+import { suppliesEvent } from './supplies';
 import { theftEvent } from './theft';
 import { wanderersEvent } from './wanderers';
 import type { GameEvent } from './types';
@@ -32,4 +34,6 @@ export const CATALOG: readonly GameEvent[] = [
   siegeEvent,
   wanderersEvent,
   rainEvent, // H5b
+  suppliesEvent, // H6c
+  goodDayEvent,
 ];

@@ -104,6 +104,8 @@ export type LogEvent =
   | { kind: 'gossip'; survivorId: number; listenerId: number; otherId: number; found: boolean }
   /** `arguedIds`: los dos que acabaron discutiendo, o `null` si salió bien. */
   | { kind: 'storyNight'; arguedIds: [number, number] | null }
+  | { kind: 'supplies'; food: number; bandage: number } // H6c
+  | { kind: 'goodDay' }
   | { kind: 'birthday'; survivorId: number }
   | { kind: 'birthdayParty'; survivorId: number }
   | { kind: 'birthdayRuined'; survivorId: number; otherId: number }

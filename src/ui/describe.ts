@@ -585,6 +585,12 @@ function logSentence(e: LogEntry, w: World, here: World): string {
     case 'cache':
       text = l.cache(name(e.survivorId), buildingThe(here, e.houseId), e.cans);
       break;
+    case 'supplies':
+      text = l.supplies(e.food, e.bandage);
+      break;
+    case 'goodDay':
+      text = l.goodDay;
+      break;
     case 'storm':
       text = l.storm;
       break;
@@ -814,6 +820,10 @@ export function noticeFor(e: LogEntry): NoticeInfo | null {
         : { tone: 'good', title: t.storyNight, focusId: null };
     case 'cache':
       return { tone: 'good', title: t.cache, focusId: e.survivorId };
+    case 'supplies':
+      return { tone: 'good', title: t.supplies, focusId: null };
+    case 'goodDay':
+      return { tone: 'good', title: t.goodDay, focusId: null };
     case 'storm':
       return { tone: 'bad', title: t.storm, focusId: null };
     case 'waterCut': // H5b: amarillo, sin pausa

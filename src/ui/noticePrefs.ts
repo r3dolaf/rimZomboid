@@ -100,6 +100,8 @@ export const NOTICE_GROUPS: readonly {
       'gossip',
       'storyNight',
       'cache',
+      'supplies',
+      'goodDay',
       'storm',
       'theftPunished',
       'theftIgnored',

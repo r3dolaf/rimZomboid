@@ -681,6 +681,8 @@ export const es = {
     gossip: 'Chisme',
     storyNight: 'Noche de historias',
     cache: 'Alijo descubierto',
+    supplies: 'Provisiones en la puerta',
+    goodDay: 'Un buen día',
     storm: 'Tormenta',
     theftPunished: 'Castigo',
     birthdayParty: 'Cumpleaños',
@@ -906,6 +908,10 @@ export const es = {
     birthdaySkipped: (who: string) => `Nadie celebra el cumpleaños de ${who}`,
     cache: (who: string, where: string, cans: number) =>
       `${who} recuerda una despensa en ${where}: ${cans} latas`,
+    supplies: (food: number, bandage: number) =>
+      `Alguien ha dejado provisiones en la puerta: ${food} latas` +
+      (bandage > 0 ? ` y ${bandage} ${bandage === 1 ? 'venda' : 'vendas'}` : ''),
+    goodDay: 'Hace un buen día: todos están de mejor ánimo',
     built: (what: BuildKind) => es.built[what],
     downed: (who: string) => `${who} ha caído`,
     gotUp: (who: string) => `${who} se ha levantado`,
@@ -1130,6 +1136,7 @@ export const es = {
     ruinedBirthday: 'Le amargaron el cumpleaños',
     forgottenBirthday: 'Nadie celebró su cumpleaños',
     storm: 'Tormenta',
+    goodDay: 'Un buen día',
     ateAtTable: 'Comió en la mesa',
     byTheFire: 'Junto al fuego',
     hurt: 'Con heridas',

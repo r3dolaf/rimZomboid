@@ -101,6 +101,8 @@ export const LOG_CATEGORY: Record<LogEvent['kind'], LogCategory> = {
   birthdayRuined: 'narrator',
   birthdaySkipped: 'narrator',
   cache: 'narrator',
+  supplies: 'narrator', // H6c
+  goodDay: 'narrator',
   storm: 'narrator',
   outOfFood: 'colony',
   strangerArrived: 'colony',

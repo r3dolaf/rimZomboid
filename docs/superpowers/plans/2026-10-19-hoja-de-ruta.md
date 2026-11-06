@@ -27,6 +27,21 @@ estado que se puede probar o jugar.
 | **H5c3. El camino**               | Sucesos por el camino al entrar en cada hexágono (zombis, horda con decisión, botín, alguien que pide unirse, tormenta, comida); la comida se comparte en el grupo y el panel propone la del viaje (spec `2026-11-03-h5c3-el-camino-design.md`)                                                                                                                                          | Viajes con riesgo                                                                       | nuevo                                                |
 | **H6. Pulido**                    | Modo depuración F3, partida automática de 30 días con todas las reglas, prioridades de trabajo (1–4, como RimWorld), ajuste de `balance.ts`                                                                                                                                                                                                                                              | El prototipo cumple el criterio de éxito (spec §12)                                     | 9 (F3), 10, 12                                       |
 
+## Arte
+
+Terminado el prototipo, el arte definitivo (spec §11, n.º 10), por pasos. El usuario eligió arte de
+píxel hecho a medida y dibujado por código, a 16×16 como las casillas, con una sola paleta y luz de
+arriba a la izquierda (spec `2026-11-06-a1-arte-mapa-design.md`).
+
+| Paso                      | Qué se dibuja                                                                                                                                                 | Estado |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| **A1. El mapa**           | Hierba, carretera con arcén y raya, suelos de cada edificio, muros con cara y sombra, ventanas y puertas en cada estado, cascotes y árboles con copa y sombra | Hecho  |
+| **A2. Muebles**           | Camas, contenedores, mesas, hogueras, agua, montones y el almacén                                                                                             |        |
+| **A3. Personas y zombis** | Figuras con cabeza y cuerpo, cada colono con su pelo y su ropa (también en su tarjeta); zombis con su propia silueta                                          |        |
+| **A4. Luz**               | La noche con huecos suaves donde alumbran la hoguera y las ventanas, sin anillos; niebla de bordes suaves                                                     |        |
+| **A5. Movimiento**        | Andar, golpes, sangre, polvo al talar, el árbol que cae                                                                                                       |        |
+| **A6. Mapa del mundo**    | Relieve: árboles en los bosques, colinas, agua y pueblos dibujados                                                                                            |        |
+
 ## Pendientes
 
 Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al planificar el hito indicado.

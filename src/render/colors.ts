@@ -63,6 +63,66 @@ export const MAP_ART = {
   treeShadow: 0.28,
 } as const;
 
+/**
+ * Los muebles (A2): cada letra de los dibujos de `props.ts` y su color. Misma luz que el mapa:
+ * arriba de cada mueble, más claro; su cara, más oscura.
+ */
+export const PROP_COLORS: Record<string, number> = {
+  k: 0x1b1a1f, // el borde
+  // Madera, de clara a oscura.
+  v: 0xa8733e,
+  w: 0x8a6236,
+  W: 0x6b4a2e,
+  q: 0x4a321c,
+  // Blanco (neveras, botiquines, camas de hospital) y acero.
+  i: 0xeef3f5,
+  I: 0xccd5da,
+  j: 0x9aa4aa,
+  J: 0x6f7a80,
+  // Metal (taquillas, cisternas).
+  g: 0xa9b0b8,
+  G: 0x5f6b78,
+  h: 0x3e4650,
+  // Cama: almohada y manta.
+  p: 0xe8e6e3,
+  P: 0xc9c6c1,
+  n: 0x6f8fb6,
+  b: 0x4f6f96,
+  B: 0x3e5878,
+  r: 0xc0392b,
+  R: 0x8a2a20,
+  // Mostradores y fregaderos.
+  l: 0xc2b8a3,
+  L: 0x8a7a68,
+  d: 0x6a5c4c,
+  // Cartón, y lo de las estanterías: rojo, amarillo, azul y verde.
+  c: 0xc49a62,
+  C: 0x9a7444,
+  u: 0xe0c050,
+  U: 0xb08f30,
+  x: 0xd9534f,
+  X: 0xa03a36,
+  m: 0x6a8ac0,
+  M: 0x4a6a9a,
+  z: 0x5aa05a,
+  Z: 0x3e7a3e,
+  // Bolsas.
+  O: 0x6b7040,
+  Q: 0x4f5330,
+  // Agua (y la pantalla del surtidor).
+  a: 0x4a90c8,
+  A: 0x9cc8e8,
+  o: 0x2f6a9a,
+  // Piedras y fuego.
+  s: 0x8f8f8f,
+  S: 0x6a6a6a,
+  t: 0x4f4f4f,
+  f: 0xff8c1a,
+  F: 0xffd24a,
+  y: 0xfff1a8,
+  e: 0xe05a10,
+};
+
 export const SURVIVOR_COLOR = 0xf2c641;
 export const SURVIVOR_OUTLINE = 0x111111;
 export const STRANGER_COLOR = 0x9a9a9a;
@@ -70,44 +130,12 @@ export const BACKGROUND = 0x111111;
 export const SELECTION_RING = 0xffffff;
 /** Las espadas sobre la cabeza de quien está en modo combate (H4e). */
 export const DRAFT_MARK = 0xd9534f;
-export const BED_COLOR = 0x4f6f96;
-export const PILLOW_COLOR = 0xe8e6e3;
-/** Cama de hospital (H5): blanca con una cruz roja. */
-export const MEDICAL_BED_COLOR = 0xd8dde3;
-export const MEDICAL_CROSS = 0xd9534f;
-export const STORAGE_COLOR = 0x8a6a3a;
-export const STORAGE_EDGE = 0x5a4424;
 export const NIGHT_COLOR = 0x0a1030;
-export const CONTAINER_COLORS = {
-  fridge: 0xd8e4ea,
-  wardrobe: 0x6b4a2e,
-  shelf: 0x9a7b4f,
-  corpse: 0x3b4436, // H4d: cuerpo de zombi
-  // H4f
-  counter: 0x8a7a68,
-  locker: 0x5f6b78,
-  crate: 0xa3824f,
-  medicine: 0xe6eef0,
-} as const;
-export const CONTAINER_EDGE = 0x1a1a1a;
 export const DESIGNATION = 0xe08a2c;
 export const HOUSE_SELECTED = 0xffffff;
 
-// H4a: madera, muebles, montones, planos y marcas de talar.
-export const PLANK_COLOR = 0x8a6236;
-export const PLANK_SEAM = 0x4a321c;
-export const TABLE_COLOR = 0x8b5a2b;
-// Agua (H5b): el barreño de madera, los fregaderos y las cisternas, y el agua.
-export const TUB_COLOR = 0x7a5230;
-export const WATER_COLOR = 0x4a90c8;
-export const SINK_COLOR = 0xc8ccd0;
-export const CISTERN_COLOR = 0x5a6e7a;
-export const TABLE_EDGE = 0x4a2f16;
-export const CAMPFIRE_STONE = 0x6a6a6a;
-export const CAMPFIRE_FLAME = 0xff8c1a;
-export const CAMPFIRE_CORE = 0xffd24a;
+// H4a: el resplandor de la hoguera, planos y barras.
 export const FIRE_GLOW = 0xff9a3c;
-export const PILE_OTHER = 0xc8c8c8;
 export const BLUEPRINT = 0x7fc3ff;
 export const BLUEPRINT_BAD = 0xd9534f;
 export const BAR_BACK = 0x111111;
@@ -125,6 +153,7 @@ export const DOWNED_RING = 0xd9534f;
 export const DAMAGE_BAR = 0xe0a030;
 
 // H4d: cuerpos.
+export const CORPSE_COLOR = 0x3b4436;
 export const CORPSE_OUTLINE = 0x161b14;
 export const CORPSE_STAIN = 0x4a2a24;
 
@@ -153,13 +182,8 @@ export function floorOf(kind: BuildingKind): FloorStyle | null {
       return null;
   }
 }
-export const PUMP_BODY = 0xb8b8b0;
-export const PUMP_TOP = 0xc0392b;
 export const LABEL_COLOR = '#f2ead8';
 export const LABEL_SHADOW = '#1a1a1a';
-export const CRATE_CROSS = 0x5e4422;
-export const LOCKER_LINE = 0x3e4650;
-export const MEDICINE_CROSS = 0xc0392b;
 
 /** El mapa del mundo (H5c2): el terreno de cada hexágono, la niebla, carreteras y pueblos. */
 export const ATLAS_TERRAIN: Record<Terrain, number> = {

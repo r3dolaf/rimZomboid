@@ -34,7 +34,7 @@ import {
   type BuildKind,
   type MapSide,
   type RoadKind,
-  type ContainerKind,
+  type Furniture,
   type Point,
   type Survivor,
   type World,
@@ -55,54 +55,29 @@ import {
   BAR_BACK,
   BAR_PROGRESS,
   BAR_WOOD,
-  BED_COLOR,
-  MEDICAL_BED_COLOR,
-  MEDICAL_CROSS,
   BLUEPRINT,
   BLUEPRINT_BAD,
-  CAMPFIRE_CORE,
-  CAMPFIRE_FLAME,
-  CAMPFIRE_STONE,
-  CONTAINER_COLORS,
+  CORPSE_COLOR,
   CORPSE_OUTLINE,
   CORPSE_STAIN,
-  CONTAINER_EDGE,
-  css,
   DAMAGE_BAR,
   DESIGNATION,
   DOWNED_RING,
   FIRE_GLOW,
   HOUSE_SELECTED,
   NIGHT_COLOR,
-  PILE_OTHER,
-  PILLOW_COLOR,
-  PLANK_COLOR,
-  PLANK_SEAM,
   SELECTION_RING,
   DRAFT_MARK,
-  STORAGE_COLOR,
-  STORAGE_EDGE,
   STRANGER_COLOR,
   SURVIVOR_COLOR,
   SURVIVOR_OUTLINE,
-  TABLE_COLOR,
-  TUB_COLOR,
-  WATER_COLOR,
-  SINK_COLOR,
-  CISTERN_COLOR,
-  TABLE_EDGE,
   ZOMBIE_COLOR,
   ZOMBIE_HURT,
   ZOMBIE_OUTLINE,
-  CRATE_CROSS,
   floorOf,
   type FloorStyle,
   LABEL_COLOR,
   LABEL_SHADOW,
-  LOCKER_LINE,
-  MEDICINE_CROSS,
-  PUMP_BODY,
-  PUMP_TOP,
   DEBUG_PATH,
 } from './colors';
 import { bubbleIcon } from './bubbles';
@@ -110,6 +85,17 @@ import { lookTile, tileLook } from './look';
 import { makeTileArt, paintTile, type TileArt } from './tileArt';
 import { makeTreeArt, nearTree, paintTrees, TREE_REACH, type TreeArt } from './trees';
 import { skyAlpha } from './daylight';
+import {
+  campfireFrame,
+  itemCount,
+  makePropAtlas,
+  pileFrames,
+  PROP_H,
+  PROP_OVERFLOW,
+  PROP_W,
+  stockedPallets,
+  waterLevel,
+} from './props';
 
 export const TILE_PX = 16;
 const SURVIVOR_RADIUS = 5;
@@ -120,6 +106,8 @@ const ZOOM_STEP = 1.1;
 const PICK_RADIUS = 0.6; // casillas
 const CLICK_SLOP_PX = 6; // soltar más lejos que esto (en pantalla) es arrastrar, no un clic
 const SLEEPING_ALPHA = 0.45;
+/** Un mueble ya registrado y vacío se ve desvaído. */
+const EMPTY_ALPHA = 0.35;
 const FOG_SEEN_ALPHA = 140; // 0–255: penumbra de lo visto pero no visible ahora
 const FOG_EVERY_FRAMES = 4;
 const BUBBLE_PX = 10;
@@ -127,6 +115,13 @@ const BLUEPRINT_ALPHA = 0.45;
 const PENDING_ALPHA = 0.3; // planos pedidos en pausa, aún sin poner
 const GLOW_RINGS = [1, 0.85, 0.7, 0.55, 0.4, 0.25]; // resplandor de la hoguera, de fuera adentro
 const GLOW_ALPHA = 0.045; // por cada círculo: se suman hacia el centro
+
+/** Un mueble que dibujar en este fotograma (A2): qué dibujo, en qué casilla y si se ve desvaído. */
+interface Prop {
+  frame: string;
+  at: Point;
+  alpha?: number;
+}
 
 export interface GameSceneData {
   /** La base: avanza todo el juego desde ella (H5c1). */
@@ -184,6 +179,11 @@ export class GameScene extends Phaser.Scene {
   /** Los dibujos de los suelos, los muros y los árboles (A1): se hacen una vez. */
   private tileArt!: TileArt;
   private treeArt!: TreeArt;
+  /** Los dibujos de los muebles (A2), en fila en un lienzo: dónde empieza cada uno. */
+  private propAtlas!: ReturnType<typeof makePropAtlas>;
+  /** Los muebles, en su capa (bajo la gente); las imágenes se reutilizan en cada fotograma. */
+  private props!: Phaser.GameObjects.Layer;
+  private propPool: Phaser.GameObjects.Image[] = [];
   /** Cómo se ve cada casilla (`tileLook`) la última vez que se pintó. */
   private mapTiles: number[] = [];
   private mapVersion = -1;
@@ -245,7 +245,12 @@ export class GameScene extends Phaser.Scene {
   create(): void {
     this.tileArt = makeTileArt();
     this.treeArt = makeTreeArt();
+    this.propAtlas = makePropAtlas();
+    const props = this.textures.addCanvas('props', this.propAtlas.canvas)!;
+    for (const [name, x] of Object.entries(this.propAtlas.frames))
+      props.add(name, 0, x, 0, PROP_W, PROP_H);
     this.drawMap();
+    this.props = this.add.layer();
     this.furniture = this.add.graphics();
     this.actors = this.add.graphics();
     this.bubbleLayer = this.add.container(0, 0);
@@ -406,10 +411,19 @@ export class GameScene extends Phaser.Scene {
       const [x, y] = [(i % grid.width) * TILE_PX, Math.floor(i / grid.width) * TILE_PX];
       paintTile(ctx, this.tileArt, grid, i, hung.has(i), this.floors[i] ?? null);
       if (this.storageTiles.has(i)) {
-        ctx.fillStyle = css(STORAGE_EDGE);
-        ctx.fillRect(x + 1, y + 1, TILE_PX - 2, TILE_PX - 2);
-        ctx.fillStyle = css(STORAGE_COLOR);
-        ctx.fillRect(x + 2, y + 2, TILE_PX - 4, TILE_PX - 4);
+        // El almacén (A2): un palé; las cajas de encima van con los muebles.
+        const from = this.propAtlas.frames.pallet!;
+        ctx.drawImage(
+          this.propAtlas.canvas,
+          from,
+          PROP_OVERFLOW,
+          TILE_PX,
+          TILE_PX,
+          x,
+          y,
+          TILE_PX,
+          TILE_PX,
+        );
       }
     }
     if (first) paintTrees(ctx, this.treeArt, grid);
@@ -784,91 +798,48 @@ export class GameScene extends Phaser.Scene {
     else buildLine(w, kind, d.from, d.to);
   }
 
-  /** Camas, contenedores vistos (bajo la niebla) y, encima de ella, marcas y casa seleccionada. */
+  /**
+   * Camas, muebles vistos, montones y las cajas del almacén (A2: dibujos en su capa, bajo la niebla)
+   * y, encima de ella, marcas y casa seleccionada.
+   */
   private drawFurniture(): void {
     const g = this.furniture;
     const m = this.marks;
     const w = this.world;
     g.clear();
     m.clear();
+    const props: Prop[] = [];
+    const seen = (p: Point) => w.seen[p.y * w.grid.width + p.x] === 1;
     for (const b of w.beds) {
-      const [x, y] = [b.pos.x * TILE_PX, b.pos.y * TILE_PX];
-      g.fillStyle(b.medical ? MEDICAL_BED_COLOR : BED_COLOR);
-      g.fillRect(x + 2, y + 1, TILE_PX - 4, TILE_PX - 2);
-      g.fillStyle(PILLOW_COLOR);
-      g.fillRect(x + 3, y + 2, TILE_PX - 6, 4);
-      if (b.medical) {
-        // Una cruz roja en la manta (H5 §6).
-        g.fillStyle(MEDICAL_CROSS);
-        g.fillRect(x + TILE_PX / 2 - 1, y + 7, 2, 6);
-        g.fillRect(x + TILE_PX / 2 - 3, y + 9, 6, 2);
-      }
+      props.push({ frame: b.medical ? 'bedMedical' : 'bed', at: b.pos });
       if (this.bedSelection.id === b.id) {
+        const [x, y] = [b.pos.x * TILE_PX, b.pos.y * TILE_PX];
         m.lineStyle(1, SELECTION_RING, 1);
         m.strokeRect(x + 1, y + 0.5, TILE_PX - 2, TILE_PX - 1);
       }
     }
     for (const c of w.containers) {
-      if (w.seen[c.pos.y * w.grid.width + c.pos.x] !== 1) continue;
+      if (!seen(c.pos)) continue;
       const [x, y] = [c.pos.x * TILE_PX, c.pos.y * TILE_PX];
-      const alpha = c.searched && isEmpty(c.items) ? 0.35 : 1;
+      const alpha = c.searched && isEmpty(c.items) ? EMPTY_ALPHA : 1;
       if (c.kind === 'corpse') this.drawCorpse(x, y, alpha);
-      else this.drawContainer(c.kind, x, y, alpha);
+      else props.push({ frame: c.kind, at: c.pos, alpha });
       if (effectiveDesignated(w, c)) {
         m.lineStyle(2, DESIGNATION, 1);
         m.strokeRect(x + 1, y + 1, TILE_PX - 2, TILE_PX - 2);
       }
     }
-    this.drawPumps();
-    const seen = (p: Point) => w.seen[p.y * w.grid.width + p.x] === 1;
-    for (const f of w.furniture) {
-      if (!seen(f.pos)) continue;
-      const [x, y] = [f.pos.x * TILE_PX, f.pos.y * TILE_PX];
-      if (f.kind === 'table') {
-        g.fillStyle(TABLE_EDGE);
-        g.fillRect(x + 1, y + 3, TILE_PX - 2, TILE_PX - 6);
-        g.fillStyle(TABLE_COLOR);
-        g.fillRect(x + 2, y + 4, TILE_PX - 4, TILE_PX - 8);
-      } else if (f.kind === 'tub' || f.kind === 'cistern') {
-        // H5b: el barreño (de madera) y la cisterna, con su agua de abajo arriba.
-        const max = f.kind === 'tub' ? TUB_LITERS : CISTERN_LITERS;
-        g.fillStyle(f.kind === 'tub' ? TUB_COLOR : CISTERN_COLOR);
-        g.fillRect(x + 2, y + 2, TILE_PX - 4, TILE_PX - 4);
-        const h = Math.round((TILE_PX - 8) * Math.min(1, (f.water ?? 0) / max));
-        g.fillStyle(WATER_COLOR);
-        g.fillRect(x + 4, y + TILE_PX - 4 - h, TILE_PX - 8, h);
-      } else if (f.kind === 'sink') {
-        g.fillStyle(SINK_COLOR);
-        g.fillRect(x + 2, y + 4, TILE_PX - 4, TILE_PX - 8);
-        g.fillStyle(mainsOn(w) ? WATER_COLOR : TUB_COLOR);
-        g.fillRect(x + 5, y + 6, TILE_PX - 10, TILE_PX - 12);
-      } else if (f.kind === 'campfire') {
-        const [cx, cy] = [x + TILE_PX / 2, y + TILE_PX / 2];
-        g.fillStyle(CAMPFIRE_STONE);
-        g.fillCircle(cx, cy, 6);
-        g.fillStyle(CAMPFIRE_FLAME);
-        g.fillCircle(cx, cy, 4 + 0.5 * Math.sin(this.frame / 6)); // la llama tiembla
-        g.fillStyle(CAMPFIRE_CORE);
-        g.fillCircle(cx, cy + 1, 2);
-      }
-    }
+    this.pumps(props);
+    for (const f of w.furniture)
+      if (seen(f.pos)) props.push({ frame: this.furnitureFrame(f), at: f.pos });
     for (const p of w.piles) {
       if (!seen(p.pos)) continue;
-      const [x, y] = [p.pos.x * TILE_PX, p.pos.y * TILE_PX];
-      for (let k = 0; k < Math.min(3, p.items.wood); k++) {
-        // Hasta 3 tablas apiladas.
-        g.fillStyle(PLANK_SEAM);
-        g.fillRect(x + 2, y + 10 - k * 3, TILE_PX - 4, 3);
-        g.fillStyle(PLANK_COLOR);
-        g.fillRect(x + 3, y + 10 - k * 3, TILE_PX - 6, 2);
-      }
-      if (!isEmpty({ ...p.items, wood: 0 })) {
-        g.fillStyle(CONTAINER_EDGE);
-        g.fillRect(x + 9, y + 2, 6, 6);
-        g.fillStyle(PILE_OTHER);
-        g.fillRect(x + 10, y + 3, 4, 4);
-      }
+      for (const frame of pileFrames(p.items)) props.push({ frame, at: p.pos });
     }
+    // Cajas en los palés del almacén, más cuanto más hay.
+    const stocked = stockedPallets(itemCount(w.storage.items), w.storage.tiles.length);
+    for (const t of w.storage.tiles.slice(0, stocked)) props.push({ frame: 'goods', at: t });
+    this.placeProps(props);
     for (const h of w.houses) {
       const marked = houseMarked(w, h.id);
       const selected = this.houseSelection.id === h.id;
@@ -878,55 +849,44 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  /** Un mueble de saqueo: caja de color, con la forma de los nuevos (H4f). */
-  private drawContainer(
-    kind: Exclude<ContainerKind, 'corpse'>,
-    x: number,
-    y: number,
-    alpha: number,
-  ) {
-    const g = this.furniture;
-    const color = CONTAINER_COLORS[kind];
-    g.fillStyle(CONTAINER_EDGE, alpha);
-    switch (kind) {
-      case 'counter': // mostrador: largo y bajo
-        g.fillRect(x + 1, y + 5, TILE_PX - 2, 7);
-        g.fillStyle(color, alpha);
-        g.fillRect(x + 2, y + 6, TILE_PX - 4, 5);
-        return;
-      case 'locker': // taquilla: alta y estrecha, con dos puertas
-        g.fillRect(x + 4, y + 1, 8, TILE_PX - 2);
-        g.fillStyle(color, alpha);
-        g.fillRect(x + 5, y + 2, 6, TILE_PX - 4);
-        g.fillStyle(LOCKER_LINE, alpha);
-        g.fillRect(x + 7.5, y + 2, 1, TILE_PX - 4);
-        return;
-      case 'crate': // caja: con su aspa
-        g.fillRect(x + 2, y + 2, TILE_PX - 4, TILE_PX - 4);
-        g.fillStyle(color, alpha);
-        g.fillRect(x + 3, y + 3, TILE_PX - 6, TILE_PX - 6);
-        g.lineStyle(1, CRATE_CROSS, alpha);
-        g.lineBetween(x + 3, y + 3, x + TILE_PX - 3, y + TILE_PX - 3);
-        g.lineBetween(x + TILE_PX - 3, y + 3, x + 3, y + TILE_PX - 3);
-        return;
-      case 'medicine': // botiquín: blanco con la cruz
-        g.fillRect(x + 3, y + 3, TILE_PX - 6, TILE_PX - 6);
-        g.fillStyle(color, alpha);
-        g.fillRect(x + 4, y + 4, TILE_PX - 8, TILE_PX - 8);
-        g.fillStyle(MEDICINE_CROSS, alpha);
-        g.fillRect(x + 7, y + 5, 2, 6);
-        g.fillRect(x + 5, y + 7, 6, 2);
-        return;
-      default:
-        g.fillRect(x + 2, y + 2, TILE_PX - 4, TILE_PX - 4);
-        g.fillStyle(color, alpha);
-        g.fillRect(x + 3, y + 3, TILE_PX - 6, TILE_PX - 6);
+  /** El dibujo de una mesa, una hoguera (con su llama) o del agua (H5b): cuánta tiene, o si sale. */
+  private furnitureFrame(f: Furniture): string {
+    switch (f.kind) {
+      case 'table':
+        return 'table';
+      case 'campfire':
+        return campfireFrame(this.frame);
+      case 'tub':
+        return `tub${waterLevel(f.water ?? 0, TUB_LITERS)}`;
+      case 'cistern':
+        return `cistern${waterLevel(f.water ?? 0, CISTERN_LITERS)}`;
+      case 'sink':
+        return mainsOn(this.world) ? 'sinkWet' : 'sinkDry';
     }
   }
 
+  /**
+   * Pone los muebles del fotograma en las imágenes de su capa, de arriba abajo para que el de
+   * delante tape al de detrás (los altos salen por encima de su casilla), y esconde las que sobran.
+   */
+  private placeProps(props: Prop[]): void {
+    props.sort((a, b) => a.at.y - b.at.y);
+    props.forEach((p, k) => {
+      let img = this.propPool[k];
+      if (!img) {
+        img = new Phaser.GameObjects.Image(this, 0, 0, 'props', p.frame).setOrigin(0, 0);
+        this.props.add(img);
+        this.propPool.push(img);
+      }
+      if (img.frame.name !== p.frame) img.setFrame(p.frame);
+      img.setPosition(p.at.x * TILE_PX, p.at.y * TILE_PX - PROP_OVERFLOW);
+      img.setAlpha(p.alpha ?? 1).setVisible(true);
+    });
+    for (let k = props.length; k < this.propPool.length; k++) this.propPool[k]!.setVisible(false);
+  }
+
   /** Surtidores de la gasolinera, en la explanada delante de la puerta (de adorno). */
-  private drawPumps(): void {
-    const g = this.furniture;
+  private pumps(props: Prop[]): void {
     const w = this.world;
     for (const h of w.houses) {
       if (h.kind !== 'gas' || w.seen[h.door.y * w.grid.width + h.door.x] !== 1) continue;
@@ -935,15 +895,9 @@ export class GameScene extends Phaser.Scene {
         side === 'top' ? [0, -1] : side === 'bottom' ? [0, 1] : side === 'left' ? [-1, 0] : [1, 0];
       for (const off of [-2, 2]) {
         // Dos casillas delante de la puerta, a un lado y a otro.
-        const px = h.door.x + dx * 2 + (dy !== 0 ? off : 0);
-        const py = h.door.y + dy * 2 + (dx !== 0 ? off : 0);
-        const [x, y] = [px * TILE_PX, py * TILE_PX];
-        g.fillStyle(CONTAINER_EDGE);
-        g.fillRect(x + 4, y + 2, 8, 12);
-        g.fillStyle(PUMP_BODY);
-        g.fillRect(x + 5, y + 3, 6, 10);
-        g.fillStyle(PUMP_TOP);
-        g.fillRect(x + 5, y + 3, 6, 3);
+        const x = h.door.x + dx * 2 + (dy !== 0 ? off : 0);
+        const y = h.door.y + dy * 2 + (dx !== 0 ? off : 0);
+        props.push({ frame: 'pump', at: { x, y } });
       }
     }
   }
@@ -956,7 +910,7 @@ export class GameScene extends Phaser.Scene {
     g.fillStyle(CORPSE_OUTLINE, alpha);
     g.fillEllipse(x + 8, y + 8, 11, 6);
     g.fillCircle(x + 13, y + 7, 3);
-    g.fillStyle(CONTAINER_COLORS.corpse, alpha);
+    g.fillStyle(CORPSE_COLOR, alpha);
     g.fillEllipse(x + 8, y + 8, 9, 4);
     g.fillCircle(x + 13, y + 7, 2);
   }

@@ -46,6 +46,14 @@
 .card .name {
   font-weight: 600;
 }
+/* El retrato (A3): la cabeza y el pecho de su figura, con los píxeles grandes. */
+.card .portrait {
+  width: 32px;
+  height: 22px;
+  margin: -3px 5px -3px 0;
+  vertical-align: middle;
+  image-rendering: pixelated;
+}
 .bar {
   height: 6px;
   margin-top: 3px;

@@ -20,6 +20,9 @@ interface Card {
   blood: HTMLElement;
   /** Dónde está, si no es en el mapa que se ve (H5c1 §7). */
   where: HTMLElement;
+  /** Su retrato (A3), si lo hay, y la imagen que tiene puesta. */
+  face?: HTMLImageElement;
+  faceSrc?: string;
 }
 
 /**
@@ -29,7 +32,13 @@ interface Card {
  */
 export function mountCards(
   root: HTMLElement,
-  opts: { world: World; selection: Selection; view?: MapView },
+  opts: {
+    world: World;
+    selection: Selection;
+    view?: MapView;
+    /** El retrato de cada colono (A3): una imagen que cambia si cambia de ropa. */
+    portrait?: (s: Survivor) => string;
+  },
 ): { update(): void } {
   const bar = document.createElement('div');
   bar.className = 'cards';
@@ -71,6 +80,13 @@ export function mountCards(
     icons.className = 'health-icons';
     icons.dataset.testid = 'health-icons';
     const who = document.createElement('span');
+    let face: HTMLImageElement | undefined;
+    if (opts.portrait) {
+      face = document.createElement('img');
+      face.className = 'portrait';
+      face.alt = '';
+      who.append(face);
+    }
     who.append(name, love);
     const right = document.createElement('span');
     right.append(icons, status);
@@ -97,7 +113,7 @@ export function mountCards(
     card.append(where);
 
     bar.append(card);
-    return { card, love, status, icons, fills, health, blood, where };
+    return { card, love, status, icons, fills, health, blood, where, face };
   };
 
   return {
@@ -117,6 +133,13 @@ export function mountCards(
           cards.set(s.id, c);
         }
         const card = c;
+        if (c.face) {
+          const src = opts.portrait!(s);
+          if (src !== c.faceSrc) {
+            c.face.src = src;
+            c.faceSrc = src;
+          }
+        }
         NEEDS.forEach((k, i) => {
           const v = Math.round(s.needs[k]);
           const fill = card.fills[i]!;

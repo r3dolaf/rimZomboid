@@ -155,3 +155,29 @@ test('en modo combate: ⚔ (lo primero) y la tarjeta marcada', () => {
   expect((card.querySelector('.status') as HTMLElement).title).toBe('En modo combate');
   expect(card.classList.contains('drafted')).toBe(true);
 });
+
+test('A3: con retratos, cada tarjeta lleva el suyo y cambia solo cuando cambia la imagen', () => {
+  const root = document.createElement('div');
+  const world = createWorld(5);
+  let version = 1;
+  let calls = 0;
+  const portrait = (s: { name: string }) => {
+    calls++;
+    return `data:image/png;base64,${s.name}${version}`;
+  };
+  const cards = mountCards(root, { world, selection: createSelection(), portrait });
+  cards.update();
+  const s = world.survivors[0]!;
+  const img = () =>
+    root.querySelector(`[data-testid="card-${s.id}"] img.portrait`) as HTMLImageElement;
+  expect(img().getAttribute('src')).toBe(`data:image/png;base64,${s.name}1`);
+  expect(calls).toBe(world.survivors.length);
+  version = 2;
+  cards.update();
+  expect(img().getAttribute('src')).toBe(`data:image/png;base64,${s.name}2`);
+});
+
+test('A3: sin retratos, las tarjetas no llevan imagen', () => {
+  const { root } = setup();
+  expect(root.querySelector('img.portrait')).toBeNull();
+});

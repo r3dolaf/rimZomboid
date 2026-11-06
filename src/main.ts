@@ -4,6 +4,7 @@ import { loadUrl, parseNarrator, parseSeed, parseZombies, randomSeed, startUrl }
 import { createTimeController } from './game/timeController';
 import { BACKGROUND } from './render/colors';
 import { GameScene, type GameSceneData } from './render/GameScene';
+import { makePortraits } from './render/people';
 import { WorldScene, type WorldSceneData } from './render/WorldScene';
 import { gameTime } from './sim/clock';
 import { zombiesInSight } from './sim/danger';
@@ -191,7 +192,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
   // H5c1: las pestañas de mapa; lo de cada mapa (arriba, Almacén, Fabricar, Trabajos, fichas)
   // es del que se ve; las tarjetas, el registro y los avisos, de todos.
   const tabs = mountMapTabs(ui, { view });
-  const cards = mountCards(ui, { world, view, selection });
+  const cards = mountCards(ui, { world, view, selection, portrait: makePortraits() });
   const sheet = mountSheet(ui, viewed(view, { base: world, selection }));
   const group = mountGroupPanel(ui, viewed(view, { selection }));
   const housePanel = mountHousePanel(ui, viewed(view, { selection: houseSelection }));

@@ -1,22 +1,67 @@
-import { Tile, type BuildingKind, type Terrain } from '../sim/types';
+import type { BuildingKind, Terrain } from '../sim/types';
 
-/** Colores provisionales: primero que sea divertido, luego bonito. */
-export const TILE_COLORS: Record<Tile, number> = {
-  [Tile.Grass]: 0x4a5d3a,
-  [Tile.Floor]: 0xa08a6a,
-  [Tile.Road]: 0x5a5a5a,
-  [Tile.Wall]: 0x2e2e33,
-  [Tile.Door]: 0x7a4e2a,
-  [Tile.Window]: 0x9cc7d9,
-  [Tile.Tree]: 0x23361f,
-  [Tile.WoodWall]: 0x6b4a2a,
-  [Tile.BoardedWindow]: 0x7a5a36,
-  [Tile.BrokenWindow]: 0x3c5560,
-  [Tile.BrokenDoor]: 0x4a3420,
-  [Tile.Rubble]: 0x6e6a64,
-  [Tile.CurtainedWindow]: 0x6a4a5e, // H4d: cortinas corridas
-  [Tile.LockedDoor]: 0x5e3a1e, // H4d: puerta atrancada
-};
+/**
+ * El mapa con textura (A1). La luz viene de arriba a la izquierda: los bordes de arriba y de la
+ * izquierda, más claros; la cara de los muros y las sombras, abajo y a la derecha.
+ */
+export const MAP_ART = {
+  grass: [0x4a5d3a, 0x526740, 0x425433, 0x5c7247], // el de siempre, uno más claro, uno más oscuro…
+  tuft: 0x6a8250,
+  tuftShade: 0x3a4a2d,
+  flowers: [0xd9c46a, 0xc9d4e0, 0xc77a6a],
+  dirt: 0x6b5a40,
+  roots: 0x33402a, // al pie de los árboles
+  asphalt: [0x48484c, 0x4f4f53, 0x414145],
+  crack: 0x353538,
+  lane: 0xb8a250, // la raya del centro, gastada
+  shoulder: 0x5f5d58, // el borde de la carretera
+  wood: [0x8a6a46, 0x84643f, 0x8f6e48], // el suelo de las casas y de la base
+  woodGrain: 0x7a5c3b,
+  woodSeam: 0x5e452b,
+  rubble: [0x6e6a64, 0x666259, 0x75716a],
+  stone: 0x8f8a82,
+  stoneShade: 0x4f4c47,
+  // Muros de ladrillo: arriba, los bordes y la cara.
+  wallTop: [0x6f6a74, 0x68636d],
+  wallLight: 0x8d8893,
+  wallDark: 0x4b4751,
+  wallFace: 0x4a4650,
+  wallFaceTop: 0x3a3640,
+  wallMortar: 0x3e3a44,
+  // Muros de madera (H4a).
+  woodWallTop: [0x7a5634, 0x72502f],
+  woodWallLight: 0x93693f,
+  woodWallDark: 0x4f3720,
+  woodWallFace: 0x5a3d22,
+  woodWallLine: 0x45301b,
+  // Ventanas y puertas.
+  frame: 0x2b2f36,
+  glass: 0x7fa9bf,
+  glassShine: 0xc8e2ee,
+  brokenGlass: 0x1c2a30,
+  shard: 0x9cc7d9,
+  drape: 0x8a5a78, // cortinas (H4d)
+  drapeFold: 0x4e3446,
+  board: 0x8a6236, // tablas de tapiar
+  boardSeam: 0x4a321c,
+  doorFrame: 0x3a2618,
+  door: 0x7a4e2a,
+  doorLine: 0x61401f,
+  knob: 0xd9c46a,
+  lockBar: 0x2a1a0c,
+  // Sombras (negro con transparencia).
+  wallShadow: 0.3,
+  // Árboles: la copa de lo más claro a lo más oscuro, con tres verdes, el borde y el tronco.
+  canopies: [
+    [0x5f8f45, 0x467535, 0x345c2a, 0x25441f],
+    [0x4f7f45, 0x3a6535, 0x2a4f2a, 0x1d3a1f],
+    [0x7a8f45, 0x5f7535, 0x4a5c2a, 0x34441f],
+  ],
+  canopyEdge: 0x16261a,
+  trunk: 0x3a2818,
+  trunkLight: 0x5a3f26,
+  treeShadow: 0.28,
+} as const;
 
 export const SURVIVOR_COLOR = 0xf2c641;
 export const SURVIVOR_OUTLINE = 0x111111;
@@ -72,19 +117,14 @@ export const BAR_PROGRESS = 0x8fd694;
 /** Color de Phaser (0xRRGGBB) en CSS, para pintar en un lienzo. */
 export const css = (c: number) => `#${c.toString(16).padStart(6, '0')}`;
 
-// H4b: zombis, derribados, lo roto y lo dañado.
+// H4b: zombis, derribados y lo dañado.
 export const ZOMBIE_COLOR = 0x86a072;
 export const ZOMBIE_OUTLINE = 0x1d2a18;
 export const ZOMBIE_HURT = 0xd9534f;
 export const DOWNED_RING = 0xd9534f;
 export const DAMAGE_BAR = 0xe0a030;
-export const RUBBLE_BITS = 0x8f8a82;
-export const BROKEN_GLASS = 0x1c2a30;
 
-// H4d: cortinas, puertas atrancadas y cuerpos.
-export const CURTAIN_DRAPE = 0x8a5a78;
-export const CURTAIN_FOLD = 0x4e3446;
-export const LOCK_BAR = 0x2a1a0c;
+// H4d: cuerpos.
 export const CORPSE_OUTLINE = 0x161b14;
 export const CORPSE_STAIN = 0x4a2a24;
 
@@ -95,7 +135,6 @@ export const FLOOR_COLORS: Record<FloorStyle, number> = {
   concrete: 0x8c8b86,
   planks: 0x9a7346,
 };
-export const FLOOR_SEAM = 0x6e5232; // juntas de las tablas y de las baldosas
 /** El suelo de cada tipo de edificio; `null`: el de siempre. */
 export function floorOf(kind: BuildingKind): FloorStyle | null {
   switch (kind) {

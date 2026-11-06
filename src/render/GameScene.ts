@@ -60,16 +60,12 @@ import {
   MEDICAL_CROSS,
   BLUEPRINT,
   BLUEPRINT_BAD,
-  BROKEN_GLASS,
   CAMPFIRE_CORE,
   CAMPFIRE_FLAME,
   CAMPFIRE_STONE,
   CONTAINER_COLORS,
   CORPSE_OUTLINE,
   CORPSE_STAIN,
-  CURTAIN_DRAPE,
-  CURTAIN_FOLD,
-  LOCK_BAR,
   CONTAINER_EDGE,
   css,
   DAMAGE_BAR,
@@ -82,7 +78,6 @@ import {
   PILLOW_COLOR,
   PLANK_COLOR,
   PLANK_SEAM,
-  RUBBLE_BITS,
   SELECTION_RING,
   DRAFT_MARK,
   STORAGE_COLOR,
@@ -96,13 +91,10 @@ import {
   SINK_COLOR,
   CISTERN_COLOR,
   TABLE_EDGE,
-  TILE_COLORS,
   ZOMBIE_COLOR,
   ZOMBIE_HURT,
   ZOMBIE_OUTLINE,
   CRATE_CROSS,
-  FLOOR_COLORS,
-  FLOOR_SEAM,
   floorOf,
   type FloorStyle,
   LABEL_COLOR,
@@ -114,6 +106,9 @@ import {
   DEBUG_PATH,
 } from './colors';
 import { bubbleIcon } from './bubbles';
+import { lookTile, tileLook } from './look';
+import { makeTileArt, paintTile, type TileArt } from './tileArt';
+import { makeTreeArt, nearTree, paintTrees, TREE_REACH, type TreeArt } from './trees';
 import { skyAlpha } from './daylight';
 
 export const TILE_PX = 16;
@@ -186,6 +181,10 @@ export class GameScene extends Phaser.Scene {
   private glow!: Phaser.GameObjects.Graphics;
   /** El mapa, pintado en un lienzo; se repinta lo que cambia (`Grid.version`). */
   private map!: Phaser.Textures.CanvasTexture;
+  /** Los dibujos de los suelos, los muros y los árboles (A1): se hacen una vez. */
+  private tileArt!: TileArt;
+  private treeArt!: TreeArt;
+  /** Cómo se ve cada casilla (`tileLook`) la última vez que se pintó. */
   private mapTiles: number[] = [];
   private mapVersion = -1;
   private mapCurtains = -1;
@@ -244,6 +243,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.tileArt = makeTileArt();
+    this.treeArt = makeTreeArt();
     this.drawMap();
     this.furniture = this.add.graphics();
     this.actors = this.add.graphics();
@@ -372,8 +373,10 @@ export class GameScene extends Phaser.Scene {
   }
 
   /**
-   * Repinta solo las casillas que han cambiado desde la última vez (talar, muros, tablas…). Las
-   * cortinas (H4d) no siempre cambian la casilla: colgarlas, solo la lista.
+   * Repinta solo las casillas que han cambiado desde la última vez (talar, muros, tablas…), también
+   * por lo de al lado (A1: la sombra y la cara de los muros). Las cortinas (H4d) no siempre cambian
+   * la casilla: colgarlas, solo la lista. Los árboles van encima del suelo y salen de su casilla: al
+   * talar se repinta todo lo de alrededor, y en lo repintado se vuelven a pintar los que lleguen.
    */
   private refreshMap(): void {
     const { grid, curtains } = this.world;
@@ -383,13 +386,25 @@ export class GameScene extends Phaser.Scene {
     this.mapCurtains = sig;
     const hung = new Set(curtains);
     const ctx = this.map.context;
+    const first = this.mapTiles[0] === -1;
+    const repaint = new Set<number>();
     for (let i = 0; i < grid.tiles.length; i++) {
-      const t = grid.tiles[i]!;
-      const look = t * 2 + (hung.has(i) ? 1 : 0);
-      if (this.mapTiles[i] === look) continue;
+      const look = tileLook(grid, i, hung.has(i));
+      const before = this.mapTiles[i]!;
+      if (before === look) continue;
       this.mapTiles[i] = look;
+      repaint.add(i);
+      if (before === -1 || (lookTile(before) === Tile.Tree) === (grid.tiles[i] === Tile.Tree))
+        continue;
+      const [x, y] = [i % grid.width, Math.floor(i / grid.width)];
+      for (let dy = -TREE_REACH; dy <= TREE_REACH; dy++)
+        for (let dx = -TREE_REACH; dx <= TREE_REACH; dx++)
+          if (x + dx >= 0 && y + dy >= 0 && x + dx < grid.width && y + dy < grid.height)
+            repaint.add((y + dy) * grid.width + x + dx);
+    }
+    for (const i of repaint) {
       const [x, y] = [(i % grid.width) * TILE_PX, Math.floor(i / grid.width) * TILE_PX];
-      paintTile(ctx, x, y, t, hung.has(i), this.floors[i] ?? null);
+      paintTile(ctx, this.tileArt, grid, i, hung.has(i), this.floors[i] ?? null);
       if (this.storageTiles.has(i)) {
         ctx.fillStyle = css(STORAGE_EDGE);
         ctx.fillRect(x + 1, y + 1, TILE_PX - 2, TILE_PX - 2);
@@ -397,6 +412,13 @@ export class GameScene extends Phaser.Scene {
         ctx.fillRect(x + 2, y + 2, TILE_PX - 4, TILE_PX - 4);
       }
     }
+    if (first) paintTrees(ctx, this.treeArt, grid);
+    else
+      for (const i of repaint) {
+        const [x, y] = [i % grid.width, Math.floor(i / grid.width)];
+        if (nearTree(grid, x, y))
+          paintTrees(ctx, this.treeArt, grid, { x0: x, y0: y, x1: x, y1: y });
+      }
     this.map.refresh();
   }
 
@@ -1178,82 +1200,5 @@ export class GameScene extends Phaser.Scene {
     if (k.D.isDown || k.RIGHT.isDown) cam.scrollX += d;
     if (k.W.isDown || k.UP.isDown) cam.scrollY -= d;
     if (k.S.isDown || k.DOWN.isDown) cam.scrollY += d;
-  }
-}
-
-/** Pinta una casilla del mapa en el lienzo (con juntas en los muros de madera, tablas en las
- * ventanas tapiadas, cortinas y la barra de las puertas atrancadas). */
-function paintTile(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  t: Tile,
-  curtains: boolean,
-  floor: FloorStyle | null,
-): void {
-  ctx.fillStyle = css(TILE_COLORS[t === Tile.BoardedWindow ? Tile.Window : t]);
-  ctx.fillRect(x, y, TILE_PX, TILE_PX);
-  if (t === Tile.Floor && floor) {
-    // Suelo según el edificio (H4f): baldosas con juntas, cemento liso o tablas.
-    ctx.fillStyle = css(FLOOR_COLORS[floor]);
-    ctx.fillRect(x, y, TILE_PX, TILE_PX);
-    ctx.fillStyle = css(FLOOR_SEAM);
-    if (floor === 'planks') for (const dy of [3, 7, 11, 15]) ctx.fillRect(x, y + dy, TILE_PX, 1);
-    if (floor === 'tiles') {
-      ctx.globalAlpha = 0.25;
-      ctx.fillRect(x, y + TILE_PX - 1, TILE_PX, 1);
-      ctx.fillRect(x + TILE_PX - 1, y, 1, TILE_PX);
-      ctx.globalAlpha = 1;
-    }
-  } else if (t === Tile.WoodWall) {
-    ctx.fillStyle = css(PLANK_SEAM);
-    for (const dy of [5, 10]) ctx.fillRect(x, y + dy, TILE_PX, 1);
-  } else if (t === Tile.BrokenWindow) {
-    // Marco con el cristal roto: oscuro, con el borde de la ventana.
-    ctx.fillStyle = css(TILE_COLORS[Tile.Window]);
-    ctx.fillRect(x, y, TILE_PX, TILE_PX);
-    ctx.fillStyle = css(BROKEN_GLASS);
-    ctx.fillRect(x + 2, y + 2, TILE_PX - 4, TILE_PX - 4);
-  } else if (t === Tile.BrokenDoor) {
-    // Hueco en el marco: el marco de la puerta y suelo en medio.
-    ctx.fillStyle = css(TILE_COLORS[Tile.Floor]);
-    ctx.fillRect(x + 3, y, TILE_PX - 6, TILE_PX);
-  } else if (t === Tile.Rubble) {
-    // Cascotes.
-    ctx.fillStyle = css(RUBBLE_BITS);
-    for (const [dx, dy] of [
-      [2, 3],
-      [8, 2],
-      [11, 9],
-      [4, 10],
-      [9, 13],
-    ])
-      ctx.fillRect(x + dx!, y + dy!, 3, 2);
-  } else if (t === Tile.Window && curtains) {
-    // Cortinas abiertas (H4d): recogidas a los lados. Sin cortinas, el marco vacío.
-    ctx.fillStyle = css(CURTAIN_DRAPE);
-    ctx.fillRect(x, y, 3, TILE_PX);
-    ctx.fillRect(x + TILE_PX - 3, y, 3, TILE_PX);
-  } else if (t === Tile.CurtainedWindow) {
-    // Cortinas corridas: tela oscura con sus pliegues.
-    ctx.fillStyle = css(CURTAIN_FOLD);
-    for (const dx of [4, 8, 12]) ctx.fillRect(x + dx, y, 1, TILE_PX);
-  } else if (t === Tile.LockedDoor) {
-    // Puerta atrancada: dos tablones cruzados.
-    ctx.strokeStyle = css(LOCK_BAR);
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x + 2, y + 2);
-    ctx.lineTo(x + TILE_PX - 2, y + TILE_PX - 2);
-    ctx.moveTo(x + TILE_PX - 2, y + 2);
-    ctx.lineTo(x + 2, y + TILE_PX - 2);
-    ctx.stroke();
-  } else if (t === Tile.BoardedWindow) {
-    for (const dy of [3, 9]) {
-      ctx.fillStyle = css(PLANK_SEAM);
-      ctx.fillRect(x, y + dy, TILE_PX, 4);
-      ctx.fillStyle = css(TILE_COLORS[Tile.BoardedWindow]);
-      ctx.fillRect(x, y + dy + 1, TILE_PX, 2);
-    }
   }
 }

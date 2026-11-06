@@ -14,7 +14,7 @@ import {
   standingFrame,
 } from './people';
 
-const LETTERS = new Set([...'.ksSheHtTaAlLfcCx']);
+const LETTERS = new Set([...'.ksSheHtTaAlLfcCxwmMr']);
 
 test('cada dibujo mide 16×16 y solo usa las letras de la figura', () => {
   const w = emptyWorld(5, 5);
@@ -105,4 +105,23 @@ test('mira hacia donde anda; quieto, sigue mirando hacia donde miraba', () => {
   expect(standingFrame('left')).toEqual({ frame: 'side', flip: true });
   expect(standingFrame('right')).toEqual({ frame: 'side', flip: false });
   expect(standingFrame('back')).toEqual({ frame: 'back', flip: false });
+  expect(standingFrame('left', 'A')).toEqual({ frame: 'sideWalkA', flip: true });
+  expect(standingFrame('front', 'B')).toEqual({ frame: 'frontWalkB', flip: false });
+});
+
+test('A5: al andar cambian solo las piernas; cada arma se ve en la mano, y los zombis no llevan', () => {
+  const l = personLook(3, [], false);
+  const rows = personRows(l);
+  for (const view of ['front', 'back', 'side'] as const)
+    for (const step of ['A', 'B'] as const) {
+      const walk = rows[`${view}Walk${step}`];
+      expect(walk.slice(0, 13), `${view}${step}`).toEqual(rows[view].slice(0, 13));
+      expect(walk.slice(13), `${view}${step}`).not.toEqual(rows[view].slice(13));
+    }
+  const weapons = ['knife', 'bat', 'axe', 'hatchet', 'crowbar', 'machete'] as const;
+  const fronts = weapons.map((wp) => personRows(personLook(3, [], false, wp)).front.join(''));
+  expect(new Set(fronts).size).toBe(weapons.length);
+  for (const f of fronts) expect(f).not.toBe(rows.front.join(''));
+  expect(personLook(3, [], true, 'axe').weapon).toBeNull();
+  expect(lookKey(personLook(3, [], false, 'axe'))).not.toBe(lookKey(l));
 });

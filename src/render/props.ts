@@ -457,6 +457,37 @@ function bloodPool(): string[] {
 }
 PROP_SPRITES.bloodPool = bloodPool();
 
+/**
+ * Salpicaduras de sangre en el suelo (A5): una mancha con gotas alrededor, tres distintas; y una gota
+ * suelta, de quien va sangrando.
+ */
+function splat(seed: number): string[] {
+  const px: Pixels = new Map();
+  let r = seed;
+  const rnd = () => (r = (Math.imul(r, 1103515245) + 12345) >>> 0) / 2 ** 32;
+  const [cx, cy] = [7.5 + (rnd() - 0.5) * 2, 10.5 + (rnd() - 0.5) * 2];
+  for (let y = 4; y < 16; y++)
+    for (let x = 0; x < PROP_W; x++) {
+      const d = ((x - cx) / 3.2) ** 2 + ((y - cy) / 2.2) ** 2 + (rnd() - 0.5) * 0.6;
+      if (d <= 1) px.set(key(x, y), d < 0.45 ? 'Y' : 'V');
+    }
+  for (let k = 0; k < 6; k++) {
+    const a = rnd() * Math.PI * 2;
+    const dist = 4 + rnd() * 3;
+    const [x, y] = [Math.round(cx + Math.cos(a) * dist), Math.round(cy + Math.sin(a) * dist * 0.6)];
+    if (x >= 0 && x < PROP_W && y >= 4 && y < 16) px.set(key(x, y), 'V');
+  }
+  return rowsOf(px, 4);
+}
+for (let k = 0; k < 3; k++) PROP_SPRITES[`splat${k}`] = splat(101 + k * 37);
+PROP_SPRITES.drip = [
+  '................',
+  '................',
+  '.......V........',
+  '......YV........',
+  '.........V......',
+];
+
 /** Hace un lienzo con todos los dibujos en fila y dice dónde empieza cada uno. */
 export function makePropAtlas(): { canvas: HTMLCanvasElement; frames: Record<string, number> } {
   const names = Object.keys(PROP_SPRITES);

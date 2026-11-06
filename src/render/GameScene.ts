@@ -75,6 +75,17 @@ import {
 } from './colors';
 import { bubbleIcon } from './bubbles';
 import { hash2, lookTile, tileLook } from './look';
+import {
+  decalAlpha,
+  fallAngle,
+  FADE_MS,
+  FALL_MS,
+  lungeAmount,
+  LUNGE_MS,
+  stepParticles,
+  walkStep,
+  type Particle,
+} from './motion';
 import { makeTileArt, paintTile, type TileArt } from './tileArt';
 import { makeTreeArt, nearTree, paintTrees, TREE_REACH, type TreeArt } from './trees';
 import { skyAlpha } from './daylight';
@@ -120,12 +131,27 @@ const SLEEPING_ALPHA = 0.85;
 /** Desconocidos y quien se va (H5): de su color, pero agrisados, hasta que son de la colonia. */
 const STRANGER_TINT = 0xb4b4c4;
 const STRANGER_ALPHA = 0.9;
+/** Movimiento (A5): andar se nota un rato después del último paso (si no, entre tick y tick, parpadea). */
+const WALKING_MS = 200;
+/** Quien recibe un golpe se tiñe de rojo un momento. */
+const HIT_TINT = 0xff6060;
+const HIT_MS = 140;
+/** Quien sangra deja una gota cada tanto andado (casillas). */
+const DRIP_EVERY = 0.6;
+/** Manchas de sangre a la vez, como mucho (las más viejas se van). */
+const MAX_DECALS = 300;
+/** Cada cuánto saltan astillas o polvo de quien tala, construye o fuerza (milisegundos). */
+const WORK_EVERY_MS = 350;
+/** Los colores de lo que salta: sangre, astillas y polvo. */
+const BLOOD_DROPS = [0x8a2420, 0x6e1a1a, 0xa0302a];
+const CHIPS = [0xc8a070, 0x8a6236, 0xe0c090];
+const DUST = 0xb8b2a6;
 /** Los cuerpos (H4d), más oscuros que en vida. */
 const CORPSE_TINT = 0x8a8a8a;
 const BLOOD_POOL_ALPHA = 0.75;
 /** Sitios para figuras en el lienzo de las figuras; si se llena, las nuevas van en su textura. */
-const PEOPLE_COLS = 12;
-const PEOPLE_ROWS = 32;
+const PEOPLE_COLS = 5;
+const PEOPLE_ROWS = 64;
 /** Un mueble ya registrado y vacío se ve desvaído. */
 const EMPTY_ALPHA = 0.35;
 const FOG_SEEN_ALPHA = 140; // 0–255: penumbra de lo visto pero no visible ahora
@@ -156,6 +182,31 @@ interface Prop {
   at: Point;
   alpha?: number;
   tint?: number;
+}
+
+/**
+ * Lo que se recuerda de cada uno entre fotogramas (A3, A5): hacia dónde mira y desde dónde, dónde
+ * estaba en el fotograma anterior, lo que ha andado, cuándo se movió por última vez y cuándo deja
+ * la próxima gota si sangra.
+ */
+interface Track {
+  x: number;
+  y: number;
+  f: Facing;
+  px: number;
+  py: number;
+  walked: number;
+  movedAt: number;
+  dripAt: number;
+}
+
+/** Una mancha de sangre en el suelo (A5): en qué mapa, dónde (píxeles), desde qué tick y cuál. */
+interface Decal {
+  map: number;
+  x: number;
+  y: number;
+  at: number;
+  frame: string;
 }
 
 /** Una persona o un zombi que dibujar en este fotograma (A3), con su dibujo puesto en su sitio. */
@@ -270,8 +321,30 @@ export class GameScene extends Phaser.Scene {
   private peopleAtlas!: Phaser.Textures.CanvasTexture;
   private peopleSlots = new Map<string, number>();
   private peopleDirty = false;
-  /** Hacia dónde mira cada uno y dónde estaba la última vez que se movió (`s3`, `z12`…). */
-  private facings = new Map<string, { x: number; y: number; f: Facing }>();
+  /** Hacia dónde mira cada uno, lo que anda… (`s3`, `z12`…; ver `Track`). */
+  private tracks = new Map<string, Track>();
+  /**
+   * Golpes (A5): las heridas de cada colono y la vida de cada zombi del fotograma anterior (para ver
+   * quién ha recibido uno), hasta cuándo se tiñe y hacia dónde se lanza quien golpea.
+   */
+  private lastWounds = new Map<string, number>();
+  private lastHealth = new Map<string, number>();
+  private hitUntil = new Map<string, number>();
+  private lunges = new Map<string, { dx: number; dy: number; start: number }>();
+  /** Manchas de sangre (A5), en su capa sobre el suelo; las imágenes se reutilizan. */
+  private decals: Decal[] = [];
+  private decalLayer!: Phaser.GameObjects.Layer;
+  private decalPool: Phaser.GameObjects.Image[] = [];
+  /** Gotas, astillas y polvo (A5), y cuándo vuelve a saltar algo de cada uno que trabaja. */
+  private particles: Particle[] = [];
+  private particleGfx!: Phaser.GameObjects.Graphics;
+  private workAt = new Map<number, number>();
+  /** Árboles talados que caen (A5), con cuándo empezaron y hacia qué lado. */
+  private falls: { img: Phaser.GameObjects.Image; start: number; dir: number; landed: boolean }[] =
+    [];
+  private fallLayer!: Phaser.GameObjects.Layer;
+  /** Si la simulación ha avanzado en este fotograma (en pausa no salta nada del trabajo). */
+  private advancing = false;
   /** Cómo se ve cada casilla (`tileLook`) la última vez que se pintó. */
   private mapTiles: number[] = [];
   private mapVersion = -1;
@@ -335,9 +408,13 @@ export class GameScene extends Phaser.Scene {
     for (const [name, x] of Object.entries(this.propAtlas.frames))
       props.add(name, 0, x, 0, PROP_W, PROP_H);
     this.drawMap();
+    this.decalLayer = this.add.layer();
+    this.treeArt.trees.forEach((c, k) => this.textures.addCanvas(`tree${k}`, c));
     this.props = this.add.layer();
     this.furniture = this.add.graphics();
     this.people = this.add.layer();
+    this.fallLayer = this.add.layer();
+    this.particleGfx = this.add.graphics();
     this.peopleAtlas = this.textures.createCanvas(
       'people',
       PEOPLE_COLS * PERSON_PX * PERSON_FRAMES.length,
@@ -378,6 +455,7 @@ export class GameScene extends Phaser.Scene {
     const ticks = this.clock.advance(dtMs);
     const t0 = performance.now();
     runTicks(this.base, ticks, this.onProblems);
+    this.advancing = ticks > 0;
     // H6c: lo que mide el modo depuración (suavizado).
     if (this.perf) {
       if (dtMs > 0) this.perf.fps = this.perf.fps * 0.9 + (1000 / dtMs) * 0.1;
@@ -398,6 +476,7 @@ export class GameScene extends Phaser.Scene {
     this.drawFurniture();
     this.drawBuilding();
     this.drawActors();
+    this.drawEffects(dtMs);
     if (this.peopleDirty) {
       this.peopleAtlas.refresh();
       this.peopleDirty = false;
@@ -511,6 +590,7 @@ export class GameScene extends Phaser.Scene {
       if (before === -1 || (lookTile(before) === Tile.Tree) === (grid.tiles[i] === Tile.Tree))
         continue;
       const [x, y] = [i % grid.width, Math.floor(i / grid.width)];
+      if (lookTile(before) === Tile.Tree && this.visible[i] === 1) this.fellTree(x, y);
       for (let dy = -TREE_REACH; dy <= TREE_REACH; dy++)
         for (let dx = -TREE_REACH; dx <= TREE_REACH; dx++)
           if (x + dx >= 0 && y + dy >= 0 && x + dx < grid.width && y + dy < grid.height)
@@ -560,21 +640,40 @@ export class GameScene extends Phaser.Scene {
   }
 
   /**
-   * Las personas y los zombis (A3): cada uno con su figura, mirando hacia donde anda. Debajo de
-   * ellos (en la capa de los muebles), el círculo de quien está elegido y el de quien está en el
-   * suelo; encima, las espadas del modo combate, la vida de los zombis y el rectángulo para elegir.
+   * Las personas y los zombis (A3): cada uno con su figura, mirando hacia donde anda y moviendo las
+   * piernas (A5). Debajo de ellos (en la capa de los muebles), el círculo de quien está elegido y el
+   * de quien está en el suelo; encima, las espadas del modo combate, la vida de los zombis y el
+   * rectángulo para elegir. Quien recibe un golpe se tiñe y sangra, y quien lo da se lanza (A5).
    */
   private drawActors(): void {
     const g = this.actors;
     const under = this.furniture;
     const w = this.world;
     g.clear();
+    const now = this.time.now;
     const figures: Figure[] = [];
-    const facings = new Map<string, { x: number; y: number; f: Facing }>();
+    const tracks = new Map<string, Track>();
+    const lastWounds = new Map<string, number>();
+    const lastHealth = new Map<string, number>();
     for (const s of w.survivors) {
       const [x, y] = [s.pos.x * TILE_PX, s.pos.y * TILE_PX];
-      const fig = this.personFigure(s, `s${s.id}`, facings);
+      const id = `s${s.id}`;
+      const fig = this.personFigure(s, id, tracks);
       figures.push(fig);
+      // Golpes (A5): una herida nueva es un golpe; quien estaba a por él se lanza.
+      const key = `${w.mapId}:${id}`;
+      const before = this.lastWounds.get(key);
+      if (before !== undefined && s.wounds.length > before) {
+        this.hit(id, x, y);
+        const attacker = w.zombies
+          .filter((z) => z.targetId === s.id)
+          .sort((a, b) => dist2(a.pos, s.pos) - dist2(b.pos, s.pos))[0];
+        if (attacker && dist2(attacker.pos, s.pos) < 2.5)
+          this.lunge(`z${attacker.id}`, attacker.pos, s.pos);
+      }
+      lastWounds.set(key, s.wounds.length);
+      this.drip(s, tracks.get(id)!);
+      this.work(s);
       if (this.selection.ids.includes(s.id)) {
         under.lineStyle(1.5, SELECTION_RING, 1);
         under.strokeEllipse(x, fig.feet - 1, 14, 6);
@@ -600,26 +699,40 @@ export class GameScene extends Phaser.Scene {
     }
     // El desconocido, agrisado, hasta que lo aceptan; también el que se va (H5).
     for (const s of [...(w.stranger?.survivors ?? []), ...w.leaving]) {
-      const fig = this.personFigure(s, `s${s.id}`, facings);
+      const fig = this.personFigure(s, `s${s.id}`, tracks);
       figures.push({ ...fig, tint: STRANGER_TINT, alpha: fig.alpha * STRANGER_ALPHA });
     }
     // Zombis (H4b): solo los que ven ahora los colonos, con una barrita si están heridos.
     for (const z of w.zombies) {
+      const id = `z${z.id}`;
+      const key = `${w.mapId}:${id}`;
+      const before = this.lastHealth.get(key);
+      lastHealth.set(key, z.health);
       if (this.visible[Math.floor(z.pos.y) * w.grid.width + Math.floor(z.pos.x)] !== 1) continue;
       const [x, y] = [z.pos.x * TILE_PX, z.pos.y * TILE_PX];
+      if (before !== undefined && z.health < before) {
+        this.hit(id, x, y);
+        for (const s of w.survivors)
+          if (s.action.type === 'melee' && s.action.zombieId === z.id)
+            this.lunge(`s${s.id}`, s.pos, z.pos);
+      }
       const look = personLook(z.name ? seedOf(z.name) : hash2(z.id, 5), z.worn, true);
-      const { frame, flip } = standingFrame(this.facing(`z${z.id}`, z.pos, facings));
-      const [key, prefix] = this.personTexture(look);
-      figures.push({
-        key,
-        frame: prefix + frame,
-        x: x - 8,
-        y: y + FEET_PX - PERSON_PX,
-        flip,
-        alpha: 1,
-        tint: null,
-        feet: y + FEET_PX,
-      });
+      const track = this.track(id, z.pos, tracks);
+      const step = walkStep(track.walked, now - track.movedAt < WALKING_MS);
+      const { frame, flip } = standingFrame(track.f, step);
+      const [tex, prefix] = this.personTexture(look);
+      figures.push(
+        this.moved(id, {
+          key: tex,
+          frame: prefix + frame,
+          x: x - 8,
+          y: y + FEET_PX - PERSON_PX - (step ? 1 : 0),
+          flip,
+          alpha: 1,
+          tint: null,
+          feet: y + FEET_PX,
+        }),
+      );
       if (z.health < ZOMBIE_HEALTH) {
         const bw = 12;
         g.fillStyle(BAR_BACK, 0.8);
@@ -628,23 +741,23 @@ export class GameScene extends Phaser.Scene {
         g.fillRect(x - bw / 2, y - HEAD_PX - 3, (bw * z.health) / ZOMBIE_HEALTH, 2);
       }
     }
-    this.facings = facings;
+    this.tracks = tracks;
+    this.lastWounds = lastWounds;
+    this.lastHealth = lastHealth;
     this.placePeople(figures);
   }
 
   /**
-   * La figura de una persona: de pie, mirando hacia donde anda; derribada, tumbada sobre un círculo
-   * rojo; dormida, en la cama (la cabeza en la almohada) o tumbada en el suelo.
+   * La figura de una persona: de pie, mirando hacia donde anda (con su paso y su arma, A5);
+   * derribada, tumbada sobre un círculo rojo; dormida, en la cama (la cabeza en la almohada) o
+   * tumbada en el suelo.
    */
-  private personFigure(
-    s: Survivor,
-    id: string,
-    facings: Map<string, { x: number; y: number; f: Facing }>,
-  ): Figure {
+  private personFigure(s: Survivor, id: string, tracks: Map<string, Track>): Figure {
     const w = this.world;
     const [x, y] = [s.pos.x * TILE_PX, s.pos.y * TILE_PX];
-    const [key, prefix] = this.personTexture(personLook(seedOf(s.name), s.worn, false));
-    const facing = this.facing(id, s.pos, facings);
+    const look = personLook(seedOf(s.name), s.worn, false, s.equipped);
+    const [key, prefix] = this.personTexture(look);
+    const track = this.track(id, s.pos, tracks);
     const flat = (frame: string, alpha: number): Figure => ({
       key,
       frame: prefix + frame,
@@ -658,7 +771,7 @@ export class GameScene extends Phaser.Scene {
     if (s.action.type === 'downed') {
       this.furniture.lineStyle(1.5, DOWNED_RING, 1);
       this.furniture.strokeEllipse(x, y + 1, 18, 10);
-      return flat('lying', 1);
+      return this.moved(id, flat('lying', 1));
     }
     if (s.action.type === 'sleep') {
       const [tx, ty] = [Math.floor(s.pos.x), Math.floor(s.pos.y)];
@@ -666,34 +779,259 @@ export class GameScene extends Phaser.Scene {
       if (!inBed) return flat('lying', SLEEPING_ALPHA);
       return { ...flat('sleep', 1), x: tx * TILE_PX, y: ty * TILE_PX };
     }
-    const { frame, flip } = standingFrame(facing);
-    return {
+    const walking = this.time.now - track.movedAt < WALKING_MS;
+    // Quieto y trabajando (A5), mira hacia lo que hace.
+    const target = walking ? null : this.workTarget(s);
+    if (target) track.f = facingOf(target.x + 0.5 - s.pos.x, target.y + 0.5 - s.pos.y, track.f);
+    const step = walkStep(track.walked, walking);
+    const { frame, flip } = standingFrame(track.f, step);
+    return this.moved(id, {
       key,
       frame: prefix + frame,
       x: x - 8,
-      y: y + FEET_PX - PERSON_PX,
+      y: y + FEET_PX - PERSON_PX - (step ? 1 : 0),
       flip,
       alpha: 1,
       tint: null,
       feet: y + FEET_PX,
-    };
+    });
   }
 
-  /** Hacia dónde mira cada uno: hacia donde se ha movido desde la última vez (y se apunta en `next`). */
-  private facing(
-    id: string,
-    pos: Point,
-    next: Map<string, { x: number; y: number; f: Facing }>,
-  ): Facing {
-    const before = this.facings.get(id);
+  /**
+   * Lo que se recuerda de cada uno (y se apunta en `next`): hacia dónde mira (cambia al moverse más
+   * de un poco), lo que ha andado y cuándo se movió por última vez.
+   */
+  private track(id: string, pos: Point, next: Map<string, Track>): Track {
+    const before = this.tracks.get(id);
+    const now = this.time.now;
     if (!before) {
-      next.set(id, { x: pos.x, y: pos.y, f: 'front' });
-      return 'front';
+      const t = {
+        x: pos.x,
+        y: pos.y,
+        f: 'front' as Facing,
+        px: pos.x,
+        py: pos.y,
+        walked: 0,
+        movedAt: -1e9,
+        dripAt: 0,
+      };
+      next.set(id, t);
+      return t;
     }
     const f = facingOf(pos.x - before.x, pos.y - before.y, before.f);
-    const moved = f !== before.f || Math.abs(pos.x - before.x) + Math.abs(pos.y - before.y) > 0.05;
-    next.set(id, moved ? { x: pos.x, y: pos.y, f } : before);
-    return f;
+    const turned = f !== before.f || Math.abs(pos.x - before.x) + Math.abs(pos.y - before.y) > 0.05;
+    const step = Math.abs(pos.x - before.px) + Math.abs(pos.y - before.py);
+    const t: Track = {
+      x: turned ? pos.x : before.x,
+      y: turned ? pos.y : before.y,
+      f,
+      px: pos.x,
+      py: pos.y,
+      walked: before.walked + step,
+      movedAt: step > 0.001 ? now : before.movedAt,
+      dripAt: before.dripAt,
+    };
+    next.set(id, t);
+    return t;
+  }
+
+  /** Una figura con lo de este momento: teñida si acaba de recibir un golpe, adelantada si lo da. */
+  private moved(id: string, fig: Figure): Figure {
+    const now = this.time.now;
+    const l = this.lunges.get(id);
+    let [x, y] = [fig.x, fig.y];
+    if (l) {
+      const a = lungeAmount(now - l.start);
+      if (now - l.start >= LUNGE_MS) this.lunges.delete(id);
+      x += l.dx * a;
+      y += l.dy * a;
+    }
+    const tint = (this.hitUntil.get(id) ?? 0) > now ? HIT_TINT : fig.tint;
+    return { ...fig, x, y, tint };
+  }
+
+  /** Un golpe a alguien (A5): se tiñe un momento, salpica sangre y deja una mancha en el suelo. */
+  private hit(id: string, x: number, y: number): void {
+    this.hitUntil.set(id, this.time.now + HIT_MS);
+    for (let k = 0; k < 7; k++) {
+      const a = Math.random() * Math.PI * 2;
+      const v = 0.015 + Math.random() * 0.03;
+      this.particles.push({
+        x,
+        y: y + FEET_PX - 1,
+        z: 6 + Math.random() * 4,
+        vx: Math.cos(a) * v,
+        vy: Math.sin(a) * v * 0.6,
+        vz: 0.03 + Math.random() * 0.05,
+        life: 700 + Math.random() * 400,
+        color: BLOOD_DROPS[k % BLOOD_DROPS.length]!,
+        size: 1,
+      });
+    }
+    this.addDecal(
+      x + (Math.random() - 0.5) * 6,
+      y + FEET_PX + (Math.random() - 0.5) * 3,
+      `splat${Math.floor(Math.random() * 3)}`,
+    );
+  }
+
+  /** Quien golpea se lanza un poco hacia quien recibe (A5). */
+  private lunge(id: string, from: Point, to: Point): void {
+    const [dx, dy] = [to.x - from.x, to.y - from.y];
+    const d = Math.sqrt(dx * dx + dy * dy) || 1;
+    this.lunges.set(id, { dx: dx / d, dy: dy / d, start: this.time.now });
+  }
+
+  /** Quien sangra y anda deja una gota cada tanto (A5). */
+  private drip(s: Survivor, t: Track): void {
+    if (!s.wounds.some((x) => x.bleeding)) return;
+    if (t.walked < t.dripAt) return;
+    t.dripAt = t.walked + DRIP_EVERY;
+    this.addDecal(s.pos.x * TILE_PX, s.pos.y * TILE_PX + FEET_PX, 'drip');
+  }
+
+  private addDecal(x: number, y: number, frame: string): void {
+    this.decals.push({ map: this.world.mapId, x, y, at: this.world.tick, frame });
+    if (this.decals.length > MAX_DECALS) this.decals.shift();
+  }
+
+  /** La casilla en la que trabaja alguien (talar, construir, forzar, pelear), o `null`. */
+  private workTarget(s: Survivor): Point | null {
+    const w = this.world;
+    const a = s.action;
+    const tile = (i: number) => ({ x: i % w.grid.width, y: Math.floor(i / w.grid.width) });
+    if (a.type === 'chop') return tile(a.tree);
+    if (a.type === 'pry') return tile(a.door);
+    if (a.type === 'build') return w.blueprints.find((b) => b.id === a.blueprintId)?.pos ?? null;
+    if (a.type === 'melee') {
+      const z = w.zombies.find((z) => z.id === a.zombieId);
+      return z ? { x: Math.floor(z.pos.x), y: Math.floor(z.pos.y) } : null;
+    }
+    return null;
+  }
+
+  /** Astillas al talar, polvo al construir y al forzar una puerta (A5), cada poco y sin pausa. */
+  private work(s: Survivor): void {
+    if (!this.advancing) return;
+    const w = this.world;
+    const a = s.action;
+    if (a.type !== 'chop' && a.type !== 'pry' && a.type !== 'build') return;
+    const at = this.workTarget(s);
+    const chips = a.type !== 'build';
+    if (!at || w.seen[at.y * w.grid.width + at.x] !== 1) return;
+    const now = this.time.now;
+    if ((this.workAt.get(s.id) ?? 0) > now) return;
+    this.workAt.set(s.id, now + WORK_EVERY_MS);
+    const [x, y] = [(at.x + 0.5) * TILE_PX, (at.y + 0.8) * TILE_PX];
+    for (let k = 0; k < 3; k++) {
+      const dir = Math.random() - 0.5;
+      this.particles.push(
+        chips
+          ? {
+              x,
+              y,
+              z: 6 + Math.random() * 4,
+              vx: dir * 0.06,
+              vy: (Math.random() - 0.5) * 0.02,
+              vz: 0.04 + Math.random() * 0.05,
+              life: 800,
+              color: CHIPS[k]!,
+              size: 1 + (k % 2),
+            }
+          : {
+              x: x + dir * 8,
+              y,
+              z: 1,
+              vx: dir * 0.004,
+              vy: 0,
+              vz: 0.006,
+              life: 600,
+              color: DUST,
+              size: 2,
+              floats: true,
+            },
+      );
+    }
+  }
+
+  /** Un árbol talado que se ve cae hacia el lado contrario de quien lo tala y se desvanece (A5). */
+  private fellTree(x: number, y: number): void {
+    const v = hash2(x, y) % this.treeArt.trees.length;
+    const chopper = this.world.survivors.find(
+      (s) => Math.abs(s.pos.x - (x + 0.5)) + Math.abs(s.pos.y - (y + 0.5)) < 2.5,
+    );
+    const dir = chopper ? (chopper.pos.x <= x + 0.5 ? 1 : -1) : hash2(y, x) % 2 ? 1 : -1;
+    const img = new Phaser.GameObjects.Image(
+      this,
+      (x + 0.5) * TILE_PX,
+      (y + 1) * TILE_PX - 1,
+      `tree${v}`,
+    );
+    img.setOrigin(0.5, 25 / 32);
+    this.fallLayer.add(img);
+    this.falls.push({ img, start: this.time.now, dir, landed: false });
+  }
+
+  /**
+   * Lo que se mueve solo (A5): las gotas, astillas y polvo; las manchas de sangre, que se secan; y
+   * los árboles que caen, que al tocar el suelo levantan polvo.
+   */
+  private drawEffects(dtMs: number): void {
+    const now = this.time.now;
+    stepParticles(this.particles, dtMs);
+    const g = this.particleGfx;
+    g.clear();
+    for (const p of this.particles) {
+      g.fillStyle(p.color, Math.min(1, p.life / 250) * (p.floats ? 0.6 : 1));
+      g.fillRect(Math.round(p.x), Math.round(p.y - p.z), p.size, p.size);
+    }
+    // Manchas de este mapa, cada vez más secas.
+    const w = this.world;
+    this.decals = this.decals.filter((d) => decalAlpha(w.tick - d.at) > 0 || d.map !== w.mapId);
+    let k = 0;
+    for (const d of this.decals) {
+      if (d.map !== w.mapId) continue;
+      let img = this.decalPool[k];
+      if (!img) {
+        img = new Phaser.GameObjects.Image(this, 0, 0, 'props', d.frame).setOrigin(0.5, 0.77);
+        this.decalLayer.add(img);
+        this.decalPool.push(img);
+      }
+      if (img.frame.name !== d.frame) img.setFrame(d.frame);
+      img
+        .setPosition(Math.round(d.x), Math.round(d.y))
+        .setAlpha(decalAlpha(w.tick - d.at) * BLOOD_POOL_ALPHA);
+      img.setVisible(true);
+      k++;
+    }
+    for (; k < this.decalPool.length; k++) this.decalPool[k]!.setVisible(false);
+    // Árboles que caen.
+    for (const f of this.falls) {
+      const ms = now - f.start;
+      f.img.setRotation(f.dir * fallAngle(ms));
+      if (ms >= FALL_MS && !f.landed) {
+        f.landed = true;
+        for (let j = 0; j < 8; j++)
+          this.particles.push({
+            x: f.img.x + f.dir * (4 + j * 2),
+            y: f.img.y,
+            z: 1,
+            vx: (Math.random() - 0.5) * 0.01,
+            vy: 0,
+            vz: 0.008,
+            life: 700,
+            color: DUST,
+            size: 2,
+            floats: true,
+          });
+      }
+      f.img.setAlpha(Math.max(0, 1 - Math.max(0, ms - FALL_MS) / FADE_MS));
+    }
+    this.falls = this.falls.filter((f) => {
+      if (now - f.start < FALL_MS + FADE_MS) return true;
+      f.img.destroy();
+      return false;
+    });
   }
 
   /**
@@ -1454,4 +1792,9 @@ export class GameScene extends Phaser.Scene {
     if (k.W.isDown || k.UP.isDown) cam.scrollY -= d;
     if (k.S.isDown || k.DOWN.isDown) cam.scrollY += d;
   }
+}
+
+/** Distancia al cuadrado entre dos puntos (en casillas). */
+function dist2(a: Point, b: Point): number {
+  return (a.x - b.x) ** 2 + (a.y - b.y) ** 2;
 }

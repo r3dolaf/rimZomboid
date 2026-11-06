@@ -136,6 +136,10 @@ export const ZOMBIE_EYES = 0xc23a2a;
 export const BLOOD = 0x8a2420;
 export const SHOES = 0x2a2420;
 export const UNDERWEAR = 0x6a6a70;
+/** Las armas en la mano (A5): mango de madera, metal y la palanca. */
+export const WEAPON_WOOD = 0x7a5230;
+export const WEAPON_METAL = 0xb8c0c8;
+export const CROWBAR = 0x8a3a30;
 /** Los colores de cada prenda (H5b): cada una saca el suyo de su número. */
 export const GARMENT_COLORS: Record<GarmentKind, readonly number[]> = {
   tshirt: [0xc8ccd0, 0x3f6aa0, 0xa0522d, 0x6b8e5a, 0x8a3a3a, 0xd9c46a, 0x2a2a2e],

@@ -1,5 +1,5 @@
 import { GARMENTS } from '../sim/balance';
-import type { BodyPart, Garment, GarmentKind } from '../sim/types';
+import type { BodyPart, Garment, GarmentKind, Weapon } from '../sim/types';
 import {
   BLOOD,
   EYES,
@@ -8,6 +8,9 @@ import {
   SHOES,
   SKIN_TONES,
   UNDERWEAR,
+  CROWBAR,
+  WEAPON_METAL,
+  WEAPON_WOOD,
   ZOMBIE_EYES,
   ZOMBIE_SKIN,
 } from './colors';
@@ -15,8 +18,23 @@ import { hash2 } from './look';
 
 /** Cada figura (A3) es de 16×16; de pie, los pies van en la fila de abajo. */
 export const PERSON_PX = 16;
-/** Los dibujos de cada figura, en este orden: de frente, de espaldas, de lado, tumbada y en la cama. */
-export const PERSON_FRAMES = ['front', 'back', 'side', 'lying', 'sleep'] as const;
+/**
+ * Los dibujos de cada figura, en este orden: de frente, de espaldas, de lado, tumbada y en la cama;
+ * y andando (A5), dos pasos de cada vista.
+ */
+export const PERSON_FRAMES = [
+  'front',
+  'back',
+  'side',
+  'lying',
+  'sleep',
+  'frontWalkA',
+  'frontWalkB',
+  'backWalkA',
+  'backWalkB',
+  'sideWalkA',
+  'sideWalkB',
+] as const;
 export type PersonFrame = (typeof PERSON_FRAMES)[number];
 /** Hacia dónde mira: de lado a la izquierda es el dibujo de lado al revés. */
 export type Facing = 'front' | 'back' | 'left' | 'right';
@@ -39,6 +57,8 @@ export interface Look {
   torn: boolean;
   /** Para colocar las manchas y los agujeros, siempre en el mismo sitio. */
   seed: number;
+  /** Lo que lleva en la mano (A5); los zombis, nada. */
+  weapon: Weapon | null;
 }
 
 /** Un número fijo sacado de un nombre (el mismo pelo y la misma piel aunque se vuelva zombi). */
@@ -82,7 +102,12 @@ const HATS: readonly GarmentKind[] = ['cap', 'beanie', 'helmet'];
  * Cómo se ve una persona o un zombi: la piel y el pelo salen de `seed` (de su nombre); la ropa, de
  * lo que lleva puesto. Un zombi tiene la piel verdosa y la ropa algo más oscura.
  */
-export function personLook(seed: number, worn: readonly Garment[], zombie: boolean): Look {
+export function personLook(
+  seed: number,
+  worn: readonly Garment[],
+  zombie: boolean,
+  weapon: Weapon | null = null,
+): Look {
   const skin = SKIN_TONES[hash2(seed, 1) % SKIN_TONES.length]!;
   const hair = HAIR_COLORS[hash2(seed, 2) % HAIR_COLORS.length]!;
   const dim = (c: number) => (zombie ? shade(c, 0.8) : c);
@@ -106,6 +131,7 @@ export function personLook(seed: number, worn: readonly Garment[], zombie: boole
     bloody: worn.some((g) => g.bloody),
     torn: chest.some((g) => g.holes.includes('torso')),
     seed,
+    weapon: zombie ? null : weapon,
   };
 }
 
@@ -123,6 +149,7 @@ export function lookKey(l: Look): string {
     l.legs.toString(16),
     hat,
     marks,
+    l.weapon ?? '',
   ].join('.');
 }
 
@@ -267,6 +294,131 @@ const LONG_HAIR: Record<'front' | 'back' | 'side', readonly string[]> = {
   side: ['................', '...kh...........', '...kh...........', '...kh...........'],
 };
 
+/**
+ * Las tres filas de abajo (las piernas) al andar (A5): dos pasos por vista. De frente y de espaldas,
+ * un pie levantado y luego el otro; de lado, las piernas abiertas y luego juntas. Los zombis
+ * arrastran el pie.
+ */
+const WALK_LEGS: Record<
+  'person' | 'zombie',
+  Record<'front' | 'side', { A: readonly string[]; B: readonly string[] }>
+> = {
+  person: {
+    front: {
+      A: ['....kllllllk....', '....kffkkllk....', '....kkk.kffk....'],
+      B: ['....kllllllk....', '....kllkkffk....', '....kffk.kkk....'],
+    },
+    side: {
+      A: ['.....kllllk.....', '....kllkkLlk....', '...kffk..kffk...'],
+      B: ['.....kllllk.....', '.....kLlllk.....', '.....kffffk.....'],
+    },
+  },
+  zombie: {
+    front: {
+      A: ['....kllllllk....', '....kffk.klk....', '....kkk..kfk....'],
+      B: ['....kllllllk....', '....kllk.kfk....', '....kfk..kkk....'],
+    },
+    side: {
+      A: ['.....kllllk.....', '....kllkklk.....', '...kffk..kfk....'],
+      B: ['.....kllllk.....', '.....kllLk......', '.....kffffk.....'],
+    },
+  },
+};
+
+/**
+ * El arma en la mano (A5), píxel a píxel desde la mano: de frente, levantada hacia fuera; de lado,
+ * hacia delante (de espaldas, la de frente al revés). `w` mango de madera, `m`/`M` metal, `r`
+ * palanca.
+ */
+const WEAPON_PX: Record<Weapon, Record<'front' | 'side', readonly [number, number, string][]>> = {
+  knife: {
+    front: [
+      [12, 11, 'm'],
+      [13, 10, 'm'],
+    ],
+    side: [
+      [9, 12, 'm'],
+      [10, 12, 'm'],
+    ],
+  },
+  bat: {
+    front: [
+      [12, 11, 'w'],
+      [13, 10, 'w'],
+      [14, 9, 'w'],
+      [14, 8, 'w'],
+    ],
+    side: [
+      [9, 12, 'w'],
+      [10, 11, 'w'],
+      [11, 10, 'w'],
+      [12, 9, 'w'],
+    ],
+  },
+  axe: {
+    front: [
+      [12, 11, 'w'],
+      [13, 10, 'w'],
+      [14, 9, 'w'],
+      [14, 8, 'm'],
+      [15, 9, 'M'],
+    ],
+    side: [
+      [9, 12, 'w'],
+      [10, 11, 'w'],
+      [11, 10, 'w'],
+      [11, 9, 'm'],
+      [12, 10, 'M'],
+    ],
+  },
+  hatchet: {
+    front: [
+      [12, 11, 'w'],
+      [13, 10, 'w'],
+      [13, 9, 'm'],
+      [14, 10, 'M'],
+    ],
+    side: [
+      [9, 12, 'w'],
+      [10, 11, 'w'],
+      [10, 10, 'm'],
+      [11, 11, 'M'],
+    ],
+  },
+  crowbar: {
+    front: [
+      [12, 11, 'r'],
+      [13, 10, 'r'],
+      [14, 9, 'r'],
+      [14, 8, 'r'],
+    ],
+    side: [
+      [9, 12, 'r'],
+      [10, 11, 'r'],
+      [11, 10, 'r'],
+      [12, 10, 'r'],
+    ],
+  },
+  machete: {
+    front: [
+      [12, 11, 'w'],
+      [13, 10, 'm'],
+      [14, 9, 'm'],
+      [15, 8, 'M'],
+    ],
+    side: [
+      [9, 12, 'w'],
+      [10, 11, 'm'],
+      [11, 10, 'm'],
+      [12, 9, 'M'],
+    ],
+  },
+};
+
+function setPx(rows: string[], x: number, y: number, ch: string): void {
+  rows[y] = rows[y]!.slice(0, x) + ch + rows[y]!.slice(x + 1);
+}
+
 function overlay(rows: string[], over: readonly string[], top: number, dx = 0): void {
   over.forEach((o, r) => {
     const row = [...rows[top + r]!];
@@ -311,7 +463,17 @@ export function personRows(l: Look): Record<PersonFrame, string[]> {
       );
     if (l.torn) marks(rows, l.seed, 2, 'S', 7);
     if (l.bloody) marks(rows, l.seed, 3, 'x', 11);
-    out[view] = rows;
+    const legs = WALK_LEGS[l.zombie ? 'zombie' : 'person'][view === 'side' ? 'side' : 'front'];
+    const frames = { stand: rows, A: [...rows], B: [...rows] };
+    overlay(frames.A, legs.A, 13);
+    overlay(frames.B, legs.B, 13);
+    if (l.weapon)
+      for (const f of Object.values(frames))
+        for (const [x, y, ch] of WEAPON_PX[l.weapon][view === 'side' ? 'side' : 'front'])
+          setPx(f, view === 'back' ? PERSON_PX - 1 - x : x, y, ch);
+    out[view] = frames.stand;
+    out[`${view}WalkA`] = frames.A;
+    out[`${view}WalkB`] = frames.B;
   }
   out.lying = lying(out.front);
   // En la cama: solo la cabeza en la almohada y los hombros, con los ojos cerrados.
@@ -342,6 +504,10 @@ function colors(l: Look): Record<string, number> {
     c: hat,
     C: shade(hat, 0.75),
     x: BLOOD,
+    w: WEAPON_WOOD,
+    m: WEAPON_METAL,
+    M: shade(WEAPON_METAL, 0.65),
+    r: CROWBAR,
   };
 }
 
@@ -381,10 +547,14 @@ export function facingOf(dx: number, dy: number, before: Facing): Facing {
   return dy > 0 ? 'front' : 'back';
 }
 
-/** El dibujo de pie para cada lado, y si va al revés. */
-export function standingFrame(f: Facing): { frame: PersonFrame; flip: boolean } {
-  if (f === 'left' || f === 'right') return { frame: 'side', flip: f === 'left' };
-  return { frame: f, flip: false };
+/** El dibujo de pie (o, andando, del paso `step`) para cada lado, y si va al revés. */
+export function standingFrame(
+  f: Facing,
+  step: 'A' | 'B' | null = null,
+): { frame: PersonFrame; flip: boolean } {
+  const view = f === 'left' || f === 'right' ? 'side' : f;
+  const frame = (step ? `${view}Walk${step}` : view) as PersonFrame;
+  return { frame, flip: f === 'left' };
 }
 
 /**

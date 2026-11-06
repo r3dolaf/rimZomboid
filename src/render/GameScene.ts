@@ -42,7 +42,7 @@ import {
 } from '../sim/types';
 import { buildingTitle, furnitureLabel, pileLabel, zombieLabel } from '../ui/describe';
 import { pileAt } from '../sim/piles';
-import { mainsOn } from '../sim/water';
+import { isRaining, mainsOn } from '../sim/water';
 import { visibleTiles } from '../sim/vision';
 import { discoverSite } from '../sim/sites';
 import { hexToward } from '../sim/expeditions';
@@ -60,9 +60,9 @@ import {
   DAMAGE_BAR,
   DESIGNATION,
   DOWNED_RING,
-  FIRE_GLOW,
+  FIRE_TINT,
   HOUSE_SELECTED,
-  NIGHT_COLOR,
+  NIGHT_TINT,
   SELECTION_RING,
   DRAFT_MARK,
   ZOMBIE_HURT,
@@ -71,12 +71,15 @@ import {
   LABEL_COLOR,
   LABEL_SHADOW,
   DEBUG_PATH,
+  FLASH_COLOR,
 } from './colors';
 import { bubbleIcon } from './bubbles';
 import { hash2, lookTile, tileLook } from './look';
 import { makeTileArt, paintTile, type TileArt } from './tileArt';
 import { makeTreeArt, nearTree, paintTrees, TREE_REACH, type TreeArt } from './trees';
 import { skyAlpha } from './daylight';
+import { darknessWith, LIGHT_IN_FOG, LIGHT_RES, lightField, nightShade, type Light } from './light';
+import { makeRainCanvas, RAIN_PX } from './weather';
 import { garments } from '../sim/bags';
 import {
   facingOf,
@@ -130,8 +133,20 @@ const FOG_EVERY_FRAMES = 4;
 const BUBBLE_PX = 10;
 const BLUEPRINT_ALPHA = 0.45;
 const PENDING_ALPHA = 0.3; // planos pedidos en pausa, aún sin poner
-const GLOW_RINGS = [1, 0.85, 0.7, 0.55, 0.4, 0.25]; // resplandor de la hoguera, de fuera adentro
-const GLOW_ALPHA = 0.045; // por cada círculo: se suman hacia el centro
+/** La luz (A4): cada cuántos fotogramas se rehace, y cuánto más allá de su alcance llega la hoguera. */
+const LIGHT_EVERY_FRAMES = 3;
+const LIGHT_BEYOND = 1.5; // casillas
+/** La llama tiembla: su luz crece y mengua un poco. */
+const FLICKER = 0.05;
+/** Lo cálida que es la luz junto a la hoguera, como mucho (de 0 a 1). */
+const WARMTH = 0.6;
+/** Lluvia: cuánto cae y cuánto se ladea (píxeles por milisegundo). */
+const RAIN_FALL = 0.12;
+const RAIN_DRIFT = 0.04;
+/** Relámpagos de la tormenta: cada cuánto (al azar entre los dos) y cuánto dura el destello. */
+const FLASH_EVERY_MS: [number, number] = [6000, 15000];
+const FLASH_MS = 350;
+const FLASH_ALPHA = 0.45;
 
 /** Un mueble que dibujar en este fotograma (A2): qué dibujo, en qué casilla y si se ve desvaído. */
 interface Prop {
@@ -180,6 +195,15 @@ export interface GameSceneData {
   openContext?: (tile: Point, screen: Point) => void;
 }
 
+/**
+ * Sube un lienzo y lo deja estirado con suavizado (A4: la niebla y la luz), no a cuadros. Con
+ * `pixelArt`, Phaser vuelve a ponerlo a cuadros cada vez que sube un lienzo, así que va después.
+ */
+function smoothRefresh(tex: Phaser.Textures.CanvasTexture): void {
+  tex.refresh();
+  tex.setFilter(Phaser.Textures.FilterMode.LINEAR);
+}
+
 /** Dibuja el mundo. Solo lee el estado de la simulación; nunca decide nada del juego. */
 export class GameScene extends Phaser.Scene {
   /** El mapa que se dibuja (el que se ve). */
@@ -187,7 +211,6 @@ export class GameScene extends Phaser.Scene {
   private base!: World;
   private view!: MapView;
   private mapImage!: Phaser.GameObjects.Image;
-  private fogImage!: Phaser.GameObjects.Image;
   private clock!: TimeController;
   private selection!: Selection;
   private houseSelection!: Selection;
@@ -206,8 +229,27 @@ export class GameScene extends Phaser.Scene {
   private zombieNames = new Map<number, Phaser.GameObjects.Text>();
   private furniture!: Phaser.GameObjects.Graphics;
   private marks!: Phaser.GameObjects.Graphics;
-  /** Resplandor de las hogueras, encima de la capa de noche. */
-  private glow!: Phaser.GameObjects.Graphics;
+  /**
+   * La niebla y la noche en una sola capa (A4): de pocos píxeles por casilla, estirada con suavizado,
+   * que multiplica el color por lo que queda de él según lo que se ve y la luz que llega (cálida
+   * junto a las hogueras, sin pasar los muros). Una sola capa a pantalla completa, de día y de noche.
+   */
+  private shade!: Phaser.Textures.CanvasTexture;
+  private shadeImage!: Phaser.GameObjects.Image;
+  private shadePixels!: ImageData;
+  /** Lo que deja ver la niebla en cada casilla: 255 a la vista, poco en lo visto y 0 sin ver. */
+  private fogKeep = new Uint8Array(0);
+  /** La luz de las hogueras en cada píxel de la capa (de 0 a 1). */
+  private lightAmounts = new Float32Array(0);
+  /** El cielo de la última vez que se rehízo la luz sin hogueras (si no cambia, no hay que rehacerla). */
+  private lastSky = -1;
+  /** Hay que repintar la capa: ha cambiado la niebla o la luz. */
+  private shadeDirty = true;
+  /** La lluvia y los relámpagos (A4). */
+  private rain!: Phaser.GameObjects.TileSprite;
+  private rainMs = 0;
+  private flash!: Phaser.GameObjects.Rectangle;
+  private nextFlash = 0;
   /** El mapa, pintado en un lienzo; se repinta lo que cambia (`Grid.version`). */
   private map!: Phaser.Textures.CanvasTexture;
   /** Los dibujos de los suelos, los muros y los árboles (A1): se hacen una vez. */
@@ -248,12 +290,9 @@ export class GameScene extends Phaser.Scene {
   private hover: Point | null = null;
   /** El agua del barreño o la cisterna bajo el ratón (H5b). */
   private waterLabel: Phaser.GameObjects.Text | null = null;
-  private fog!: Phaser.Textures.CanvasTexture;
   /** Lo que ven ahora los colonos (se rehace con la niebla): solo ahí se dibujan los zombis. */
   private visible: Uint8Array = new Uint8Array(0);
-  private fogPixels!: ImageData;
   private frame = 0;
-  private night!: Phaser.GameObjects.Rectangle;
   private keys!: Record<
     'W' | 'A' | 'S' | 'D' | 'UP' | 'LEFT' | 'DOWN' | 'RIGHT',
     Phaser.Input.Keyboard.Key
@@ -306,19 +345,25 @@ export class GameScene extends Phaser.Scene {
     )!;
     this.actors = this.add.graphics();
     this.bubbleLayer = this.add.container(0, 0);
-    const { width, height } = this.world.grid;
-    // Niebla: una textura de 1 píxel por casilla, escalada al tamaño del mapa.
-    this.makeFog();
-    this.fogImage = this.add.image(0, 0, 'fog').setOrigin(0, 0).setScale(TILE_PX);
+    // La niebla y la noche (A4), que multiplican: debajo de las marcas, para verlas siempre.
+    this.makeShade();
+    this.shadeImage = this.add
+      .image(0, 0, 'shade')
+      .setOrigin(0, 0)
+      .setScale(TILE_PX / LIGHT_RES)
+      .setBlendMode(Phaser.BlendModes.MULTIPLY);
     this.drawFog();
+    this.paintShade();
     // Marcas de saqueo y casa seleccionada: encima de la niebla, para verlas también en lo no visto.
     this.marks = this.add.graphics();
-    // La capa de noche cubre todo el mapa (la cámara nunca sale de él).
-    this.night = this.add
-      .rectangle(0, 0, width * TILE_PX, height * TILE_PX, NIGHT_COLOR, 1)
+    // La lluvia y los relámpagos, encima de la noche; solo cubren lo que se ve.
+    this.textures.addCanvas('rain', makeRainCanvas());
+    this.rain = this.add.tileSprite(0, 0, RAIN_PX, RAIN_PX, 'rain').setOrigin(0, 0);
+    this.rain.setVisible(false);
+    this.flash = this.add
+      .rectangle(0, 0, TILE_PX, TILE_PX, FLASH_COLOR)
       .setOrigin(0, 0)
       .setAlpha(0);
-    this.glow = this.add.graphics().setBlendMode(Phaser.BlendModes.ADD);
     this.makeLabels();
     this.setupCamera();
     this.setupSelection();
@@ -365,8 +410,9 @@ export class GameScene extends Phaser.Scene {
       this.drawFog();
       for (const l of this.labels) l.text.setVisible(this.world.seen[l.door] === 1);
     }
-    this.night.setAlpha(skyAlpha(this.world.tick, this.world.tick < this.world.common.stormUntil));
-    this.drawGlow();
+    this.drawLight();
+    this.paintShade();
+    this.drawWeather(dtMs);
     this.onFrame?.();
   }
 
@@ -382,10 +428,17 @@ export class GameScene extends Phaser.Scene {
     this.map = this.textures.createCanvas('map', grid.width * TILE_PX, grid.height * TILE_PX)!;
   }
 
-  private makeFog(): void {
+  /** La capa de la niebla y la noche, del tamaño del mapa que se ve, opaca (multiplica). */
+  private makeShade(): void {
     const { width, height } = this.world.grid;
-    this.fog = this.textures.createCanvas('fog', width, height)!;
-    this.fogPixels = this.fog.context.createImageData(width, height);
+    const [w, h] = [width * LIGHT_RES, height * LIGHT_RES];
+    this.shade = this.textures.createCanvas('shade', w, h)!;
+    this.shadePixels = this.shade.context.createImageData(w, h);
+    for (let i = 0; i < w * h; i++) this.shadePixels.data[i * 4 + 3] = 255;
+    this.fogKeep = new Uint8Array(width * height);
+    this.lightAmounts = new Float32Array(w * h);
+    this.lastSky = -1;
+    this.shadeDirty = true;
   }
 
   /** Lo que se guarda de cada casilla para repintar solo lo que cambia; y lo pinta todo. */
@@ -792,15 +845,14 @@ export class GameScene extends Phaser.Scene {
     this.waterLabel?.setVisible(false);
     for (const l of this.labels) l.text.destroy();
     this.textures.remove('map');
-    this.textures.remove('fog');
+    this.textures.remove('shade');
     this.makeMapCanvas();
     this.mapImage.setTexture('map');
     this.paintMap();
-    this.makeFog();
-    this.fogImage.setTexture('fog');
+    this.makeShade();
+    this.shadeImage.setTexture('shade');
     this.drawFog();
-    const { width, height } = this.world.grid;
-    this.night.setSize(width * TILE_PX, height * TILE_PX);
+    this.paintShade();
     this.makeLabels();
     this.placeCamera();
   }
@@ -1220,32 +1272,103 @@ export class GameScene extends Phaser.Scene {
     m.fillRect(x + 1, y, (TILE_PX - 2) * Math.min(1, frac), 2);
   }
 
-  /** De noche, cada hoguera vista alumbra un círculo del tamaño de su alcance. */
-  private drawGlow(): void {
-    const g = this.glow;
+  /**
+   * La luz de las hogueras vistas (A4), que tiembla con la llama y no pasa los muros: solo cuenta
+   * de noche o con tormenta. Si no hay hogueras y el cielo no ha cambiado, no hay nada que rehacer.
+   */
+  private drawLight(): void {
     const w = this.world;
-    g.clear();
-    const dark = darkness(w.tick);
-    if (dark <= 0) return;
-    for (const f of w.furniture) {
-      if (f.kind !== 'campfire' || w.seen[f.pos.y * w.grid.width + f.pos.x] !== 1) continue;
-      const [cx, cy] = [(f.pos.x + 0.5) * TILE_PX, (f.pos.y + 0.5) * TILE_PX];
-      g.fillStyle(FIRE_GLOW, GLOW_ALPHA * dark);
-      for (const k of GLOW_RINGS) g.fillCircle(cx, cy, (CAMPFIRE_RANGE + 0.5) * TILE_PX * k);
+    if (this.frame % LIGHT_EVERY_FRAMES !== 0) return;
+    const sky = skyAlpha(w.tick, w.tick < w.common.stormUntil);
+    const lights: Light[] = [];
+    if (sky > 0)
+      for (const f of w.furniture) {
+        if (f.kind !== 'campfire' || w.seen[f.pos.y * w.grid.width + f.pos.x] !== 1) continue;
+        const flicker = 1 + FLICKER * Math.sin(this.frame / 5 + f.id);
+        const radius = (CAMPFIRE_RANGE + LIGHT_BEYOND) * flicker;
+        lights.push({ x: f.pos.x + 0.5, y: f.pos.y + 0.5, radius });
+      }
+    if (lights.length === 0 && sky === this.lastSky) return;
+    if (lights.length > 0) lightField(w.grid, lights, this.lightAmounts);
+    else this.lightAmounts.fill(0);
+    this.lastSky = lights.length === 0 ? sky : -1;
+    this.shadeDirty = true;
+  }
+
+  /**
+   * Pinta la capa de la niebla y la noche si ha cambiado algo: en cada píxel, lo que deja la niebla
+   * de su casilla por lo que deja la noche ahí (el tinte de la noche, o cálido junto al fuego).
+   */
+  private paintShade(): void {
+    if (!this.shadeDirty) return;
+    this.shadeDirty = false;
+    const w = this.world;
+    const sky = skyAlpha(w.tick, w.tick < w.common.stormUntil);
+    const night = darkness(w.tick);
+    const plain = [0, 0, 0];
+    const lit = [0, 0, 0];
+    nightShade(sky, 0, NIGHT_TINT, FIRE_TINT, plain);
+    const data = this.shadePixels.data;
+    const width = w.grid.width * LIGHT_RES;
+    const height = w.grid.height * LIGHT_RES;
+    for (let py = 0; py < height; py++) {
+      const row = Math.floor(py / LIGHT_RES) * w.grid.width;
+      for (let px = 0; px < width; px++) {
+        const i = py * width + px;
+        const l = this.lightAmounts[i]!;
+        let keep = this.fogKeep[row + Math.floor(px / LIGHT_RES)]!;
+        if (l > 0 && keep > 0) keep += (255 - keep) * l * LIGHT_IN_FOG;
+        keep /= 255;
+        let c = plain;
+        if (l > 0 && sky > 0) {
+          nightShade(darknessWith(sky, l), l * WARMTH * night, NIGHT_TINT, FIRE_TINT, lit);
+          c = lit;
+        }
+        data[i * 4] = c[0]! * keep;
+        data[i * 4 + 1] = c[1]! * keep;
+        data[i * 4 + 2] = c[2]! * keep;
+      }
+    }
+    this.shade.putData(this.shadePixels, 0, 0);
+    smoothRefresh(this.shade);
+  }
+
+  /**
+   * Lluvia mientras llueve o hay tormenta (A4), solo sobre lo que se ve; con tormenta, de vez en
+   * cuando un relámpago que lo blanquea todo un momento.
+   */
+  private drawWeather(dtMs: number): void {
+    const w = this.world;
+    const v = this.cameras.main.worldView;
+    const storm = w.tick < w.common.stormUntil;
+    const raining = storm || isRaining(w);
+    this.rain.setVisible(raining);
+    if (raining) {
+      this.rainMs += dtMs;
+      this.rain.setPosition(v.x, v.y).setSize(Math.ceil(v.width) + 1, Math.ceil(v.height) + 1);
+      this.rain.setTilePosition(v.x - this.rainMs * RAIN_DRIFT, v.y - this.rainMs * RAIN_FALL);
+    }
+    const now = this.time.now;
+    if (!storm) this.nextFlash = 0;
+    else if (now >= this.nextFlash) {
+      if (this.nextFlash > 0) this.flash.setAlpha(FLASH_ALPHA);
+      const [lo, hi] = FLASH_EVERY_MS;
+      this.nextFlash = now + lo + Math.random() * (hi - lo);
+    }
+    if (this.flash.alpha > 0) {
+      this.flash.setPosition(v.x, v.y).setSize(v.width, v.height);
+      this.flash.setAlpha(Math.max(0, this.flash.alpha - dtMs / FLASH_MS));
     }
   }
 
-  /** Niebla: negro donde no se ha visto nunca, penumbra en lo visto y nada en lo visible. */
+  /** Niebla: lo que deja ver cada casilla, nada donde no se ha visto nunca, poco en lo visto. */
   private drawFog(): void {
     const w = this.world;
     const visible = visibleTiles(w);
     this.visible = visible;
-    const data = this.fogPixels.data;
-    for (let i = 0; i < w.seen.length; i++) {
-      data[i * 4 + 3] = visible[i] ? 0 : w.seen[i] ? FOG_SEEN_ALPHA : 255;
-    }
-    this.fog.putData(this.fogPixels, 0, 0);
-    this.fog.refresh();
+    for (let i = 0; i < w.seen.length; i++)
+      this.fogKeep[i] = 255 - (visible[i] ? 0 : w.seen[i] ? FOG_SEEN_ALPHA : 255);
+    this.shadeDirty = true;
   }
 
   /** Para los tests de navegador: el mundo y cómo pasar de casilla a píxel de pantalla. */

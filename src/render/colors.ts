@@ -163,12 +163,16 @@ export const BACKGROUND = 0x111111;
 export const SELECTION_RING = 0xffffff;
 /** Las espadas sobre la cabeza de quien está en modo combate (H4e). */
 export const DRAFT_MARK = 0xd9534f;
-export const NIGHT_COLOR = 0x0a1030;
+/** Lo que queda de cada color en plena noche (A4: la noche multiplica, así que oscurece y azulea). */
+export const NIGHT_TINT = 0x141c3c;
+/** Lo que queda de cada color junto a la hoguera de noche: el rojo entero, menos azul (cálido). */
+export const FIRE_TINT = 0xffc890;
 export const DESIGNATION = 0xe08a2c;
 export const HOUSE_SELECTED = 0xffffff;
 
-// H4a: el resplandor de la hoguera, planos y barras.
-export const FIRE_GLOW = 0xff9a3c;
+// H4a: planos y barras.
+/** El destello de los relámpagos (A4). */
+export const FLASH_COLOR = 0xe8f0ff;
 export const BLUEPRINT = 0x7fc3ff;
 export const BLUEPRINT_BAD = 0xd9534f;
 export const BAR_BACK = 0x111111;

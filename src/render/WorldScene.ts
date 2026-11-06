@@ -13,17 +13,16 @@ import {
   worldGroups,
   worldSites,
 } from '../ui/worldView';
+import { FILL_RADIUS, hexDecor, makeAtlasArt, paintDecor, type AtlasArt } from './atlasArt';
 import {
-  ATLAS_EDGE,
-  ATLAS_FOG,
+  ATLAS_ART,
   ATLAS_GROUP,
   ATLAS_HOVER,
   ATLAS_ROAD,
   ATLAS_ROUTE,
   ATLAS_STOP,
   ATLAS_SPECIAL,
-  ATLAS_TERRAIN,
-  ATLAS_TOWN,
+  css,
   LABEL_COLOR,
   LABEL_SHADOW,
   SURVIVOR_OUTLINE,
@@ -74,7 +73,9 @@ export class WorldScene extends Phaser.Scene {
   private routeLabel!: Phaser.GameObjects.Text;
   /** El punto de la ruta que se está arrastrando, o −1. */
   private dragging = -1;
-  private ground!: Phaser.GameObjects.Graphics;
+  /** El suelo del mundo (A6), pintado en un lienzo: terreno con textura, relieve, carreteras y pueblos. */
+  private ground!: Phaser.Textures.CanvasTexture;
+  private atlasArt!: AtlasArt;
   private marks!: Phaser.GameObjects.Graphics;
   /** Lo que se sabe del mundo cuando se pintó el suelo (se repinta al despejar niebla). */
   private groundKey = '';
@@ -108,7 +109,14 @@ export class WorldScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.ground = this.add.graphics();
+    this.atlasArt = makeAtlasArt();
+    const size = atlasPixels(this.base.common.atlas);
+    this.ground = this.textures.createCanvas(
+      'atlasGround',
+      Math.ceil(size.width),
+      Math.ceil(size.height),
+    )!;
+    this.add.image(0, 0, 'atlasGround').setOrigin(0, 0);
     this.marks = this.add.graphics();
     this.routeLabel = this.add
       .text(0, 0, '', {
@@ -159,7 +167,10 @@ export class WorldScene extends Phaser.Scene {
     return this.route.path;
   }
 
-  /** El terreno, las carreteras y los pueblos de lo que se ha visto; lo demás, niebla. */
+  /**
+   * El terreno de lo que se ha visto, con textura y su relieve (A6: árboles, lomas, olas, matas), las
+   * carreteras de tierra y los pueblos con sus casitas; lo demás, niebla. Se repinta al ver más.
+   */
   private paintGround(): void {
     const { atlas } = this.base.common;
     const seen = atlas.seen.reduce((n, v) => n + v, 0);
@@ -167,44 +178,75 @@ export class WorldScene extends Phaser.Scene {
     const key = `${seen}:${roads}`;
     if (key === this.groundKey) return;
     this.groundKey = key;
-    const g = this.ground.clear();
+    const ctx = this.ground.context;
     const n = atlas.width * atlas.height;
-    for (let i = 0; i < n; i++) {
+    ctx.clearRect(0, 0, this.ground.width, this.ground.height);
+    const hex = (i: number, r: number) => {
       const c = hexPixel(atlas, i);
-      const color = atlas.seen[i] === 1 ? ATLAS_TERRAIN[atlas.terrain[i]!] : ATLAS_FOG;
-      g.fillStyle(color, 1).fillPoints(corners(c.x, c.y, HEX_PX), true);
-      g.lineStyle(1, ATLAS_EDGE, 0.25).strokePoints(corners(c.x, c.y, HEX_PX), true);
+      ctx.beginPath();
+      hexCorners(c.x, c.y, r).forEach((p, k) => (k ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+      ctx.closePath();
+    };
+    const fill = {
+      fog: ctx.createPattern(this.atlasArt.fog, 'repeat')!,
+      field: ctx.createPattern(this.atlasArt.terrain.field, 'repeat')!,
+      forest: ctx.createPattern(this.atlasArt.terrain.forest, 'repeat')!,
+      hills: ctx.createPattern(this.atlasArt.terrain.hills, 'repeat')!,
+      water: ctx.createPattern(this.atlasArt.terrain.water, 'repeat')!,
+    };
+    for (let i = 0; i < n; i++) {
+      hex(i, FILL_RADIUS);
+      ctx.fillStyle = atlas.seen[i] === 1 ? fill[atlas.terrain[i]!] : fill.fog;
+      ctx.fill();
     }
+    ctx.strokeStyle = 'rgba(0,0,0,0.18)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < n; i++) {
+      hex(i, HEX_PX);
+      ctx.stroke();
+    }
+    // El relieve, de arriba abajo; las casitas, después de las carreteras.
+    const decor = (house: boolean) => {
+      for (let i = 0; i < n; i++) {
+        const c = hexPixel(atlas, i);
+        for (const d of hexDecor(atlas, i))
+          if ((d.kind === 'house') === house) paintDecor(ctx, d, c.x + d.dx, c.y + d.dy);
+      }
+    };
+    decor(false);
     // Carreteras: de cada hexágono con carretera (o pueblo) a sus vecinos con carretera, si se ven;
-    // sin triángulos: si dos vecinos tienen otro en común con número menor, se va por él.
+    // sin triángulos: si dos vecinos tienen otro en común con número menor, se va por él. De tierra:
+    // con su borde más oscuro.
     const onRoad = (i: number) =>
       atlas.seen[i] === 1 && (atlas.road[i] === 1 || atlas.town[i] === 1);
     const linked = (i: number) => neighbors(atlas, i).filter(onRoad);
-    g.lineStyle(3, ATLAS_ROAD, 1);
+    const segments: [number, number][] = [];
     for (let i = 0; i < n; i++) {
       if (!onRoad(i)) continue;
-      const a = hexPixel(atlas, i);
       const mine = linked(i);
       for (const j of mine) {
         if (j < i || (atlas.road[i] !== 1 && atlas.road[j] !== 1)) continue;
         if (linked(j).some((k) => k < i && k < j && mine.includes(k))) continue;
-        const b = hexPixel(atlas, j);
-        g.lineBetween(a.x, a.y, b.x, b.y);
+        segments.push([i, j]);
       }
     }
-    // Pueblos: unas casitas.
-    g.fillStyle(ATLAS_TOWN, 1);
-    for (let i = 0; i < n; i++) {
-      if (atlas.town[i] !== 1 || atlas.seen[i] !== 1 || i === atlas.base) continue;
-      const c = hexPixel(atlas, i);
-      for (const [dx, dy] of [
-        [-6, -4],
-        [2, -6],
-        [-2, 3],
-        [5, 2],
-      ] as const)
-        g.fillRect(c.x + dx, c.y + dy, 4, 4);
+    ctx.lineCap = 'round';
+    for (const [width, color] of [
+      [5, ATLAS_ART.roadEdge],
+      [3, ATLAS_ROAD],
+    ] as const) {
+      ctx.lineWidth = width;
+      ctx.strokeStyle = css(color);
+      ctx.beginPath();
+      for (const [i, j] of segments) {
+        const [a, b] = [hexPixel(atlas, i), hexPixel(atlas, j)];
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+      }
+      ctx.stroke();
     }
+    decor(true);
+    this.ground.refresh();
   }
 
   /** La base, los sitios, los grupos, el hexágono bajo el ratón y el elegido. */

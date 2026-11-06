@@ -233,10 +233,19 @@ export const ATLAS_TERRAIN: Record<Terrain, number> = {
   hills: 0x8a7a5a,
   water: 0x3a6ea5,
 };
-export const ATLAS_FOG = 0x1e1e22;
-export const ATLAS_EDGE = 0x000000;
+/** El mapa del mundo con relieve (A6): árboles, olas, casitas, la niebla y las carreteras. */
+export const ATLAS_ART = {
+  outline: 0x1b1a1f,
+  canopy: [0x4f7f45, 0x3a6535, 0x24441f] as const,
+  trunk: 0x4a3320,
+  waveLight: 0x8cc0e8,
+  roofs: [0xa8433a, 0x7a4a32, 0x5a5e66] as const,
+  wall: 0xd8d0c0,
+  door: 0x5a3a22,
+  fog: 0x1e1e22,
+  roadEdge: 0x6e6450,
+} as const;
 export const ATLAS_ROAD = 0xcfc4a8;
-export const ATLAS_TOWN = 0xb8b0a0;
 export const ATLAS_HOVER = 0xffffff;
 export const ATLAS_GROUP = 0xf2c641;
 export const ATLAS_SPECIAL = '#ffd34d';

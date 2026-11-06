@@ -1,4 +1,4 @@
-import type { BuildingKind, Terrain } from '../sim/types';
+import type { BuildingKind, GarmentKind, Terrain } from '../sim/types';
 
 /**
  * El mapa con textura (A1). La luz viene de arriba a la izquierda: los bordes de arriba y de la
@@ -121,6 +121,39 @@ export const PROP_COLORS: Record<string, number> = {
   F: 0xffd24a,
   y: 0xfff1a8,
   e: 0xe05a10,
+  // Sangre seca bajo los cuerpos (A3).
+  Y: 0x4e1414,
+  V: 0x6e1c1c,
+};
+
+/** Personas y zombis (A3): tonos de piel y de pelo, ojos, sangre, zapatos y la ropa interior. */
+export const SKIN_TONES = [0xf0c8a0, 0xe0b48c, 0xc89068, 0x9a6a48, 0x6e4a32];
+export const HAIR_COLORS = [0x1e1a18, 0x3a2a1e, 0x5a3a22, 0x8a6a3a, 0xc9a040, 0xa0482a, 0x9a9a9a];
+export const EYES = 0x1b1a1f;
+/** La piel de un zombi: la de quien fue, tirando a este verde. */
+export const ZOMBIE_SKIN = 0x7f9a62;
+export const ZOMBIE_EYES = 0xc23a2a;
+export const BLOOD = 0x8a2420;
+export const SHOES = 0x2a2420;
+export const UNDERWEAR = 0x6a6a70;
+/** Los colores de cada prenda (H5b): cada una saca el suyo de su número. */
+export const GARMENT_COLORS: Record<GarmentKind, readonly number[]> = {
+  tshirt: [0xc8ccd0, 0x3f6aa0, 0xa0522d, 0x6b8e5a, 0x8a3a3a, 0xd9c46a, 0x2a2a2e],
+  longSleeve: [0x5a6a7a, 0x7a4a5a, 0x4a6a4a, 0xb0a890],
+  shirt: [0x9ab0c8, 0xc8b8a0, 0x8a4040, 0x5a7a5a],
+  hoodie: [0x6a6a70, 0x2a3a5a, 0x5a2a2a, 0x3a4a3a],
+  sweater: [0x7a6a5a, 0x4a5a7a, 0x8a7a4a, 0x5a4a6a],
+  denimJacket: [0x4a6a9a],
+  leatherJacket: [0x3a2a22],
+  coat: [0x5a4a3a, 0x3a3e44, 0x4a5040],
+  vest: [0x5a5a40, 0x3a3a3a],
+  tracksuit: [0x2a4a8a, 0x8a2a2a, 0x2a2a2a],
+  jeans: [0x3e5a8a, 0x2e4a7a, 0x4a6a9a],
+  workPants: [0x7a6a4a, 0x5a5040],
+  chaps: [0x5a3a22],
+  cap: [0xc0392b, 0x2a4a8a, 0x2a2a2a, 0x6b8e5a],
+  beanie: [0x3a3a3a, 0x8a3a3a, 0x4a5a7a],
+  helmet: [0x5a6040, 0x6a6e74],
 };
 
 export const SURVIVOR_COLOR = 0xf2c641;

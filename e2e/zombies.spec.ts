@@ -51,6 +51,8 @@ test('portada: opción Zombis; un zombi junto a un colono se ve en el HUD; postu
       cooldown: 0,
       waitUntil: 0,
       hordeId: null, // H4e
+      worn: [], // H5b
+      bags: [], // H5b2
     });
   });
   await expect(page.getByTestId('hud-zombies')).toHaveText('🧟 1');

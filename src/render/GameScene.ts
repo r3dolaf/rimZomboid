@@ -57,9 +57,6 @@ import {
   BAR_WOOD,
   BLUEPRINT,
   BLUEPRINT_BAD,
-  CORPSE_COLOR,
-  CORPSE_OUTLINE,
-  CORPSE_STAIN,
   DAMAGE_BAR,
   DESIGNATION,
   DOWNED_RING,
@@ -68,12 +65,7 @@ import {
   NIGHT_COLOR,
   SELECTION_RING,
   DRAFT_MARK,
-  STRANGER_COLOR,
-  SURVIVOR_COLOR,
-  SURVIVOR_OUTLINE,
-  ZOMBIE_COLOR,
   ZOMBIE_HURT,
-  ZOMBIE_OUTLINE,
   floorOf,
   type FloorStyle,
   LABEL_COLOR,
@@ -81,10 +73,23 @@ import {
   DEBUG_PATH,
 } from './colors';
 import { bubbleIcon } from './bubbles';
-import { lookTile, tileLook } from './look';
+import { hash2, lookTile, tileLook } from './look';
 import { makeTileArt, paintTile, type TileArt } from './tileArt';
 import { makeTreeArt, nearTree, paintTrees, TREE_REACH, type TreeArt } from './trees';
 import { skyAlpha } from './daylight';
+import { garments } from '../sim/bags';
+import {
+  facingOf,
+  lookKey,
+  paintPerson,
+  personLook,
+  PERSON_FRAMES,
+  PERSON_PX,
+  seedOf,
+  standingFrame,
+  type Facing,
+  type Look,
+} from './people';
 import {
   campfireFrame,
   itemCount,
@@ -98,14 +103,26 @@ import {
 } from './props';
 
 export const TILE_PX = 16;
-const SURVIVOR_RADIUS = 5;
+/** De pie (A3), los pies quedan esto por debajo de la posición; la cabeza, esto por encima. */
+const FEET_PX = 4;
+const HEAD_PX = 10;
 const PAN_SPEED = 600; // px por segundo, a zoom 1
 const ZOOM_MIN = 0.5; // como mínimo; nunca tan lejos que el mapa no llene la pantalla
 const ZOOM_MAX = 4;
 const ZOOM_STEP = 1.1;
 const PICK_RADIUS = 0.6; // casillas
 const CLICK_SLOP_PX = 6; // soltar más lejos que esto (en pantalla) es arrastrar, no un clic
-const SLEEPING_ALPHA = 0.45;
+/** Quien duerme en el suelo, tumbado y algo desvaído. */
+const SLEEPING_ALPHA = 0.85;
+/** Desconocidos y quien se va (H5): de su color, pero agrisados, hasta que son de la colonia. */
+const STRANGER_TINT = 0xb4b4c4;
+const STRANGER_ALPHA = 0.9;
+/** Los cuerpos (H4d), más oscuros que en vida. */
+const CORPSE_TINT = 0x8a8a8a;
+const BLOOD_POOL_ALPHA = 0.75;
+/** Sitios para figuras en el lienzo de las figuras; si se llena, las nuevas van en su textura. */
+const PEOPLE_COLS = 12;
+const PEOPLE_ROWS = 32;
 /** Un mueble ya registrado y vacío se ve desvaído. */
 const EMPTY_ALPHA = 0.35;
 const FOG_SEEN_ALPHA = 140; // 0–255: penumbra de lo visto pero no visible ahora
@@ -118,9 +135,26 @@ const GLOW_ALPHA = 0.045; // por cada círculo: se suman hacia el centro
 
 /** Un mueble que dibujar en este fotograma (A2): qué dibujo, en qué casilla y si se ve desvaído. */
 interface Prop {
+  /** La textura: `props` (los muebles) o la de una figura (los cuerpos, A3). */
+  key?: string;
   frame: string;
   at: Point;
   alpha?: number;
+  tint?: number;
+}
+
+/** Una persona o un zombi que dibujar en este fotograma (A3), con su dibujo puesto en su sitio. */
+interface Figure {
+  key: string;
+  frame: string;
+  /** Arriba a la izquierda del dibujo, en píxeles del mapa. */
+  x: number;
+  y: number;
+  flip: boolean;
+  alpha: number;
+  tint: number | null;
+  /** Para ordenar: los de más abajo tapan a los de más arriba. */
+  feet: number;
 }
 
 export interface GameSceneData {
@@ -184,6 +218,18 @@ export class GameScene extends Phaser.Scene {
   /** Los muebles, en su capa (bajo la gente); las imágenes se reutilizan en cada fotograma. */
   private props!: Phaser.GameObjects.Layer;
   private propPool: Phaser.GameObjects.Image[] = [];
+  /** Las personas y los zombis (A3), en su capa, entre los muebles y las marcas de encima. */
+  private people!: Phaser.GameObjects.Layer;
+  private peoplePool: Phaser.GameObjects.Image[] = [];
+  /**
+   * Las figuras (A3), todas en un lienzo para dibujarlas de una vez (una textura por zombi costaba
+   * unas 4 imágenes por segundo con una horda): el sitio de cada una, según cómo se ve.
+   */
+  private peopleAtlas!: Phaser.Textures.CanvasTexture;
+  private peopleSlots = new Map<string, number>();
+  private peopleDirty = false;
+  /** Hacia dónde mira cada uno y dónde estaba la última vez que se movió (`s3`, `z12`…). */
+  private facings = new Map<string, { x: number; y: number; f: Facing }>();
   /** Cómo se ve cada casilla (`tileLook`) la última vez que se pintó. */
   private mapTiles: number[] = [];
   private mapVersion = -1;
@@ -252,6 +298,12 @@ export class GameScene extends Phaser.Scene {
     this.drawMap();
     this.props = this.add.layer();
     this.furniture = this.add.graphics();
+    this.people = this.add.layer();
+    this.peopleAtlas = this.textures.createCanvas(
+      'people',
+      PEOPLE_COLS * PERSON_PX * PERSON_FRAMES.length,
+      PEOPLE_ROWS * PERSON_PX,
+    )!;
     this.actors = this.add.graphics();
     this.bubbleLayer = this.add.container(0, 0);
     const { width, height } = this.world.grid;
@@ -301,6 +353,10 @@ export class GameScene extends Phaser.Scene {
     this.drawFurniture();
     this.drawBuilding();
     this.drawActors();
+    if (this.peopleDirty) {
+      this.peopleAtlas.refresh();
+      this.peopleDirty = false;
+    }
     if (this.debugOpen?.value) this.drawDebugPath();
     this.drawBubbles();
     this.drawZombieNames();
@@ -450,19 +506,29 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Las personas y los zombis (A3): cada uno con su figura, mirando hacia donde anda. Debajo de
+   * ellos (en la capa de los muebles), el círculo de quien está elegido y el de quien está en el
+   * suelo; encima, las espadas del modo combate, la vida de los zombis y el rectángulo para elegir.
+   */
   private drawActors(): void {
     const g = this.actors;
+    const under = this.furniture;
+    const w = this.world;
     g.clear();
-    for (const s of this.world.survivors) {
+    const figures: Figure[] = [];
+    const facings = new Map<string, { x: number; y: number; f: Facing }>();
+    for (const s of w.survivors) {
       const [x, y] = [s.pos.x * TILE_PX, s.pos.y * TILE_PX];
+      const fig = this.personFigure(s, `s${s.id}`, facings);
+      figures.push(fig);
       if (this.selection.ids.includes(s.id)) {
-        g.lineStyle(2, SELECTION_RING, 1);
-        g.strokeCircle(x, y, SURVIVOR_RADIUS + 4);
+        under.lineStyle(1.5, SELECTION_RING, 1);
+        under.strokeEllipse(x, fig.feet - 1, 14, 6);
       }
-      this.drawPerson(g, s, SURVIVOR_COLOR);
       // Modo combate (H4e): dos espadas cruzadas sobre la cabeza.
-      if (effectiveDrafted(this.world, s)) {
-        const top = y - SURVIVOR_RADIUS - 6;
+      if (effectiveDrafted(w, s)) {
+        const top = y - HEAD_PX - 5;
         g.lineStyle(2, DRAFT_MARK, 1);
         g.lineBetween(x - 3, top - 3, x + 3, top + 3);
         g.lineBetween(x + 3, top - 3, x - 3, top + 3);
@@ -479,43 +545,154 @@ export class GameScene extends Phaser.Scene {
       g.lineStyle(1, SELECTION_RING, 0.9);
       g.strokeRect(x0, y0, bw, bh);
     }
-    // El desconocido, en gris, hasta que lo aceptan; también el que se va (H5).
-    for (const s of this.world.stranger?.survivors ?? []) this.drawPerson(g, s, STRANGER_COLOR);
-    for (const s of this.world.leaving) this.drawPerson(g, s, STRANGER_COLOR);
+    // El desconocido, agrisado, hasta que lo aceptan; también el que se va (H5).
+    for (const s of [...(w.stranger?.survivors ?? []), ...w.leaving]) {
+      const fig = this.personFigure(s, `s${s.id}`, facings);
+      figures.push({ ...fig, tint: STRANGER_TINT, alpha: fig.alpha * STRANGER_ALPHA });
+    }
     // Zombis (H4b): solo los que ven ahora los colonos, con una barrita si están heridos.
-    const width = this.world.grid.width;
-    for (const z of this.world.zombies) {
-      if (this.visible[Math.floor(z.pos.y) * width + Math.floor(z.pos.x)] !== 1) continue;
+    for (const z of w.zombies) {
+      if (this.visible[Math.floor(z.pos.y) * w.grid.width + Math.floor(z.pos.x)] !== 1) continue;
       const [x, y] = [z.pos.x * TILE_PX, z.pos.y * TILE_PX];
-      g.fillStyle(ZOMBIE_OUTLINE, 1);
-      g.fillCircle(x, y, SURVIVOR_RADIUS + 1);
-      g.fillStyle(ZOMBIE_COLOR, 1);
-      g.fillCircle(x, y, SURVIVOR_RADIUS);
+      const look = personLook(z.name ? seedOf(z.name) : hash2(z.id, 5), z.worn, true);
+      const { frame, flip } = standingFrame(this.facing(`z${z.id}`, z.pos, facings));
+      const [key, prefix] = this.personTexture(look);
+      figures.push({
+        key,
+        frame: prefix + frame,
+        x: x - 8,
+        y: y + FEET_PX - PERSON_PX,
+        flip,
+        alpha: 1,
+        tint: null,
+        feet: y + FEET_PX,
+      });
       if (z.health < ZOMBIE_HEALTH) {
-        const w = 2 * SURVIVOR_RADIUS + 2;
-        g.fillStyle(SURVIVOR_OUTLINE, 0.8);
-        g.fillRect(x - w / 2, y - SURVIVOR_RADIUS - 4, w, 2);
+        const bw = 12;
+        g.fillStyle(BAR_BACK, 0.8);
+        g.fillRect(x - bw / 2, y - HEAD_PX - 3, bw, 2);
         g.fillStyle(ZOMBIE_HURT, 1);
-        g.fillRect(x - w / 2, y - SURVIVOR_RADIUS - 4, (w * z.health) / ZOMBIE_HEALTH, 2);
+        g.fillRect(x - bw / 2, y - HEAD_PX - 3, (bw * z.health) / ZOMBIE_HEALTH, 2);
       }
     }
+    this.facings = facings;
+    this.placePeople(figures);
   }
 
-  private drawPerson(g: Phaser.GameObjects.Graphics, s: Survivor, color: number): void {
+  /**
+   * La figura de una persona: de pie, mirando hacia donde anda; derribada, tumbada sobre un círculo
+   * rojo; dormida, en la cama (la cabeza en la almohada) o tumbada en el suelo.
+   */
+  private personFigure(
+    s: Survivor,
+    id: string,
+    facings: Map<string, { x: number; y: number; f: Facing }>,
+  ): Figure {
+    const w = this.world;
     const [x, y] = [s.pos.x * TILE_PX, s.pos.y * TILE_PX];
+    const [key, prefix] = this.personTexture(personLook(seedOf(s.name), s.worn, false));
+    const facing = this.facing(id, s.pos, facings);
+    const flat = (frame: string, alpha: number): Figure => ({
+      key,
+      frame: prefix + frame,
+      x: x - PERSON_PX / 2,
+      y: y - PERSON_PX / 2,
+      flip: false,
+      alpha,
+      tint: null,
+      feet: y,
+    });
     if (s.action.type === 'downed') {
-      // Derribado: tumbado, con un borde rojo.
-      g.fillStyle(DOWNED_RING, 1);
-      g.fillEllipse(x, y, 2 * SURVIVOR_RADIUS + 6, SURVIVOR_RADIUS + 4);
-      g.fillStyle(color, 1);
-      g.fillEllipse(x, y, 2 * SURVIVOR_RADIUS + 2, SURVIVOR_RADIUS);
-      return;
+      this.furniture.lineStyle(1.5, DOWNED_RING, 1);
+      this.furniture.strokeEllipse(x, y + 1, 18, 10);
+      return flat('lying', 1);
     }
-    const alpha = s.action.type === 'sleep' ? SLEEPING_ALPHA : 1;
-    g.fillStyle(SURVIVOR_OUTLINE, alpha);
-    g.fillCircle(x, y, SURVIVOR_RADIUS + 1);
-    g.fillStyle(color, alpha);
-    g.fillCircle(x, y, SURVIVOR_RADIUS);
+    if (s.action.type === 'sleep') {
+      const [tx, ty] = [Math.floor(s.pos.x), Math.floor(s.pos.y)];
+      const inBed = w.beds.some((b) => b.pos.x === tx && b.pos.y === ty);
+      if (!inBed) return flat('lying', SLEEPING_ALPHA);
+      return { ...flat('sleep', 1), x: tx * TILE_PX, y: ty * TILE_PX };
+    }
+    const { frame, flip } = standingFrame(facing);
+    return {
+      key,
+      frame: prefix + frame,
+      x: x - 8,
+      y: y + FEET_PX - PERSON_PX,
+      flip,
+      alpha: 1,
+      tint: null,
+      feet: y + FEET_PX,
+    };
+  }
+
+  /** Hacia dónde mira cada uno: hacia donde se ha movido desde la última vez (y se apunta en `next`). */
+  private facing(
+    id: string,
+    pos: Point,
+    next: Map<string, { x: number; y: number; f: Facing }>,
+  ): Facing {
+    const before = this.facings.get(id);
+    if (!before) {
+      next.set(id, { x: pos.x, y: pos.y, f: 'front' });
+      return 'front';
+    }
+    const f = facingOf(pos.x - before.x, pos.y - before.y, before.f);
+    const moved = f !== before.f || Math.abs(pos.x - before.x) + Math.abs(pos.y - before.y) > 0.05;
+    next.set(id, moved ? { x: pos.x, y: pos.y, f } : before);
+    return f;
+  }
+
+  /**
+   * Dónde están los cinco dibujos de una figura: la textura y lo que va delante del nombre de cada
+   * dibujo. Se pintan la primera vez que hacen falta, en su sitio del lienzo de las figuras.
+   */
+  private personTexture(look: Look): [string, string] {
+    const id = lookKey(look);
+    let slot = this.peopleSlots.get(id);
+    if (slot === undefined) {
+      slot = this.peopleSlots.size;
+      if (slot >= PEOPLE_COLS * PEOPLE_ROWS) return this.ownPersonTexture(id, look);
+      const x = (slot % PEOPLE_COLS) * PERSON_PX * PERSON_FRAMES.length;
+      const y = Math.floor(slot / PEOPLE_COLS) * PERSON_PX;
+      this.peopleAtlas.context.drawImage(paintPerson(look), x, y);
+      PERSON_FRAMES.forEach((name, k) =>
+        this.peopleAtlas.add(`${slot}.${name}`, 0, x + k * PERSON_PX, y, PERSON_PX, PERSON_PX),
+      );
+      this.peopleSlots.set(id, slot);
+      this.peopleDirty = true;
+    }
+    return ['people', `${slot}.`];
+  }
+
+  /** Con el lienzo de las figuras lleno: una textura para esta figura sola. */
+  private ownPersonTexture(id: string, look: Look): [string, string] {
+    const key = `person:${id}`;
+    if (!this.textures.exists(key)) {
+      const tex = this.textures.addCanvas(key, paintPerson(look))!;
+      PERSON_FRAMES.forEach((name, k) => tex.add(name, 0, k * PERSON_PX, 0, PERSON_PX, PERSON_PX));
+    }
+    return [key, ''];
+  }
+
+  /** Pone las figuras en las imágenes de su capa, de arriba abajo, y esconde las que sobran. */
+  private placePeople(figures: Figure[]): void {
+    figures.sort((a, b) => a.feet - b.feet);
+    figures.forEach((f, k) => {
+      let img = this.peoplePool[k];
+      if (!img) {
+        img = new Phaser.GameObjects.Image(this, 0, 0, f.key, f.frame).setOrigin(0, 0);
+        this.people.add(img);
+        this.peoplePool.push(img);
+      }
+      if (img.texture.key !== f.key || img.frame.name !== f.frame) img.setTexture(f.key, f.frame);
+      img.setPosition(Math.round(f.x), Math.round(f.y)).setFlipX(f.flip).setAlpha(f.alpha);
+      if (f.tint === null) img.clearTint();
+      else img.setTint(f.tint);
+      img.setVisible(true);
+    });
+    for (let k = figures.length; k < this.peoplePool.length; k++)
+      this.peoplePool[k]!.setVisible(false);
   }
 
   /** "Ana (zombi)" bajo los zombis que fueron alguien y que se ven ahora (H5 §10). */
@@ -536,7 +713,7 @@ export class GameScene extends Phaser.Scene {
         this.bubbleLayer.add(t);
         this.zombieNames.set(z.id, t);
       }
-      t.setPosition(z.pos.x * TILE_PX, z.pos.y * TILE_PX + SURVIVOR_RADIUS + 1);
+      t.setPosition(z.pos.x * TILE_PX, z.pos.y * TILE_PX + FEET_PX + 1);
       t.setVisible(true);
     }
     for (const [id, t] of this.zombieNames)
@@ -589,7 +766,7 @@ export class GameScene extends Phaser.Scene {
         this.bubbles.set(s.id, t);
       }
       if (t.text !== icon) t.setText(icon);
-      t.setPosition(s.pos.x * TILE_PX, s.pos.y * TILE_PX - SURVIVOR_RADIUS - 1);
+      t.setPosition(s.pos.x * TILE_PX, s.pos.y * TILE_PX - HEAD_PX - 1);
       t.setVisible(true);
     }
     for (const [id, t] of this.bubbles) if (!live.has(id)) t.setVisible(false);
@@ -822,8 +999,15 @@ export class GameScene extends Phaser.Scene {
       if (!seen(c.pos)) continue;
       const [x, y] = [c.pos.x * TILE_PX, c.pos.y * TILE_PX];
       const alpha = c.searched && isEmpty(c.items) ? EMPTY_ALPHA : 1;
-      if (c.kind === 'corpse') this.drawCorpse(x, y, alpha);
-      else props.push({ frame: c.kind, at: c.pos, alpha });
+      if (c.kind === 'corpse') {
+        // Un cuerpo (A3): tumbado sobre su sangre, con la ropa que le queda; de persona o de zombi.
+        const seed = c.name ? seedOf(c.name) : hash2(c.id, 5);
+        const [key, prefix] = this.personTexture(
+          personLook(seed, garments(c.items.pieces), !c.name),
+        );
+        props.push({ frame: 'bloodPool', at: c.pos, alpha: alpha * BLOOD_POOL_ALPHA });
+        props.push({ key, frame: `${prefix}lying`, at: c.pos, alpha, tint: CORPSE_TINT });
+      } else props.push({ frame: c.kind, at: c.pos, alpha });
       if (effectiveDesignated(w, c)) {
         m.lineStyle(2, DESIGNATION, 1);
         m.strokeRect(x + 1, y + 1, TILE_PX - 2, TILE_PX - 2);
@@ -873,13 +1057,18 @@ export class GameScene extends Phaser.Scene {
     props.sort((a, b) => a.at.y - b.at.y);
     props.forEach((p, k) => {
       let img = this.propPool[k];
+      const key = p.key ?? 'props';
       if (!img) {
-        img = new Phaser.GameObjects.Image(this, 0, 0, 'props', p.frame).setOrigin(0, 0);
+        img = new Phaser.GameObjects.Image(this, 0, 0, key, p.frame).setOrigin(0, 0);
         this.props.add(img);
         this.propPool.push(img);
       }
-      if (img.frame.name !== p.frame) img.setFrame(p.frame);
-      img.setPosition(p.at.x * TILE_PX, p.at.y * TILE_PX - PROP_OVERFLOW);
+      if (img.texture.key !== key || img.frame.name !== p.frame) img.setTexture(key, p.frame);
+      // Los muebles salen por arriba de su casilla; las figuras (cuerpos) caben en ella.
+      const up = key === 'props' ? PROP_OVERFLOW : 0;
+      img.setPosition(p.at.x * TILE_PX, p.at.y * TILE_PX - up);
+      if (p.tint === undefined) img.clearTint();
+      else img.setTint(p.tint);
       img.setAlpha(p.alpha ?? 1).setVisible(true);
     });
     for (let k = props.length; k < this.propPool.length; k++) this.propPool[k]!.setVisible(false);
@@ -900,19 +1089,6 @@ export class GameScene extends Phaser.Scene {
         props.push({ frame: 'pump', at: { x, y } });
       }
     }
-  }
-
-  /** Cuerpo de zombi (H4d): una silueta oscura tumbada, con una mancha; desvaída si está vacío. */
-  private drawCorpse(x: number, y: number, alpha: number): void {
-    const g = this.furniture;
-    g.fillStyle(CORPSE_STAIN, 0.6 * alpha);
-    g.fillEllipse(x + 9, y + 10, 12, 6);
-    g.fillStyle(CORPSE_OUTLINE, alpha);
-    g.fillEllipse(x + 8, y + 8, 11, 6);
-    g.fillCircle(x + 13, y + 7, 3);
-    g.fillStyle(CORPSE_COLOR, alpha);
-    g.fillEllipse(x + 8, y + 8, 9, 4);
-    g.fillCircle(x + 13, y + 7, 2);
   }
 
   /** Encima de la niebla: marcas de talar, planos (también los pendientes) y lo que se va a hacer

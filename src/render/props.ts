@@ -444,6 +444,19 @@ for (let l = 0; l <= 4; l++) {
 }
 for (let n = 1; n <= 3; n++) PROP_SPRITES[`planks${n}`] = planks(n);
 
+/** Un charco de sangre seca bajo un cuerpo (A3), con el borde irregular. */
+function bloodPool(): string[] {
+  const px: Pixels = new Map();
+  for (let y = 5; y < 16; y++)
+    for (let x = 0; x < PROP_W; x++) {
+      const wobble = 0.85 + 0.3 * ((Math.sin(x * 1.7) + Math.cos(y * 2.3)) / 2);
+      const d = ((x - 7.5) / 6.5) ** 2 + ((y - 10) / 3.5) ** 2;
+      if (d <= wobble) px.set(key(x, y), d < wobble * 0.5 ? 'Y' : 'V');
+    }
+  return rowsOf(px, 5);
+}
+PROP_SPRITES.bloodPool = bloodPool();
+
 /** Hace un lienzo con todos los dibujos en fila y dice dónde empieza cada uno. */
 export function makePropAtlas(): { canvas: HTMLCanvasElement; frames: Record<string, number> } {
   const names = Object.keys(PROP_SPRITES);

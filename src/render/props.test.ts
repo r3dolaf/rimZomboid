@@ -46,6 +46,7 @@ test('hay dibujo para cada mueble, cada nivel de agua y cada llama', () => {
     'goods',
     'bag',
     'box',
+    'bloodPool',
     ...[0, 1, 2].map((f) => `campfire${f}`),
     ...[0, 1, 2, 3, 4].flatMap((l) => [`tub${l}`, `cistern${l}`]),
     ...[1, 2, 3].map((n) => `planks${n}`),

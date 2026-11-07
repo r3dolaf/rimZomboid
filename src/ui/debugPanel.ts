@@ -1,6 +1,7 @@
 // El modo depuración (spec H6c §1): con F3, un panel con el rendimiento, cuántos hay, el colono
 // elegido por dentro (también la infección que aún no se ve) y las trampas (órdenes `debug`, o pasar
 // el tiempo de golpe).
+import { MOODS, SFX_IDS, type Mood, type SfxId } from '../audio/catalog';
 import { es } from '../i18n/es';
 import { TICKS_PER_HOUR } from '../sim/balance';
 import { issue } from '../sim/orders';
@@ -21,6 +22,8 @@ export function mountDebugPanel(
     perf: () => { fps: number; msPerTick: number };
     /** Pasa `hours` horas de golpe. */
     onSkip: (hours: number) => void;
+    /** S1: el muestrario: oír un efecto y forzar un ambiente de música (`null`, automático). */
+    sound?: { play(id: SfxId): void; force(m: Mood | null): void };
   },
 ): { update(): void } {
   const t = es.debug;
@@ -64,6 +67,7 @@ export function mountDebugPanel(
   const h2 = document.createElement('h2');
   h2.textContent = t.title;
   panel.append(h2, perf, counts, who, row);
+  if (opts.sound) panel.append(soundRow(opts.sound));
   root.append(panel);
   const set = (p: HTMLElement, text: string) => {
     if (p.textContent !== text) p.textContent = text;
@@ -99,4 +103,31 @@ export function mountDebugPanel(
       );
     },
   };
+}
+
+/** El muestrario (S1 §6): una lista de efectos con «Oír» y otra de ambientes de música. */
+function soundRow(sound: { play(id: SfxId): void; force(m: Mood | null): void }): HTMLElement {
+  const t = es.sound;
+  const row = document.createElement('div');
+  row.className = 'buttons';
+  const select = (testid: string, values: readonly string[], first?: string) => {
+    const s = document.createElement('select');
+    s.dataset.testid = testid;
+    if (first !== undefined) s.append(new Option(first, ''));
+    for (const v of values) s.append(new Option(v, v));
+    return s;
+  };
+  const sfx = select('debug-sfx', SFX_IDS);
+  const play = document.createElement('button');
+  play.type = 'button';
+  play.textContent = t.play;
+  play.dataset.testid = 'debug-sfx-play';
+  play.addEventListener('click', () => {
+    sound.play(sfx.value as SfxId);
+    play.blur();
+  });
+  const mood = select('debug-mood', MOODS, t.auto);
+  mood.addEventListener('change', () => sound.force(mood.value ? (mood.value as Mood) : null));
+  row.append(t.sample, sfx, play, t.mood, mood);
+  return row;
 }

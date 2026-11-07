@@ -254,8 +254,8 @@ export const SFX_RECIPES: Record<string, Recipe> = {
   /** Forzar una puerta: la madera cruje y salta. */
   pry(o, at, pan, gain) {
     const out = outlet(o, pan, gain, 0.2);
-    creak(o, out, at, vary(0.55, 0.2), vary(115), 0.35);
-    burst(o, out, 'highpass', 2000, 0.7, at + 0.5, 0.001, 0.25, 0.03);
+    creak(o, out, at, vary(0.55, 0.2), vary(115), 1);
+    burst(o, out, 'highpass', 2000, 0.7, at + 0.5, 0.001, 0.12, 0.03);
     return 0.7;
   },
   /** Construir: martillazos. */
@@ -269,11 +269,11 @@ export const SFX_RECIPES: Record<string, Recipe> = {
   /** Cae un árbol: cruje, y al tocar el suelo (a 0,7 s, como se ve), el golpe y las hojas. */
   treeFall(o, at, pan, gain) {
     const out = outlet(o, pan, gain, 0.3);
-    creak(o, out, at, 0.7, vary(80), 0.3);
+    creak(o, out, at, 0.7, vary(80), 0.9);
     const land = at + 0.7;
     burst(o, out, 'lowpass', 800, 0.7, land, 0.005, 1, 1);
     tone(o, out, 'sine', 70, land, 0.004, 0.9, 0.6, 35, 0.4);
-    burst(o, out, 'highpass', 4000, 0.7, land, 0.02, 0.15, 0.6);
+    burst(o, out, 'highpass', 4000, 0.7, land, 0.02, 0.05, 0.6);
     return 2;
   },
   /** Un zombi gime: una voz grave que baja, con dos formantes y temblor. */
@@ -308,7 +308,7 @@ export const SFX_RECIPES: Record<string, Recipe> = {
     src.loop = true;
     const g = o.ctx.createGain();
     const curve = new Float32Array(24).map(
-      (_, i) => (1 - i / 23) ** 1.5 * (0.5 + Math.random() * 0.5),
+      (_, i) => (1 - i / 23) ** 1.5 * (1.2 + Math.random() * 1.3),
     );
     g.gain.setValueAtTime(0, at);
     g.gain.setValueCurveAtTime(curve, at + 0.01, 3.2);
@@ -344,7 +344,7 @@ export const SFX_RECIPES: Record<string, Recipe> = {
   /** Aviso neutro: una nota suave. */
   noticeMixed(o, at, pan, gain) {
     const out = outlet(o, pan, gain, 0.3);
-    bell(o, out, 880, at, 0.2, 0.5);
+    bell(o, out, 880, at, 0.32, 0.5);
     return 0.7;
   },
   /** Aviso rojo o decisión: dos notas graves que bajan. */

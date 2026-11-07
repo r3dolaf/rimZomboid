@@ -59,7 +59,7 @@ const soundPrefs = createSoundPrefs();
 const sound = createSound(soundPrefs);
 if (new URLSearchParams(location.search).get('debug') === '1') {
   const g = window as unknown as { rimzomboid?: Record<string, unknown> };
-  g.rimzomboid = { ...g.rimzomboid, sound: sound.debug, soundCue: sound.cue };
+  g.rimzomboid = { ...g.rimzomboid, sound: sound.debug };
 }
 
 /** La dirección para seguir la partida guardada (sin semilla; con lo demás, como `debug`). */
@@ -253,6 +253,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
     onSkip(hours) {
       for (let i = 0; i < hours * TICKS_PER_HOUR && !world.common.over; i++) stepGame(world);
     },
+    sound: { play: (id) => sound.cue(id), force: (m) => sound.force(m) }, // S1: el muestrario
   });
   // Al caer la colonia (H5 §9): otra partida con el mismo narrador y zombis, o a la portada.
   const endScreen = mountEndScreen(ui, {

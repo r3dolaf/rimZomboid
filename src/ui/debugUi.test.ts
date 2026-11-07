@@ -50,3 +50,32 @@ test('el panel F3: cuántos hay, el elegido por dentro y las trampas', () => {
   q('debug-day').click();
   expect(skipped).toEqual([1, 24]);
 });
+
+test('S1: el muestrario de sonido: oír un efecto y forzar la música', () => {
+  const w = emptyWorld(10, 10);
+  const root = document.createElement('div');
+  const open = createFlag();
+  const played: string[] = [];
+  const forced: (string | null)[] = [];
+  mountDebugPanel(root, {
+    world: w,
+    view: { world: w },
+    open,
+    selection: createSelection(),
+    perf: () => ({ fps: 60, msPerTick: 0 }),
+    onSkip: () => {},
+    sound: { play: (id) => played.push(id), force: (m) => forced.push(m) },
+  });
+  const q = <T extends HTMLElement>(id: string) => root.querySelector(`[data-testid="${id}"]`) as T;
+  const sfx = q<HTMLSelectElement>('debug-sfx');
+  expect([...sfx.options].map((o) => o.value)).toContain('groan');
+  sfx.value = 'hurt';
+  q('debug-sfx-play').click();
+  expect(played).toEqual(['hurt']);
+  const mood = q<HTMLSelectElement>('debug-mood');
+  mood.value = 'night';
+  mood.dispatchEvent(new Event('change'));
+  mood.value = '';
+  mood.dispatchEvent(new Event('change'));
+  expect(forced).toEqual(['night', null]);
+});

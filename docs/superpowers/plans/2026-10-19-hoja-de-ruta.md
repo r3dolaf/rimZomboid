@@ -42,6 +42,17 @@ arriba a la izquierda (spec `2026-11-06-a1-arte-mapa-design.md`).
 | **A5. Movimiento**        | Andar con dos pasos por vista, el arma en la mano, mirar a lo que se hace, golpes (tinte, gotas, mancha y el golpe hacia delante), sangre que se seca, astillas y polvo al trabajar y el árbol que cae; spec `2026-11-06-a5-arte-movimiento-design.md`                                                            | Hecho  |
 | **A6. Mapa del mundo**    | Terreno con textura y relieve (arbolitos, lomas, olas y matas), pueblos con casitas, carreteras de tierra y niebla con textura; spec `2026-11-06-a6-arte-mundo-design.md`                                                                                                                                         | Hecho  |
 
+## Móvil
+
+Que se pueda jugar en un móvil en horizontal y en una tableta (pedido por el usuario tras A6), por
+pasos. En vertical cabe muy poco mapa; no se busca (spec `2026-11-07-m1-tactil-design.md`).
+
+| Paso                                 | Qué se hace                                                                                                                                                                                                               | Estado   |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| **M1. Controles táctiles**           | Tocar, arrastrar un dedo (cámara, o marcar con herramienta), mantener pulsado (el clic derecho), mantener y arrastrar (elegir a varios) y pellizcar, en el mapa y en el del mundo; tarjetas y menú contextual con el dedo | En curso |
+| **M2. Interfaz en pantalla pequeña** | La barra de arriba en iconos o en un menú (hoy no cabe); «Sucesos» plegado; tarjetas más pequeñas; paneles a todo el ancho                                                                                                |          |
+| **M3. Detalles de móvil**            | Botones de al menos 44 px, el notch, guardar al salir de la pestaña, instalable a pantalla completa y medir el rendimiento en un móvil                                                                                    |          |
+
 ## Pendientes
 
 Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al planificar el hito indicado.

@@ -36,6 +36,21 @@ Controles:
 - Clic izquierdo en un superviviente (o en su tarjeta) abre su ficha; en una casa, la ficha de la casa.
 - `L` o el botón **Saquear** activan la herramienta: clic en una casa (o en un contenedor ya visto)
   para marcarla o desmarcarla. `Esc` sale de la herramienta y cierra las fichas.
+- `M` silencia o vuelve a dar sonido. Los volúmenes (General, Música y Efectos) están en el panel
+  **Partida**.
+
+## Sonido
+
+Los efectos y la música se hacen por código, en el navegador (`src/audio/`): no hay archivos de
+audio. Suenan tras el primer clic o la primera tecla (los navegadores no dejan antes). Con `F3`, el
+muestrario deja oír cada efecto y forzar cada ambiente de música.
+
+Para cambiar un efecto o un ambiente de música por un archivo:
+
+1. Copia el archivo a `public/audio/` (por ejemplo `public/audio/noche-1.mp3`).
+2. En `src/audio/catalog.ts`, cambia su línea: `night: [{ file: 'audio/noche-1.mp3' }]`. Puede haber
+   varios temas por ambiente, de código y de archivo mezclados; se elige uno al azar cada vez.
+3. Apunta de dónde es y su licencia en `public/audio/CREDITOS.md`.
 
 ## Publicar en GitHub Pages
 

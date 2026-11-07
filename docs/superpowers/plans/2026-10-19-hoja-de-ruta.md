@@ -48,10 +48,10 @@ Después del arte, el sonido, por pasos. El usuario eligió efectos y música he
 arte), con todo en un catálogo para poder cambiar después cualquier sonido o tema por un archivo
 (spec `2026-11-07-s1-sonido-design.md`).
 
-| Paso                       | Qué se oye                                                                                                                                                                                                                                                         | Estado    |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------- |
-| **S1. Efectos y música**   | Golpes, puertas y ventanas que se rompen, talar, forzar y construir, el árbol que cae, gemidos, truenos, pájaros y avisos; lluvia, viento, hoguera y grillos; música generativa por ambientes (portada, día, noche, peligro, asedio y final); ajustes y muestrario | En marcha |
-| **S2. Música en archivos** | Los temas elegidos de oído (o encargados), en `public/audio/`, con sus créditos; solo cambia el catálogo                                                                                                                                                           | Pendiente |
+| Paso                       | Qué se oye                                                                                                                                                                                                                                                                                                | Estado    |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| **S1. Efectos y música**   | Golpes, puertas y ventanas que se rompen, talar, forzar y construir, el árbol que cae, gemidos, truenos, pájaros y avisos; lluvia, viento, hoguera y grillos; música generativa por ambientes (portada, día, noche, peligro, asedio y final); ajustes y muestrario; spec `2026-11-07-s1-sonido-design.md` | Hecho     |
+| **S2. Música en archivos** | Los temas elegidos de oído (o encargados), en `public/audio/`, con sus créditos; solo cambia el catálogo                                                                                                                                                                                                  | Pendiente |
 
 ## Pendientes
 

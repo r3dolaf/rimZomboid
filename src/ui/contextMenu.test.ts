@@ -98,9 +98,12 @@ test('el menú se abre donde se pulsa, da la orden y se cierra; con Esc o un cli
   menu.open({ x: 4, y: 4 }, { x: 10, y: 10 });
   expect(menu.close()).toBe(true); // Esc
   expect(menu.close()).toBe(false); // ya cerrado
-  menu.open({ x: 4, y: 4 }, { x: 10, y: 10 });
-  document.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
-  expect(el().hidden).toBe(true);
+  // Pulsar fuera lo cierra, con el ratón o con el dedo (M1).
+  for (const pointerType of ['mouse', 'touch']) {
+    menu.open({ x: 4, y: 4 }, { x: 10, y: 10 });
+    document.body.dispatchEvent(new PointerEvent('pointerdown', { pointerType, bubbles: true }));
+    expect(el().hidden).toBe(true);
+  }
 });
 
 test('las opciones de ventana ya no están en Construir', () => {

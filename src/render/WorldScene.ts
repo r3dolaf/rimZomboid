@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { neighbors } from '../sim/atlas/hex';
 import { routeHours } from '../sim/atlas/route';
+import { createGestures, fingerRadius, zoomAround, type Gesture, type Pt } from '../game/gestures';
 import type { Point, World } from '../sim/types';
 import type { MapView } from '../ui/mapView';
 import type { RoutePlan } from '../ui/routePlan';
@@ -34,6 +35,9 @@ const ZOOM_MAX = 3;
 const ZOOM_STEP = 1.1;
 const CLICK_SLOP_PX = 6; // soltar más lejos es arrastrar, no un clic
 const GROUP_RADIUS = 6;
+/** El aro de mantener pulsado (M1), de radio en pantalla. */
+const HOLD_RING_PX = 18;
+const HOLD_RING = 0xffffff;
 const LOST_ALPHA = 0.4;
 
 /** Las esquinas de un hexágono como las quiere Phaser (que solo lee `x` e `y`). */
@@ -89,6 +93,12 @@ export class WorldScene extends Phaser.Scene {
   private hover = -1;
   /** Dónde se pulsó (en pantalla): soltar cerca es un clic; lejos, arrastrar la cámara. */
   private downAt: Point | null = null;
+  /** M1: los gestos con los dedos (el ratón va aparte). */
+  private gestures = createGestures((g) => this.onGesture(g));
+  /** Si el dedo que se arrastra mueve la cámara (y no un punto de la ruta). */
+  private touchPan = false;
+  /** Dónde se mantiene pulsado (en pantalla): ahí se ve el aro. */
+  private holdAt: Pt | null = null;
   private keys!: Record<
     'W' | 'A' | 'S' | 'D' | 'UP' | 'LEFT' | 'DOWN' | 'RIGHT',
     Phaser.Input.Keyboard.Key
@@ -142,8 +152,10 @@ export class WorldScene extends Phaser.Scene {
     this.show(this.view.atlas);
     if (!this.view.atlas) return;
     this.panWithKeys(dtMs);
+    this.gestures.tick(performance.now());
     this.paintGround();
     this.drawMarks();
+    this.drawHold();
   }
 
   /** Se ve y atiende al ratón solo con la pestaña del mundo. */
@@ -154,6 +166,9 @@ export class WorldScene extends Phaser.Scene {
       this.downAt = null;
       this.hover = -1;
       this.dragging = -1;
+      this.gestures.reset();
+      this.touchPan = false;
+      this.holdAt = null;
     }
   }
 
@@ -376,6 +391,7 @@ export class WorldScene extends Phaser.Scene {
     cam.centerOn(b.x, b.y);
     this.input.mouse?.disableContextMenu();
     this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
+      if (p.wasTouch) return; // los dedos, en `onGesture`
       this.hover = hexAtPixel(atlas, p.worldX, p.worldY);
       if (!p.isDown || this.dragging > 0) return; // arrastrando la ruta, la cámara quieta
       const far =
@@ -395,14 +411,21 @@ export class WorldScene extends Phaser.Scene {
   /** Un clic (sin arrastrar): en un grupo, su ficha; si no, la del hexágono. */
   private setupInput(): void {
     const { atlas } = this.base.common;
+    const now = () => performance.now();
+    this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
+      if (p.wasTouch) this.gestures.move(p.id, { x: p.x, y: p.y }, now());
+    });
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
+      if (p.wasTouch) return this.gestures.down(p.id, { x: p.x, y: p.y }, now());
       this.downAt = { x: p.x, y: p.y };
       // Sobre un punto de la ruta (no sus extremos): se arrastra para poner o mover una parada.
-      const path = p.leftButtonDown() ? this.plannedRoute() : null;
-      const k = path ? path.indexOf(hexAtPixel(atlas, p.worldX, p.worldY)) : -1;
-      this.dragging = path && k > 0 && k < path.length - 1 ? k : -1;
+      this.dragging = p.leftButtonDown() ? this.routePointAt(p.worldX, p.worldY) : -1;
     });
     this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
+      if (p.wasTouch) {
+        if (p.wasCanceled) return this.gestures.lift(p.id);
+        return this.gestures.up(p.id, { x: p.x, y: p.y }, now());
+      }
       const from = this.downAt;
       const dragged = this.dragging;
       this.downAt = null;
@@ -419,18 +442,104 @@ export class WorldScene extends Phaser.Scene {
         return;
       }
       if (!from || p.button !== 0 || moved) return;
-      const screen = { x: p.x, y: p.y };
-      const grp = worldGroups(this.base).find(
-        (x) => Math.hypot(x.x - p.worldX, x.y - p.worldY) <= GROUP_RADIUS + 2,
-      );
-      if (grp) return this.onGroup?.(grp.travelId, screen);
-      if (hex >= 0) this.onHex?.(hex, screen);
+      this.clickAt({ x: p.worldX, y: p.worldY }, { x: p.x, y: p.y }, GROUP_RADIUS + 2);
     });
-    this.input.on('pointerupoutside', () => {
+    this.input.on('pointerupoutside', (p: Phaser.Input.Pointer) => {
+      if (p.wasTouch) return this.gestures.lift(p.id);
       this.downAt = null;
       this.dragging = -1;
     });
     this.input.on('gameout', () => (this.hover = -1));
+  }
+
+  /** El punto de la ruta planeada en (x, y) del mundo, si no es un extremo; si no, −1. */
+  private routePointAt(x: number, y: number): number {
+    const path = this.plannedRoute();
+    const k = path ? path.indexOf(hexAtPixel(this.base.common.atlas, x, y)) : -1;
+    return path && k > 0 && k < path.length - 1 ? k : -1;
+  }
+
+  /** Un clic en `at` (del mundo): un grupo a menos de `radius`, su ficha; si no, la del hexágono. */
+  private clickAt(at: Point, screen: Point, radius: number): void {
+    const grp = worldGroups(this.base).find((x) => Math.hypot(x.x - at.x, x.y - at.y) <= radius);
+    if (grp) return this.onGroup?.(grp.travelId, screen);
+    const hex = hexAtPixel(this.base.common.atlas, at.x, at.y);
+    if (hex >= 0) this.onHex?.(hex, screen);
+  }
+
+  /** M1: lo que hace cada gesto de los dedos sobre el mapa del mundo (spec M1 §2). */
+  private onGesture(g: Gesture): void {
+    const cam = this.cameras.main;
+    const { atlas } = this.base.common;
+    const world = (at: Pt) => cam.getWorldPoint(at.x, at.y);
+    const tapAt = (at: Pt) =>
+      this.clickAt(world(at), at, fingerRadius(1, cam.zoom, GROUP_RADIUS + 2));
+    switch (g.type) {
+      case 'tap':
+        this.holdAt = null;
+        return tapAt(g.at);
+      case 'hold':
+        this.holdAt = g.at;
+        if ('vibrate' in navigator) navigator.vibrate(15);
+        return;
+      case 'longPress': {
+        // Sobre una parada, quitarla (el clic derecho); en otro sitio, como tocar.
+        this.holdAt = null;
+        const w = world(g.at);
+        const hex = hexAtPixel(atlas, w.x, w.y);
+        if (this.plan?.waypoints.includes(hex)) this.plan.remove(hex);
+        else tapAt(g.at);
+        return;
+      }
+      case 'dragStart': {
+        this.holdAt = null;
+        const from = world(g.from);
+        this.dragging = this.routePointAt(from.x, from.y);
+        this.touchPan = this.dragging < 0;
+        return;
+      }
+      case 'drag':
+        if (this.dragging > 0) {
+          const w = world(g.at);
+          this.hover = hexAtPixel(atlas, w.x, w.y);
+        } else if (this.touchPan) {
+          cam.scrollX -= (g.at.x - g.prev.x) / cam.zoom;
+          cam.scrollY -= (g.at.y - g.prev.y) / cam.zoom;
+        }
+        return;
+      case 'dragEnd': {
+        const k = this.dragging;
+        this.dragging = -1;
+        this.touchPan = false;
+        this.hover = -1;
+        const w = world(g.at);
+        const hex = hexAtPixel(atlas, w.x, w.y);
+        if (k > 0 && hex >= 0) this.plan?.drag(atlas, k, hex);
+        return;
+      }
+      case 'pinch': {
+        const zoom = Phaser.Math.Clamp(cam.zoom * g.scale, this.minZoom(), ZOOM_MAX);
+        const s = zoomAround(cam, g.prevMid, g.mid, zoom);
+        cam.setZoom(zoom);
+        cam.setScroll(s.x, s.y);
+        return;
+      }
+      case 'cancel':
+        this.dragging = -1;
+        this.touchPan = false;
+        this.holdAt = null;
+        this.hover = -1;
+        return;
+    }
+  }
+
+  /** El aro donde se mantiene pulsado (M1): del mismo tamaño en pantalla con cualquier zoom. */
+  private drawHold(): void {
+    if (!this.holdAt) return;
+    const cam = this.cameras.main;
+    const c = cam.getWorldPoint(this.holdAt.x, this.holdAt.y);
+    this.marks.lineStyle(HOLD_RING_PX / 6 / cam.zoom, HOLD_RING, 0.9);
+    this.marks.strokeCircle(c.x, c.y, HOLD_RING_PX / cam.zoom);
   }
 
   /** Zoom mínimo: el mundo entero, más o menos, en la pantalla. */

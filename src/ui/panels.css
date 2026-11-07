@@ -12,6 +12,9 @@
 }
 .card {
   pointer-events: auto;
+  /* M1: mantener pulsada con el dedo no saca el menú del navegador ni elige texto. */
+  -webkit-touch-callout: none;
+  user-select: none;
   width: 150px;
   flex: 0 0 auto;
   padding: 6px 8px;

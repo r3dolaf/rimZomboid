@@ -3,7 +3,8 @@ import type { Tool } from './tool';
 
 /**
  * Atajos: Espacio pausa/reanuda; 1, 2 y 3 cambian la velocidad; L, T y B, las herramientas
- * Saquear, Talar y Construir; J, el panel de Trabajos; F, el de Fabricar; R, el modo combate (H4e).
+ * Saquear, Talar y Construir; J, el panel de Trabajos; F, el de Fabricar; R, el modo combate (H4e);
+ * M, silenciar (S1).
  */
 export function bindTimeKeys(
   target: EventTarget,
@@ -15,6 +16,8 @@ export function bindTimeKeys(
     toggleDraft?: () => void;
     /** H6c: F3, el modo depuración. */
     toggleDebug?: () => void;
+    /** S1: M, silenciar o volver a dar sonido. */
+    toggleMute?: () => void;
   } = {},
 ): void {
   target.addEventListener('keydown', (ev) => {
@@ -36,6 +39,8 @@ export function bindTimeKeys(
       extra.toggleCraft?.();
     } else if (e.code === 'KeyR') {
       extra.toggleDraft?.();
+    } else if (e.code === 'KeyM') {
+      extra.toggleMute?.();
     } else if (e.code === 'F3' && extra.toggleDebug) {
       e.preventDefault(); // (F3 busca en la página)
       extra.toggleDebug();

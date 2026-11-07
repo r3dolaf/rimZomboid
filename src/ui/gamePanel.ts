@@ -1,5 +1,6 @@
 // El panel «Partida» (spec H6b §2): guardar ahora, cargar la guardada (confirmando), exportar a un
-// archivo e importar uno.
+// archivo e importar uno; y el sonido (S1 §3).
+import type { SoundPrefs, SoundPrefsStore } from '../audio/prefs';
 import { es } from '../i18n/es';
 import type { NarratorStyle } from '../sim/types';
 import type { Flag } from './flag';
@@ -19,6 +20,8 @@ export function mountGamePanel(
     onLoad: () => void;
     onExport: () => void;
     onImport: (text: string) => void;
+    /** S1: los ajustes del sonido (volúmenes y Silenciar). */
+    sound?: SoundPrefsStore;
   },
 ): { update(): void; say(text: string): void } {
   const t = es.game;
@@ -77,6 +80,8 @@ export function mountGamePanel(
   narrator.dataset.testid = 'game-narrator';
   narrator.textContent = es.narratorLabel(es.narrators[opts.narrator ?? 'balanced'].name);
   panel.append(head, seed, narrator, row, status);
+  const sound = opts.sound ? soundSection(opts.sound) : null;
+  if (sound) panel.append(sound.el);
   root.append(panel);
   return {
     update() {
@@ -86,7 +91,52 @@ export function mountGamePanel(
         return;
       }
       load.disabled = !opts.hasSave();
+      sound?.update();
     },
     say,
+  };
+}
+
+/** La sección Sonido (S1 §3): General, Música y Efectos (0–100) y Silenciar. */
+function soundSection(store: SoundPrefsStore): { el: HTMLElement; update(): void } {
+  const t = es.sound;
+  const el = document.createElement('section');
+  el.className = 'sound';
+  const h3 = document.createElement('h3');
+  h3.textContent = t.title;
+  el.append(h3);
+  const sliders = (['master', 'music', 'sfx'] as const).map((key) => {
+    const label = document.createElement('label');
+    const input = document.createElement('input');
+    input.type = 'range';
+    input.min = '0';
+    input.max = '100';
+    input.step = '5';
+    input.dataset.testid = `sound-${key}`;
+    input.addEventListener('input', () =>
+      store.set({ ...store.get(), [key]: Number(input.value) }),
+    );
+    label.append(document.createTextNode(`${t[key]} `), input);
+    el.append(label);
+    return { key, input };
+  });
+  const label = document.createElement('label');
+  const muted = document.createElement('input');
+  muted.type = 'checkbox';
+  muted.dataset.testid = 'sound-muted';
+  muted.addEventListener('change', () => store.set({ ...store.get(), muted: muted.checked }));
+  label.append(muted, document.createTextNode(` ${t.muted}`));
+  el.append(label);
+  return {
+    el,
+    update() {
+      const p: SoundPrefs = store.get();
+      for (const s of sliders) {
+        const v = String(p[s.key]);
+        // Mientras se arrastra no se toca (si no, saltaría).
+        if (s.input.value !== v && document.activeElement !== s.input) s.input.value = v;
+      }
+      if (muted.checked !== p.muted) muted.checked = p.muted;
+    },
   };
 }

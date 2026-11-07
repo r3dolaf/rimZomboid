@@ -259,3 +259,24 @@ test('menú de Avisos (H4e): lo que no aparece no sale; lo que pausa o no, segú
   prefs = {};
   void prefs;
 });
+
+test('S1: cada aviso que aparece suena con su tono y su tipo; los ocultos, no', () => {
+  const root = document.createElement('div');
+  const world = createWorld(2);
+  world.tick = 1000;
+  const onNotice = vi.fn();
+  const notices = mountNotices(root, {
+    world,
+    time: createTimeController(),
+    prefs: { get: () => ({ grief: { show: false } }) },
+    onNotice,
+  });
+  notices.update();
+  logEvent(world, { kind: 'died', name: 'Ana', cause: 'blood' });
+  logEvent(world, { kind: 'grief', survivorId: world.survivors[0]!.id }); // oculto
+  notices.update();
+  expect(onNotice.mock.calls).toEqual([['bad', 'died']]);
+  addDecision(world, 'theft', [world.survivors[0]!.id]);
+  notices.update();
+  expect(onNotice).toHaveBeenLastCalledWith('bad', 'decision:theft');
+});

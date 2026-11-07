@@ -81,3 +81,11 @@ test('R: modo combate para los elegidos (H4e)', () => {
   press(window, { code: 'KeyR', key: 'r' });
   expect(toggleDraft).toHaveBeenCalledTimes(1);
 });
+
+test('M silencia o vuelve a dar sonido (S1)', () => {
+  const time = createTimeController();
+  const toggleMute = vi.fn();
+  bindTimeKeys(window, time, undefined, { toggleMute });
+  press(window, { code: 'KeyM', key: 'm' });
+  expect(toggleMute).toHaveBeenCalledTimes(1);
+});

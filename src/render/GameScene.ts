@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import type { ListenerView } from '../audio/space';
 import { markCorpsesIn, toggleContainer, toggleHouse } from '../game/designate';
 import { bedAt, containerAt, houseAt, survivorAt, tableAt } from '../game/pick';
 import { commandAt, effectiveDrafted } from '../game/command';
@@ -244,6 +245,8 @@ export interface GameSceneData {
   openCraft?: () => void;
   /** Clic derecho que no es una orden (H5c1 §8): el menú de esa casilla, donde se ha pulsado. */
   openContext?: (tile: Point, screen: Point) => void;
+  /** S1: ha caído un rayo (los relámpagos son de la pantalla): el trueno. */
+  onLightning?: () => void;
 }
 
 /**
@@ -272,6 +275,7 @@ export class GameScene extends Phaser.Scene {
   private perf?: { fps: number; msPerTick: number };
   private openCraft?: () => void;
   private openContext?: (tile: Point, screen: Point) => void;
+  private onLightning?: () => void;
   private actors!: Phaser.GameObjects.Graphics;
   /** Globos sobre la cabeza, uno por superviviente que lo lleva (se reutilizan). */
   private bubbleLayer!: Phaser.GameObjects.Container;
@@ -397,6 +401,7 @@ export class GameScene extends Phaser.Scene {
     this.perf = data.perf;
     this.openCraft = data.openCraft;
     this.openContext = data.openContext;
+    this.onLightning = data.onLightning;
     if (data.debug) this.exposeDebug();
   }
 
@@ -1689,7 +1694,10 @@ export class GameScene extends Phaser.Scene {
     const now = this.time.now;
     if (!storm) this.nextFlash = 0;
     else if (now >= this.nextFlash) {
-      if (this.nextFlash > 0) this.flash.setAlpha(FLASH_ALPHA);
+      if (this.nextFlash > 0) {
+        this.flash.setAlpha(FLASH_ALPHA);
+        this.onLightning?.();
+      }
       const [lo, hi] = FLASH_EVERY_MS;
       this.nextFlash = now + lo + Math.random() * (hi - lo);
     }
@@ -1697,6 +1705,12 @@ export class GameScene extends Phaser.Scene {
       this.flash.setPosition(v.x, v.y).setSize(v.width, v.height);
       this.flash.setAlpha(Math.max(0, this.flash.alpha - dtMs / FLASH_MS));
     }
+  }
+
+  /** S1: lo que se ve del mapa, en casillas (para el volumen y el lado de cada sonido). */
+  listenerView(): ListenerView {
+    const v = this.cameras.main.worldView;
+    return { x: v.x / TILE_PX, y: v.y / TILE_PX, w: v.width / TILE_PX, h: v.height / TILE_PX };
   }
 
   /** Niebla: lo que deja ver cada casilla, nada donde no se ha visto nunca, poco en lo visto. */

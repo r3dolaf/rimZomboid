@@ -37,6 +37,8 @@ export function mountNotices(
     onFocusAt?: (p: { x: number; y: number }, mapId: number) => void;
     /** Qué aparece y qué pausa (menú de Avisos, H4e); sin ello, lo de siempre. */
     prefs?: { get(): NoticePrefs };
+    /** S1: ha aparecido un aviso (su tono y su tipo; las decisiones, `decision:<tipo>`). */
+    onNotice?: (tone: Tone, kind: string) => void;
   },
 ): { update(): void } {
   const box = document.createElement('div');
@@ -109,6 +111,7 @@ export function mountNotices(
     el.append(x);
     plainBox.prepend(el); // el más nuevo arriba
     plain.push({ entry, el });
+    opts.onNotice?.(info.tone, entry.kind);
     if (pauses(prefs, entry.kind, info.tone)) opts.time.setSpeed(0);
   }
 
@@ -166,6 +169,7 @@ export function mountNotices(
     el.append(row);
     decisionsBox.append(el);
     decisions.set(d.id, { el, buttons, map: w });
+    opts.onNotice?.(DECISION_TONE[d.kind], `decision:${d.kind}`);
     if (pauses(opts.prefs?.get() ?? {}, `decision:${d.kind}`, DECISION_TONE[d.kind]))
       opts.time.setSpeed(0);
   }

@@ -1,4 +1,6 @@
 import Phaser from 'phaser';
+import { createSound } from './audio/engine';
+import { createSoundPrefs } from './audio/prefs';
 import { draftToggle } from './game/command';
 import { loadUrl, parseNarrator, parseSeed, parseZombies, randomSeed, startUrl } from './game/seed';
 import { createTimeController } from './game/timeController';
@@ -6,7 +8,7 @@ import { BACKGROUND } from './render/colors';
 import { GameScene, type GameSceneData } from './render/GameScene';
 import { makePortraits } from './render/people';
 import { WorldScene, type WorldSceneData } from './render/WorldScene';
-import { gameTime } from './sim/clock';
+import { darkness, gameTime } from './sim/clock';
 import { zombiesInSight } from './sim/danger';
 import type { NarratorStyle, World, ZombieLevel } from './sim/types';
 import { loadGame, saveGame, type SaveMeta } from './sim/save';
@@ -52,6 +54,14 @@ const ui = document.getElementById('hud')!;
 
 const store = createSaveStore(); // H6b: la partida guardada en el navegador
 
+// S1: el sonido, desde la portada (suena tras el primer clic o tecla); con `debug`, para los tests.
+const soundPrefs = createSoundPrefs();
+const sound = createSound(soundPrefs);
+if (new URLSearchParams(location.search).get('debug') === '1') {
+  const g = window as unknown as { rimzomboid?: Record<string, unknown> };
+  g.rimzomboid = { ...g.rimzomboid, sound: sound.debug, soundCue: sound.cue };
+}
+
 /** La dirección para seguir la partida guardada (sin semilla; con lo demás, como `debug`). */
 const loadHere = () => `${location.pathname}${loadUrl(location.search)}`;
 
@@ -75,6 +85,7 @@ if (!(params.has('load') && startSaved(store.read()))) {
     );
   } else {
     const saved = store.read();
+    sound.title();
     const screen = mountStartScreen(ui, {
       seed: randomSeed(),
       randomSeed,
@@ -188,6 +199,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
       if (!store.write(text)) return gamePanel.say(es.game.saveFailed);
       location.assign(loadHere());
     },
+    sound: soundPrefs,
   });
   // H5c1: las pestañas de mapa; lo de cada mapa (arriba, Almacén, Fabricar, Trabajos, fichas)
   // es del que se ve; las tarjetas, el registro y los avisos, de todos.
@@ -253,6 +265,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
     world,
     time,
     prefs,
+    onNotice: (tone, kind) => sound.notice(tone, kind), // S1
     // Pulsar un aviso: a su mapa (H5c1), la cámara va al colono y se abre su ficha.
     onFocus(id) {
       const where = allColonists(world).find((x) => x.s.id === id)?.where;
@@ -305,7 +318,37 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
       document.body.classList.toggle(`tool-${m}`, mode === m);
   });
 
-  bindTimeKeys(window, time, tool, { ...toggles, toggleDraft, toggleDebug: debugOpen.toggle });
+  bindTimeKeys(window, time, tool, {
+    ...toggles,
+    toggleDraft,
+    toggleDebug: debugOpen.toggle,
+    toggleMute: soundPrefs.toggleMute, // S1
+  });
+
+  // S1: lo que el sonido mira en cada fotograma.
+  let soundTick = world.tick;
+  let soundAt = performance.now();
+  const hearFrame = (here: World, seen: number) => {
+    const now = performance.now();
+    const scene = game.scene.getScene('game') as GameScene | null;
+    const map = view.atlas || !scene ? null : here;
+    sound.frame({
+      world: map,
+      view: map && scene ? scene.listenerView() : null,
+      advancing: world.tick !== soundTick,
+      dtMs: now - soundAt,
+      mood: {
+        title: false,
+        over: world.common.over !== null,
+        siege: world.hordes.some((h) => h.kind === 'siege' && !h.done),
+        zombiesSeen: map ? seen : 0,
+        darkness: darkness(world.tick),
+        now,
+      },
+    });
+    soundTick = world.tick;
+    soundAt = now;
+  };
 
   const game = new Phaser.Game({
     type: Phaser.AUTO,
@@ -328,16 +371,19 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
     perf,
     openCraft: () => craftOpen.set(true),
     openContext: (tile, screen) => contextMenu.open(tile, screen),
+    onLightning: () => sound.lightning(), // S1
     onFrame: () => {
       tabs.update(); // primero: si el sitio que se ve se ha quedado vacío, a la base
       const here = view.world;
+      const seen = zombiesInSight(here).length;
       hud.update(
         gameTime(world.tick),
         here.storage.items,
         world.tick < world.common.stormUntil,
-        zombiesInSight(here).length,
+        seen,
         siegeText(world),
       );
+      hearFrame(here, seen);
       cards.update();
       sheet.update();
       group.update();

@@ -743,6 +743,18 @@ export const es = {
     continue: (day: number) => `Continuar (día ${day})`,
     importStart: 'Importar partida:',
   },
+  // El sonido (S1): sus ajustes en el panel Partida y el muestrario del modo depuración.
+  sound: {
+    title: 'Sonido',
+    master: 'General',
+    music: 'Música',
+    sfx: 'Efectos',
+    muted: 'Silenciar (M)',
+    sample: 'Sonido:',
+    play: 'Oír',
+    mood: 'Música:',
+    auto: 'automática',
+  },
   /** H6a: «Antibióticos y que descanse (quedan 2)». */
   antibioticsLeft: (label: string, n: number) => `${label} (quedan ${n})`,
   decisions: {

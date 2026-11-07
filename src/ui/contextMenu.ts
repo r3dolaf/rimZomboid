@@ -83,7 +83,8 @@ export function mountContextMenu(
     menu.replaceChildren();
     return true;
   };
-  document.addEventListener('mousedown', (ev) => {
+  // Con `pointerdown`, también al tocar fuera con el dedo (M1).
+  document.addEventListener('pointerdown', (ev) => {
     if (!menu.hidden && !menu.contains(ev.target as Node)) close();
   });
   return {

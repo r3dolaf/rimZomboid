@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
+import { HOLD_MS } from '../game/gestures';
 import { createWorld } from '../sim/world';
 import { mountCards } from './cards';
 import { createSelection } from './selection';
@@ -142,6 +143,68 @@ test('Mayús + clic añade o quita de la selección (H4e); sin Mayús, solo ese'
   expect(selection.ids).toEqual([b.id]);
   card(a.id).click();
   expect(selection.ids).toEqual([a.id]);
+});
+
+/** Un evento de puntero sobre la tarjeta: con el dedo (`touch`) o con el ratón. */
+const point = (el: Element, type: string, kind = 'touch', x = 10, y = 10) =>
+  el.dispatchEvent(
+    new PointerEvent(type, { pointerType: kind, clientX: x, clientY: y, bubbles: true }),
+  );
+
+test('mantener pulsada una tarjeta con el dedo la añade o la quita (M1); el clic de después no cuenta', () => {
+  vi.useFakeTimers();
+  try {
+    const { root, world, selection } = setup();
+    const [a, b] = [world.survivors[0]!, world.survivors[1]!];
+    const card = (id: number) => root.querySelector(`[data-testid="card-${id}"]`) as HTMLElement;
+    card(a.id).click();
+    point(card(b.id), 'pointerdown');
+    vi.advanceTimersByTime(HOLD_MS - 1);
+    expect(selection.ids).toEqual([a.id]);
+    vi.advanceTimersByTime(1);
+    expect(selection.ids).toEqual([a.id, b.id]);
+    point(card(b.id), 'pointerup');
+    card(b.id).click(); // el navegador puede mandar el clic al soltar
+    expect(selection.ids).toEqual([a.id, b.id]);
+    // Otra vez: la quita.
+    point(card(b.id), 'pointerdown');
+    vi.advanceTimersByTime(HOLD_MS);
+    point(card(b.id), 'pointerup');
+    card(b.id).click();
+    expect(selection.ids).toEqual([a.id]);
+    // Tocar sin mantener es como un clic: solo ese.
+    point(card(b.id), 'pointerdown');
+    vi.advanceTimersByTime(100);
+    point(card(b.id), 'pointerup');
+    card(b.id).click();
+    expect(selection.ids).toEqual([b.id]);
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test('mantener pulsada no cuenta con el ratón, ni si el dedo se mueve (desplazar las tarjetas)', () => {
+  vi.useFakeTimers();
+  try {
+    const { root, world, selection } = setup();
+    const [a, b] = [world.survivors[0]!, world.survivors[1]!];
+    const card = (id: number) => root.querySelector(`[data-testid="card-${id}"]`) as HTMLElement;
+    card(a.id).click();
+    point(card(b.id), 'pointerdown', 'mouse');
+    vi.advanceTimersByTime(HOLD_MS * 2);
+    expect(selection.ids).toEqual([a.id]);
+    point(card(b.id), 'pointerup', 'mouse');
+    point(card(b.id), 'pointerdown');
+    point(card(b.id), 'pointermove', 'touch', 40, 10);
+    vi.advanceTimersByTime(HOLD_MS * 2);
+    expect(selection.ids).toEqual([a.id]);
+    point(card(b.id), 'pointerdown');
+    point(card(b.id), 'pointercancel'); // el navegador se lo queda para desplazar
+    vi.advanceTimersByTime(HOLD_MS * 2);
+    expect(selection.ids).toEqual([a.id]);
+  } finally {
+    vi.useRealTimers();
+  }
 });
 
 test('en modo combate: ⚔ (lo primero) y la tarjeta marcada', () => {

@@ -12,10 +12,14 @@
         height: 100%;
         overflow: hidden;
         background: #111;
+        /* M1: sin el zoom de dos toques seguidos (molesta en los botones de velocidad). */
+        touch-action: manipulation;
       }
       #game {
         position: fixed;
         inset: 0;
+        /* M1: sobre el mapa, los gestos son del juego, no del navegador. */
+        touch-action: none;
       }
     </style>
   </head>

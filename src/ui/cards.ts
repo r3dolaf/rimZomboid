@@ -1,6 +1,7 @@
 import { es } from '../i18n/es';
 import type { Needs, Survivor, World } from '../sim/types';
 import { effectiveDrafted } from '../game/command';
+import { HOLD_MS, TOUCH_SLOP_PX } from '../game/gestures';
 import { allColonists, mapById } from '../sim/game';
 import { barLevel, healthIcons, statusIcon, whereText } from './describe';
 import type { MapView } from './mapView';
@@ -50,8 +51,7 @@ export function mountCards(
     card.type = 'button';
     card.className = 'card';
     card.dataset.testid = `card-${s.id}`;
-    card.addEventListener('click', (ev) => {
-      card.blur();
+    const choose = (add: boolean) => {
       const where = allColonists(opts.world).find((x) => x.s.id === s.id)?.where;
       if (where === 'travel') return; // de viaje no hay mapa al que ir
       if (opts.view && where !== undefined && where !== opts.view.mapId) {
@@ -60,8 +60,48 @@ export function mountCards(
         return;
       }
       // Mayús (H4e): lo añade o lo quita; si no, solo él (o nadie, si ya era el único).
-      if (ev.shiftKey) opts.selection.toggle(s.id);
+      if (add) opts.selection.toggle(s.id);
       else opts.selection.set(opts.selection.id === s.id ? null : s.id);
+    };
+    // M1: mantener pulsada la tarjeta con el dedo es como Mayús y clic. El clic que el navegador
+    // pueda mandar al soltar ya no cuenta.
+    let hold: { timer: number; x: number; y: number } | null = null;
+    let held = false;
+    const stopHold = () => {
+      if (hold) window.clearTimeout(hold.timer);
+      hold = null;
+    };
+    card.addEventListener('pointerdown', (ev) => {
+      stopHold();
+      held = false;
+      if (ev.pointerType !== 'touch') return;
+      const timer = window.setTimeout(() => {
+        hold = null;
+        held = true;
+        choose(true);
+      }, HOLD_MS);
+      hold = { timer, x: ev.clientX, y: ev.clientY };
+    });
+    card.addEventListener('pointermove', (ev) => {
+      if (
+        hold &&
+        Math.sqrt((ev.clientX - hold.x) ** 2 + (ev.clientY - hold.y) ** 2) > TOUCH_SLOP_PX
+      )
+        stopHold();
+    });
+    for (const type of ['pointerup', 'pointercancel', 'pointerleave'])
+      card.addEventListener(type, stopHold);
+    // Que el navegador no saque su menú al mantener pulsado.
+    card.addEventListener('contextmenu', (ev) => {
+      if (hold || held) ev.preventDefault();
+    });
+    card.addEventListener('click', (ev) => {
+      card.blur();
+      if (held) {
+        held = false;
+        return;
+      }
+      choose(ev.shiftKey);
     });
 
     const head = document.createElement('div');

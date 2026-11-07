@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { markCorpsesIn, toggleContainer, toggleHouse } from '../game/designate';
 import { bedAt, containerAt, houseAt, survivorAt, tableAt } from '../game/pick';
 import { commandAt, effectiveDrafted } from '../game/command';
+import { createGestures, fingerRadius, zoomAround, type Gesture, type Pt } from '../game/gestures';
 import { runTicks } from '../game/runTicks';
 import type { TimeController } from '../game/timeController';
 import {
@@ -126,6 +127,8 @@ const ZOOM_MAX = 4;
 const ZOOM_STEP = 1.1;
 const PICK_RADIUS = 0.6; // casillas
 const CLICK_SLOP_PX = 6; // soltar más lejos que esto (en pantalla) es arrastrar, no un clic
+/** El aro de mantener pulsado (M1), de radio en pantalla. */
+const HOLD_RING_PX = 18;
 /** Quien duerme en el suelo, tumbado y algo desvaído. */
 const SLEEPING_ALPHA = 0.85;
 /** Desconocidos y quien se va (H5): de su color, pero agrisados, hasta que son de la colonia. */
@@ -361,6 +364,12 @@ export class GameScene extends Phaser.Scene {
   /** Dónde se pulsó el botón derecho (en pantalla): si se suelta cerca, es una orden (H4e). */
   private rightFrom: Point | null = null;
   private hover: Point | null = null;
+  /** M1: los gestos con los dedos (el ratón va aparte). */
+  private gestures = createGestures((g) => this.onGesture(g));
+  /** Qué hace el arrastre de un dedo que está en marcha: mover la cámara, marcar o el rectángulo. */
+  private touchDrag: 'pan' | 'paint' | 'box' | null = null;
+  /** Dónde se mantiene pulsado (en pantalla): ahí se ve el aro. */
+  private holdAt: Pt | null = null;
   /** El agua del barreño o la cisterna bajo el ratón (H5b). */
   private waterLabel: Phaser.GameObjects.Text | null = null;
   /** Lo que ven ahora los colonos (se rehace con la niebla): solo ahí se dibujan los zombis. */
@@ -465,16 +474,21 @@ export class GameScene extends Phaser.Scene {
     // Con la pestaña del mundo (H5c2) el juego sigue, pero este mapa ni se ve ni atiende al ratón.
     const hidden = this.view.atlas;
     if (this.sys.isVisible() === hidden) this.sys.setVisible(!hidden);
-    if (this.input.enabled === hidden) this.input.enabled = !hidden;
+    if (this.input.enabled === hidden) {
+      this.input.enabled = !hidden;
+      this.forgetTouch();
+    }
     if (hidden) {
       this.onFrame?.();
       return;
     }
     this.syncMap();
     this.panWithKeys(dtMs);
+    this.gestures.tick(performance.now());
     this.refreshMap();
     this.drawFurniture();
     this.drawBuilding();
+    this.drawHold();
     this.drawActors();
     this.drawEffects(dtMs);
     if (this.peopleDirty) {
@@ -1177,6 +1191,7 @@ export class GameScene extends Phaser.Scene {
     this.box = null;
     this.rightFrom = null;
     this.hover = null;
+    this.forgetTouch();
     for (const t of [...this.bubbles.values(), ...this.zombieNames.values()]) t.destroy();
     this.bubbles.clear();
     this.zombieNames.clear();
@@ -1227,32 +1242,50 @@ export class GameScene extends Phaser.Scene {
     this.scale.on('resize', () => cam.setZoom(Math.max(cam.zoom, this.minZoom())));
   }
 
-  /** Casilla bajo el puntero (dentro del mapa). */
-  private tileAt(p: Phaser.Input.Pointer): Point {
+  /** Casilla (dentro del mapa) del punto `at`, en casillas continuas. */
+  private clampTile(at: Point): Point {
     const { width, height } = this.world.grid;
     return {
-      x: Phaser.Math.Clamp(Math.floor(p.worldX / TILE_PX), 0, width - 1),
-      y: Phaser.Math.Clamp(Math.floor(p.worldY / TILE_PX), 0, height - 1),
+      x: Phaser.Math.Clamp(Math.floor(at.x), 0, width - 1),
+      y: Phaser.Math.Clamp(Math.floor(at.y), 0, height - 1),
     };
+  }
+
+  /** Casilla bajo el puntero (dentro del mapa). */
+  private tileAt(p: Phaser.Input.Pointer): Point {
+    return this.clampTile({ x: p.worldX / TILE_PX, y: p.worldY / TILE_PX });
+  }
+
+  /** Lo que hay en pantalla en `at`, en casillas continuas (para los dedos, M1). */
+  private toWorld(at: Pt): Point {
+    const v = this.cameras.main.getWorldPoint(at.x, at.y);
+    return { x: v.x / TILE_PX, y: v.y / TILE_PX };
   }
 
   /**
    * Clic izquierdo. Con la herramienta Saquear: marca o desmarca el contenedor (si se ha visto)
    * o la casa. Con Talar o Construir: un clic o un arrastre (ver `finishDrag`). Sin herramienta:
-   * selecciona superviviente o casa vista, o deselecciona.
+   * selecciona superviviente o casa vista, o deselecciona. Los dedos van aparte (`onGesture`).
    */
   private setupSelection(): void {
+    const now = () => performance.now();
     this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
+      if (p.wasTouch) return this.gestures.move(p.id, { x: p.x, y: p.y }, now());
       this.hover = this.tileAt(p);
       if (this.drag) this.drag.to = this.hover;
       if (this.box) this.box.to = { x: p.worldX / TILE_PX, y: p.worldY / TILE_PX };
     });
     this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
+      if (p.wasTouch) {
+        if (p.wasCanceled) return this.gestures.lift(p.id);
+        return this.gestures.up(p.id, { x: p.x, y: p.y }, now());
+      }
       if (p.button === 2) return this.finishRight(p);
       if (this.box) return this.finishBox(p);
       this.finishDrag();
     });
-    this.input.on('pointerupoutside', () => {
+    this.input.on('pointerupoutside', (p: Phaser.Input.Pointer) => {
+      if (p.wasTouch) return this.gestures.lift(p.id);
       this.drag = null;
       this.box = null;
       this.rightFrom = null;
@@ -1260,33 +1293,68 @@ export class GameScene extends Phaser.Scene {
     this.input.on('gameout', () => (this.hover = null));
     this.tool.onChange(() => (this.drag = null));
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
+      if (p.wasTouch) {
+        // Con Construir, la silueta se ve mientras el primer dedo está puesto (M1 §1).
+        if (this.tool.mode && !this.gestures.active) this.hover = this.tileAt(p);
+        return this.gestures.down(p.id, { x: p.x, y: p.y }, now());
+      }
       if (p.rightButtonDown()) {
         this.rightFrom = { x: p.x, y: p.y };
         return;
       }
       if (!p.leftButtonDown()) return;
-      const w = this.world;
-      const { x: tx, y: ty } = this.tileAt(p);
       const mode = this.tool.mode;
-      if (mode === 'chop' || mode === 'build' || mode === 'loot') {
-        this.drag = { mode, from: { x: tx, y: ty }, to: { x: tx, y: ty } };
+      if (mode) {
+        const t = this.tileAt(p);
+        this.drag = { mode, from: t, to: t };
         return;
       }
       const shift = (p.event as MouseEvent | undefined)?.shiftKey === true;
-      const s = survivorAt(w, p.worldX / TILE_PX, p.worldY / TILE_PX, PICK_RADIUS);
-      if (s) {
-        if (shift) this.selection.toggle(s.id);
-        else this.selection.set(s.id);
-        return;
-      }
-      if (tableAt(w, tx, ty)) {
-        this.openCraft?.();
-        return;
-      }
-      // Lo demás se decide al soltar: un clic (edificio o nadie) o un rectángulo (H4e).
       const at = { x: p.worldX / TILE_PX, y: p.worldY / TILE_PX };
+      if (this.pickAt(at, PICK_RADIUS, shift)) return;
+      // Lo demás se decide al soltar: un clic (edificio o nadie) o un rectángulo (H4e).
       this.box = { from: at, to: { ...at }, screen: { x: p.x, y: p.y }, add: shift };
     });
+  }
+
+  /**
+   * Lo primero de un clic sin herramienta: elige a quien esté en `at` (con `add`, lo añade o lo
+   * quita) o abre la mesa. Dice si ha hecho algo.
+   */
+  private pickAt(at: Point, radius: number, add: boolean): boolean {
+    const w = this.world;
+    const s = survivorAt(w, at.x, at.y, radius);
+    if (s) {
+      if (add) this.selection.toggle(s.id);
+      else this.selection.set(s.id);
+      return true;
+    }
+    const t = this.clampTile(at);
+    if (!tableAt(w, t.x, t.y)) return false;
+    this.openCraft?.();
+    return true;
+  }
+
+  /** Un clic que no ha elegido a nadie: abre la cama o el edificio vistos, o deja a nadie elegido. */
+  private clickTile({ x: tx, y: ty }: Point): void {
+    const w = this.world;
+    const seen = w.seen[ty * w.grid.width + tx] === 1;
+    // Una cama (H5) abre su ficha; si no, el edificio.
+    const bed = seen ? bedAt(w, tx, ty) : null;
+    const h = seen && !bed ? houseAt(w, tx, ty) : null;
+    this.selection.set(null);
+    this.houseSelection.set(h?.id ?? null);
+    this.bedSelection.set(bed?.id ?? null);
+  }
+
+  /** Elige a los colonos dentro del rectángulo (en casillas continuas); con `add`, además. */
+  private selectIn(from: Point, to: Point, add: boolean): void {
+    const [x0, x1] = [Math.min(from.x, to.x), Math.max(from.x, to.x)];
+    const [y0, y1] = [Math.min(from.y, to.y), Math.max(from.y, to.y)];
+    const inside = this.world.survivors
+      .filter((s) => s.pos.x >= x0 && s.pos.x <= x1 && s.pos.y >= y0 && s.pos.y <= y1)
+      .map((s) => s.id);
+    this.selection.setMany(add ? [...this.selection.ids, ...inside] : inside);
   }
 
   /** ¿Se ha movido el puntero desde `from` (en pantalla) lo bastante como para ser un arrastre? */
@@ -1298,24 +1366,8 @@ export class GameScene extends Phaser.Scene {
   private finishBox(p: Phaser.Input.Pointer): void {
     const b = this.box!;
     this.box = null;
-    const w = this.world;
-    if (!this.dragged(p, b.screen)) {
-      const { x: tx, y: ty } = this.tileAt(p);
-      const seen = w.seen[ty * w.grid.width + tx] === 1;
-      // Una cama (H5) abre su ficha; si no, el edificio.
-      const bed = seen ? bedAt(w, tx, ty) : null;
-      const h = seen && !bed ? houseAt(w, tx, ty) : null;
-      this.selection.set(null);
-      this.houseSelection.set(h?.id ?? null);
-      this.bedSelection.set(bed?.id ?? null);
-      return;
-    }
-    const [x0, x1] = [Math.min(b.from.x, b.to.x), Math.max(b.from.x, b.to.x)];
-    const [y0, y1] = [Math.min(b.from.y, b.to.y), Math.max(b.from.y, b.to.y)];
-    const inside = w.survivors
-      .filter((s) => s.pos.x >= x0 && s.pos.x <= x1 && s.pos.y >= y0 && s.pos.y <= y1)
-      .map((s) => s.id);
-    this.selection.setMany(b.add ? [...this.selection.ids, ...inside] : inside);
+    if (!this.dragged(p, b.screen)) return this.clickTile(this.tileAt(p));
+    this.selectIn(b.from, b.to, b.add);
   }
 
   /** Clic derecho (sin arrastrar, que mueve la cámara): una orden del modo combate (H4e). */
@@ -1323,15 +1375,121 @@ export class GameScene extends Phaser.Scene {
     const from = this.rightFrom;
     this.rightFrom = null;
     if (!from || this.dragged(p, from)) return;
+    const ev = p.event as MouseEvent | undefined;
+    const screen = { x: ev?.clientX ?? p.x, y: ev?.clientY ?? p.y };
+    this.rightClickAt({ x: p.worldX / TILE_PX, y: p.worldY / TILE_PX }, screen);
+  }
+
+  /**
+   * El clic derecho en `at` (casillas continuas): una orden del modo combate a los elegidos (H4e)
+   * o, si no la hay, el menú contextual en `screen` (H5c1 §8).
+   */
+  private rightClickAt(at: Point, screen: Point): void {
     const w = this.world;
     const seen = (z: Zombie) =>
       this.visible[Math.floor(z.pos.y) * w.grid.width + Math.floor(z.pos.x)] === 1;
-    const at = { x: p.worldX / TILE_PX, y: p.worldY / TILE_PX };
     const order = commandAt(w, this.selection.ids, at, seen);
     if (order) return issue(w, order);
-    const ev = p.event as MouseEvent | undefined;
-    const screen = { x: ev?.clientX ?? p.x, y: ev?.clientY ?? p.y };
-    this.openContext?.(this.tileAt(p), screen);
+    this.openContext?.(this.clampTile(at), screen);
+  }
+
+  /** M1: lo que hace cada gesto de los dedos sobre el mapa (spec M1 §1). */
+  private onGesture(g: Gesture): void {
+    const cam = this.cameras.main;
+    switch (g.type) {
+      case 'tap': {
+        this.holdAt = null;
+        this.hover = null;
+        const mode = this.tool.mode;
+        const at = this.toWorld(g.at);
+        if (mode) {
+          const t = this.clampTile(at);
+          this.drag = { mode, from: t, to: t };
+          return this.finishDrag();
+        }
+        if (this.pickAt(at, fingerRadius(TILE_PX, cam.zoom, PICK_RADIUS), false)) return;
+        return this.clickTile(this.clampTile(at));
+      }
+      case 'hold':
+        this.holdAt = g.at;
+        if ('vibrate' in navigator) navigator.vibrate(15);
+        return;
+      case 'longPress':
+        this.holdAt = null;
+        this.hover = null;
+        return this.rightClickAt(this.toWorld(g.at), g.at);
+      case 'dragStart': {
+        this.holdAt = null;
+        const mode = this.tool.mode;
+        if (mode) {
+          this.touchDrag = 'paint';
+          const from = this.clampTile(this.toWorld(g.from));
+          this.drag = { mode, from, to: this.clampTile(this.toWorld(g.at)) };
+        } else if (g.held) {
+          this.touchDrag = 'box';
+          const from = this.toWorld(g.from);
+          this.box = { from, to: { ...from }, screen: g.from, add: false };
+        } else {
+          this.touchDrag = 'pan';
+        }
+        return;
+      }
+      case 'drag':
+        if (this.touchDrag === 'pan') {
+          cam.scrollX -= (g.at.x - g.prev.x) / cam.zoom;
+          cam.scrollY -= (g.at.y - g.prev.y) / cam.zoom;
+        } else if (this.touchDrag === 'paint' && this.drag) {
+          this.hover = this.clampTile(this.toWorld(g.at));
+          this.drag.to = this.hover;
+        } else if (this.touchDrag === 'box' && this.box) {
+          this.box.to = this.toWorld(g.at);
+        }
+        return;
+      case 'dragEnd': {
+        const kind = this.touchDrag;
+        this.touchDrag = null;
+        this.hover = null;
+        if (kind === 'paint') return this.finishDrag();
+        if (kind === 'box' && this.box) {
+          const b = this.box;
+          this.box = null;
+          this.selectIn(b.from, this.toWorld(g.at), false);
+        }
+        return;
+      }
+      case 'pinch': {
+        const zoom = Phaser.Math.Clamp(cam.zoom * g.scale, this.minZoom(), ZOOM_MAX);
+        const s = zoomAround(cam, g.prevMid, g.mid, zoom);
+        cam.setZoom(zoom);
+        cam.setScroll(s.x, s.y);
+        return;
+      }
+      case 'cancel':
+        this.drag = null;
+        this.box = null;
+        this.touchDrag = null;
+        this.holdAt = null;
+        this.hover = null;
+        return;
+    }
+  }
+
+  /** Olvida lo que hacían los dedos (al cambiar de mapa o de pestaña). */
+  private forgetTouch(): void {
+    this.gestures.reset();
+    if (this.touchDrag === 'paint') this.drag = null;
+    if (this.touchDrag === 'box') this.box = null;
+    this.touchDrag = null;
+    this.holdAt = null;
+  }
+
+  /** El aro donde se mantiene pulsado (M1): del mismo tamaño en pantalla con cualquier zoom. */
+  private drawHold(): void {
+    if (!this.holdAt) return;
+    const cam = this.cameras.main;
+    const c = cam.getWorldPoint(this.holdAt.x, this.holdAt.y);
+    this.marks.lineStyle(HOLD_RING_PX / 6 / cam.zoom, SELECTION_RING, 0.9);
+    this.marks.strokeCircle(c.x, c.y, HOLD_RING_PX / cam.zoom);
   }
 
   /**

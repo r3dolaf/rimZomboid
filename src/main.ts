@@ -313,6 +313,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
     backgroundColor: BACKGROUND,
     pixelArt: true,
     scale: { mode: Phaser.Scale.RESIZE, width: '100%', height: '100%' },
+    input: { activePointers: 2 }, // M1: dos dedos para pellizcar
   });
 
   const data: GameSceneData = {

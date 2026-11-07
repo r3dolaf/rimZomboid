@@ -53,6 +53,17 @@ arte), con todo en un catálogo para poder cambiar después cualquier sonido o t
 | **S1. Efectos y música**   | Golpes, puertas y ventanas que se rompen, talar, forzar y construir, el árbol que cae, gemidos, truenos, pájaros y avisos; lluvia, viento, hoguera y grillos; música generativa por ambientes (portada, día, noche, peligro, asedio y final); ajustes y muestrario; spec `2026-11-07-s1-sonido-design.md` | Hecho     |
 | **S2. Música en archivos** | Los temas elegidos de oído (o encargados), en `public/audio/`, con sus créditos; solo cambia el catálogo                                                                                                                                                                                                  | Pendiente |
 
+## Móvil
+
+Que se pueda jugar en un móvil en horizontal y en una tableta (pedido por el usuario tras A6), por
+pasos. En vertical cabe muy poco mapa; no se busca (spec `2026-11-07-m1-tactil-design.md`).
+
+| Paso                                 | Qué se hace                                                                                                                                                                                                               | Estado   |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| **M1. Controles táctiles**           | Tocar, arrastrar un dedo (cámara, o marcar con herramienta), mantener pulsado (el clic derecho), mantener y arrastrar (elegir a varios) y pellizcar, en el mapa y en el del mundo; tarjetas y menú contextual con el dedo | En curso |
+| **M2. Interfaz en pantalla pequeña** | La barra de arriba en iconos o en un menú (hoy no cabe); «Sucesos» plegado; tarjetas más pequeñas; paneles a todo el ancho                                                                                                |          |
+| **M3. Detalles de móvil**            | Botones de al menos 44 px, el notch, guardar al salir de la pestaña, instalable a pantalla completa y medir el rendimiento en un móvil                                                                                    |          |
+
 ## Pendientes
 
 Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al planificar el hito indicado.

@@ -15,7 +15,7 @@ export default tseslint.config(
           patterns: [
             { group: ['phaser/*'], message: 'La simulación no usa Phaser.' },
             {
-              group: ['**/render/**', '**/ui/**', '**/game/**'],
+              group: ['**/render/**', '**/ui/**', '**/game/**', '**/audio/**'],
               message: 'La simulación no depende de la pantalla.',
             },
           ],

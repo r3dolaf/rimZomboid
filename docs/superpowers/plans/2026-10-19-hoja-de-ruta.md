@@ -42,6 +42,17 @@ arriba a la izquierda (spec `2026-11-06-a1-arte-mapa-design.md`).
 | **A5. Movimiento**        | Andar con dos pasos por vista, el arma en la mano, mirar a lo que se hace, golpes (tinte, gotas, mancha y el golpe hacia delante), sangre que se seca, astillas y polvo al trabajar y el árbol que cae; spec `2026-11-06-a5-arte-movimiento-design.md`                                                            | Hecho  |
 | **A6. Mapa del mundo**    | Terreno con textura y relieve (arbolitos, lomas, olas y matas), pueblos con casitas, carreteras de tierra y niebla con textura; spec `2026-11-06-a6-arte-mundo-design.md`                                                                                                                                         | Hecho  |
 
+## Sonido
+
+Después del arte, el sonido, por pasos. El usuario eligió efectos y música hechos por código (como el
+arte), con todo en un catálogo para poder cambiar después cualquier sonido o tema por un archivo
+(spec `2026-11-07-s1-sonido-design.md`).
+
+| Paso                       | Qué se oye                                                                                                                                                                                                                                                         | Estado    |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------- |
+| **S1. Efectos y música**   | Golpes, puertas y ventanas que se rompen, talar, forzar y construir, el árbol que cae, gemidos, truenos, pájaros y avisos; lluvia, viento, hoguera y grillos; música generativa por ambientes (portada, día, noche, peligro, asedio y final); ajustes y muestrario | En marcha |
+| **S2. Música en archivos** | Los temas elegidos de oído (o encargados), en `public/audio/`, con sus créditos; solo cambia el catálogo                                                                                                                                                           | Pendiente |
+
 ## Pendientes
 
 Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al planificar el hito indicado.

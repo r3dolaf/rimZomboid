@@ -183,3 +183,16 @@ test('la hoguera suena según lo cerca que esté del centro', () => {
   w.furniture[0]!.pos = { x: 500, y: 500 };
   expect(ambienceOf(w, view).fire).toBe(0);
 });
+
+test('tras reset (la pestaña del mundo), el siguiente fotograma no suena', () => {
+  const w = world();
+  const s = addSurvivor(w, { x: 5, y: 5 });
+  const watcher = createWatcher();
+  watcher.watch(w, 0, true);
+  watcher.reset();
+  s.wounds.push(wound(1));
+  setTile(w.grid, 4, 4, Tile.BrokenWindow);
+  expect(watcher.watch(w, 16, true)).toEqual([]);
+  s.wounds.push(wound(2));
+  expect(watcher.watch(w, 32, true).map((c) => c.id)).toEqual(['hurt']);
+});

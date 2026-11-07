@@ -57,6 +57,10 @@ export function createWatcher() {
   let memo: Memo | null = null;
   const nextWork = new Map<string, number>(); // por colono y trabajo
   return {
+    /** Olvida lo anterior: el siguiente fotograma empieza de cero, sin sonar. */
+    reset(): void {
+      memo = null;
+    },
     watch(w: World, now: number, advancing: boolean): Cue[] {
       const g = w.grid;
       if (!memo || memo.world !== w) {

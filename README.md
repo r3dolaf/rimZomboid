@@ -52,6 +52,14 @@ Para cambiar un efecto o un ambiente de música por un archivo:
    varios temas por ambiente, de código y de archivo mezclados; se elige uno al azar cada vez.
 3. Apunta de dónde es y su licencia en `public/audio/CREDITOS.md`.
 
+Con el dedo (móvil en horizontal o tableta):
+
+- Tocar es el clic izquierdo; mantener pulsado medio segundo y soltar, el clic derecho (órdenes del
+  modo combate y menú contextual).
+- Arrastrar un dedo mueve la cámara (con una herramienta activa, marca); mantener y arrastrar elige
+  a varios con un rectángulo; dos dedos acercan, alejan y mueven la cámara.
+- Mantener pulsada una tarjeta añade o quita a ese colono de los elegidos.
+
 ## Publicar en GitHub Pages
 
 Cada push a `main` comprueba el juego y lo publica automáticamente. La primera vez hay que

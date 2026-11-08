@@ -979,3 +979,99 @@ test(`semilla 1: ${2 * DAYS} días (hasta el invierno) con huerto, hogueras y le
   if (DAYS >= 30 && !w.common.over) expect(winterTotals.seasons).toContain('winter');
   console.log('V3, un año con huerto y hogueras:', winterTotals);
 }, 1_800_000);
+
+/** C1: la radio y el rescate, en 3 partidas. */
+const rescueTotals = {
+  built: 0,
+  announced: 0,
+  sent: 0,
+  arrived: 0,
+  landed: 0,
+  rescued: 0,
+  won: 0,
+  day: [] as number[],
+};
+
+test.each([1, 2, 3])(
+  'semilla %i: con una radio y pilas se oye el rescate, se va al punto y alguien sube — sin romper nada',
+  (seed) => {
+    const w = createWorld(seed, 'balanced', 'normal');
+    for (const h of w.houses) issue(w, { type: 'designateHouse', houseId: h.id, on: true });
+    w.storage.items.radio = 1;
+    w.storage.items.battery = 6;
+    w.storage.items.wood += 4;
+    w.common.woodLog.start += 4;
+    const { rect } = w.base;
+    const floor = Array.from({ length: rect.w * rect.h }, (_, k) => ({
+      x: rect.x + (k % rect.w),
+      y: rect.y + Math.floor(k / rect.w),
+    }));
+    const spot = floor.find((p) => canPlace(w, 'radio', p));
+    expect(spot, 'sitio para la radio').toBeDefined();
+    issue(w, { type: 'placeBlueprint', kind: 'radio', x: spot!.x, y: spot!.y });
+    const r = createRng(seed * 13);
+    let sent = false;
+    let built = false;
+    for (let day = 1; day <= 25 && !w.common.over; day++)
+      for (let i = 0; i < TICKS_PER_DAY && !w.common.over; i++) {
+        const d = w.decisions[0];
+        if (d && !w.orders.some((o) => o.type === 'decide'))
+          issue(w, {
+            type: 'decide',
+            decisionId: d.id,
+            option: d.kind === 'rescued' ? 0 : answer(r, d),
+          });
+        const resc = w.common.rescue;
+        // Con el helicóptero anunciado, sale todo el que puede a tiempo de llegar un poco antes.
+        if (!sent && resc?.stage === 3 && resc.from !== null) {
+          const info = w.common.expedition.sites.find((x) => x.id === resc.siteId)!;
+          const lead = (Math.ceil(info.hours / 14) + 1) * TICKS_PER_DAY;
+          const able = w.survivors.filter((s) => canGo(s, w));
+          if (w.tick >= resc.from - lead && able.length > 0) {
+            const n = able.length;
+            issue(w, {
+              type: 'sendExpedition',
+              from: 0,
+              siteId: info.id,
+              survivorIds: able.map((s) => s.id),
+              items: {
+                food: Math.min(3 * n, w.storage.items.food),
+                waterBottle: Math.min(3 * n, w.storage.items.waterBottle),
+                bandage: Math.min(2 * n, w.storage.items.bandage),
+              },
+            });
+            sent = true;
+            rescueTotals.sent++;
+          }
+        }
+        const last = w.common.log.at(-1);
+        stepGame(w);
+        const problems = checkInvariants(w);
+        if (problems.length > 0) expect(problems, `tick ${w.tick}`).toEqual([]);
+        if (!built && w.furniture.some((f) => f.kind === 'radio')) {
+          built = true;
+          rescueTotals.built++;
+        }
+        for (const e of w.common.log.slice(last ? w.common.log.lastIndexOf(last) + 1 : 0)) {
+          if (e.kind === 'radioEvac') rescueTotals.announced++;
+          if (e.kind === 'heliArrived') rescueTotals.landed++;
+          if (e.kind === 'boarded') rescueTotals.rescued++;
+          if (e.kind === 'expeditionArrived' && e.site?.kind === 'evac') rescueTotals.arrived++;
+        }
+      }
+    if (w.common.over?.won) {
+      rescueTotals.won++;
+      rescueTotals.day.push(gameTime(w.common.over.tick).day);
+    }
+    expect(built, 'la radio se ha construido').toBe(true);
+  },
+  600_000,
+);
+
+test('con la radio se oye el helicóptero, se llega al punto y alguien se salva', () => {
+  console.log('C1, en las 3 partidas con radio:', rescueTotals);
+  expect(rescueTotals.announced, 'helicópteros anunciados').toBeGreaterThan(0);
+  expect(rescueTotals.arrived, 'llegadas al punto').toBeGreaterThan(0);
+  expect(rescueTotals.landed, 'aterrizajes').toBeGreaterThan(0);
+  expect(rescueTotals.rescued, 'a salvo').toBeGreaterThan(0);
+});

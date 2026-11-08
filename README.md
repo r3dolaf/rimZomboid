@@ -56,6 +56,12 @@ Asentarse (huerto, agua y estaciones):
 - **Amputar**: un mordisco en un brazo o una pierna pregunta si se amputa (hay 8 horas, y hace falta
   algo para cortar y 2 vendas). Si se hace a tiempo, la infección no le mata, pero pierde el brazo o
   la pierna para siempre.
+- **Radio y rescate**: tras encontrar una radio en una nave, una gasolinera o un pueblecito del mapa
+  del mundo, se construye en la base (Construir → Radio) y se le dan pilas. Encendida, se oye al
+  ejército: primero que evacúa, luego hacia dónde y, por último, dónde y qué día pasará un
+  helicóptero. Hay que llegar al punto de evacuación y pisar la zona de aterrizaje antes de que se
+  vaya (el ruido atrae a los zombis). Quien sube se salva; se puede ver el final o seguir con los que
+  se quedan.
 - **Estaciones**: el año dura 60 días y empieza en verano. En invierno no crece nada y hiela: hace
   falta ropa de abrigo y hogueras con leña (Transportar se la lleva). La estación y la temperatura
   están junto a las pestañas de mapa.

@@ -211,3 +211,15 @@ test('trucos de depuración: oír la radio y todos al helicóptero', async () =>
   expect(map.tick).toBe(base.tick + 1);
   expect(checkInvariants(base)).toEqual([]);
 });
+
+test('el punto de evacuación no se quema como los demás sitios', async () => {
+  const { sitesDailySystem } = await import('./sites');
+  const { TICKS_PER_DAY } = await import('./balance');
+  const { base, info } = announced();
+  for (let d = 1; d <= 300; d++) {
+    base.tick = (Math.floor(base.tick / TICKS_PER_DAY) + 1) * TICKS_PER_DAY;
+    sitesDailySystem(base);
+  }
+  expect(info.state).toBe('known');
+  expect(base.common.expedition.sites.some((x) => x.state === 'lost')).toBe(true);
+});

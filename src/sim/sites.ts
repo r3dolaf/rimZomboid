@@ -434,7 +434,8 @@ function siteDay(base: World, info: SiteInfo): void {
     }
     logEvent(base, { kind: 'siteChanged', site, change: 'silent' });
   }
-  if (nextFloat(rng) < SITE_BURN_PER_DAY) {
+  // C1: el punto de evacuación no se quema (la tirada, igual, para no cambiar el azar del resto).
+  if (nextFloat(rng) < SITE_BURN_PER_DAY && info.kind !== 'evac') {
     burn(base, info);
     logEvent(base, { kind: 'siteChanged', site, change: 'burned' });
   } else if (nextFloat(rng) < SITE_HORDE_PER_DAY) {

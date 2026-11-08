@@ -19,7 +19,7 @@ import { logEvent } from './log';
 import { baseLayout } from './base';
 import { wallSpots } from './map/recipes';
 import { nextInt, type RngState } from './rng';
-import type { Building, Container, Furniture, Grid, World } from './types';
+import type { Building, Container, Furniture, Grid, Point, World } from './types';
 import { indoors } from './zombies/spawn';
 
 /** ¿Sigue habiendo agua corriente? */
@@ -71,7 +71,12 @@ export function placeFixtures(
  * del almacén (y de lo que tengan al lado), lo más cerca posible del almacén. Sin sorteo: no cambia
  * el azar de la partida.
  */
-export function baseSink(grid: Grid, base: Building, id: number): Furniture | null {
+export function baseSink(
+  grid: Grid,
+  base: Building,
+  id: number,
+  blocked: (p: Point) => boolean = () => false,
+): Furniture | null {
   const layout = baseLayout(base);
   const taken = [...layout.beds, ...layout.storage];
   const near = (p: { x: number; y: number }) =>
@@ -80,7 +85,7 @@ export function baseSink(grid: Grid, base: Building, id: number): Furniture | nu
   let best: { x: number; y: number } | null = null;
   let bestD = Infinity;
   for (const p of wallSpots(grid, base)) {
-    if (near(p)) continue;
+    if (near(p) || blocked(p)) continue;
     const d = (p.x - st.x) ** 2 + (p.y - st.y) ** 2;
     if (d < bestD) {
       best = p;

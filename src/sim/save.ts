@@ -1,15 +1,18 @@
 // Guardar y cargar la partida (spec H6b §1): la partida entera en JSON, con su versión y unos datos
 // para enseñarla. La caja común va una sola vez (los sitios la comparten con la base) y al cargar se
 // vuelve a enlazar, así la partida sigue exactamente igual.
+import { occupied } from './build';
+import { contains } from './geom';
 import { checkInvariants } from './invariants';
 import { ITEM_KINDS } from './items';
+import { baseSink } from './water';
 import type { NarratorStyle, World, ZombieLevel } from './types';
 
 /**
  * Cambia con cada cambio de forma de la partida. Las de versiones anteriores se ponen al día al
  * cargarlas (`migrate`); las de una versión desconocida no se cargan.
  */
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 /** Lo que se enseña de una partida guardada. */
 export interface SaveMeta {
@@ -69,6 +72,7 @@ export function loadGame(
     if (!isMeta(file.meta) || typeof world !== 'object' || world === null)
       return { error: 'broken' };
     if (file.version < 2) toV2(world);
+    if (file.version < 3) toV3(world);
     const c = world.common;
     if (!c?.expedition || !c.atlas || !world.grid || !Array.isArray(world.siteMaps))
       return { error: 'broken' };
@@ -130,4 +134,27 @@ function toV2(world: World): void {
     ...(Array.isArray(world.siteMaps) ? world.siteMaps.map((m) => m.world) : []),
   ];
   for (const m of maps) if (isObject(m) && !Array.isArray(m.plots)) m.plots = [];
+}
+
+/**
+ * De la versión 2 a la 3 (V2, beber): la sed (como su hambre) en cada persona y el fregadero de la
+ * base, donde no estorbe a nada.
+ */
+function toV3(world: World): void {
+  walk(world, (o) => {
+    const needs = o.needs as Partial<Record<string, number>> | undefined;
+    if (isObject(needs) && typeof needs.hunger === 'number' && typeof needs.thirst !== 'number')
+      needs.thirst = needs.hunger;
+  });
+  if (!Array.isArray(world.furniture) || !world.grid || !world.base) return;
+  const hasSink = world.furniture.some(
+    (f) => f.kind === 'sink' && contains(world.base.rect, f.pos),
+  );
+  if (hasSink) return;
+  const sink = baseSink(world.grid, world.base, world.common.nextId, (p) =>
+    occupied(world, p.x, p.y),
+  );
+  if (!sink) return;
+  world.common.nextId++;
+  world.furniture.push(sink);
 }

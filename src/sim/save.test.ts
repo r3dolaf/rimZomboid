@@ -108,6 +108,7 @@ function asVersion1(text: string): string {
       if (typeof o[k] === 'object' && o[k] !== null) delete (o[k] as Record<string, unknown>).farm;
     if ('chopMarks' in o) delete o.plots;
     if ('siegesRepelled' in o) delete o.harvested;
+    if (typeof o.hunger === 'number') delete o.thirst; // (y V2: la sed)
     Object.values(o).forEach(strip);
   };
   strip(file.world);
@@ -115,7 +116,6 @@ function asVersion1(text: string): string {
 }
 
 test('V1: una partida de la versión 1 se sigue cargando, con lo nuevo a 0 y Cultivar', () => {
-  expect(SAVE_VERSION).toBe(2);
   const w = createWorld(7);
   for (let i = 0; i < 600; i++) stepGame(w);
   const old = asVersion1(saveGame(w, meta));
@@ -135,5 +135,56 @@ test('V1: una partida de la versión 1 se sigue cargando, con lo nuevo a 0 y Cul
   }
   expect(checkInvariants(lw)).toEqual([]);
   for (let i = 0; i < 600; i++) stepGame(lw); // y se sigue jugando
+  expect(checkInvariants(lw)).toEqual([]);
+});
+
+/** Como la versión 2: sin la sed ni el fregadero de la base (V2). */
+function asVersion2(text: string, w: World): string {
+  const file = JSON.parse(text) as { version: number; world: World };
+  file.version = 2;
+  const strip = (x: unknown): void => {
+    if (typeof x !== 'object' || x === null) return;
+    if (Array.isArray(x)) return x.forEach(strip);
+    const o = x as Record<string, unknown>;
+    if (typeof o.hunger === 'number') delete o.thirst;
+    Object.values(o).forEach(strip);
+  };
+  strip(file.world);
+  const r = w.base.rect;
+  file.world.furniture = file.world.furniture.filter(
+    (f) =>
+      !(
+        f.kind === 'sink' &&
+        f.pos.x >= r.x &&
+        f.pos.y >= r.y &&
+        f.pos.x < r.x + r.w &&
+        f.pos.y < r.y + r.h
+      ),
+  );
+  return JSON.stringify(file);
+}
+
+test('V2: una partida de la versión 2 se sigue cargando, con la sed y el fregadero de la base', () => {
+  expect(SAVE_VERSION).toBe(3);
+  const w = createWorld(7);
+  for (let i = 0; i < 600; i++) stepGame(w);
+  const old = asVersion2(saveGame(w, meta), w);
+  expect(old).not.toContain('"thirst"');
+  const loaded = loadGame(old);
+  if ('error' in loaded) throw new Error(loaded.error);
+  const lw = loaded.world;
+  for (const s of lw.survivors) expect(s.needs.thirst).toBe(s.needs.hunger);
+  const r = lw.base.rect;
+  const sinks = lw.furniture.filter(
+    (f) =>
+      f.kind === 'sink' &&
+      f.pos.x >= r.x &&
+      f.pos.y >= r.y &&
+      f.pos.x < r.x + r.w &&
+      f.pos.y < r.y + r.h,
+  );
+  expect(sinks).toHaveLength(1);
+  expect(checkInvariants(lw)).toEqual([]);
+  for (let i = 0; i < 600; i++) stepGame(lw);
   expect(checkInvariants(lw)).toEqual([]);
 });

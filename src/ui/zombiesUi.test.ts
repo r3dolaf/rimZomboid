@@ -41,7 +41,7 @@ test('portada: opción Zombis (normal marcado) que llega a Empezar', () => {
   const onStart = vi.fn();
   mountStartScreen(root, { seed: 42, randomSeed: () => 1, onStart });
   expect(q(root, 'zombies-normal').classList.contains('selected')).toBe(true);
-  expect(q(root, 'zombies-few').textContent).toBe('Pocos');
+  expect(q(root, 'zombies-few').textContent).toBe('Pocos Para empezar'); // U1 §10
   q(root, 'zombies-many').click();
   expect(q(root, 'zombies-many').classList.contains('selected')).toBe(true);
   q(root, 'start-go').click();

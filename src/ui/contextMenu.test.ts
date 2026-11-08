@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 // H5c1 §8: el menú del clic derecho: en una ventana, una puerta, un muro dañado o un plano, solo lo
 // que tiene sentido allí, con lo que gasta y lo que tienes.
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
+import { emptyInventory } from '../sim/items';
 import { damageTile } from '../sim/structures';
 import { setTile } from '../sim/map/grid';
 import { emptyWorld } from '../sim/testing/fixtures';
@@ -115,4 +116,87 @@ test('las opciones de ventana ya no están en Construir', () => {
   for (const k of ['board', 'unboard', 'curtains', 'takeDownCurtains', 'smashWindow'])
     expect(root.querySelector(`[data-testid="build-${k}"]`)).toBeNull();
   expect(root.querySelectorAll('.build-group')).toHaveLength(3);
+});
+
+// U1 §7: el clic derecho (mantener pulsado) en todo: saquear, talar, ver la casa y fabricar.
+function town(): World {
+  const w = world();
+  w.houses.push({ id: 4, kind: 'house', rect: { x: 5, y: 5, w: 4, h: 4 }, door: { x: 6, y: 8 } });
+  w.containers.push({
+    id: 9,
+    houseId: 4,
+    pos: { x: 6, y: 6 },
+    kind: 'fridge',
+    items: emptyInventory(),
+    searched: false,
+    designated: false,
+    reservedBy: null,
+  });
+  return w;
+}
+const kinds = (w: World, x: number, y: number, acts = {}) =>
+  contextOptions(w, { x, y }, acts).map((o) => o.kind);
+
+test('U1 §7: un mueble: saquearlo y dejar de saquearlo; también la casa entera', () => {
+  const w = town();
+  expect(labels(w, 6, 6)).toEqual(['🎒 Saquear la nevera', '🎒 Saquear la casa']);
+  contextOptions(w, { x: 6, y: 6 })[0]!.choose();
+  expect(w.orders).toEqual([{ type: 'designateContainer', containerId: 9, on: true }]);
+  // Lo pedido en pausa ya cuenta.
+  expect(labels(w, 6, 6)).toEqual(['🎒 Dejar de saquear la nevera', '🎒 Dejar de saquear la casa']);
+  contextOptions(w, { x: 6, y: 6 })[1]!.choose();
+  expect(w.orders.at(-1)).toEqual({ type: 'designateHouse', houseId: 4, on: false });
+});
+
+test('U1 §7: una casa sin ver por dentro se puede marcar; ver su ficha, solo vista', () => {
+  const w = town();
+  const onHouse = vi.fn();
+  w.seen[7 * w.grid.width + 7] = 0;
+  expect(kinds(w, 7, 7, { onHouse })).toEqual(['lootHouse']);
+  expect(kinds(w, 7, 6, { onHouse })).toEqual(['lootHouse', 'viewHouse']);
+  const view = contextOptions(w, { x: 7, y: 6 }, { onHouse }).find((o) => o.kind === 'viewHouse')!;
+  expect(view.label).toBe('🏠 Ver la casa');
+  view.choose();
+  expect(onHouse).toHaveBeenCalledWith(4);
+  // Ya saqueada del todo, no se ofrece saquearla.
+  w.containers[0]!.searched = true;
+  expect(kinds(w, 7, 6, { onHouse })).toEqual(['viewHouse']);
+});
+
+test('U1 §7: un cuerpo se registra; un árbol se tala; la mesa abre Fabricar', () => {
+  const w = world();
+  w.containers.push({
+    id: 3,
+    houseId: -1,
+    pos: { x: 1, y: 1 },
+    kind: 'corpse',
+    items: emptyInventory(),
+    searched: false,
+    designated: false,
+    reservedBy: null,
+  });
+  expect(labels(w, 1, 1)).toEqual(['🎒 Registrar el cuerpo']);
+  contextOptions(w, { x: 1, y: 1 })[0]!.choose();
+  expect(labels(w, 1, 1)).toEqual(['🎒 No registrar el cuerpo']);
+  setTile(w.grid, 3, 3, Tile.Tree);
+  expect(labels(w, 3, 3)).toEqual(['🪓 Talar el árbol']);
+  contextOptions(w, { x: 3, y: 3 })[0]!.choose();
+  expect(w.orders.at(-1)).toEqual({ type: 'markTree', x: 3, y: 3, on: true });
+  w.furniture.push({ id: 1, kind: 'table', pos: { x: 4, y: 4 } });
+  const onCraft = vi.fn();
+  expect(kinds(w, 4, 4, { onCraft })).toEqual(['craft']);
+  expect(kinds(w, 4, 4)).toEqual([]); // sin Fabricar (en un test), nada
+  contextOptions(w, { x: 4, y: 4 }, { onCraft })[0]!.choose();
+  expect(onCraft).toHaveBeenCalledTimes(1);
+});
+
+test('U1 §7: el menú en pantalla pasa Fabricar y Ver la casa', () => {
+  const w = town();
+  const root = document.createElement('div');
+  document.body.replaceChildren(root);
+  const onHouse = vi.fn();
+  const menu = mountContextMenu(root, { world: w, onHouse });
+  expect(menu.open({ x: 7, y: 7 }, { x: 10, y: 10 })).toBe(true);
+  (root.querySelector('[data-testid="ctx-viewHouse"]') as HTMLButtonElement).click();
+  expect(onHouse).toHaveBeenCalledWith(4);
 });

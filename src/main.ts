@@ -52,6 +52,9 @@ import { createPanelGroup } from './ui/panelGroup';
 import { mountStoragePanel } from './ui/storagePanel';
 import { mountStartScreen } from './ui/startScreen';
 import { createTool } from './ui/tool';
+import { mountToolHint } from './ui/toolHint';
+import { mountHelp } from './ui/help';
+import { mountCoach } from './ui/coach';
 import { mountWorkPanel } from './ui/workPanel';
 
 const ui = document.getElementById('hud')!;
@@ -91,18 +94,27 @@ if (!(params.has('load') && startSaved(store.read()))) {
   } else {
     const saved = store.read();
     sound.title();
+    // U1 §10: la Ayuda también desde la portada (sin pausa ni primeros pasos).
+    const titleHelp = createFlag();
+    const help = mountHelp(ui, { open: titleHelp });
+    window.addEventListener('keydown', (e) => e.key === 'Escape' && titleHelp.set(false));
+    const leave = () => {
+      screen.remove();
+      help.remove(); // la de la partida es otra (con pausa y primeros pasos)
+    };
     const screen = mountStartScreen(ui, {
+      onHelp: () => titleHelp.set(true),
       seed: randomSeed(),
       randomSeed,
       onStart(seed, style, zombies) {
         history.replaceState(null, '', startUrl(location.search, seed, style, zombies));
-        screen.remove();
+        leave();
         start(seed, style, zombies);
       },
       saved: savedMeta(saved),
       onContinue() {
         history.replaceState(null, '', loadHere());
-        screen.remove();
+        leave();
         startSaved(saved);
       },
       onImport(text) {
@@ -110,7 +122,7 @@ if (!(params.has('load') && startSaved(store.read()))) {
         if ('error' in got) return screen.say(es.game[got.error]);
         store.write(text); // si no deja, se juega igual (pero no se podrá «Continuar»)
         history.replaceState(null, '', loadHere());
-        screen.remove();
+        leave();
         startSaved(text);
       },
     });
@@ -134,6 +146,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
   const expeditionsOpen = createFlag(); // el panel Expediciones (H5c1)
   const gameOpen = createFlag(); // el panel Partida (H6b)
   const debugOpen = createFlag(); // el modo depuración, F3 (H6c)
+  const helpOpen = createFlag(); // U1 §8: la Ayuda
   const debugUrl = new URLSearchParams(location.search).get('debug') === '1';
   const perf = { fps: 60, msPerTick: 0 };
   // Los paneles salen en el mismo sitio: abrir uno cierra los otros.
@@ -155,6 +168,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
     toggleStorage: storageOpen.toggle,
     toggleExpeditions: expeditionsOpen.toggle,
     toggleGame: () => gameGroup.toggle(),
+    toggleHelp: helpOpen.toggle,
   };
   // R (H4e): modo combate para los elegidos.
   const toggleDraft = () => {
@@ -228,6 +242,15 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
   // es del que se ve; las tarjetas, el registro y los avisos, de todos.
   const tabs = mountMapTabs(ui, { view });
   const cards = mountCards(ui, { world, view, selection, portrait: makePortraits() });
+  // U1 §9: los primeros pasos y los consejos (antes que los paneles: estos van por encima).
+  const coach = mountCoach(ui, {
+    world,
+    time,
+    tool,
+    selection,
+    workOpen,
+    zombiesSeen: () => zombiesInSight(view.world).length,
+  });
   // M2: en pantalla pequeña, los paneles van entre la barra y las tarjetas (miden lo que ocupan).
   trackHeight(ui.querySelector<HTMLElement>('.hud-bar')!, '--bar-h');
   trackHeight(ui.querySelector<HTMLElement>('.cards')!, '--cards-h');
@@ -282,7 +305,15 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
       expeditionsOpen.set(true);
     },
   });
-  const contextMenu = mountContextMenu(ui, viewed(view, {})); // clic derecho (H5c1 §8)
+  // Clic derecho (H5c1 §8); U1 §7: también saquear, talar, ver la casa y fabricar.
+  const contextMenu = mountContextMenu(
+    ui,
+    viewed(view, {
+      onCraft: () => craftOpen.set(true),
+      onHouse: (id: number) => houseSelection.set(id),
+    }),
+  );
+  mountToolHint(ui, { tool }); // U1 §4: qué hacer con la herramienta, y «Hecho»
   // H6c: el modo depuración (F3): pasar el tiempo de golpe avanza la partida como lo haría el reloj.
   const debugPanel = mountDebugPanel(ui, {
     world,
@@ -302,11 +333,21 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
     onRestart: () => location.assign(startUrl(location.search, randomSeed(), style, zombies)),
     onTitle: () => location.assign(location.pathname),
   });
+  // U1 §8: la Ayuda, por encima de todo (salvo el final).
+  mountHelp(ui, {
+    open: helpOpen,
+    time,
+    onGuide: () => coach.restart(),
+    tips: coach.tips,
+  });
   const notices = mountNotices(ui, {
     world,
     time,
     prefs,
-    onNotice: (tone, kind) => sound.notice(tone, kind), // S1
+    onNotice: (tone, kind) => {
+      sound.notice(tone, kind); // S1
+      coach.noticed(); // U1 §9: si pausa, su consejo
+    },
     // Pulsar un aviso: a su mapa (H5c1), la cámara va al colono y se abre su ficha.
     onFocus(id) {
       const where = allColonists(world).find((x) => x.s.id === id)?.where;
@@ -339,6 +380,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
   // Esc cierra por capas: primero la herramienta, luego el panel de Trabajos o el de Fabricar, la
   // ficha de la casa y la del superviviente.
   bindEscape(window, [
+    () => helpOpen.value && (helpOpen.set(false), true), // U1: la Ayuda, lo primero
     () => hud.closeMenu(), // M2: el menú ☰
     () => contextMenu.close(),
     () => view.atlas && worldCard.selected >= 0 && (worldCard.close(), true),
@@ -434,6 +476,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
       bedPanel.update();
       log.update();
       notices.update();
+      coach.update(); // después de los avisos (el de la pausa)
       noticeMenu.update();
       storagePanel.update();
       outfitsPanel.update();

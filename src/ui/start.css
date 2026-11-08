@@ -27,8 +27,35 @@
   color: #f2c641;
 }
 .start-subtitle {
-  margin: 4px 0 24px;
+  margin: 4px 0 10px;
   opacity: 0.7;
+}
+/* U1 §10: de qué va, con «❓ Cómo se juega». */
+.start-pitch {
+  margin: 0 0 20px;
+}
+.start-help {
+  margin-left: 4px;
+  padding: 3px 10px;
+  border: 1px solid #c9a227;
+  border-radius: 6px;
+  background: #3a3220;
+  color: #f2e2a8;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+/* «Para empezar», en Tranquilo y en Pocos. */
+.start-starter {
+  display: inline-block;
+  align-self: flex-start;
+  margin-top: 6px;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: #2f4a2f;
+  color: #b9e6b9;
+  font-size: 11px;
+  font-style: normal;
 }
 .start h2 {
   margin: 0 0 10px;
@@ -149,10 +176,8 @@
   margin-bottom: 12px;
 }
 .start-import {
-  display: block;
-  margin-top: 12px;
+  margin-top: 14px;
   font-size: 13px;
-  color: #aaa;
 }
 .start-message {
   min-height: 1em;

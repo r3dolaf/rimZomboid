@@ -66,8 +66,8 @@ export function mountGamePanel(
   });
   const exp = button(t.export, 'game-export', () => opts.onExport());
   const label = document.createElement('label');
-  label.className = 'import';
-  label.append(document.createTextNode(`${t.import} `), importInput('game-import', opts.onImport));
+  label.className = 'import file-button';
+  label.append(document.createTextNode(t.import), importInput('game-import', opts.onImport));
   const row = document.createElement('div');
   row.className = 'buttons';
   row.append(save, load, confirm, exp, label);

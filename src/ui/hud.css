@@ -175,6 +175,12 @@ body.tool-build canvas {
   }
 }
 
+/* U1 §2: las herramientas, con su icono también en la barra (el mismo de la columna del móvil y de
+   los primeros pasos). */
+.hud-tools .hud-tool::before {
+  content: attr(data-icon) ' ';
+}
+
 /* M2: las herramientas y los paneles, cada grupo en su caja; en pantalla ancha, en la fila. */
 .hud-tools,
 .hud-panels {

@@ -60,7 +60,12 @@ export function mountWorkPanel(
   thead.append(headRow);
   const tbody = document.createElement('tbody');
   table.append(thead, tbody);
-  panel.append(head, table);
+  // U1: qué es cada cosa de la tabla (para quien empieza).
+  const hint = document.createElement('p');
+  hint.className = 'work-hint';
+  hint.dataset.testid = 'work-hint';
+  hint.textContent = es.workHint;
+  panel.append(head, table, hint);
   root.append(panel);
 
   // Una fila por colono; se crean y se quitan según quién está (las casillas no se rehacen).

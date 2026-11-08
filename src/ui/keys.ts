@@ -2,8 +2,8 @@ import type { Speed, TimeController } from '../game/timeController';
 import type { Tool } from './tool';
 
 /**
- * Atajos: Espacio pausa/reanuda; 1, 2 y 3 cambian la velocidad; L, T y B, las herramientas
- * Saquear, Talar y Construir; J, el panel de Trabajos; F, el de Fabricar; R, el modo combate (H4e);
+ * Atajos: Espacio pausa/reanuda; 1, 2 y 3 cambian la velocidad; L, T, H y B, las herramientas
+ * Saquear, Talar, Huerto (V1) y Construir; J, el panel de Trabajos; F, el de Fabricar; R, el modo combate (H4e);
  * M, silenciar (S1).
  */
 export function bindTimeKeys(
@@ -31,6 +31,8 @@ export function bindTimeKeys(
       tool?.toggle('loot');
     } else if (e.code === 'KeyT') {
       tool?.toggle('chop');
+    } else if (e.code === 'KeyH') {
+      tool?.toggle('farm');
     } else if (e.code === 'KeyB') {
       tool?.toggle('build');
     } else if (e.code === 'KeyJ') {

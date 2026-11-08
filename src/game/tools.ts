@@ -1,6 +1,7 @@
 // Herramientas Talar y Construir: qué órdenes da cada clic o arrastre, teniendo en cuenta las aún
 // pendientes (con el juego en pausa, la orden no se aplica hasta el siguiente tick).
 import { canPlace, hasCurtains, markedTrees, repairKindAt, treeMarked } from '../sim/build';
+import { canPlot, plotMarked } from '../sim/farm';
 import { getTile } from '../sim/map/grid';
 import { issue } from '../sim/orders';
 import { Tile, type Blueprint, type BuildKind, type Point, type World } from '../sim/types';
@@ -20,6 +21,20 @@ export function markTreesIn(w: World, a: Point, b: Point): void {
     for (let x = Math.min(a.x, b.x); x <= Math.max(a.x, b.x); x++)
       if (seenTree(w, x, y) && !marked.has(y * w.grid.width + x))
         issue(w, { type: 'markTree', x, y, on: true });
+}
+
+/** Clic con Huerto (V1): marca la parcela si se puede, o la desmarca si ya lo está. */
+export function togglePlot(w: World, x: number, y: number): void {
+  if (plotMarked(w, x, y)) issue(w, { type: 'markPlot', x, y, on: false });
+  else if (canPlot(w, { x, y })) issue(w, { type: 'markPlot', x, y, on: true });
+}
+
+/** Arrastrar con Huerto: marca todas las casillas del rectángulo donde se pueda. */
+export function markPlotsIn(w: World, a: Point, b: Point): void {
+  for (let y = Math.min(a.y, b.y); y <= Math.max(a.y, b.y); y++)
+    for (let x = Math.min(a.x, b.x); x <= Math.max(a.x, b.x); x++)
+      if (!plotMarked(w, x, y) && canPlot(w, { x, y }))
+        issue(w, { type: 'markPlot', x, y, on: true });
 }
 
 const cancelling = (w: World) =>

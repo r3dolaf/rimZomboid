@@ -89,3 +89,15 @@ test('M silencia o vuelve a dar sonido (S1)', () => {
   press(window, { code: 'KeyM', key: 'm' });
   expect(toggleMute).toHaveBeenCalledTimes(1);
 });
+
+test('V1: H activa o quita la herramienta Huerto', () => {
+  const target = new EventTarget();
+  const tool = createTool();
+  bindTimeKeys(target, createTimeController(), tool);
+  const press = (code: string) =>
+    target.dispatchEvent(Object.assign(new Event('keydown'), { code, key: '' }));
+  press('KeyH');
+  expect(tool.mode).toBe('farm');
+  press('KeyH');
+  expect(tool.mode).toBeNull();
+});

@@ -1,5 +1,7 @@
+import { GROW_HOURS } from '../sim/balance';
 import { bagsIn } from '../sim/bags';
 import { ITEM_KINDS, type Inventory } from '../sim/items';
+import type { Plot } from '../sim/types';
 import { PROP_COLORS } from './colors';
 
 /** Cada dibujo de mueble (A2): 16 de ancho y hasta 24 de alto; la casilla son las 16 filas de abajo. */
@@ -487,6 +489,63 @@ PROP_SPRITES.drip = [
   '......YV........',
   '.........V......',
 ];
+
+/**
+ * La tierra labrada del huerto (V1): surcos de lado a lado, con el lomo claro y el fondo oscuro;
+ * mojada, más oscura.
+ */
+function soil(wet: boolean): string[] {
+  const [top, mid, low] = wet ? ['E', 'H', 'N'] : ['D', 'E', 'H'];
+  const rows: string[] = [];
+  for (let y = 0; y < 16; y++) {
+    const c = y === 0 || y === 15 ? '.' : [top, mid, low][(y - 1) % 3]!;
+    rows.push(c === '.' ? '.'.repeat(16) : `.${c.repeat(14)}.`);
+  }
+  return rows;
+}
+
+/** Las seis matas de una parcela, de brote (1) a grandes (3), y con fruto si está madura. */
+function crop(stage: 1 | 2 | 3, ripe: boolean): string[] {
+  const px: Pixels = new Map();
+  const centers: [number, number][] = [
+    [3, 4],
+    [8, 4],
+    [12, 4],
+    [3, 11],
+    [8, 11],
+    [12, 11],
+  ];
+  const r = [0, 0.8, 1.6, 2.4][stage]!;
+  for (const [cx, cy] of centers) {
+    for (let y = cy - 3; y <= cy + 1; y++)
+      for (let x = cx - 3; x <= cx + 3; x++) {
+        const d = Math.abs(x - cx) + Math.abs(y - cy) * 1.2;
+        if (d > r + 0.2 || x < 0 || x > 15 || y < 0 || y > 15) continue;
+        px.set(key(x, y), d < r * 0.4 && y <= cy ? 'K' : d > r - 0.6 ? 'Z' : 'z');
+      }
+    px.set(key(cx, cy + 1), 'Z'); // el tallo
+    if (ripe) {
+      px.set(key(cx - 1, cy), 'x');
+      px.set(key(cx + 1, cy - 1), 'T');
+      px.set(key(cx, cy + 1), 'X');
+    }
+  }
+  return rowsOf(px, 0);
+}
+
+PROP_SPRITES.soilDry = soil(false);
+PROP_SPRITES.soilWet = soil(true);
+PROP_SPRITES.crop1 = crop(1, false);
+PROP_SPRITES.crop2 = crop(2, false);
+PROP_SPRITES.crop3 = crop(3, false);
+PROP_SPRITES.cropRipe = crop(3, true);
+
+/** El dibujo de lo sembrado en una parcela: por tercios de lo que ha crecido, o maduro. */
+export function cropFrame(p: Plot): string | null {
+  if (!p.crop) return null;
+  if (p.crop.grown >= GROW_HOURS) return 'cropRipe';
+  return `crop${Math.min(3, 1 + Math.floor((3 * p.crop.grown) / GROW_HOURS))}`;
+}
 
 /** Hace un lienzo con todos los dibujos en fila y dice dónde empieza cada uno. */
 export function makePropAtlas(): { canvas: HTMLCanvasElement; frames: Record<string, number> } {

@@ -42,6 +42,15 @@ export const es = {
   seed: (s: number) => `Semilla: ${s}`,
   // H6c: con icono, para que la barra de arriba quepa (el nombre, al pasar el ratón).
   food: (n: number) => `🥫 ${n}`,
+  /** V1: «Comida: 10 latas, 4 hortalizas y 2 guisos». */
+  hudFoodTitle: (cans: number, veg: number, meals: number) =>
+    `Comida: ${list(
+      [
+        `${cans} ${cans === 1 ? 'lata' : 'latas'}`,
+        veg > 0 ? `${veg} ${veg === 1 ? 'hortaliza' : 'hortalizas'}` : '',
+        meals > 0 ? `${meals} ${meals === 1 ? 'guiso' : 'guisos'}` : '',
+      ].filter((x) => x !== ''),
+    )}`,
   bandages: (n: number) => `🩹 ${n}`,
   painkillers: (n: number) => `💊 ${n}`,
   hudTitles: {
@@ -54,6 +63,8 @@ export const es = {
   lootTool: 'Saquear',
   chopTool: 'Talar',
   chopToolHint: 'Marcar árboles para talar: clic o arrastrar (T)',
+  farmTool: 'Huerto', // V1
+  farmToolHint: 'Marcar el huerto en la hierba: clic o arrastrar (H)',
   buildTool: 'Construir',
   buildToolHint: 'Construir con madera (B)',
   workPanel: 'Trabajos',
@@ -135,6 +146,13 @@ export const es = {
   },
   craftNoTub: 'Hace falta un barreño',
   /** Al pasar el ratón por el barreño, una cisterna o un fregadero (H5b). */
+  /** El huerto al pasar el ratón (V1). */
+  plotLabels: {
+    empty: 'Huerto: sin sembrar',
+    ripe: 'Huerto: maduro, para cosechar',
+    growing: (pct: number, hours: number) =>
+      `Huerto: creciendo ${pct} % · ${hours > 0 ? `húmedo ${hours} h` : 'seco'}`,
+  },
   furnitureLabels: {
     tub: (l: number, max: number) => `Barreño: ${l} / ${max} litros`,
     cistern: (l: number, max: number) => `Cisterna: ${l} / ${max} litros`,
@@ -403,6 +421,7 @@ export const es = {
   hudIcons: {
     loot: '🎒',
     chop: '🪓',
+    farm: '🌱', // V1
     build: '🔨',
     storage: '📦',
     work: '📋',

@@ -6,6 +6,7 @@ import {
   CISTERN_LITERS,
   CLEAN_BANDAGE_HEAL,
   DIRTY_HOURS,
+  GROW_HOURS,
   LONELY_BELOW,
   MOOD_CRISIS,
   MOOD_EDGE,
@@ -32,6 +33,7 @@ import type {
   Garment,
   MemoryId,
   Pile,
+  Plot,
   SiteInfo,
   Survivor,
   Tone,
@@ -165,6 +167,15 @@ export function furnitureLabel(w: World, f: Furniture): string | null {
   if (f.kind === 'cistern') return t.cistern(l, CISTERN_LITERS);
   if (f.kind === 'sink') return mainsOn(w) ? t.sinkOn : t.sinkOff;
   return null;
+}
+
+/** «Huerto: creciendo 60 % · húmedo 20 h», «… · seco», «Huerto: maduro» o «Huerto: sin sembrar» (V1). */
+export function plotLabel(p: Plot): string {
+  const t = es.plotLabels;
+  if (!p.crop) return t.empty;
+  if (p.crop.grown >= GROW_HOURS) return t.ripe;
+  const pct = Math.floor((100 * p.crop.grown) / GROW_HOURS);
+  return t.growing(pct, Math.round(p.moisture));
 }
 
 /** La terminación de un adjetivo para esa prenda, por su artículo: rota, roto, rotas, rotos. */

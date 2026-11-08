@@ -120,3 +120,25 @@ test('Cortinas: en una ventana con cortinas las corre (o abre); en una sin corti
   buildAt(w, 'smashWindow', 7, 2);
   expect(w.orders).toEqual([{ type: 'placeBlueprint', kind: 'smashWindow', x: 7, y: 2 }]);
 });
+
+test('V1: clic con Huerto marca o desmarca la parcela (contando lo pendiente); arrastrar marca el rectángulo', async () => {
+  const { togglePlot, markPlotsIn } = await import('./tools');
+  const { plotMarked } = await import('../sim/farm');
+  const w = emptyWorld(8, 8);
+  w.base = { id: 0, kind: 'base', rect: { x: 0, y: 0, w: 2, h: 2 }, door: { x: 1, y: 1 } };
+  w.seen.fill(1);
+  togglePlot(w, 4, 4);
+  expect(plotMarked(w, 4, 4)).toBe(true);
+  togglePlot(w, 4, 4); // en pausa: lo deshace
+  expect(plotMarked(w, 4, 4)).toBe(false);
+  ordersSystem(w);
+  expect(w.plots).toEqual([]);
+  markPlotsIn(w, { x: 5, y: 6 }, { x: 3, y: 5 });
+  ordersSystem(w);
+  expect(w.plots).toHaveLength(6);
+  togglePlot(w, 3, 5);
+  ordersSystem(w);
+  expect(w.plots).toHaveLength(5);
+  markPlotsIn(w, { x: 0, y: 0 }, { x: 1, y: 1 }); // en la base, no
+  expect(w.orders).toEqual([]);
+});

@@ -11,8 +11,10 @@ import {
   buildKindAt,
   buildLine,
   liveBlueprints,
+  markPlotsIn,
   markTreesIn,
   pendingPlacements,
+  togglePlot,
   toggleTree,
   wallLine,
 } from '../game/tools';
@@ -42,7 +44,8 @@ import {
   type World,
   type Zombie,
 } from '../sim/types';
-import { buildingTitle, furnitureLabel, pileLabel, zombieLabel } from '../ui/describe';
+import { buildingTitle, furnitureLabel, pileLabel, plotLabel, zombieLabel } from '../ui/describe';
+import { plotAt, plotPos } from '../sim/farm';
 import { pileAt } from '../sim/piles';
 import { isRaining, mainsOn } from '../sim/water';
 import { visibleTiles } from '../sim/vision';
@@ -74,6 +77,7 @@ import {
   LABEL_SHADOW,
   DEBUG_PATH,
   FLASH_COLOR,
+  WILT_TINT,
 } from './colors';
 import { bubbleIcon } from './bubbles';
 import { hash2, lookTile, tileLook } from './look';
@@ -108,6 +112,7 @@ import {
 } from './people';
 import {
   campfireFrame,
+  cropFrame,
   itemCount,
   makePropAtlas,
   pileFrames,
@@ -1135,7 +1140,7 @@ export class GameScene extends Phaser.Scene {
 
   /**
    * Al pasar el ratón por el barreño, una cisterna o un fregadero vistos: su agua (H5b); por una
-   * bolsa en el suelo, qué es y cuántas cosas lleva (H5b2).
+   * bolsa en el suelo, qué es y cuántas cosas lleva (H5b2); por el huerto, cómo va (V1).
    */
   private drawWaterLabel(): void {
     const w = this.world;
@@ -1143,8 +1148,11 @@ export class GameScene extends Phaser.Scene {
     const seenHere = h !== null && w.seen[h.y * w.grid.width + h.x] === 1;
     const f = seenHere ? w.furniture.find((x) => x.pos.x === h.x && x.pos.y === h.y) : undefined;
     const pile = seenHere && !f ? pileAt(w, h.x, h.y) : undefined;
-    const text = f ? furnitureLabel(w, f) : pile ? pileLabel(pile) : null;
-    if (text === null) {
+    const plot = seenHere && !f ? plotAt(w, h.x, h.y) : undefined;
+    const text = f
+      ? furnitureLabel(w, f)
+      : ((pile ? pileLabel(pile) : null) ?? (plot ? plotLabel(plot) : null));
+    if (text === null || h === null) {
       this.waterLabel?.setVisible(false);
       return;
     }
@@ -1156,7 +1164,7 @@ export class GameScene extends Phaser.Scene {
       this.bubbleLayer.add(this.waterLabel);
     }
     if (this.waterLabel.text !== text) this.waterLabel.setText(text);
-    this.waterLabel.setPosition((f!.pos.x + 0.5) * TILE_PX, f!.pos.y * TILE_PX - 1);
+    this.waterLabel.setPosition((h.x + 0.5) * TILE_PX, h.y * TILE_PX - 1);
     this.waterLabel.setVisible(true);
   }
 
@@ -1523,6 +1531,11 @@ export class GameScene extends Phaser.Scene {
       else markTreesIn(w, d.from, d.to);
       return;
     }
+    if (d.mode === 'farm') {
+      if (click) togglePlot(w, d.from.x, d.from.y);
+      else markPlotsIn(w, d.from, d.to);
+      return;
+    }
     const kind = this.tool.buildKind;
     if (click || kind !== 'woodWall') buildAt(w, kind, d.from.x, d.from.y);
     else buildLine(w, kind, d.from, d.to);
@@ -1547,6 +1560,14 @@ export class GameScene extends Phaser.Scene {
         m.lineStyle(1, SELECTION_RING, 1);
         m.strokeRect(x + 1, y + 0.5, TILE_PX - 2, TILE_PX - 1);
       }
+    }
+    // El huerto (V1): la tierra, seca o mojada, y lo sembrado (mustio tras un día sin agua).
+    for (const p of w.plots) {
+      const at = plotPos(w, p);
+      if (!seen(at)) continue;
+      props.push({ frame: p.moisture > 0 ? 'soilWet' : 'soilDry', at });
+      const crop = cropFrame(p);
+      if (crop) props.push({ frame: crop, at, ...(p.crop!.dry >= 24 ? { tint: WILT_TINT } : {}) });
     }
     for (const c of w.containers) {
       if (!seen(c.pos)) continue;
@@ -1655,6 +1676,11 @@ export class GameScene extends Phaser.Scene {
       m.lineBetween(x + 4, y + 4, x + TILE_PX - 4, y + TILE_PX - 4);
       m.lineBetween(x + TILE_PX - 4, y + 4, x + 4, y + TILE_PX - 4);
     }
+    // Parcelas pedidas en pausa (V1): un recuadro hasta que se apliquen.
+    for (const o of w.orders) {
+      if (o.type !== 'markPlot' || !o.on) continue;
+      m.strokeRect(o.x * TILE_PX + 2, o.y * TILE_PX + 2, TILE_PX - 4, TILE_PX - 4);
+    }
     for (const b of liveBlueprints(w)) {
       this.drawBlueprint(b.kind, b.pos, BLUEPRINT, BLUEPRINT_ALPHA);
       const [x, y] = [b.pos.x * TILE_PX, b.pos.y * TILE_PX];
@@ -1675,7 +1701,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     const d = this.drag;
-    const area = d?.mode === 'chop' || d?.mode === 'loot';
+    const area = d?.mode === 'chop' || d?.mode === 'loot' || d?.mode === 'farm';
     if (d && area && (d.from.x !== d.to.x || d.from.y !== d.to.y)) {
       const [x, y] = [Math.min(d.from.x, d.to.x) * TILE_PX, Math.min(d.from.y, d.to.y) * TILE_PX];
       const rw = (Math.abs(d.from.x - d.to.x) + 1) * TILE_PX;

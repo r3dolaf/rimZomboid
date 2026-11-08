@@ -94,3 +94,18 @@ test('ir a un cuerpo dice "Va a registrar un cuerpo", no la casa -1 (H4d)', () =
   x.action = { type: 'search', containerId: c.id, ticksLeft: 5 };
   expect(activityText(x, w)).toBe('Registrando un cuerpo');
 });
+
+test('V1: el huerto al pasar el ratón', async () => {
+  const { plotLabel } = await import('./describe');
+  const { GROW_HOURS } = await import('../sim/balance');
+  expect(plotLabel({ tile: 0, moisture: 0, crop: null })).toBe('Huerto: sin sembrar');
+  expect(
+    plotLabel({ tile: 0, moisture: 20, crop: { grown: GROW_HOURS * 0.6, ripe: 0, dry: 0 } }),
+  ).toBe('Huerto: creciendo 60 % · húmedo 20 h');
+  expect(plotLabel({ tile: 0, moisture: 0, crop: { grown: 1, ripe: 0, dry: 3 } })).toBe(
+    'Huerto: creciendo 0 % · seco',
+  );
+  expect(plotLabel({ tile: 0, moisture: 5, crop: { grown: GROW_HOURS, ripe: 2, dry: 0 } })).toBe(
+    'Huerto: maduro, para cosechar',
+  );
+});

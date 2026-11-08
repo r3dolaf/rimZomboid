@@ -1,7 +1,7 @@
 import type { BuildKind } from '../sim/types';
 
-/** Herramientas del mapa (spec H4a §5): Saquear, Talar y Construir. */
-export type ToolMode = 'loot' | 'chop' | 'build';
+/** Herramientas del mapa (spec H4a §5): Saquear, Talar, Huerto (V1) y Construir. */
+export type ToolMode = 'loot' | 'chop' | 'farm' | 'build';
 
 /** Herramienta activa de la interfaz (como mucho una). Estado de la interfaz. */
 export interface Tool {

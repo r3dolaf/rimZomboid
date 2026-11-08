@@ -124,7 +124,16 @@ export const PROP_COLORS: Record<string, number> = {
   // Sangre seca bajo los cuerpos (A3).
   Y: 0x4e1414,
   V: 0x6e1c1c,
+  // El huerto (V1): tierra labrada (seca, de clara a oscura; mojada, más oscura), hojas y frutos.
+  D: 0x8a6a44,
+  E: 0x6a4e30,
+  H: 0x4a3420,
+  N: 0x33240f,
+  K: 0x9ccf5c,
+  T: 0xe07a2a,
 };
+/** V1: lo sembrado que lleva un día sin agua se ve mustio. */
+export const WILT_TINT = 0xd8c27a;
 
 /** Personas y zombis (A3): tonos de piel y de pelo, ojos, sangre, zapatos y la ropa interior. */
 export const SKIN_TONES = [0xf0c8a0, 0xe0b48c, 0xc89068, 0x9a6a48, 0x6e4a32];

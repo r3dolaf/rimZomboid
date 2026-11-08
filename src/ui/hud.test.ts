@@ -107,14 +107,17 @@ test('muestra la comida del almacén', () => {
       roadMap: 0,
       note: 0,
       seeds: 0,
-      veg: 0,
-      meal: 0,
+      veg: 4,
+      meal: 1,
       pieces: [],
     },
   );
-  expect(root.querySelector('[data-testid="hud-food"]')!.textContent).toBe('🥫 12');
+  // V1: la comida suma latas, hortalizas y guisos; al pasar el ratón, el desglose.
+  expect(root.querySelector('[data-testid="hud-food"]')!.textContent).toBe('🥫 17');
   expect(root.querySelector('[data-testid="hud-bandages"]')!.textContent).toBe('🩹 3');
-  expect((root.querySelector('[data-testid="hud-food"]') as HTMLElement).title).toBe('Comida');
+  expect((root.querySelector('[data-testid="hud-food"]') as HTMLElement).title).toBe(
+    'Comida: 12 latas, 4 hortalizas y 1 guiso',
+  );
 });
 
 test('los botones Saquear, Talar y Construir activan su herramienta (solo una a la vez)', () => {
@@ -319,15 +322,16 @@ test('M2: cada botón de la barra lleva su icono, que pinta el CSS (el texto no 
   mountHud(root, { seed: 1, time: createTimeController(), tool: createTool(), ...calls });
   const icon = (id: string) =>
     (root.querySelector(`[data-testid="${id}"]`) as HTMLElement).dataset.icon;
-  expect(['hud-loot-tool', 'hud-chop-tool', 'hud-build-tool'].map(icon)).toEqual([
+  expect(['hud-loot-tool', 'hud-chop-tool', 'hud-farm-tool', 'hud-build-tool'].map(icon)).toEqual([
     '🎒',
     '🪓',
+    '🌱', // V1
     '🔨',
   ]);
   expect(PANELS.map((p) => icon(`hud-${p}`))).toEqual(['📦', '📋', '🧵', '👕', '🧭', '🔔', '💾']);
   expect(root.querySelector('[data-testid="hud-craft"]')!.textContent).toBe('Fabricar');
   // Las herramientas y los paneles, cada grupo en su sitio (el CSS los mueve en pantalla pequeña).
-  expect(root.querySelectorAll('.hud-tools .hud-tool')).toHaveLength(3);
+  expect(root.querySelectorAll('.hud-tools .hud-tool')).toHaveLength(4);
   expect(root.querySelectorAll('.hud-panels .hud-tool')).toHaveLength(PANELS.length);
 });
 

@@ -133,6 +133,7 @@ export function mountHud(
     [
       ['loot', 'hud-loot-tool', es.lootTool, es.lootToolHint],
       ['chop', 'hud-chop-tool', es.chopTool, es.chopToolHint],
+      ['farm', 'hud-farm-tool', es.farmTool, es.farmToolHint], // V1
       ['build', 'hud-build-tool', es.buildTool, es.buildToolHint],
     ] as const
   ).map(([mode, testid, text, hint]) => {
@@ -327,8 +328,11 @@ export function mountHud(
       if (weather.hidden === storm) weather.hidden = !storm;
       const text = formatDayTime(t);
       if (time.textContent !== text) time.textContent = text;
-      const foodText = es.food(stock.food);
+      // V1: latas, hortalizas y guisos (el desglose, al pasar el ratón).
+      const foodText = es.food(stock.food + stock.veg + stock.meal);
       if (food.textContent !== foodText) food.textContent = foodText;
+      const foodTitle = es.hudFoodTitle(stock.food, stock.veg, stock.meal);
+      if (food.title !== foodTitle) food.title = foodTitle;
       const bandagesText = es.bandages(stock.bandage);
       if (bandages.textContent !== bandagesText) bandages.textContent = bandagesText;
       const painkillersText = es.painkillers(stock.painkillers);

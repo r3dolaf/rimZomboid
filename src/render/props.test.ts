@@ -100,3 +100,20 @@ test('el almacén: cajas en un palé por cada 10 cosas o menos, sin pasar de los
   expect(stockedPallets(13, 4)).toBe(2);
   expect(stockedPallets(500, 4)).toBe(4);
 });
+
+test('V1: el huerto: tierra seca y mojada, y lo sembrado por tercios hasta madurar', async () => {
+  const { cropFrame } = await import('./props');
+  const { GROW_HOURS } = await import('../sim/balance');
+  for (const f of ['soilDry', 'soilWet', 'crop1', 'crop2', 'crop3', 'cropRipe'])
+    expect(PROP_SPRITES[f], f).toBeDefined();
+  const plot = (grown: number | null) => ({
+    tile: 0,
+    moisture: 0,
+    crop: grown === null ? null : { grown, ripe: 0, dry: 0 },
+  });
+  expect(cropFrame(plot(null))).toBeNull();
+  expect(cropFrame(plot(0))).toBe('crop1');
+  expect(cropFrame(plot(GROW_HOURS / 2))).toBe('crop2');
+  expect(cropFrame(plot(GROW_HOURS - 1))).toBe('crop3');
+  expect(cropFrame(plot(GROW_HOURS))).toBe('cropRipe');
+});

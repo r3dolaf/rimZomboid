@@ -214,15 +214,76 @@ test('el botón Fabricar abre el panel de pedidos (H4d)', () => {
   expect(toggleCraft).toHaveBeenCalledTimes(1);
 });
 
-test('el botón Avisos abre su menú (H4e)', () => {
+const PANELS = ['storage', 'work', 'craft', 'expeditions', 'game'] as const;
+const toggleName = {
+  storage: 'toggleStorage',
+  work: 'toggleWork',
+  craft: 'toggleCraft',
+  expeditions: 'toggleExpeditions',
+  game: 'toggleGame',
+} as const;
+
+test('U1 §2: Atuendos y Avisos ya no están en la barra (son pestañas de Trabajos y Partida)', () => {
   const root = document.createElement('div');
-  const toggleNotices = vi.fn();
-  mountHud(root, { seed: 1, time: createTimeController(), toggleNotices });
-  const b = root.querySelector('[data-testid="hud-notices"]') as HTMLButtonElement;
-  expect(b.hidden).toBe(false);
-  expect(b.textContent).toBe('Avisos');
-  b.click();
-  expect(toggleNotices).toHaveBeenCalledTimes(1);
+  mountHud(root, { seed: 1, time: createTimeController(), toggleWork: vi.fn() });
+  for (const id of ['hud-outfits', 'hud-notices', 'hud-menu-outfits', 'hud-menu-notices'])
+    expect(root.querySelector(`[data-testid="${id}"]`)).toBeNull();
+});
+
+test('U1 §2: cada herramienta y cada panel dice su tecla en la ayuda; en el ☰, a la derecha', () => {
+  const root = document.createElement('div');
+  const calls = Object.fromEntries(PANELS.map((p) => [toggleName[p], vi.fn()]));
+  mountHud(root, { seed: 1, time: createTimeController(), tool: createTool(), ...calls });
+  const title = (id: string) => (root.querySelector(`[data-testid="${id}"]`) as HTMLElement).title;
+  expect(title('hud-loot-tool')).toMatch(/\(L\)$/);
+  expect(title('hud-chop-tool')).toMatch(/\(T\)$/);
+  expect(title('hud-build-tool')).toMatch(/\(B\)$/);
+  expect(PANELS.map((p) => title(`hud-${p}`).slice(-3))).toEqual([
+    '(I)',
+    '(J)',
+    '(F)',
+    '(E)',
+    '(P)',
+  ]);
+  const kbd = (p: string) => root.querySelector(`[data-testid="hud-menu-${p}"] kbd`)!.textContent;
+  expect(PANELS.map(kbd)).toEqual(['I', 'J', 'F', 'E', 'P']);
+});
+
+test('U1 §2: «⏸ En pausa» se ve en pausa (también la de los avisos) y pulsarlo sigue', () => {
+  const root = document.createElement('div');
+  const time = createTimeController();
+  const hud = mountHud(root, { seed: 1, time });
+  const sign = root.querySelector('[data-testid="hud-paused"]') as HTMLButtonElement;
+  expect(sign.hidden).toBe(true);
+  time.setSpeed(0); // como un aviso rojo
+  hud.update({ day: 1, hour: 8, minute: 0 }, emptyInventory());
+  expect(sign.hidden).toBe(false);
+  expect(sign.textContent).toBe('⏸ En pausa');
+  expect(document.body.classList.contains('game-paused')).toBe(true);
+  time.setSpeed(2);
+  time.setSpeed(0);
+  hud.update({ day: 1, hour: 8, minute: 0 }, emptyInventory());
+  sign.click();
+  expect(time.speed).toBe(2); // sigue como iba
+  expect(sign.hidden).toBe(true);
+  expect(document.body.classList.contains('game-paused')).toBe(false);
+});
+
+test('U1 §2: ❓ Ayuda, siempre en la barra (también en el móvil), abre la Ayuda', () => {
+  const root = document.createElement('div');
+  const toggleHelp = vi.fn();
+  mountHud(root, { seed: 1, time: createTimeController(), toggleHelp });
+  const help = root.querySelector('[data-testid="hud-help"]') as HTMLButtonElement;
+  expect(help.hidden).toBe(false);
+  expect(help.parentElement!.className).toBe('hud-bar');
+  expect(help.getAttribute('aria-label')).toContain('Ayuda');
+  expect(help.title).toMatch(/\(H\)$/);
+  help.click();
+  expect(toggleHelp).toHaveBeenCalledTimes(1);
+  // Sin Ayuda (en algún test), no sale.
+  const other = document.createElement('div');
+  mountHud(other, { seed: 1, time: createTimeController() });
+  expect((other.querySelector('[data-testid="hud-help"]') as HTMLElement).hidden).toBe(true);
 });
 
 test('con todos durmiendo muestra «x6 (durmiendo)» y ningún botón activo; al despertar, el elegido', () => {
@@ -240,17 +301,6 @@ test('con todos durmiendo muestra «x6 (durmiendo)» y ningún botón activo; al
   expect(badge.hidden).toBe(true);
   expect(root.querySelector('[data-speed="1"]')!.classList.contains('active')).toBe(true);
 });
-
-const PANELS = ['storage', 'work', 'craft', 'outfits', 'expeditions', 'notices', 'game'] as const;
-const toggleName = {
-  storage: 'toggleStorage',
-  work: 'toggleWork',
-  craft: 'toggleCraft',
-  outfits: 'toggleOutfits',
-  expeditions: 'toggleExpeditions',
-  notices: 'toggleNotices',
-  game: 'toggleGame',
-} as const;
 
 test('M2: el menú ☰ con los paneles se abre y se cierra; cada línea abre lo mismo que su botón', () => {
   const root = document.createElement('div');
@@ -312,7 +362,7 @@ test('M2: cada botón de la barra lleva su icono, que pinta el CSS (el texto no 
     '🪓',
     '🔨',
   ]);
-  expect(PANELS.map((p) => icon(`hud-${p}`))).toEqual(['📦', '📋', '🧵', '👕', '🧭', '🔔', '💾']);
+  expect(PANELS.map((p) => icon(`hud-${p}`))).toEqual(['📦', '📋', '🧵', '🧭', '💾']);
   expect(root.querySelector('[data-testid="hud-craft"]')!.textContent).toBe('Fabricar');
   // Las herramientas y los paneles, cada grupo en su sitio (el CSS los mueve en pantalla pequeña).
   expect(root.querySelectorAll('.hud-tools .hud-tool')).toHaveLength(3);

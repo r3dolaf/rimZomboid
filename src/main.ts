@@ -48,6 +48,7 @@ import { createFullscreen } from './ui/fullscreen';
 import { mountRotateHint } from './ui/rotateHint';
 import { mountSheet } from './ui/sheet';
 import { mountOutfitsPanel } from './ui/outfitsPanel';
+import { createPanelGroup } from './ui/panelGroup';
 import { mountStoragePanel } from './ui/storagePanel';
 import { mountStartScreen } from './ui/startScreen';
 import { createTool } from './ui/tool';
@@ -147,7 +148,14 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
   ];
   for (const f of panels) f.onChange((on) => on && panels.forEach((o) => o !== f && o.set(false)));
   const prefs = createPrefsStore();
-  const toggles = { toggleWork: workOpen.toggle, toggleCraft: craftOpen.toggle };
+  // U1 §3: Trabajos con Atuendos y Partida con Avisos, como pestañas (se crean tras los paneles).
+  const toggles = {
+    toggleWork: () => workGroup.toggle(),
+    toggleCraft: craftOpen.toggle,
+    toggleStorage: storageOpen.toggle,
+    toggleExpeditions: expeditionsOpen.toggle,
+    toggleGame: () => gameGroup.toggle(),
+  };
   // R (H4e): modo combate para los elegidos.
   const toggleDraft = () => {
     const o = draftToggle(view.world, selection.ids);
@@ -159,11 +167,6 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
     tool,
     narrator: style,
     ...toggles,
-    toggleNotices: noticesOpen.toggle,
-    toggleStorage: storageOpen.toggle,
-    toggleOutfits: outfitsOpen.toggle,
-    toggleExpeditions: expeditionsOpen.toggle,
-    toggleGame: gameOpen.toggle,
     fullscreen: createFullscreen(), // M3: en el menú ☰, si el navegador deja
     // M3: con ?debug=1, el modo depuración también desde el menú ☰ (en el móvil no hay F3).
     toggleDebug: debugUrl ? debugOpen.toggle : undefined,
@@ -239,6 +242,20 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
   const noticeMenu = mountNoticeMenu(ui, { prefs, open: noticesOpen });
   const storagePanel = mountStoragePanel(ui, viewed(view, { open: storageOpen }));
   const outfitsPanel = mountOutfitsPanel(ui, { world, open: outfitsOpen });
+  const panelEl = (id: string) => ui.querySelector<HTMLElement>(`[data-testid="${id}"]`)!;
+  const workGroup = createPanelGroup([
+    { id: 'work', label: es.workPanel, flag: workOpen, panel: panelEl('work-panel') },
+    {
+      id: 'outfits',
+      label: es.outfitsUi.title,
+      flag: outfitsOpen,
+      panel: panelEl('outfits-panel'),
+    },
+  ]);
+  const gameGroup = createPanelGroup([
+    { id: 'game', label: es.game.title, flag: gameOpen, panel: panelEl('game-panel') },
+    { id: 'notices', label: es.noticeMenu.title, flag: noticesOpen, panel: panelEl('notice-menu') },
+  ]);
   // H5c2: la ruta que se planea en el mapa del mundo, su ficha y «Ver en el mapa».
   const plan = createRoutePlan();
   const worldScene = () => game.scene.getScene('world') as WorldScene | null;

@@ -89,3 +89,53 @@ test('M silencia o vuelve a dar sonido (S1)', () => {
   press(window, { code: 'KeyM', key: 'm' });
   expect(toggleMute).toHaveBeenCalledTimes(1);
 });
+
+test('U1: I, E y P abren Almacén, Expediciones y Partida; H y ? la Ayuda', () => {
+  const time = createTimeController();
+  const calls = {
+    toggleStorage: vi.fn(),
+    toggleExpeditions: vi.fn(),
+    toggleGame: vi.fn(),
+    toggleHelp: vi.fn(),
+  };
+  bindTimeKeys(window, time, undefined, calls);
+  press(window, { code: 'KeyI', key: 'i' });
+  press(window, { code: 'KeyE', key: 'e' });
+  press(window, { code: 'KeyP', key: 'p' });
+  press(window, { code: 'KeyH', key: 'h' });
+  press(window, { code: 'Minus', key: '?' }); // en un teclado español, Mayús y la tecla del '
+  expect(calls.toggleStorage).toHaveBeenCalledTimes(1);
+  expect(calls.toggleExpeditions).toHaveBeenCalledTimes(1);
+  expect(calls.toggleGame).toHaveBeenCalledTimes(1);
+  expect(calls.toggleHelp).toHaveBeenCalledTimes(2);
+});
+
+test('U1: escribiendo en un campo, las teclas no hacen nada (ni Espacio)', () => {
+  const time = createTimeController();
+  const tool = createTool();
+  const toggleCraft = vi.fn();
+  bindTimeKeys(window, time, tool, { toggleCraft });
+  for (const tag of ['input', 'select', 'textarea'] as const) {
+    const field = document.createElement(tag);
+    document.body.append(field);
+    const space = press(field, { code: 'Space', key: ' ' });
+    press(field, { code: 'KeyL', key: 'l' });
+    press(field, { code: 'KeyF', key: 'f' });
+    press(field, { code: 'Digit3', key: '3' });
+    expect(space.defaultPrevented).toBe(false);
+    field.remove();
+  }
+  expect(time.speed).toBe(1);
+  expect(tool.mode).toBeNull();
+  expect(toggleCraft).not.toHaveBeenCalled();
+});
+
+test('U1: con Ctrl, Alt o Cmd no hacen nada (Ctrl+F busca en la página)', () => {
+  const time = createTimeController();
+  const toggleCraft = vi.fn();
+  bindTimeKeys(window, time, undefined, { toggleCraft });
+  press(window, { code: 'KeyF', key: 'f', ctrlKey: true });
+  press(window, { code: 'KeyF', key: 'f', metaKey: true });
+  press(window, { code: 'KeyF', key: 'f', altKey: true });
+  expect(toggleCraft).not.toHaveBeenCalled();
+});

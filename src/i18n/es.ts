@@ -52,11 +52,11 @@ export const es = {
   },
   lootTool: 'Saquear',
   chopTool: 'Talar',
-  chopToolHint: 'Marcar árboles para talar: clic o arrastrar (T)',
+  chopToolHint: 'Marcar árboles para talar: clic o arrastrar',
   buildTool: 'Construir',
-  buildToolHint: 'Construir con madera (B)',
+  buildToolHint: 'Construir con madera',
   workPanel: 'Trabajos',
-  workPanelHint: 'Quién hace qué (J)',
+  workPanelHint: 'Quién hace qué, y qué ropa se pone cada uno',
   wood: (n: number) => `🪵 ${n}`,
   inHand: (what: string) => `En la mano: ${what}`,
   /** Trabajos, en el orden del panel. */
@@ -71,10 +71,21 @@ export const es = {
   } satisfies Record<WorkType, string>,
   sheetTabs: {
     general: 'General',
-    skills: 'Habilidades',
+    skills: 'Trabajos',
     health: 'Salud',
-    clothes: 'Ropa',
-    bags: 'Bolsas',
+    clothes: 'Equipo',
+  },
+  /** U1 §5: en la ficha, la prioridad de cada trabajo y lo que explica la pestaña. */
+  sheetPriority: (work: string) => `Prioridad de ${work}`,
+  sheetSkillsHint: 'Prioridad (1 primero, 4 último, — no lo hace) y nivel de cada trabajo',
+  /** U1 §5: las barras de la tarjeta, con su nombre e icono (ficha y Ayuda). */
+  meters: {
+    health: { icon: '❤️', name: 'Salud' },
+    blood: { icon: '🩸', name: 'Sangre' },
+    hunger: { icon: '🍗', name: 'Hambre' },
+    sleep: { icon: '💤', name: 'Sueño' },
+    social: { icon: '💬', name: 'Social' },
+    mood: { icon: '🙂', name: 'Ánimo' },
   },
   // Bolsas (H5b2 §7)
   storageBags: { title: 'Bolsas' },
@@ -203,7 +214,7 @@ export const es = {
   } as Partial<Record<ItemKind, string>>,
   lostItem: (n: number, what: string) => `−${n} de ${what}`,
   craftPanel: 'Fabricar',
-  craftPanelHint: 'Pedidos en la mesa (F)',
+  craftPanelHint: 'Pedidos en la mesa',
   craftStock: (parts: string[]) => `En el almacén: ${parts.join(' · ')}`,
   craftNoTable: 'Hace falta una mesa',
   craftEmpty: 'Sin pedidos: añade uno abajo',
@@ -306,6 +317,10 @@ export const es = {
   /** «Cama — 6 tablas (tienes 12)» (H5c1 §8). */
   buildOption: (name: string, wood: number | string, have: number) =>
     `${name} — ${wood} ${wood === 1 ? 'tabla' : 'tablas'} (tienes ${have})`,
+  /** U1 §1: en el menú Construir, corto: «Cama · 6 🪵»; lo que hay, una vez arriba. */
+  buildChoice: (name: string, wood: number | string) => `${name} · ${wood} 🪵`,
+  buildHave: (have: number) => `Tienes ${have} 🪵`,
+  buildShort: 'Falta madera: el plano esperará a que la traigan',
   buildGroups: { furniture: 'Muebles', walls: 'Muros y puertas', fix: 'Arreglar' },
   /** El menú del clic derecho (H5c1 §8). */
   contextMenu: {
@@ -395,6 +410,12 @@ export const es = {
   },
   /** M2: el menú de los paneles, cuando no caben en la barra. */
   hudMenu: { button: '☰', hint: 'Paneles', debug: 'Depuración' },
+  /** U1 §2: la tecla de cada cosa, en su ayuda: «Almacén (I)». */
+  withKey: (hint: string, key: string) => `${hint} (${key})`,
+  /** U1 §2: el letrero de la pausa, que al pulsarlo sigue. */
+  paused: { text: '⏸ En pausa', hint: 'El juego está en pausa: pulsa para seguir (Espacio)' },
+  /** U1 §2: el botón de la Ayuda, siempre a la vista. */
+  helpButton: { icon: '❓', hint: 'Ayuda: cómo se juega, controles y consejos' },
   /** M3: pantalla completa (menú ☰) y el aviso de girar el móvil. */
   fullscreen: { enter: 'Pantalla completa', exit: 'Salir de pantalla completa', icon: '⛶' },
   rotateHint: {
@@ -413,6 +434,12 @@ export const es = {
   lockWeapon: 'Fijar',
   lockWeaponHint: 'No cambia ni devuelve lo que lleva en la mano',
   logToggle: { hide: 'Minimizar el registro', show: 'Abrir el registro' },
+  /** U1 §1: el botón que enseña los filtros del registro. */
+  logFilter: {
+    button: 'Filtrar',
+    hint: 'Elegir qué sucesos se ven',
+    some: (n: number) => `Filtrar (${n} ${n === 1 ? 'oculto' : 'ocultos'})`,
+  },
   /** Filtros del registro (H5 §10). */
   logCategories: {
     social: 'Social',
@@ -751,7 +778,7 @@ export const es = {
   // Guardar y cargar la partida (H6b).
   game: {
     button: 'Partida',
-    hint: 'Guardar, cargar, exportar o importar la partida',
+    hint: 'Guardar, cargar, exportar o importar la partida; sonido y avisos',
     title: 'Partida',
     save: 'Guardar ahora',
     saved: 'Partida guardada',
@@ -836,7 +863,7 @@ export const es = {
       options: readonly string[];
     }
   >,
-  lootToolHint: 'Marcar casas, muebles o cuerpos para saquear; arrastrar marca los cuerpos (L)',
+  lootToolHint: 'Marcar casas, muebles o cuerpos para saquear; arrastrar marca los cuerpos',
   pause: 'Pausa',
   pauseIcon: '⏸',
   speed: (n: number) => `x${n}`,

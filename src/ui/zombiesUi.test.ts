@@ -100,7 +100,7 @@ test('ficha: Salud, postura con tres botones y arma con su casilla Fijar (con ó
   s.equipped = 'bat';
   selection.set(s.id);
   sheet.update();
-  expect(q(root, 'sheet').textContent).toContain('Salud: 64');
+  expect(q(root, 'sheet-meter-health').textContent).toBe('❤️ Salud64'); // U1 §5
   expect(q(root, 'sheet-weapon').textContent).toContain('En la mano: bate');
   expect(q(root, 'sheet-stance-decide').classList.contains('selected')).toBe(true);
   q(root, 'sheet-stance-fight').click();
@@ -145,7 +145,7 @@ test('menú Construir: Reparar (1–3 tablas)', () => {
   const menu = mountBuildMenu(root, { tool, world: emptyWorld(5, 5) });
   tool.set('build');
   menu.update();
-  expect(q(root, 'build-repair').textContent).toBe('Reparar — 1–3 tablas (tienes 0)');
+  expect(q(root, 'build-repair').textContent).toBe('Reparar · 1–3 🪵');
   expect(q(root, 'build-fixDoor')).toBeNull(); // la elige Reparar sola
 });
 

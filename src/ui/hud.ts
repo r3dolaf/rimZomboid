@@ -13,15 +13,31 @@ export function formatDayTime(t: GameTime): string {
 
 const SPEEDS: readonly Speed[] = [0, 1, 2, 3];
 
-/** Los paneles que se abren desde la barra (o desde el menú ☰, M2), en este orden. */
-const PANELS = ['storage', 'work', 'craft', 'outfits', 'expeditions', 'notices', 'game'] as const;
+/**
+ * Los paneles que se abren desde la barra (o desde el menú ☰, M2), en este orden. U1 §2: Atuendos
+ * va en Trabajos y Avisos en Partida, como pestañas.
+ */
+const PANELS = ['storage', 'work', 'craft', 'expeditions', 'game'] as const;
 type PanelKey = (typeof PANELS)[number];
 
+/** U1 §2: la tecla de cada herramienta y cada panel (ver `keys.ts`). */
+const KEYS: Record<PanelKey | 'loot' | 'chop' | 'build', string> = {
+  loot: 'L',
+  chop: 'T',
+  build: 'B',
+  storage: 'I',
+  work: 'J',
+  craft: 'F',
+  expeditions: 'E',
+  game: 'P',
+};
+
 /**
- * Barra superior: hora, velocidad, comida, vendas y madera del almacén, herramientas (Saquear,
- * Talar, Construir), paneles (Almacén, Trabajos, Fabricar…), zombis a la vista y tormenta. Por
- * debajo de 1200 px, los paneles van en un menú ☰ y, en pantalla pequeña, las herramientas en una
- * columna a la derecha (M2: lo coloca el CSS).
+ * Barra superior: hora, velocidad (y «En pausa», U1), comida, vendas y madera del almacén,
+ * herramientas (Saquear, Talar, Construir), paneles (Almacén, Trabajos, Fabricar, Expediciones y
+ * Partida), zombis a la vista, tormenta y la Ayuda ❓ (U1). Por debajo de 1200 px, los paneles van
+ * en un menú ☰ y, en pantalla pequeña, las herramientas en una columna a la derecha (M2: lo coloca
+ * el CSS).
  */
 export function mountHud(
   root: HTMLElement,
@@ -30,18 +46,17 @@ export function mountHud(
     time: TimeController;
     tool?: Tool;
     narrator?: NarratorStyle;
+    /** Trabajos (con Atuendos, U1). */
     toggleWork?: () => void;
     toggleCraft?: () => void;
     /** H5: el panel de Almacén. */
     toggleStorage?: () => void;
-    /** El panel Atuendos (H5b). */
-    toggleOutfits?: () => void;
-    /** El menú de Avisos (H4e). */
-    toggleNotices?: () => void;
     /** El panel Expediciones (H5c1). */
     toggleExpeditions?: () => void;
-    /** H6b: el panel «Partida». */
+    /** H6b: el panel «Partida» (con Avisos, U1). */
     toggleGame?: () => void;
+    /** U1: la Ayuda (❓, siempre en la barra). */
+    toggleHelp?: () => void;
     /** M3: «⛶ Pantalla completa» en el menú ☰ (si el navegador deja). */
     fullscreen?: Fullscreen;
     /** M3: con `?debug=1`, «🐞 Depuración» en el menú ☰ (el F3 del móvil, para medir). */
@@ -81,6 +96,20 @@ export function mountHud(
     speeds.append(b);
     return b;
   });
+  // U1 §2: en pausa se dice (los avisos rojos pausan solos); pulsarlo sigue.
+  const paused = document.createElement('button');
+  paused.type = 'button';
+  paused.className = 'hud-paused';
+  paused.dataset.testid = 'hud-paused';
+  paused.textContent = es.paused.text;
+  paused.title = es.paused.hint;
+  paused.hidden = true;
+  paused.addEventListener('click', () => {
+    opts.time.togglePause();
+    refreshSpeed();
+    paused.blur();
+  });
+  speeds.append(paused);
   // Con todos durmiendo, el tiempo va solo más rápido (pulsar una velocidad lo quita esta noche).
   const sleepSpeed = document.createElement('span');
   sleepSpeed.className = 'hud-sleep-speed';
@@ -136,7 +165,13 @@ export function mountHud(
       ['build', 'hud-build-tool', es.buildTool, es.buildToolHint],
     ] as const
   ).map(([mode, testid, text, hint]) => {
-    const b = button(testid, text, hint, () => opts.tool?.toggle(mode), es.hudIcons[mode]);
+    const b = button(
+      testid,
+      text,
+      es.withKey(hint, KEYS[mode]),
+      () => opts.tool?.toggle(mode),
+      es.hudIcons[mode],
+    );
     b.hidden = !opts.tool;
     return { mode, b };
   });
@@ -149,15 +184,14 @@ export function mountHud(
     storage: { text: es.storage.button, hint: es.storage.hint, toggle: opts.toggleStorage },
     work: { text: es.workPanel, hint: es.workPanelHint, toggle: opts.toggleWork },
     craft: { text: es.craftPanel, hint: es.craftPanelHint, toggle: opts.toggleCraft },
-    outfits: { text: es.outfitsUi.button, hint: es.outfitsUi.hint, toggle: opts.toggleOutfits },
     expeditions: {
       text: es.expeditions.button,
       hint: es.expeditions.hint,
       toggle: opts.toggleExpeditions,
     },
-    notices: { text: es.noticesButton, hint: es.noticesButtonHint, toggle: opts.toggleNotices },
     game: { text: es.game.button, hint: es.game.hint, toggle: opts.toggleGame },
   };
+  for (const key of PANELS) panels[key].hint = es.withKey(panels[key].hint, KEYS[key]);
   const panelButtons = PANELS.map((key) => {
     const p = panels[key];
     const b = button(`hud-${key}`, p.text, p.hint, () => p.toggle?.(), es.hudIcons[key]);
@@ -206,7 +240,10 @@ export function mountHud(
     const label = document.createElement('span');
     label.className = 'label';
     label.textContent = p.text;
-    item.append(icon, label);
+    // U1 §2: su tecla, a la derecha (el CSS solo la enseña con ratón).
+    const kbd = document.createElement('kbd');
+    kbd.textContent = KEYS[key];
+    item.append(icon, label, kbd);
     item.addEventListener('click', () => {
       setMenu(false);
       p.toggle?.();
@@ -281,6 +318,20 @@ export function mountHud(
 
   // (El narrador está en el panel Partida, H6c, como la semilla.)
 
+  // U1 §2: la Ayuda, siempre a la vista (antes del ☰).
+  const help = document.createElement('button');
+  help.type = 'button';
+  help.className = 'hud-tool hud-help';
+  help.dataset.testid = 'hud-help';
+  help.textContent = es.helpButton.icon;
+  help.title = es.withKey(es.helpButton.hint, 'H');
+  help.setAttribute('aria-label', es.helpButton.hint);
+  help.hidden = !opts.toggleHelp;
+  help.addEventListener('click', () => {
+    opts.toggleHelp?.();
+    help.blur();
+  });
+
   // Las herramientas y los paneles, cada grupo en su caja: en pantalla ancha no se notan (el CSS
   // los deja en la fila); en la pequeña, las herramientas van en columna y los paneles, en el ☰.
   const toolBox = document.createElement('div');
@@ -302,6 +353,7 @@ export function mountHud(
     zombies,
     siege,
     weather,
+    help,
     more,
   );
   // El menú, fuera de la barra: así queda por encima de los paneles abiertos.
@@ -314,6 +366,8 @@ export function mountHud(
     shownSpeed = now;
     buttons.forEach((b, i) => b.classList.toggle('active', SPEEDS[i] === now));
     sleepSpeed.hidden = now !== 'boosted';
+    paused.hidden = now !== 0;
+    document.body?.classList.toggle('game-paused', now === 0);
   }
   refreshSpeed();
 

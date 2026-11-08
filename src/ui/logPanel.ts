@@ -7,6 +7,8 @@ import './panels.css';
 
 const COLLAPSED_KEY = 'rimzomboid.logCollapsed';
 const FILTERS_KEY = 'rimzomboid.logFilters';
+/** U1 §1: si los filtros están a la vista (al principio, no). */
+const SHOW_FILTERS_KEY = 'rimzomboid.logShowFilters';
 
 /** Tipos de suceso para filtrar el registro (H5 §10), en el orden de los botones. */
 export const LOG_CATEGORIES = [
@@ -147,6 +149,23 @@ function loadCollapsed(): boolean {
   return screenIs(SMALL_SCREEN);
 }
 
+/** Un sí/no guardado en el navegador; sin almacenamiento, no. */
+function loadFlag(key: string): boolean {
+  try {
+    return localStorage.getItem(key) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function saveFlag(key: string, on: boolean): void {
+  try {
+    localStorage.setItem(key, on ? '1' : '0');
+  } catch {
+    // Sin almacenamiento: solo dura esta partida.
+  }
+}
+
 function saveCollapsed(on: boolean): void {
   try {
     localStorage.setItem(COLLAPSED_KEY, on ? '1' : '0');
@@ -170,7 +189,17 @@ export function mountLog(root: HTMLElement, opts: { world: World }): { update():
   const toggle = document.createElement('button');
   toggle.type = 'button';
   toggle.dataset.testid = 'log-toggle';
-  head.append(title, toggle);
+  // U1 §1: «Filtrar» enseña o esconde los filtros (se recuerda).
+  const filterToggle = document.createElement('button');
+  filterToggle.type = 'button';
+  filterToggle.className = 'filter-toggle';
+  filterToggle.dataset.testid = 'log-filter-toggle';
+  filterToggle.textContent = es.logFilter.button;
+  filterToggle.title = es.logFilter.hint;
+  const tools = document.createElement('span');
+  tools.className = 'log-head-buttons';
+  tools.append(filterToggle, toggle);
+  head.append(title, tools);
   const list = document.createElement('ol');
   // Filtros (H5 §10): un botón por categoría, que se apaga y se enciende.
   const hidden = loadHidden();
@@ -194,6 +223,7 @@ export function mountLog(root: HTMLElement, opts: { world: World }): { update():
       b.classList.toggle('off', hidden.has(c));
       saveHidden(hidden);
       applyFilters();
+      refresh();
       b.blur();
     });
     filters.append(b);
@@ -203,9 +233,16 @@ export function mountLog(root: HTMLElement, opts: { world: World }): { update():
   root.append(panel);
 
   let collapsed = loadCollapsed();
+  let showFilters = loadFlag(SHOW_FILTERS_KEY);
   const refresh = () => {
     list.hidden = collapsed;
-    filters.hidden = collapsed;
+    filters.hidden = collapsed || !showFilters;
+    filterToggle.hidden = collapsed;
+    filterToggle.classList.toggle('active', showFilters);
+    filterToggle.setAttribute('aria-pressed', String(showFilters));
+    // Con algo apagado, se dice en el botón (si no, parecería que faltan sucesos).
+    const off = hidden.size > 0 ? es.logFilter.some(hidden.size) : es.logFilter.button;
+    if (filterToggle.textContent !== off) filterToggle.textContent = off;
     panel.classList.toggle('collapsed', collapsed);
     toggle.textContent = collapsed ? '▴' : '▾';
     const label = collapsed ? es.logToggle.show : es.logToggle.hide;
@@ -218,6 +255,13 @@ export function mountLog(root: HTMLElement, opts: { world: World }): { update():
     refresh();
     toggle.blur();
     if (!collapsed) panel.scrollTop = panel.scrollHeight;
+  });
+  filterToggle.addEventListener('click', () => {
+    showFilters = !showFilters;
+    saveFlag(SHOW_FILTERS_KEY, showFilters);
+    refresh();
+    filterToggle.blur();
+    if (showFilters) panel.scrollTop = panel.scrollHeight;
   });
   refresh();
 

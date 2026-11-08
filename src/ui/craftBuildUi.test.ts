@@ -53,15 +53,16 @@ test('Construir por grupos: cada botón con lo que gasta y lo que tienes; abajo,
   expect(inGroup(0)).toEqual(['build-bed', 'build-table', 'build-campfire', 'build-tub']);
   expect(inGroup(1)).toEqual(['build-woodWall', 'build-woodDoor']);
   expect(inGroup(2)).toEqual(['build-repair']);
-  expect(q('build-bed').textContent).toBe('Cama — 6 tablas (tienes 12)');
-  expect(q('build-repair').textContent).toBe('Reparar — 1–3 tablas (tienes 12)');
+  expect(q('build-bed').textContent).toBe('Cama · 6 🪵');
+  expect(q('build-repair').textContent).toBe('Reparar · 1–3 🪵');
   expect(q('build-desc').textContent).toContain('muro'); // lo elegido al empezar: Muro
   q('build-bed').click();
   menu.update();
   expect(q('build-desc').textContent).toContain('se duerme mejor');
   world.storage.items.wood = 3;
   menu.update();
-  expect(q('build-bed').textContent).toBe('Cama — 6 tablas (tienes 3)');
+  expect(q('build-have').textContent).toBe('Tienes 3 🪵');
+  expect(q('build-bed').classList.contains('short')).toBe(true);
 });
 
 test('Fabricar por grupos: cada receta dice «usa → da · dónde · tiempo»', () => {

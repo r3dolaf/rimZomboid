@@ -196,9 +196,52 @@
 }
 .sheet .skill {
   display: grid;
-  grid-template-columns: 90px 24px 1fr 32px;
+  grid-template-columns: 84px 34px 20px 1fr 30px;
   align-items: center;
   gap: 6px;
+}
+.sheet .skills-head {
+  margin: 0 0 2px;
+  font-size: 12px;
+}
+/* U1 §5: Combate y Postura, arriba en General. */
+.sheet .actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 4px 0 2px;
+}
+.sheet .actions .stance {
+  margin: 0;
+}
+/* U1 §5: sus barras con nombre, con los colores de la tarjeta. */
+.sheet .meters {
+  display: grid;
+  gap: 3px;
+  margin: 8px 0 4px;
+}
+.sheet .meter {
+  display: grid;
+  grid-template-columns: 92px 1fr 28px;
+  align-items: center;
+  gap: 6px;
+}
+.sheet .meter .bar {
+  display: block;
+  height: 6px;
+  margin: 0;
+}
+.sheet .meter .bar[data-need='blood'] {
+  height: 4px;
+}
+.sheet .meter .bar .fill {
+  display: block;
+}
+.sheet .meter .value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
 }
 .sheet .skill .level {
   font-weight: 600;
@@ -277,11 +320,9 @@
   margin: 6px 0 0;
 }
 /* Prioridades (H4d): el número en una cajita; "—" atenuado cuando no lo hace. */
-.sheet .work button {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 2px 7px 2px 3px;
+/* U1 §5: la prioridad de cada trabajo, en su fila de la pestaña Trabajos. */
+.sheet .work-prio {
+  padding: 1px 3px;
   border: 1px solid #555;
   border-radius: 4px;
   background: #2a2d31;
@@ -289,10 +330,10 @@
   font: inherit;
   cursor: pointer;
 }
-.sheet .work button.off {
+.sheet .work-prio.off {
   opacity: 0.55;
 }
-.sheet .work .prio,
+.sheet .work-prio .prio,
 .work-panel button.prio {
   display: inline-block;
   min-width: 1.5em;
@@ -310,7 +351,7 @@
   font-weight: 700;
   cursor: pointer;
 }
-.sheet .work .prio.off,
+.sheet .work-prio .prio.off,
 .work-panel button.prio.off {
   background: none;
   font-weight: 400;
@@ -473,6 +514,18 @@
   background: #e08a2c;
   border-color: #e08a2c;
   color: #111;
+}
+/* U1 §1: sin madera bastante, más apagado (se puede poner igual). */
+.build-menu button.short:not(.selected) {
+  color: #9a9690;
+  border-style: dashed;
+}
+.build-menu .build-have {
+  width: 100%;
+  margin: 0 0 2px;
+  text-align: center;
+  font-size: 12px;
+  opacity: 0.85;
 }
 /* Por grupos (H5c1 §8), con la frase de lo elegido abajo. */
 .build-menu .build-group {
@@ -720,6 +773,40 @@
 .notice-menu .reset {
   margin-top: 10px;
 }
+/* U1 §3: Avisos es una pestaña de Partida, así que sale en su mismo sitio y con su ancho. */
+.work-panel.notice-menu {
+  top: 56px;
+  right: 12px;
+  left: auto;
+  transform: none;
+  box-sizing: border-box;
+  width: 320px;
+  max-height: calc(100vh - 180px);
+}
+
+/* U1 §3: las pestañas de los paneles que van juntos (Trabajos y Atuendos; Partida y Avisos). */
+.panel-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 8px 0 6px;
+  border-bottom: 1px solid #444;
+}
+.panel-tabs button {
+  padding: 3px 12px;
+  border: 1px solid #444;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  background: #24272b;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  opacity: 0.7;
+}
+.panel-tabs button.selected {
+  background: #33373c;
+  opacity: 1;
+  font-weight: 600;
+}
 
 /* Pestaña Salud (H5 §10). */
 .sheet .health .part {
@@ -785,13 +872,38 @@
   background: rgb(15, 17, 20);
 }
 .log .log-filters button {
-  padding: 0 5px;
+  padding: 1px 7px;
+  border: 1px solid #c9a227;
+  border-radius: 10px;
+  background: #3a3220;
+  color: #f2e2a8;
+  font: inherit;
   font-size: 11px;
   cursor: pointer;
 }
+/* Apagado: sin color y tachado. */
 .log .log-filters button.off {
-  opacity: 0.4;
+  border-color: #555;
+  background: none;
+  color: #999;
   text-decoration: line-through;
+}
+/* U1 §1: los botones de la cabecera (Filtrar y plegar). */
+.log .log-head-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.log header .filter-toggle {
+  padding: 0 6px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.log header .filter-toggle.active {
+  border-color: #c9a227;
+  color: #f2c641;
 }
 
 /* Panel de Almacén (H5 §10). */
@@ -1091,7 +1203,8 @@ body.with-map-tabs .work-panel {
   position: absolute;
   right: 12px;
   top: 56px;
-  width: 300px;
+  box-sizing: border-box;
+  width: 320px;
   padding: 10px 12px;
   background: rgba(20, 22, 26, 0.94);
   border: 1px solid #3a3d42;

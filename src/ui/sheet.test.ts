@@ -148,7 +148,9 @@ test('una prioridad por trabajo ("—" sin permiso) y "En la mano: hacha"', () =
     '—',
     '4',
   ]);
-  expect(cell('haul').textContent).toContain('Transportar');
+  // U1 §5: en la fila de su trabajo, en la pestaña Trabajos (el botón dice a qué es).
+  expect(cell('haul').getAttribute('aria-label')).toBe('Prioridad de Transportar');
+  expect(cell('haul').closest('[data-testid="sheet-skill-haul"]')).not.toBeNull();
   cell('build').click();
   expect(world.orders).toEqual([
     { type: 'setWork', survivorId: s.id, work: 'build', enabled: true },

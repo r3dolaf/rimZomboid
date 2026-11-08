@@ -5,6 +5,19 @@
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-l: env(safe-area-inset-left, 0px);
 }
+/* U1 §1: lo que tiene `hidden` no se ve nunca, aunque su estilo diga otra cosa (la ficha enseñaba
+   las Habilidades en todas las pestañas porque `display: grid` le ganaba a `[hidden]`). */
+#hud [hidden] {
+  display: none !important;
+}
+/* U1 §1: con el teclado se ve dónde está el foco. */
+#hud button:focus-visible,
+#hud select:focus-visible,
+#hud input:focus-visible,
+#hud [tabindex]:focus-visible {
+  outline: 2px solid #f2c641;
+  outline-offset: 1px;
+}
 .hud-bar {
   position: fixed;
   top: 0;
@@ -112,6 +125,56 @@ body.tool-build canvas {
   font-weight: bold;
 }
 
+/* U1 §2: «⏸ En pausa», naranja, junto a las velocidades; pulsarlo sigue. (Con `.hud-speeds`,
+   para ganar al estilo de los botones de velocidad.) */
+.hud-speeds .hud-paused {
+  pointer-events: auto;
+  align-self: center;
+  padding: 3px 8px;
+  border: 1px solid #e08a2c;
+  border-radius: 4px;
+  background: #4a2e12;
+  color: #ffd6a8;
+  font: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  animation: hud-paused-pulse 1.6s ease-in-out infinite;
+}
+@keyframes hud-paused-pulse {
+  50% {
+    border-color: #ffb469;
+    background: #5e3a16;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hud-speeds .hud-paused {
+    animation: none;
+  }
+}
+/* U1 §2: la Ayuda, en la punta derecha (antes del ☰ cuando lo hay). */
+.hud-help {
+  margin-left: auto;
+  min-width: 32px;
+  font-size: 15px;
+}
+/* La tecla de cada panel en el ☰: solo con ratón (con el dedo no hay teclado). */
+.hud-menu kbd {
+  margin-left: auto;
+  padding: 0 5px;
+  border: 1px solid #555;
+  border-radius: 3px;
+  color: #bbb;
+  font:
+    11px/1.5 ui-monospace,
+    monospace;
+}
+@media not ((hover: hover) and (pointer: fine)) {
+  .hud-menu kbd {
+    display: none;
+  }
+}
+
 /* M2: las herramientas y los paneles, cada grupo en su caja; en pantalla ancha, en la fila. */
 .hud-tools,
 .hud-panels {
@@ -175,7 +238,7 @@ body.tool-build canvas {
   .hud-more {
     display: inline-block;
     min-width: 36px;
-    margin-left: auto;
+    margin-left: 0;
     font-size: 16px;
   }
   .hud-menu {
@@ -219,13 +282,18 @@ body.tool-build canvas {
      derecha, pero el ☰ queda siempre en su sitio. */
   .hud-bar {
     overflow: hidden;
-    padding-right: calc(62px + var(--safe-r));
+    padding-right: calc(112px + var(--safe-r));
   }
-  .hud-more {
+  .hud-more,
+  .hud-help {
     position: absolute;
     top: calc(4px + var(--safe-t));
     bottom: 4px;
     right: calc(10px + var(--safe-r));
+  }
+  .hud-help {
+    right: calc(60px + var(--safe-r));
+    min-width: 44px;
   }
 }
 
@@ -242,7 +310,8 @@ body.tool-build canvas {
     min-height: 44px;
   }
   #hud .hud-speeds button,
-  #hud .hud-more {
+  #hud .hud-more,
+  #hud .hud-help {
     min-width: 44px;
   }
 }

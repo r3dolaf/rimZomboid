@@ -53,6 +53,9 @@ Asentarse (huerto, agua y estaciones):
 - **Agua** (💧 arriba): se bebe del fregadero mientras hay agua corriente (se corta entre los días 7
   y 14); después, de barriles de lluvia (Construir), barreños, cisternas y botellas. Para las
   expediciones, botellas (o un río por el camino).
+- **Amputar**: un mordisco en un brazo o una pierna pregunta si se amputa (hay 8 horas, y hace falta
+  algo para cortar y 2 vendas). Si se hace a tiempo, la infección no le mata, pero pierde el brazo o
+  la pierna para siempre.
 - **Estaciones**: el año dura 60 días y empieza en verano. En invierno no crece nada y hiela: hace
   falta ropa de abrigo y hogueras con leña (Transportar se la lleva). La estación y la temperatura
   están junto a las pestañas de mapa.

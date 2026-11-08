@@ -85,6 +85,15 @@ que se cultiva, con amenazas nuevas cuando ya se es autosuficiente (pedido por e
 | **V2. Beber**             | Sed (ánimo, sangre y muerte de sed); beber del fregadero (uno en la base), de barreños, barriles y cisternas, de las botellas del almacén o de las suyas; barril de lluvia; de viaje (botellas, el compañero, los ríos) y Expediciones propone botellas; dar de beber al derribado; 💧 en la barra de arriba y avisos de poca agua y de sed sin agua; 6 botellas al empezar y fregaderos y cisternas en los sitios; spec `2026-11-08-v2-beber-design.md`                                                           | Hecho  |
 | **V3. Estaciones y frío** | Año de 60 días (verano, otoño, invierno, primavera) y temperatura (el día, la lluvia, bajo techo, la hoguera); el abrigo de la ropa y la sensación térmica (frío, helado y calor; muerte de frío; calentarse); la hoguera gasta leña y Transportar se la lleva; vestirse según el frío; el huerto se para con frío y se hiela; nieve; lo fresco aguanta más; zombis más lentos; olas de frío y de calor; la estación junto a las pestañas y la hierba según la estación; spec `2026-11-08-v3-estaciones-design.md` | Hecho  |
 
+## Decisiones duras
+
+Que lo que más mata (la infección) deje decidir al jugador, y otras decisiones que den historias
+(pedido por el usuario tras el bloque Asentarse: «sigue»).
+
+| Paso               | Qué se hace                                                                                                                                                                                                                                                                                                      | Estado |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| **B1. Amputación** | Un mordisco en un brazo o una pierna saca «¿Amputar?» (8 h, con algo para cortar y 2 vendas): se pierde la parte para siempre, se cae y se pierde sangre (más si sale mal; mejor con Sanar) y la infección se cura si venía de ese mordisco; los golpes ya no van ahí; spec `2026-11-08-b1-amputacion-design.md` | Hecho  |
+
 ## Pendientes
 
 Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al planificar el hito indicado.

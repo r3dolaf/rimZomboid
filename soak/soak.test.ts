@@ -69,8 +69,10 @@ test.each([1, 2, 3])(
           if (lying(s) || (b && (b.x !== s.pos.x || b.y !== s.pos.y))) moved.add(s.id);
         }
       }
-      // H2: con ~10 días de comida, el almacén está vacío antes del día 15
-      if (day === 15) expect(w.storage.items.food, 'comida el día 15').toBe(0);
+      // H2: con ~10 días de comida, el almacén está vacío antes del día 15 (V2: si siguen todos; sin
+      // saquear ni barriles, tras el corte del agua alguien puede morir de sed y sobrar comida)
+      if (day === 15 && w.common.dead.length === 0)
+        expect(w.storage.items.food, 'comida el día 15').toBe(0);
       // sin bloqueos: cada superviviente se ha movido en algún momento del día (o ha estado
       // acostado: descansando o derribado, H5)
       for (const s of w.survivors)

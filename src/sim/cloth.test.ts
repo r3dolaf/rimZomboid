@@ -112,7 +112,17 @@ test('al empezar: todas las ventanas con cortinas abiertas, sin pedidos y con la
 });
 
 test('Fabricar: trabajo y habilidad nuevos, detrás de Construir; todos lo tienen; Manitas y Torpe, ±2', () => {
-  expect(SKILLS).toEqual(['heal', 'social', 'build', 'craft', 'haul', 'chop', 'loot', 'fight']);
+  expect(SKILLS).toEqual([
+    'heal',
+    'social',
+    'build',
+    'craft',
+    'haul',
+    'farm', // V1
+    'chop',
+    'loot',
+    'fight',
+  ]);
   expect(defaultWork([]).craft).toBe(true);
   expect(defaultWork(['coward']).craft).toBe(true);
   expect(TRAIT_SKILL_MODS.handy).toEqual({ build: 2, craft: 2 });
@@ -126,6 +136,7 @@ test('Fabricar: trabajo y habilidad nuevos, detrás de Construir; todos lo tiene
       build: 3,
       craft: 3,
       haul: 3,
+      farm: 3,
       chop: 3,
       loot: 3,
     });

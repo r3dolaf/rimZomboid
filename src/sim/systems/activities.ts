@@ -8,6 +8,7 @@ import { finishConsoling } from '../consoling';
 import { nearTable } from '../furniture';
 import { workOnBlueprint } from '../jobs/build';
 import { finishChop } from '../jobs/chop';
+import { tendStep } from '../jobs/farm';
 import { mercyStep } from '../death';
 import { bandageStep } from '../jobs/medical';
 import { finishCraft, unloadAfterCraft } from '../jobs/craft';
@@ -103,6 +104,9 @@ export function activitiesSystem(w: World): void {
       if (a.ticksLeft > 0) continue;
       finishPry(w, s, a.door);
       s.action = { type: 'idle', ticksLeft: 0 };
+    } else if (a.type === 'tend') {
+      // Cultivar (V1 §4): se aprende con cada momento de trabajo.
+      if (tendStep(w, s, a)) s.action = { type: 'idle', ticksLeft: 0 };
     } else if (a.type === 'dress') {
       // Vistiéndose (H5b §4): ya se ha cambiado; tarda lo suyo.
       if (--a.ticksLeft > 0) continue;

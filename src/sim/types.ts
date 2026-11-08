@@ -296,7 +296,11 @@ export type Activity =
   // Llenar el barreño (H5b §6): coger agua o un cubo en el almacén, llenarlo en una fuente y vaciarlo.
   | { type: 'takeWater'; tubId: number }
   | { type: 'fillBucket'; sourceId: number; tubId: number }
-  | { type: 'pourWater'; tubId: number };
+  | { type: 'pourWater'; tubId: number }
+  // El huerto (V1 §4): coger semillas, ir a por agua para regar y trabajar una parcela.
+  | { type: 'takeSeeds' }
+  | { type: 'fillCan'; sourceId: number }
+  | { type: 'tend'; tile: number; what: TendKind };
 
 export type Action =
   /** `wait`: esperando tras no encontrar camino (no se consulta al cerebro) o tras negarse a trabajar. */
@@ -340,7 +344,9 @@ export type Action =
   // Descansando por dolor (y, en H5 §7, por fiebre): acostado sin trabajar.
   | { type: 'rest' }
   // Vistiéndose (H5b §4).
-  | { type: 'dress'; ticksLeft: number };
+  | { type: 'dress'; ticksLeft: number }
+  // Sembrando, regando o cosechando una parcela (V1 §4).
+  | { type: 'tend'; tile: number; what: TendKind; ticksLeft: number };
 
 export interface Survivor {
   id: number;
@@ -422,6 +428,8 @@ export interface Survivor {
   trip: Trip | null;
   /** La bolsa que lleva en la mano para dejarla en el almacén (Transportar, H5b2 §5). */
   haulingBag?: number;
+  /** Litros que lleva para regar el huerto (V1 §4; no pesan y se quedan para la próxima vez). */
+  waterCan?: number;
 }
 
 /** Un atuendo (H5b §4): las prendas que se puede poner y si acepta ropa de muertos. */
@@ -522,7 +530,18 @@ export interface Horde {
 }
 
 /** Trabajos, en orden de criticidad (spec H4a §3.1; Sanar, de H4e, el primero). */
-export type WorkType = 'heal' | 'social' | 'build' | 'craft' | 'haul' | 'chop' | 'loot';
+export type WorkType =
+  | 'heal'
+  | 'social'
+  | 'build'
+  | 'craft'
+  | 'haul'
+  | 'farm' // V1: Cultivar
+  | 'chop'
+  | 'loot';
+
+/** Lo que se hace en una parcela (V1 §4). */
+export type TendKind = 'sow' | 'water' | 'harvest';
 
 /** Habilidades (H4c): una por trabajo y Pelear. */
 export type SkillId = WorkType | 'fight';

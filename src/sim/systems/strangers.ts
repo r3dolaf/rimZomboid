@@ -197,6 +197,7 @@ export function newStranger(w: World, start: Point, taken: readonly string[] = [
       build: true,
       craft: true,
       haul: true,
+      farm: true,
       chop: false,
       loot: false,
     },

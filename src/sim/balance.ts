@@ -128,6 +128,17 @@ export const WITHER_DRY_HOURS = 3 * 24;
 export const RIPE_ROT_HOURS = 4 * 24;
 /** Se riega lo que tiene menos de estas horas de humedad (así no llega a secarse). */
 export const WATER_BELOW_HOURS = 6;
+// Cultivar (V1 §4): lo que se tarda con Cultivar 5, lo que da la cosecha y lo que se coge.
+export const SOW_TICKS = 25; // 5 minutos
+export const WATER_TICKS = 15; // 3 minutos
+export const HARVEST_TICKS = 50; // 10 minutos
+/** Hortalizas por parcela: 3 con Cultivar 0, 4 con 5 y 5 con 10 (la fracción, a veces). */
+export const HARVEST_VEG_BASE = 3;
+export const HARVEST_VEG_PER_LEVEL = 0.2;
+/** Semillas por parcela: 1 y otra con esta probabilidad. */
+export const HARVEST_EXTRA_SEED = 0.5;
+export const SOW_TAKE_MAX = 10;
+export const WATER_CAN_LITERS = 4;
 export const EAT_TICKS = 30; // 6 minutos de juego
 // De noche casi todos se acuestan (< 95) y nadie se levanta hasta las 06:00: así los ritmos se
 // sincronizan con la noche aunque alguien eche una siesta de día (< 10).

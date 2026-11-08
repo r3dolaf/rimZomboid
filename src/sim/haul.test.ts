@@ -33,6 +33,7 @@ function scene(): { w: World; a: Survivor } {
       build: false,
       craft: false,
       haul: false,
+      farm: false,
       chop: false,
       loot: false,
     };

@@ -36,13 +36,14 @@ export const SKILLS: readonly SkillId[] = [
   'build',
   'craft',
   'haul',
+  'farm', // V1
   'chop',
   'loot',
   'fight',
 ];
 
-/** Las que se sortean como en H4c (Sanar va aparte; ver `rollSkills`). */
-const ROLLED: readonly SkillId[] = SKILLS.filter((k) => k !== 'heal');
+/** Las que se sortean como en H4c (Sanar y Cultivar van aparte; ver `rollSkills`). */
+const ROLLED: readonly SkillId[] = SKILLS.filter((k) => k !== 'heal' && k !== 'farm');
 
 /**
  * El azar de las habilidades de cada colono: la semilla del mundo y su id. Así sortearlas no
@@ -59,6 +60,8 @@ export function rollSkills(rng: RngState, traits: readonly TraitId[]): Record<Sk
   out[pick(rng, ROLLED)].level = nextInt(rng, SPECIALTY_MIN, SPECIALTY_MAX);
   // Sanar (H4e), después y sin poder ser la especialidad: así lo de antes sale igual.
   out.heal = { level: nextInt(rng, 0, SKILL_START_MAX), xp: 0 };
+  // Cultivar (V1), después de Sanar y por lo mismo.
+  out.farm = { level: nextInt(rng, 0, SKILL_START_MAX), xp: 0 };
   for (const t of traits) {
     const mods: Partial<Record<SkillId, number>> =
       t in TRAIT_SKILL_MODS ? TRAIT_SKILL_MODS[t as keyof typeof TRAIT_SKILL_MODS] : {};

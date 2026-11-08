@@ -30,6 +30,7 @@ test('oculto hasta que se abre; una fila por colono y una columna por trabajo, e
     'Construir',
     'Fabricar',
     'Transportar',
+    'Cultivar', // V1
     'Talar',
     'Saquear',
     'Pelear', // H4c: la columna de la postura es la de Pelear

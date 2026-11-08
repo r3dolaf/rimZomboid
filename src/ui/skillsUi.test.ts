@@ -58,6 +58,7 @@ test('Habilidades: una fila por habilidad con su nivel y la barrita de la práct
     'Construir',
     'Fabricar',
     'Transportar',
+    'Cultivar', // V1
     'Talar',
     'Saquear',
     'Pelear',
@@ -131,6 +132,7 @@ test('panel de Trabajos como matriz: columnas por habilidad, casilla y nivel; el
     'Construir',
     'Fabricar',
     'Transportar',
+    'Cultivar', // V1
     'Talar',
     'Saquear',
     'Pelear',

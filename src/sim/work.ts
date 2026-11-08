@@ -12,6 +12,7 @@ import { contains } from './geom';
 import { buildJob, buildStillWorth } from './jobs/build';
 import { chopJob, chopStillWorth, returnAxeJob } from './jobs/chop';
 import { pryJob, pryStillWorth } from './jobs/pry';
+import { farmJob, farmStillWorth, sowJob } from './jobs/farm';
 import { craftJob, craftStillWorth } from './jobs/craft';
 import { deliverJob, haulJob, haulStillWorth } from './jobs/haul';
 import { healJob, healStillWorth } from './jobs/heal';
@@ -128,6 +129,9 @@ export function findWork(s: Survivor, w: World): Action | null {
     // La madera que lleva, a un plano que la necesite.
     const deliver = may(s, 'haul') ? deliverJob(s, w) : null;
     if (deliver) return deliver;
+    // Las semillas que lleva, al huerto (V1).
+    const sow = may(s, 'farm') ? sowJob(s, w) : null;
+    if (sow) return sow;
     return (loot ? (pryJob(s, w) ?? lootJob(s, w)) : null) ?? goUnload(w);
   }
   const back = returnAxeJob(s, w);
@@ -153,6 +157,7 @@ export function findWork(s: Survivor, w: World): Action | null {
   const jobs: [WorkType, () => Action | null][] = [
     ['heal', () => healJob(s, w)], // H4e
     ['build', () => buildJob(s, w)],
+    ['farm', () => farmJob(s, w)], // V1: lo maduro se pudre y lo seco se pierde
     ['craft', () => craftJob(s, w)],
     // H5b: también llenar el barreño; H5b2: y las bolsas guardadas.
     ['haul', () => haulJob(s, w) ?? waterJob(s, w) ?? packJob(s, w)],
@@ -203,6 +208,9 @@ const WORK_ACTIONS: ReadonlySet<string> = new Set([
   'givePainkiller',
   'fetchFood', // H6c
   'giveFood',
+  'takeSeeds', // V1
+  'fillCan',
+  'tend',
 ]);
 
 /** ¿Está trabajando (o yendo a trabajar)? */
@@ -238,6 +246,7 @@ export function stillWorthIt(s: Survivor, w: World): boolean {
   if (what === 'takeWater' || what === 'fillBucket' || what === 'pourWater')
     return waterStillWorth(s, w);
   if (what === 'build') return buildStillWorth(s, w);
+  if (what === 'takeSeeds' || what === 'fillCan' || what === 'tend') return farmStillWorth(s, w);
   if (what === 'swapWeapon') return swapWeaponStillWorth(s, w);
   if (what === 'dress') return dressStillWorth(s);
   if (what === 'bags') return bagStillWorth(s);

@@ -28,6 +28,7 @@ function world(): World {
     build: false,
     craft: true,
     haul: false,
+    farm: false,
     chop: false,
     loot: false,
   };
@@ -195,7 +196,7 @@ test('al terminar lleva lo hecho al almacén antes de nada, aunque tenga Saquear
   const w = world();
   const s = w.survivors[0]!;
   s.work.loot = true;
-  s.priorities = { heal: 3, social: 3, build: 3, craft: 1, haul: 3, chop: 3, loot: 3 };
+  s.priorities = { heal: 3, social: 3, build: 3, craft: 1, haul: 3, farm: 3, chop: 3, loot: 3 };
   w.containers.push({
     id: 90,
     houseId: -1,

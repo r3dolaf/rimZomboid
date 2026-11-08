@@ -98,6 +98,7 @@ test('se marcan como cualquier mueble, y quien saquea los registra: "ha registra
     build: false,
     craft: false,
     haul: false,
+    farm: false,
     chop: false,
     loot: true,
   };

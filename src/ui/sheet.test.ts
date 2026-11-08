@@ -133,10 +133,11 @@ test('una prioridad por trabajo ("—" sin permiso) y "En la mano: hacha"', () =
     build: false,
     craft: false,
     haul: true,
+    farm: false,
     chop: false,
     loot: true,
   };
-  s.priorities = { heal: 3, social: 3, build: 3, craft: 3, haul: 1, chop: 3, loot: 4 };
+  s.priorities = { heal: 3, social: 3, build: 3, craft: 3, haul: 1, farm: 3, chop: 3, loot: 4 };
   s.equipped = 'axe';
   selection.set(s.id);
   sheet.update();

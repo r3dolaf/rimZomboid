@@ -36,6 +36,7 @@ function scene(): { w: World; a: Survivor } {
       build: false,
       craft: false,
       haul: false,
+      farm: false,
       chop: false,
       loot: false,
     };
@@ -181,6 +182,7 @@ test('orden por criticidad: construir antes que transportar, talar o saquear; co
     build: true,
     craft: false,
     haul: true,
+    farm: false,
     chop: true,
     loot: true,
   };
@@ -212,6 +214,7 @@ test('orden por criticidad: transportar antes que talar, y talar antes que saque
     build: true,
     craft: false,
     haul: true,
+    farm: false,
     chop: true,
     loot: true,
   };
@@ -273,6 +276,7 @@ test('escenario: talar, acarrear y construir una cama para quien dormía en el s
     build: true,
     craft: false,
     haul: true,
+    farm: false,
     chop: true,
     loot: false,
   };

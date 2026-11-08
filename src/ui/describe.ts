@@ -296,6 +296,8 @@ export function activityText(s: Survivor, w?: World): string {
       return t.rest;
     case 'dress':
       return t.dress; // H5b
+    case 'tend':
+      return t.tend[a.what]; // V1
     case 'mercy':
       return t.mercy(name(a.patientId));
     case 'moveTo':
@@ -335,6 +337,9 @@ export function activityText(s: Survivor, w?: World): string {
       if (a.then?.type === 'pry') return t.goPry;
       if (a.then?.type === 'fetchCraft') return t.fetchCraft;
       if (a.then?.type === 'craft') return t.goCraft;
+      if (a.then?.type === 'takeSeeds') return t.takeSeeds; // V1
+      if (a.then?.type === 'fillCan') return t.fillCan;
+      if (a.then?.type === 'tend') return t.goTend[a.then.what];
       if (a.run) return t.flee;
       return t.wander;
     case 'idle':

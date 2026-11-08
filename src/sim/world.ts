@@ -325,12 +325,22 @@ function takeDistinct<T>(rng: RngState, items: readonly T[], n: number): T[] {
 export function defaultWork(traits: readonly TraitId[]): Record<WorkType, boolean> {
   const out = !traits.includes('coward');
   // Sanar (H4e), también el Cobarde: rescatar es urgente.
-  return { heal: true, social: true, build: true, craft: true, haul: true, chop: out, loot: out };
+  // Cultivar (V1), también el Cobarde: el huerto está junto a la base.
+  return {
+    heal: true,
+    social: true,
+    build: true,
+    craft: true,
+    haul: true,
+    farm: true,
+    chop: out,
+    loot: out,
+  };
 }
 
 /** Prioridades al empezar (H4d): todo a 3, y así se trabaja como antes; Sanar (H4e), a 1. */
 export function defaultPriorities(): Record<WorkType, number> {
-  return { heal: 1, social: 3, build: 3, craft: 3, haul: 3, chop: 3, loot: 3 };
+  return { heal: 1, social: 3, build: 3, craft: 3, haul: 3, farm: 3, chop: 3, loot: 3 };
 }
 
 /** Postura por defecto (spec H4b §7): el Cobarde huye, el Valiente pelea y el resto decide. */

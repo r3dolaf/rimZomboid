@@ -67,6 +67,7 @@ function scene(): World {
     build: false,
     craft: false,
     haul: false,
+    farm: false,
     chop: false,
     loot: true,
   };
@@ -187,6 +188,7 @@ test('quien no saquea no se queda la única palanca si hay puertas que forzar: l
     build: false,
     craft: false,
     haul: false,
+    farm: false,
     chop: false,
     loot: false,
   };

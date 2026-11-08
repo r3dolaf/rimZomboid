@@ -31,6 +31,7 @@ import {
 import { startCraftActivity } from '../jobs/craft';
 import { startPryActivity } from '../jobs/pry';
 import { startSwapWeapon } from '../jobs/weapons';
+import { startFarmActivity } from '../jobs/farm';
 import { startDress } from '../jobs/dress';
 import { startWaterActivity } from '../jobs/water';
 import { logEvent } from '../log';
@@ -176,6 +177,10 @@ function startActivity(s: Survivor, activity: Activity, w: World): Action {
     case 'fetchFood': // H6c
     case 'giveFood':
       return startFeedActivity(s, w, activity);
+    case 'takeSeeds': // V1
+    case 'fillCan':
+    case 'tend':
+      return startFarmActivity(s, w, activity);
     case 'rest':
       return { type: 'rest' };
     case 'mercy':

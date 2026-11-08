@@ -15,6 +15,7 @@ export const WORKS: readonly WorkType[] = [
   'build',
   'craft',
   'haul',
+  'farm', // V1
   'chop',
   'loot',
 ];

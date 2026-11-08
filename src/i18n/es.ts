@@ -25,6 +25,7 @@ import type {
   SkillId,
   WorkType,
   WoundKind,
+  TendKind,
   ZombieLevel,
 } from '../sim/types';
 
@@ -66,6 +67,7 @@ export const es = {
     build: 'Construir',
     craft: 'Fabricar',
     haul: 'Transportar',
+    farm: 'Cultivar', // V1
     chop: 'Talar',
     loot: 'Saquear',
   } satisfies Record<WorkType, string>,
@@ -282,6 +284,7 @@ export const es = {
     build: 'Construir',
     craft: 'Fabricar',
     haul: 'Transportar',
+    farm: 'Cultivar', // V1
     chop: 'Talar',
     loot: 'Saquear',
     fight: 'Pelear',
@@ -1288,6 +1291,17 @@ export const es = {
     goConsole: (other: string) => `Va a consolar a ${other}`,
     goChop: 'Va a talar',
     chop: 'Talando',
+    // El huerto (V1)
+    takeSeeds: 'Va a por semillas',
+    fillCan: 'Va a por agua para regar',
+    goTend: { sow: 'Va a sembrar', water: 'Va a regar', harvest: 'Va a cosechar' } satisfies Record<
+      TendKind,
+      string
+    >,
+    tend: { sow: 'Sembrando', water: 'Regando', harvest: 'Cosechando' } satisfies Record<
+      TendKind,
+      string
+    >,
     takeAxe: 'Va a por el hacha',
     storeAxe: 'Devuelve el hacha',
     goPickUp: 'Va a recoger un montón',

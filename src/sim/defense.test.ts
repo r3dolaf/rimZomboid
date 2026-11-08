@@ -55,6 +55,7 @@ test('al empezar: sin montones, planos, muebles ni marcas; cada uno con su cuchi
       build: true,
       craft: true, // H4d: Fabricar, todos
       haul: true,
+      farm: true, // V1: Cultivar, todos
       chop: !coward,
       loot: !coward,
     });

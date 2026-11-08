@@ -29,6 +29,7 @@ function world(): World {
     build: false,
     craft: true,
     haul: false,
+    farm: false,
     chop: false,
     loot: false,
   };

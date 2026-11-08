@@ -72,6 +72,8 @@ export type LogEvent =
   | { kind: 'waterCut' }
   // V1: lo que se ha estropeado hoy en el almacén.
   | { kind: 'spoiled'; veg: number; meal: number }
+  // V1: cultivos perdidos esta hora, secos y podridos sin cosechar.
+  | { kind: 'cropsLost'; dried: number; rotted: number }
   | { kind: 'rain' }
   | { kind: 'found'; survivorId: number; houseId: number; items: Inventory }
   | { kind: 'emptyContainer'; survivorId: number; houseId: number }

@@ -126,6 +126,8 @@ export const RAIN_MOISTURE_HOURS = 48;
 export const WATER_MOISTURE_HOURS = 36;
 export const WITHER_DRY_HOURS = 3 * 24;
 export const RIPE_ROT_HOURS = 4 * 24;
+/** Se riega lo que tiene menos de estas horas de humedad (así no llega a secarse). */
+export const WATER_BELOW_HOURS = 6;
 export const EAT_TICKS = 30; // 6 minutos de juego
 // De noche casi todos se acuestan (< 95) y nadie se levanta hasta las 06:00: así los ritmos se
 // sincronizan con la noche aunque alguien eche una siesta de día (< 10).

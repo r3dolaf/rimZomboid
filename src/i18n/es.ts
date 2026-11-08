@@ -988,6 +988,17 @@ export const es = {
       const one = veg + meal === 1;
       return `Se ${one ? 'ha' : 'han'} estropeado ${list(parts)} en el almacén`;
     },
+    /** V1: «Se han secado 2 cultivos» y «Se ha podrido 1 cultivo sin cosechar». */
+    cropsLost: (dried: number, rotted: number) => {
+      const n = (k: number) => `${k} ${k === 1 ? 'cultivo' : 'cultivos'}`;
+      const has = (k: number) => (k === 1 ? 'ha' : 'han');
+      const parts = [
+        dried > 0 ? `Se ${has(dried)} secado ${n(dried)}` : '',
+        rotted > 0 ? `se ${has(rotted)} podrido ${n(rotted)} sin cosechar` : '',
+      ].filter((x) => x !== '');
+      const text = parts.join(' y ');
+      return text.charAt(0).toUpperCase() + text.slice(1);
+    },
     rain: 'Llueve',
     /** «una granja hacia el norte, a 4 horas» (con lo especial delante, si lo es). */
     siteFound: (how: string, what: string, who?: string) =>

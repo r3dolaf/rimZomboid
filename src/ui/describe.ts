@@ -754,6 +754,9 @@ function logSentence(e: LogEntry, w: World, here: World): string {
     case 'spoiled': // V1
       text = l.spoiled(e.veg, e.meal);
       break;
+    case 'cropsLost': // V1
+      text = l.cropsLost(e.dried, e.rotted);
+      break;
     case 'rain':
       text = l.rain;
       break;

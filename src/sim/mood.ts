@@ -13,6 +13,9 @@ import {
   PESSIMIST_MOOD,
   SCARED_OUTSIDE_MOOD,
   STARVING_MOOD,
+  DEHYDRATED_MOOD,
+  THIRSTY_BELOW,
+  THIRSTY_MOOD,
   TICKS_PER_HOUR,
   TIRED_BELOW,
   TIRED_MOOD,
@@ -24,6 +27,8 @@ import type { Memory, MemoryId, Rect, Survivor } from './types';
 export type MoodModifierId =
   | 'hungry'
   | 'starving'
+  | 'thirsty' // V2
+  | 'dehydrated'
   | 'tired'
   | 'lonely'
   | 'fever'
@@ -51,6 +56,8 @@ export function moodModifiers(s: Survivor, tick: number, base?: Rect): MoodModif
   const mods: MoodModifier[] = [];
   if (s.needs.hunger <= 0) mods.push({ id: 'starving', value: STARVING_MOOD });
   else if (s.needs.hunger < HUNGRY_BELOW) mods.push({ id: 'hungry', value: HUNGRY_MOOD });
+  if (s.needs.thirst <= 0) mods.push({ id: 'dehydrated', value: DEHYDRATED_MOOD });
+  else if (s.needs.thirst < THIRSTY_BELOW) mods.push({ id: 'thirsty', value: THIRSTY_MOOD });
   if (s.needs.sleep < TIRED_BELOW) mods.push({ id: 'tired', value: TIRED_MOOD });
   if (s.needs.social < LONELY_BELOW) mods.push({ id: 'lonely', value: LONELY_MOOD });
   if (s.health < HURT_BELOW) mods.push({ id: 'hurt', value: HURT_MOOD });

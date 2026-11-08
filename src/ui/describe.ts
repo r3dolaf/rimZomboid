@@ -270,6 +270,8 @@ export function activityText(s: Survivor, w?: World): string {
   switch (a.type) {
     case 'eat':
       return t.eat;
+    case 'drink':
+      return t.drink; // V2
     case 'sleep':
       return a.inBed ? t.sleepInBed : t.sleepOnFloor;
     case 'crisis':
@@ -333,6 +335,7 @@ export function activityText(s: Survivor, w?: World): string {
       }
       if (a.then?.type === 'unload') return t.goUnload;
       if (a.then?.type === 'eat') return t.goEat;
+      if (a.then?.type === 'drink') return t.goDrink; // V2
       if (a.then?.type === 'sleep') return t.goSleep;
       if (a.then?.type === 'crisis') return t.crisis;
       if (a.then?.type === 'console') return t.goConsole(name(a.then.otherId));

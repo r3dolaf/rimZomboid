@@ -178,6 +178,7 @@ export function newStranger(w: World, start: Point, taken: readonly string[] = [
     path: findPath(w.grid, start, door) ?? [],
     needs: {
       hunger: nextInt(w.rng, STRANGER_NEED_MIN, STRANGER_NEED_MAX),
+      thirst: 100, // V2: se iguala al hambre abajo (sin tocar el azar)
       sleep: nextInt(w.rng, STRANGER_NEED_MIN, STRANGER_NEED_MAX),
       mood: 0,
       social: nextInt(w.rng, STRANGER_NEED_MIN, STRANGER_NEED_MAX),
@@ -234,6 +235,7 @@ export function newStranger(w: World, start: Point, taken: readonly string[] = [
     const b = newBag(w, nextFloat(w.rng) < 0.5 ? 'fannyPack' : 'schoolBag');
     s.bags[b.kind === 'fannyPack' ? 'waist' : 'back'] = b;
   }
+  s.needs.thirst = s.needs.hunger; // V2
   s.needs.mood = moodTarget(s, w.tick, w.base.rect);
   s.stance = defaultStance(s.traits);
   s.skills = rollSkills(skillRng(w.seed, s.id), s.traits);

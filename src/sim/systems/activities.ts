@@ -2,6 +2,7 @@ import { readFindings } from '../sites';
 import { takeInto, unloadAt } from '../bags';
 import { CHOP_NOISE_TICKS, NOISE, PRY_NOISE_TICKS } from '../balance';
 import { eatFrom, eatFromPack, hasFood } from '../food';
+import { finishDrink } from '../drink';
 import { setTile } from '../map/grid';
 import { isNight } from '../clock';
 import { finishConsoling } from '../consoling';
@@ -36,6 +37,11 @@ export function activitiesSystem(w: World): void {
         addMemory(s, ate.kind === 'meal' ? 'hotMeal' : 'ate', w.tick);
         if (nearTable(w, s)) addMemory(s, 'ateAtTable', w.tick);
       }
+      s.action = { type: 'idle', ticksLeft: 0 };
+    } else if (a.type === 'drink') {
+      // V2: un litro de donde sea (si se ha secado mientras tanto, nada).
+      if (--a.ticksLeft > 0) continue;
+      finishDrink(w, s, a);
       s.action = { type: 'idle', ticksLeft: 0 };
     } else if (a.type === 'sleep') {
       // Con el sueño lleno se levanta, pero nunca de noche.

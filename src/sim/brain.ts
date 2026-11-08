@@ -1,5 +1,7 @@
 import {
   CRISIS_BREAK_HUNGER,
+  CRISIS_BREAK_THIRST,
+  DRINK_BELOW,
   EAT_TICKS,
   EAT_BELOW,
   MOOD_CRISIS,
@@ -12,6 +14,7 @@ import {
 } from './balance';
 import { baseFloor } from './base';
 import { hasFood, packFood } from './food';
+import { drinkSomething, stillDrinkable } from './drink';
 import { isNight } from './clock';
 import { findConsoleTarget, inCrisis as crisisNow, stillConsoling } from './consoling';
 import { dangerDecision, zombieInSight } from './danger';
@@ -32,7 +35,7 @@ export interface Brain {
   decide(s: Survivor, w: World): Action | null;
 }
 
-/** Prioridades del spec §8.1: peligro, comer, dormir, crisis, consolar, trabajo, pasear. */
+/** Prioridades del spec §8.1: peligro, beber (V2), comer, dormir, crisis, consolar, trabajo, pasear. */
 const AiBrain: Brain = {
   decide(s, w) {
     equipFromPack(s, w.chopMarks.length > 0);
@@ -52,13 +55,24 @@ const AiBrain: Brain = {
     // Si la comida se acaba mientras va a comer o come, lo deja.
     if (((a.type === 'eat' && !a.fromPack) || goingTo === 'eat') && !hasFood(w.storage.items))
       return { type: 'idle', ticksLeft: 0 };
-    // Comer, dormir y pelear se terminan; la crisis solo se corta por algo urgente.
-    if (a.type === 'eat' || a.type === 'sleep' || goingTo === 'eat' || goingTo === 'sleep')
+    // V2: lo mismo si se seca el agua adonde va a beber.
+    if (a.type === 'moveTo' && a.then?.type === 'drink' && !stillDrinkable(w, a.then.sourceId))
+      return { type: 'idle', ticksLeft: 0 };
+    // Comer, beber, dormir y pelear se terminan; la crisis solo se corta por algo urgente.
+    if (
+      a.type === 'eat' ||
+      a.type === 'drink' ||
+      a.type === 'sleep' ||
+      goingTo === 'eat' ||
+      goingTo === 'drink' ||
+      goingTo === 'sleep'
+    )
       return null;
     // Pelear y consolar son cosas de dos y duran poco: las termina activitiesSystem.
     if (a.type === 'fight' || a.type === 'console' || a.type === 'consoled') return null;
     // (desplomarse, que también la corta, lo decide decisionsSystem)
     if (inCrisis) {
+      if (s.needs.thirst < CRISIS_BREAK_THIRST) return drinkSomething(s, w); // V2
       if (s.needs.hunger < CRISIS_BREAK_HUNGER) return eatSomething(s, w);
       return null;
     }
@@ -116,8 +130,12 @@ export function crisisDue(s: Survivor, w: World): boolean {
   return s.needs.mood < MOOD_CRISIS && !calmed;
 }
 
-/** Comer si tiene hambre (y hay qué) o, si no, dormir si tiene sueño. */
+/** Beber si tiene sed (V2), comer si tiene hambre (y hay qué) o, si no, dormir si tiene sueño. */
 function rest(s: Survivor, w: World): Action | null {
+  if (s.needs.thirst < DRINK_BELOW) {
+    const drink = drinkSomething(s, w);
+    if (drink) return drink;
+  }
   if (s.needs.hunger < EAT_BELOW) {
     const eat = eatSomething(s, w);
     if (eat) return eat;

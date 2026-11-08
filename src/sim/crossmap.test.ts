@@ -156,7 +156,7 @@ test('quien no puede ir (descansando por dolor o fiebre) no se queda en la lista
   const { base, ana, bea } = couple();
   base.storage.tiles = [{ x: 5, y: 5 }];
   for (const s of base.survivors) {
-    s.needs = { hunger: 100, sleep: 100, mood: 60, social: 100 };
+    s.needs = { hunger: 100, sleep: 100, mood: 60, social: 100, thirst: 100 };
     for (const k of Object.keys(s.work) as (keyof typeof s.work)[]) s.work[k] = false;
   }
   bea.health = 5; // le duele tanto que descansa (sin analgésico)

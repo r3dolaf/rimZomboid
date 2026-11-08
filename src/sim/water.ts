@@ -14,6 +14,7 @@ import {
   WATER_CUT_DAY_MIN,
 } from './balance';
 import { logEvent } from './log';
+import { baseLayout } from './base';
 import { wallSpots } from './map/recipes';
 import { nextInt, type RngState } from './rng';
 import type { Building, Container, Furniture, Grid, World } from './types';
@@ -61,6 +62,30 @@ export function placeFixtures(
     }
   }
   return out;
+}
+
+/**
+ * El fregadero de la cocina de la base (V2 §4): junto a una pared, fuera de los sitios de las camas y
+ * del almacén (y de lo que tengan al lado), lo más cerca posible del almacén. Sin sorteo: no cambia
+ * el azar de la partida.
+ */
+export function baseSink(grid: Grid, base: Building, id: number): Furniture | null {
+  const layout = baseLayout(base);
+  const taken = [...layout.beds, ...layout.storage];
+  const near = (p: { x: number; y: number }) =>
+    taken.some((t) => Math.abs(t.x - p.x) <= 1 && Math.abs(t.y - p.y) <= 1);
+  const st = layout.storage[0]!;
+  let best: { x: number; y: number } | null = null;
+  let bestD = Infinity;
+  for (const p of wallSpots(grid, base)) {
+    if (near(p)) continue;
+    const d = (p.x - st.x) ** 2 + (p.y - st.y) ** 2;
+    if (d < bestD) {
+      best = p;
+      bestD = d;
+    }
+  }
+  return best && { id, kind: 'sink', pos: best };
 }
 
 /** ¿Llueve? (Con tormenta, también.) */

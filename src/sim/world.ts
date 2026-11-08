@@ -31,7 +31,7 @@ import { bagFields } from './bags';
 import { baseLayout } from './base';
 import { dressStarter } from './clothes';
 import { defaultOutfits } from './outfits';
-import { placeFixtures, rollWaterCut } from './water';
+import { baseSink, placeFixtures, rollWaterCut } from './water';
 import { emptyInventory } from './items';
 import {
   fillBags,
@@ -114,6 +114,7 @@ export function createWorld(
     path: [],
     needs: {
       hunger: nextInt(rng, NEED_START_MIN, NEED_START_MAX),
+      thirst: 100, // V2: se iguala al hambre abajo (sin tocar el azar)
       sleep: nextInt(rng, NEED_START_MIN, NEED_START_MAX),
       mood: 0, // se fija abajo con su objetivo
       social: 0, // se sortea abajo, después de los contenedores
@@ -157,6 +158,7 @@ export function createWorld(
   const { atlas, sites } = newAtlas(seed); // H5c2: el mapa del mundo
   for (const s of survivors) dressStarter(pieces, s, clothesRng);
   for (const s of survivors) {
+    s.needs.thirst = s.needs.hunger; // V2: empieza con la misma sed que hambre
     s.work = defaultWork(s.traits);
     s.stance = defaultStance(s.traits);
     s.skills = rollSkills(skillRng(seed, s.id), s.traits);
@@ -186,6 +188,9 @@ export function createWorld(
   // H5b: fregaderos y cisternas, y cuándo se corta el agua (con el mismo azar).
   const firstId = Math.max(survivors.length, ...containers.map((c) => c.id)) + 1;
   const fixtures = placeFixtures(grid, houses, containers, clothesRng, firstId);
+  // V2: el fregadero de la base, sin azar y con el último id (no cambia lo de antes).
+  const sink = baseSink(grid, base, firstId + fixtures.length);
+  if (sink) fixtures.push(sink);
   const waterCutAt = rollWaterCut(clothesRng);
   // H5b2: las bolsas y las hachuelas, con el mismo azar y al final (no cambia lo de antes).
   fillBags(pieces, houses, containers, clothesRng);

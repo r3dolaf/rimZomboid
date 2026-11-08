@@ -713,6 +713,7 @@ export const es = {
     infection: 'por una infección',
     mercy: 'para no sufrir más',
     hunger: 'de hambre',
+    thirst: 'de sed', // V2
   } satisfies Record<DeathCause, string>,
   wounds: { scratch: 'Arañazo', cut: 'Corte', bite: 'Mordisco' } satisfies Record<
     WoundKind,
@@ -1147,7 +1148,7 @@ export const es = {
     feverGone: (who: string) => `A ${who} se le ha pasado la fiebre`,
   },
 
-  needs: { hunger: 'Hambre', sleep: 'Sueño', mood: 'Ánimo', social: 'Social' },
+  needs: { hunger: 'Hambre', thirst: 'Sed', sleep: 'Sueño', mood: 'Ánimo', social: 'Social' },
   traitsTitle: 'Rasgos',
   needsTitle: 'Necesidades',
   moodTitle: 'Ánimo',
@@ -1190,6 +1191,8 @@ export const es = {
   modifiers: {
     hungry: 'Hambriento',
     starving: 'Desnutrido',
+    thirsty: 'Con sed', // V2
+    dehydrated: 'Deshidratado',
     tired: 'Cansado',
     lonely: 'Soledad',
     fever: 'Tiene fiebre',
@@ -1312,6 +1315,8 @@ export const es = {
     wander: 'Paseando',
     goEat: 'Va a comer',
     eat: 'Comiendo',
+    goDrink: 'Va a beber', // V2
+    drink: 'Bebiendo',
     goSleep: 'Va a dormir',
     sleepInBed: 'Durmiendo en su cama',
     sleepOnFloor: 'Durmiendo en el suelo',

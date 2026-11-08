@@ -145,7 +145,7 @@ test('quien sale a explorar se lleva la comida de ida y vuelta, si la hay (H5c3)
   w.storage.items.food = 3; // menos de lo que haría falta
   const ana = w.survivors[0]!;
   ana.carrying.food = 0;
-  ana.needs = { hunger: 100, sleep: 100, mood: 60, social: 100 };
+  ana.needs = { hunger: 100, sleep: 100, mood: 60, social: 100, thirst: 100 };
   for (const k of Object.keys(ana.work) as (keyof typeof ana.work)[]) ana.work[k] = false;
   const target = hexToward(w.common.atlas, w.common.atlas.base, 2, EXPLORE_DIST);
   issue(w, { type: 'explore', target, survivorIds: [ana.id] });

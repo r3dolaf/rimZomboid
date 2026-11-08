@@ -5,6 +5,7 @@ import { carriesSomething } from '../bags';
 import {
   CARRY_SPEED,
   CRISIS_TICKS,
+  DRINK_TICKS,
   EAT_TICKS,
   IDLE_TICKS_MAX,
   IDLE_TICKS_MIN,
@@ -32,6 +33,7 @@ import { startCraftActivity } from '../jobs/craft';
 import { startPryActivity } from '../jobs/pry';
 import { startSwapWeapon } from '../jobs/weapons';
 import { startFarmActivity } from '../jobs/farm';
+import { stillDrinkable } from '../drink';
 import { startDress } from '../jobs/dress';
 import { startWaterActivity } from '../jobs/water';
 import { logEvent } from '../log';
@@ -112,6 +114,10 @@ function startActivity(s: Survivor, activity: Activity, w: World): Action {
   switch (activity.type) {
     case 'eat':
       return { type: 'eat', ticksLeft: EAT_TICKS };
+    case 'drink': // V2
+      return stillDrinkable(w, activity.sourceId)
+        ? { type: 'drink', ticksLeft: DRINK_TICKS, sourceId: activity.sourceId }
+        : { type: 'idle', ticksLeft: 0 };
     case 'crisis':
       logEvent(w, { kind: 'crisis', survivorId: s.id });
       return { type: 'crisis', ticksLeft: CRISIS_TICKS };

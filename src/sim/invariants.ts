@@ -150,7 +150,7 @@ function checkMap(w: World, everyone: readonly Survivor[], allBeds: readonly Bed
       problems.push(`${who}: posición no válida (${s.pos.x}, ${s.pos.y})`);
       continue; // el resto de comprobaciones no tiene sentido sin posición
     }
-    for (const k of ['hunger', 'sleep', 'mood', 'social'] as const) {
+    for (const k of ['hunger', 'thirst', 'sleep', 'mood', 'social'] as const) {
       const v = s.needs[k];
       if (!Number.isFinite(v) || v < 0 || v > 100)
         problems.push(`${who}: ${k} fuera de 0–100 (${v})`);
@@ -274,7 +274,7 @@ function checkMap(w: World, everyone: readonly Survivor[], allBeds: readonly Bed
   for (const s of w.stranger?.survivors ?? []) {
     const who = `desconocido ${s.name} (#${s.id})`;
     if (ids.has(s.id)) problems.push(`${who}: su id ya es de un colono`);
-    for (const k of ['hunger', 'sleep', 'mood', 'social'] as const) {
+    for (const k of ['hunger', 'thirst', 'sleep', 'mood', 'social'] as const) {
       const v = s.needs[k];
       if (!Number.isFinite(v) || v < 0 || v > 100)
         problems.push(`${who}: ${k} fuera de 0–100 (${v})`);

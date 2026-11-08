@@ -35,7 +35,7 @@ function world(): World {
   };
   s.equipped = null;
   s.skills.craft.level = 10; // no falla (los fallos, en su test)
-  s.needs = { hunger: 100, sleep: 100, mood: 60, social: 100 };
+  s.needs = { hunger: 100, sleep: 100, mood: 60, social: 100, thirst: 100 };
   s.nextChatAt = 1e9;
   // Que no se ponga la ropa que hay que coser (H5b: se vestiría con ella).
   w.common.outfits[0]!.allowed = ['tshirt', 'jeans'];

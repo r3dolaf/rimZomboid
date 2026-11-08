@@ -20,7 +20,7 @@ function world() {
   const bea = addSurvivor(w, { x: 12, y: 12 }, 'Bea');
   for (const s of w.survivors) {
     for (const k of Object.keys(s.work) as (keyof typeof s.work)[]) s.work[k] = false;
-    s.needs = { hunger: 100, sleep: 100, mood: 60, social: 100 };
+    s.needs = { hunger: 100, sleep: 100, mood: 60, social: 100, thirst: 100 };
     s.nextChatAt = 1e9;
     s.carrying.food = 0;
   }

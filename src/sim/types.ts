@@ -176,6 +176,8 @@ export interface Needs {
   mood: number;
   /** Ganas de compañía: baja con el tiempo y sube al charlar. */
   social: number;
+  /** Sed (V2): baja con el tiempo y sube al beber. */
+  thirst: number;
 }
 
 export type MemoryId =
@@ -300,7 +302,9 @@ export type Activity =
   // El huerto (V1 §4): coger semillas, ir a por agua para regar y trabajar una parcela.
   | { type: 'takeSeeds' }
   | { type: 'fillCan'; sourceId: number }
-  | { type: 'tend'; tile: number; what: TendKind };
+  | { type: 'tend'; tile: number; what: TendKind }
+  // Beber (V2 §2): en un mueble con agua o, con `sourceId` null, una botella del almacén.
+  | { type: 'drink'; sourceId: number | null };
 
 export type Action =
   /** `wait`: esperando tras no encontrar camino (no se consulta al cerebro) o tras negarse a trabajar. */
@@ -346,7 +350,9 @@ export type Action =
   // Vistiéndose (H5b §4).
   | { type: 'dress'; ticksLeft: number }
   // Sembrando, regando o cosechando una parcela (V1 §4).
-  | { type: 'tend'; tile: number; what: TendKind; ticksLeft: number };
+  | { type: 'tend'; tile: number; what: TendKind; ticksLeft: number }
+  /** Bebiendo (V2): de ese mueble, de una botella del almacén (null) o de lo suyo (`fromPack`). */
+  | { type: 'drink'; ticksLeft: number; sourceId: number | null; fromPack?: boolean };
 
 export interface Survivor {
   id: number;
@@ -461,7 +467,7 @@ export interface Fever {
 }
 
 /** De qué se muere (H5 §8). */
-export type DeathCause = 'blood' | 'wounds' | 'infection' | 'mercy' | 'hunger';
+export type DeathCause = 'blood' | 'wounds' | 'infection' | 'mercy' | 'hunger' | 'thirst';
 
 /** Uno o dos desconocidos que esperan a la puerta a que el jugador decida (su decisión caduca). */
 export interface Stranger {
@@ -622,7 +628,7 @@ export interface Blueprint {
  */
 export interface Furniture {
   id: number;
-  kind: 'table' | 'campfire' | 'tub' | 'sink' | 'cistern';
+  kind: 'table' | 'campfire' | 'tub' | 'sink' | 'cistern' | 'barrel';
   pos: Point;
   water?: number;
 }

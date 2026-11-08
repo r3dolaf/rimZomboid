@@ -21,6 +21,7 @@ import {
 import {
   BUILD,
   CAMPFIRE_RANGE,
+  BARREL_LITERS,
   CISTERN_LITERS,
   RESISTANCE,
   TUB_LITERS,
@@ -1618,6 +1619,8 @@ export class GameScene extends Phaser.Scene {
         return `tub${waterLevel(f.water ?? 0, TUB_LITERS)}`;
       case 'cistern':
         return `cistern${waterLevel(f.water ?? 0, CISTERN_LITERS)}`;
+      case 'barrel':
+        return `barrel${waterLevel(f.water ?? 0, BARREL_LITERS)}`; // V2
       case 'sink':
         return mainsOn(this.world) ? 'sinkWet' : 'sinkDry';
     }

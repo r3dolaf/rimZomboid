@@ -197,7 +197,7 @@ function yard(): World {
   const s = w.survivors[0]!;
   s.pos = { x: 2.5, y: 2.5 };
   for (const k of Object.keys(s.work) as (keyof typeof s.work)[]) s.work[k] = k === 'haul';
-  s.needs = { hunger: 100, sleep: 100, mood: 60, social: 100 };
+  s.needs = { hunger: 100, sleep: 100, mood: 60, social: 100, thirst: 100 };
   s.nextChatAt = 1e9;
   w.common.outfits[0]!.allowed = ['tshirt', 'jeans'];
   return w;

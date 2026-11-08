@@ -71,7 +71,7 @@ export function emptyWorld(width: number, height: number): World {
         brain: 'ai',
         action: { type: 'idle', ticksLeft: 0 },
         path: [],
-        needs: { hunger: 100, sleep: 100, mood: 50, social: 100 },
+        needs: { hunger: 100, sleep: 100, mood: 50, social: 100, thirst: 100 },
         traits: [],
         skills: skillsAt(5), // nivel 5: todo va como antes de H4c
         memories: [],
@@ -198,7 +198,7 @@ export function fixturePerson(w: World, name = 'Bea'): Survivor {
     pos: { ...template.pos },
     action: { type: 'idle', ticksLeft: 0 },
     path: [],
-    needs: { hunger: 100, sleep: 100, mood: 50, social: 100 },
+    needs: { hunger: 100, sleep: 100, mood: 50, social: 100, thirst: 100 },
     traits: [],
     memories: [],
     bedId: null,

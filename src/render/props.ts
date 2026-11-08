@@ -350,11 +350,18 @@ function outline(px: Pixels, top: number): void {
 }
 
 /**
- * Un barreño (de madera) o una cisterna (de metal) visto desde arriba y un poco de frente: el borde,
- * por dentro el agua (que baja según `level`, de 0 a 4) y debajo, la cara con sus duelas y aros.
+ * Un barreño (de madera), una cisterna (de metal) o un barril de lluvia (V2: de madera, más estrecho
+ * y alto) visto desde arriba y un poco de frente: el borde, por dentro el agua (que baja según
+ * `level`, de 0 a 4) y debajo, la cara con sus duelas y aros.
  */
-function vessel(level: number, metal: boolean): string[] {
-  const [cx, cy, rx, ry, depth] = metal ? [7.5, 3, 6.5, 3.5, 8] : [7.5, 7, 6.5, 3.5, 4];
+function vessel(level: number, kind: 'tub' | 'cistern' | 'barrel'): string[] {
+  const metal = kind === 'cistern';
+  const [cx, cy, rx, ry, depth] =
+    kind === 'cistern'
+      ? [7.5, 3, 6.5, 3.5, 8]
+      : kind === 'barrel'
+        ? [7.5, 1, 5, 2.6, 10]
+        : [7.5, 7, 6.5, 3.5, 4];
   const [rim, rimDark, inner, stave, line, hoop] = metal
     ? ['g', 'G', 'h', 'G', 'h', 'J']
     : ['v', 'w', 'q', 'w', 'W', 'J'];
@@ -441,8 +448,9 @@ function planks(n: number): string[] {
 
 for (let f = 0; f < 3; f++) PROP_SPRITES[`campfire${f}`] = campfire(f);
 for (let l = 0; l <= 4; l++) {
-  PROP_SPRITES[`tub${l}`] = vessel(l, false);
-  PROP_SPRITES[`cistern${l}`] = vessel(l, true);
+  PROP_SPRITES[`tub${l}`] = vessel(l, 'tub');
+  PROP_SPRITES[`cistern${l}`] = vessel(l, 'cistern');
+  PROP_SPRITES[`barrel${l}`] = vessel(l, 'barrel'); // V2
 }
 for (let n = 1; n <= 3; n++) PROP_SPRITES[`planks${n}`] = planks(n);
 

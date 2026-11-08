@@ -146,6 +146,28 @@ export const SLEEP_AT_NIGHT_BELOW = 95;
 export const SLEEP_ANYTIME_BELOW = 10;
 export const CRISIS_TICKS = 2 * TICKS_PER_HOUR;
 export const CRISIS_BREAK_HUNGER = 10;
+// La sed (spec V2 §1): baja 100 al día (con fiebre, ×1,5); se bebe por debajo de 40, 1 litro sube
+// 50; con sed por debajo de 25 y deshidratado a 0 (entonces pierde sangre).
+export const THIRST_PER_DAY = 100;
+export const THIRST_PER_TICK = THIRST_PER_DAY / TICKS_PER_DAY;
+export const FEVER_THIRST = 1.5;
+export const DRINK_BELOW = 40;
+export const DRINK_RESTORE = 50;
+export const DRINK_TICKS = 10; // 2 minutos
+export const THIRSTY_BELOW = 25;
+export const THIRSTY_MOOD = -10;
+export const DEHYDRATED_MOOD = -25;
+export const DEHYDRATED_BLOOD = 4;
+export const CRISIS_BREAK_THIRST = 10;
+/** Teniendo una botella encima, un fregadero o un depósito a más de esto (casillas) no compensa. */
+export const NEAR_WATER = 20;
+/** Un depósito cuenta como si estuviera esto más lejos que un fregadero (el grifo, primero). */
+export const DEPOT_DETOUR = 8;
+// El barril de lluvia (V2 §3): lo que guarda y lo que suma cada hora de lluvia al aire libre.
+export const BARREL_LITERS = 60;
+export const RAIN_BARREL_LITERS = 4;
+/** Botellas del almacén que no se vacían en los depósitos: para beber y para los viajes. */
+export const BOTTLES_KEEP = 4;
 
 // Objetos y saqueo (H3)
 export const ITEM_WEIGHT_KG = {

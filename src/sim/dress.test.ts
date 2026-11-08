@@ -22,7 +22,7 @@ function world(): World {
   const s = w.survivors[0]!;
   s.pos = { x: 5.5, y: 5.5 };
   for (const k of Object.keys(s.work) as (keyof typeof s.work)[]) s.work[k] = false;
-  s.needs = { hunger: 100, sleep: 100, mood: 60, social: 100 };
+  s.needs = { hunger: 100, sleep: 100, mood: 60, social: 100, thirst: 100 };
   s.nextChatAt = 1e9;
   return w;
 }
@@ -182,7 +182,7 @@ test('revisión: yendo a vestirse no repasa toda la ropa del almacén en cada ti
   const s = w.survivors[0]!;
   s.pos = { x: 58.5, y: 10.5 };
   for (const k of Object.keys(s.work) as (keyof typeof s.work)[]) s.work[k] = false;
-  s.needs = { hunger: 100, sleep: 100, mood: 60, social: 100 };
+  s.needs = { hunger: 100, sleep: 100, mood: 60, social: 100, thirst: 100 };
   s.nextChatAt = 1e9;
   const kinds: GarmentKind[] = ['shirt', 'hoodie', 'sweater', 'coat', 'cap', 'beanie', 'workPants'];
   for (let i = 0; i < 800; i++) stored(w, kinds[i % kinds.length]!);

@@ -37,7 +37,7 @@ export function applyDebugOrder(w: World, o: DebugOrder): void {
       s.dying = null;
       s.blood = 100;
       s.health = 100;
-      s.needs = { ...s.needs, hunger: 100, sleep: 100 };
+      s.needs = { ...s.needs, hunger: 100, sleep: 100, thirst: 100 };
       if (s.action.type === 'downed') s.action = { type: 'idle', ticksLeft: 0 };
       w.decisions = w.decisions.filter((d) => d.kind !== 'fever' || d.survivorIds[0] !== s.id);
       w.mercy = w.mercy.filter((id) => id !== s.id);

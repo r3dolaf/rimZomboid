@@ -33,7 +33,7 @@ function world(): World {
     loot: false,
   };
   s.skills.craft.level = 10; // no falla (los fallos, en su test)
-  s.needs = { hunger: 100, sleep: 100, mood: 60, social: 100 };
+  s.needs = { hunger: 100, sleep: 100, mood: 60, social: 100, thirst: 100 };
   s.nextChatAt = 1e9;
   return w;
 }

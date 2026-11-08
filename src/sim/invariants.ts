@@ -3,6 +3,7 @@ import {
   BUILD,
   BUILDINGS,
   CISTERN_LITERS,
+  DEPOT_LITERS,
   CURTAINS_COST,
   OPINION_LIMIT,
   RECIPES,
@@ -399,7 +400,7 @@ function checkMap(w: World, everyone: readonly Survivor[], allBeds: readonly Bed
       problems.push(`pedido ${b.id}: ${b.recipe}, ${b.mode}, N ${b.target}, hechos ${b.done}`);
   // Agua (H5b §6): entre 0 y lo que cabe.
   for (const f of w.furniture) {
-    const max = f.kind === 'tub' ? TUB_LITERS : f.kind === 'cistern' ? CISTERN_LITERS : null;
+    const max = DEPOT_LITERS[f.kind] ?? null;
     if (max === null) continue;
     const l = f.water ?? 0;
     if (!Number.isFinite(l) || l < 0 || l > max + 1e-9)

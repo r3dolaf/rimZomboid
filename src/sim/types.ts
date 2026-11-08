@@ -592,7 +592,9 @@ export type BuildKind =
   // Romper una ventana a propósito (H4d).
   | 'smashWindow'
   // El barreño (H5b §6).
-  | 'tub';
+  | 'tub'
+  // El barril de lluvia (V2 §3).
+  | 'barrel';
 
 /**
  * Lo sembrado en una parcela (spec V1 §3), en horas: las que ha crecido con humedad, las que lleva

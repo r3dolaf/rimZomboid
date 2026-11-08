@@ -50,7 +50,13 @@ test('Construir por grupos: cada botón con lo que gasta y lo que tienes; abajo,
     [...root.querySelectorAll('.build-group')[i]!.querySelectorAll('button')].map(
       (b) => b.dataset.testid,
     );
-  expect(inGroup(0)).toEqual(['build-bed', 'build-table', 'build-campfire', 'build-tub']);
+  expect(inGroup(0)).toEqual([
+    'build-bed',
+    'build-table',
+    'build-campfire',
+    'build-tub',
+    'build-barrel', // V2
+  ]);
   expect(inGroup(1)).toEqual(['build-woodWall', 'build-woodDoor']);
   expect(inGroup(2)).toEqual(['build-repair']);
   expect(q('build-bed').textContent).toBe('Cama — 6 tablas (tienes 12)');

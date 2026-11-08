@@ -522,6 +522,7 @@ export const BUILD = {
   smashWindow: { wood: 0, ticks: 2 * (TICKS_PER_HOUR / 60) },
   // El barreño (H5b §6).
   tub: { wood: 4, ticks: TICKS_PER_HOUR },
+  barrel: { wood: 6, ticks: TICKS_PER_HOUR }, // V2
 } as const;
 /** Cortinas que necesita cada plano (H4d). */
 export const CURTAINS_COST: Partial<Record<BuildKind, number>> = { hangCurtains: 1 };
@@ -1216,6 +1217,12 @@ export const BUCKET_LITERS = 4;
 export const BOTTLE_LITERS = 1;
 export const CISTERN_LITERS = 200;
 export const TUB_LITERS = 20;
+/** Lo que cabe en cada depósito de agua (el barreño, la cisterna y el barril). */
+export const DEPOT_LITERS: Partial<Record<string, number>> = {
+  tub: TUB_LITERS,
+  cistern: CISTERN_LITERS,
+  barrel: BARREL_LITERS,
+};
 /** El agua corriente se corta un día al azar entre estos (con su hora). */
 export const WATER_CUT_DAY_MIN = 7;
 export const WATER_CUT_DAY_MAX = 14;

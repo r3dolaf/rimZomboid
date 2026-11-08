@@ -1,6 +1,13 @@
-// Llenar el barreño (spec H5b §6), en Transportar: con el cubo de agua o las botellas del almacén,
-// o llevando un cubo vacío a la fuente más cercana (fregadero con agua corriente o cisterna).
-import { BOTTLE_LITERS, BUCKET_LITERS, ITEM_WEIGHT_KG, TUB_LITERS } from '../balance';
+// Llenar el barreño (spec H5b §6) y el barril de lluvia (V2 §3), en Transportar: con el cubo de agua
+// o las botellas del almacén (salvo las que se guardan, V2), o llevando un cubo vacío a la fuente más
+// cercana (fregadero con agua corriente o cisterna). `tubId` es el depósito que se llena.
+import {
+  BOTTLE_LITERS,
+  BOTTLES_KEEP,
+  BUCKET_LITERS,
+  DEPOT_LITERS,
+  ITEM_WEIGHT_KG,
+} from '../balance';
 import { weightOf } from '../items';
 import { findPath, regionOf } from '../path/astar';
 import { pick } from '../rng';
@@ -12,8 +19,14 @@ import { atOrBeside, standOnOrBeside } from './stand';
 
 type WaterActivity = Extract<Activity, { type: 'takeWater' | 'fillBucket' | 'pourWater' }>;
 
-/** Lo que le cabe al barreño. */
-const room = (f: Furniture) => TUB_LITERS - (f.water ?? 0);
+/** ¿Se llena a mano? El barreño y el barril de lluvia (la cisterna, no: es de los edificios). */
+const fillable = (f: Furniture) => f.kind === 'tub' || f.kind === 'barrel';
+
+/** Lo que le cabe al depósito. */
+const room = (f: Furniture) => (DEPOT_LITERS[f.kind] ?? 0) - (f.water ?? 0);
+
+/** Las botellas del almacén que se pueden vaciar (las últimas se guardan para beber, V2). */
+const spareBottles = (w: World) => Math.max(0, w.storage.items.waterBottle - BOTTLES_KEEP);
 
 /** El barreño que va a llenar (o está llenando), o `null`. */
 export function waterTarget(s: Survivor): number | null {
@@ -48,7 +61,7 @@ function nearestSource(s: Survivor, w: World): Furniture | null {
 function how(s: Survivor, w: World, tub: Furniture): 'bucket' | 'bottles' | 'source' | null {
   const st = w.storage.items;
   if (room(tub) >= BUCKET_LITERS && st.waterBucket > 0) return 'bucket';
-  if (room(tub) >= BOTTLE_LITERS && st.waterBottle > 0) return 'bottles';
+  if (room(tub) >= BOTTLE_LITERS && spareBottles(w) > 0) return 'bottles';
   if (room(tub) >= BUCKET_LITERS && st.bucket > 0 && nearestSource(s, w)) return 'source';
   return null;
 }
@@ -58,8 +71,7 @@ function tubToFill(s: Survivor, w: World): Furniture | null {
   const busy = new Set(w.survivors.filter((o) => o !== s).map(waterTarget));
   let best: Furniture | null = null;
   for (const f of w.furniture) {
-    if (f.kind !== 'tub' || busy.has(f.id) || (best && dist2(s, f.pos) >= dist2(s, best.pos)))
-      continue;
+    if (!fillable(f) || busy.has(f.id) || (best && dist2(s, f.pos) >= dist2(s, best.pos))) continue;
     if (standOnOrBeside(w, s, f.pos) && how(s, w, f)) best = f;
   }
   return best;
@@ -82,7 +94,7 @@ export function waterStillWorth(s: Survivor, w: World): boolean {
   if (!s.work.haul) return false;
   const t = a.then;
   if (t.type !== 'takeWater' && t.type !== 'fillBucket' && t.type !== 'pourWater') return true;
-  const tub = w.furniture.find((f) => f.id === t.tubId && f.kind === 'tub');
+  const tub = w.furniture.find((f) => f.id === t.tubId && fillable(f));
   if (!tub) return false;
   if (t.type === 'takeWater') return how(s, w, tub) !== null;
   if (t.type === 'fillBucket') {
@@ -112,7 +124,7 @@ const fits = (s: Survivor, kg: number) =>
  */
 export function startWaterActivity(s: Survivor, w: World, activity: WaterActivity): Action {
   const idle: Action = { type: 'idle', ticksLeft: 0 };
-  const tub = w.furniture.find((f) => f.id === activity.tubId && f.kind === 'tub');
+  const tub = w.furniture.find((f) => f.id === activity.tubId && fillable(f));
   if (!tub) return idle;
   const st = w.storage.items;
   if (activity.type === 'takeWater') {
@@ -124,7 +136,7 @@ export function startWaterActivity(s: Survivor, w: World, activity: WaterActivit
       return goTo(s, w, tub.pos, pour);
     }
     if (way === 'bottles') {
-      const n = Math.min(room(tub), st.waterBottle, fits(s, ITEM_WEIGHT_KG.waterBottle));
+      const n = Math.min(room(tub), spareBottles(w), fits(s, ITEM_WEIGHT_KG.waterBottle));
       if (n < 1) return idle;
       st.waterBottle -= n;
       s.carrying.waterBottle += n;

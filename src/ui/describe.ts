@@ -2,6 +2,7 @@
 import { es } from '../i18n/es';
 import {
   BAGS,
+  BARREL_LITERS,
   BODY_HP,
   CISTERN_LITERS,
   CLEAN_BANDAGE_HEAL,
@@ -164,6 +165,7 @@ export function furnitureLabel(w: World, f: Furniture): string | null {
   const t = es.furnitureLabels;
   const l = Math.round(f.water ?? 0);
   if (f.kind === 'tub') return t.tub(l, TUB_LITERS);
+  if (f.kind === 'barrel') return t.barrel(l, BARREL_LITERS); // V2
   if (f.kind === 'cistern') return t.cistern(l, CISTERN_LITERS);
   if (f.kind === 'sink') return mainsOn(w) ? t.sinkOn : t.sinkOff;
   return null;

@@ -22,6 +22,7 @@ test('el menú Construir solo se ve con la herramienta y elige qué construir', 
     'Mesa — 4 tablas (tienes 7)',
     'Hoguera — 3 tablas (tienes 7)',
     'Barreño — 4 tablas (tienes 7)', // H5b
+    'Barril de lluvia — 6 tablas (tienes 7)', // V2
     'Muro — 2 tablas (tienes 7)',
     'Puerta — 4 tablas (tienes 7)',
     'Reparar — 1–3 tablas (tienes 7)',

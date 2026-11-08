@@ -6,7 +6,7 @@ import './panels.css';
 
 /** Por grupos (H5c1 §8): lo que se pone, y Reparar para muchas cosas seguidas. */
 const GROUPS: readonly { title: keyof typeof es.buildGroups; kinds: readonly BuildKind[] }[] = [
-  { title: 'furniture', kinds: ['bed', 'table', 'campfire', 'tub'] },
+  { title: 'furniture', kinds: ['bed', 'table', 'campfire', 'tub', 'barrel'] },
   { title: 'walls', kinds: ['woodWall', 'woodDoor'] },
   // Reparar elige el plano según la casilla (spec H4b §4.2). Lo de las ventanas, con el clic
   // derecho (H5c1 §8).

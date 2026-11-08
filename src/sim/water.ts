@@ -1,8 +1,10 @@
 // Agua (spec H5b §6): fregaderos con agua corriente (hasta que se corta), cisternas, lluvia y el
 // barreño.
 import {
+  BARREL_LITERS,
   CISTERN_IN,
   CISTERN_LITERS,
+  RAIN_BARREL_LITERS,
   RAIN_CISTERN_LITERS,
   RAIN_TUB_LITERS,
   SINK_IN,
@@ -93,7 +95,7 @@ export const isRaining = (w: World): boolean => w.tick < w.common.rainUntil;
 
 /**
  * Al cortarse el agua corriente, se avisa. Cada hora de lluvia: los cubos vacíos de los montones
- * al aire libre se llenan, las cisternas suben y el barreño de fuera también.
+ * al aire libre se llenan, las cisternas suben y el barreño y el barril (V2) de fuera también.
  */
 export function waterSystem(w: World): void {
   if (w.mapId !== 0) return; // H5c1: en los sitios no hay agua corriente ni depósitos
@@ -109,5 +111,7 @@ export function waterSystem(w: World): void {
       f.water = Math.min(CISTERN_LITERS, (f.water ?? 0) + RAIN_CISTERN_LITERS);
     else if (f.kind === 'tub' && !indoors(w, f.pos.x, f.pos.y))
       f.water = Math.min(TUB_LITERS, (f.water ?? 0) + RAIN_TUB_LITERS);
+    else if (f.kind === 'barrel' && !indoors(w, f.pos.x, f.pos.y))
+      f.water = Math.min(BARREL_LITERS, (f.water ?? 0) + RAIN_BARREL_LITERS); // V2
   }
 }

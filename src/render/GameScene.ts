@@ -1755,6 +1755,9 @@ export class GameScene extends Phaser.Scene {
       case 'tub': // H5b
         m.fillRect(x + 2, y + 2, TILE_PX - 4, TILE_PX - 4);
         break;
+      case 'barrel': // V2
+        m.fillCircle(x + TILE_PX / 2, y + TILE_PX / 2, 5);
+        break;
       case 'board':
         m.fillRect(x, y + 3, TILE_PX, 4);
         m.fillRect(x, y + 9, TILE_PX, 4);

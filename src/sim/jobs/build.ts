@@ -130,7 +130,8 @@ export function finishBuild(w: World, b: Blueprint, builder: Survivor): void {
       w.furniture.push({ id: w.common.nextId++, kind: b.kind, pos: { x, y } });
       break;
     case 'tub': // H5b: vacío
-      w.furniture.push({ id: w.common.nextId++, kind: 'tub', pos: { x, y }, water: 0 });
+    case 'barrel': // V2: también
+      w.furniture.push({ id: w.common.nextId++, kind: b.kind, pos: { x, y }, water: 0 });
       break;
     case 'woodWall':
       setTile(w.grid, x, y, Tile.WoodWall);

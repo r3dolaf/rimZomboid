@@ -155,6 +155,7 @@ export const es = {
   },
   furnitureLabels: {
     tub: (l: number, max: number) => `Barreño: ${l} / ${max} litros`,
+    barrel: (l: number, max: number) => `Barril de lluvia: ${l} / ${max} litros`, // V2
     cistern: (l: number, max: number) => `Cisterna: ${l} / ${max} litros`,
     sinkOn: 'Fregadero (con agua corriente)',
     sinkOff: 'Fregadero (sin agua)',
@@ -340,6 +341,7 @@ export const es = {
     hangCurtains: 'Colgar cortinas',
     smashWindow: 'Romper ventana',
     tub: 'Barreño', // H5b
+    barrel: 'Barril de lluvia', // V2
   } satisfies Record<BuildKind, string>,
   /** «Cama — 6 tablas (tienes 12)» (H5c1 §8). */
   buildOption: (name: string, wood: number | string, have: number) =>
@@ -359,6 +361,8 @@ export const es = {
     table: 'Una mesa: hace falta para fabricar (vendas, cortinas, ropa, bolsas)',
     campfire: 'Una hoguera: de noche alumbra y anima a quien está cerca (y la ven los zombis)',
     tub: 'Un barreño: recoge el agua de la lluvia y sirve para lavar la ropa',
+    barrel:
+      'Un barril de lluvia: guarda 60 litros para beber y regar; se llena con la lluvia o a cubos',
     woodWall: 'Un muro de madera: arrastra para hacer una fila',
     woodDoor: 'Una puerta de madera, en un hueco o en una fila de muros',
     board: 'Tapiar una ventana con tablas: aguanta a los zombis',
@@ -1388,6 +1392,7 @@ export const es = {
     hangCurtains: 'Se han colgado unas cortinas',
     smashWindow: 'Se ha roto una ventana para entrar',
     tub: 'Barreño construido',
+    barrel: 'Barril de lluvia construido',
   } satisfies Record<BuildKind, string>,
   /** Lo que intentaba quien falla al construir: "ha fallado al levantar el muro". */
   buildFail: {
@@ -1405,6 +1410,7 @@ export const es = {
     hangCurtains: 'colgar las cortinas',
     smashWindow: 'romper la ventana',
     tub: 'construir el barreño',
+    barrel: 'construir el barril de lluvia',
   } satisfies Record<BuildKind, string>,
   /** Lo que hace quien trabaja en cada plano. */
   building: {
@@ -1422,6 +1428,7 @@ export const es = {
     hangCurtains: 'Colgando unas cortinas',
     smashWindow: 'Rompiendo una ventana',
     tub: 'Construyendo un barreño',
+    barrel: 'Construyendo un barril de lluvia',
   } satisfies Record<BuildKind, string>,
   /** Cada plano, para las frases ("Llevando madera a una cama"). */
   builds: {
@@ -1439,6 +1446,7 @@ export const es = {
     hangCurtains: 'una ventana sin cortinas',
     smashWindow: 'una ventana',
     tub: 'un barreño',
+    barrel: 'un barril de lluvia',
   } satisfies Record<BuildKind, string>,
 
   /** Iconos sobre la cabeza en el mapa. */

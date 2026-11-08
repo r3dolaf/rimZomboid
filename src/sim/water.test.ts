@@ -3,6 +3,7 @@
 import { expect, test } from 'vitest';
 import {
   BOTTLE_LITERS,
+  BOTTLES_KEEP,
   BUCKET_LITERS,
   BUILD,
   CISTERN_LITERS,
@@ -231,12 +232,12 @@ test('con un cubo de agua en el almacén, lo vacía en el barreño y el cubo vue
   expect(checkInvariants(w)).toEqual([]);
 });
 
-test('las botellas de agua del almacén también se vacían en él (y se tiran)', () => {
+test('las botellas de agua del almacén también se vacían en él (y se tiran), salvo las que se guardan para beber (V2)', () => {
   const w = yard();
-  w.storage.items.waterBottle = 3;
+  w.storage.items.waterBottle = 3 + BOTTLES_KEEP;
   runFor(w, 600);
   expect(tub(w).water).toBe(3 * BOTTLE_LITERS);
-  expect(w.storage.items.waterBottle).toBe(0);
+  expect(w.storage.items.waterBottle).toBe(BOTTLES_KEEP);
   expect(w.survivors[0]!.carrying.waterBottle).toBe(0);
 });
 

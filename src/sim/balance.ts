@@ -85,7 +85,7 @@ export const COLD_MOOD = -6;
 export const FREEZING_BELOW = 0;
 export const FREEZING_MOOD = -20;
 export const FREEZING_BLOOD = 3;
-export const HOT_ABOVE = 38;
+export const HOT_ABOVE = 40;
 export const HOT_MOOD = -5;
 export const HOT_THIRST = 1.5;
 // La leña de la hoguera (V3 §4), en horas: la que trae al construirla, el máximo, cuándo se lleva más
@@ -215,9 +215,9 @@ export const SLEEP_AT_NIGHT_BELOW = 95;
 export const SLEEP_ANYTIME_BELOW = 10;
 export const CRISIS_TICKS = 2 * TICKS_PER_HOUR;
 export const CRISIS_BREAK_HUNGER = 10;
-// La sed (spec V2 §1): baja 100 al día (con fiebre, ×1,5); se bebe por debajo de 40, 1 litro sube
+// La sed (spec V2 §1): baja 70 al día (con fiebre, ×1,5); se bebe por debajo de 40, 1 litro sube
 // 50; con sed por debajo de 25 y deshidratado a 0 (entonces pierde sangre).
-export const THIRST_PER_DAY = 100;
+export const THIRST_PER_DAY = 70; // sonda: con 100 la sed mataba en casi todas las partidas
 export const THIRST_PER_TICK = THIRST_PER_DAY / TICKS_PER_DAY;
 export const FEVER_THIRST = 1.5;
 export const DRINK_BELOW = 40;
@@ -226,15 +226,15 @@ export const DRINK_TICKS = 10; // 2 minutos
 export const THIRSTY_BELOW = 25;
 export const THIRSTY_MOOD = -10;
 export const DEHYDRATED_MOOD = -25;
-export const DEHYDRATED_BLOOD = 4;
+export const DEHYDRATED_BLOOD = 3;
 export const CRISIS_BREAK_THIRST = 10;
 /** Teniendo una botella encima, un fregadero o un depósito a más de esto (casillas) no compensa. */
 export const NEAR_WATER = 20;
 /** Un depósito cuenta como si estuviera esto más lejos que un fregadero (el grifo, primero). */
 export const DEPOT_DETOUR = 8;
 // El barril de lluvia (V2 §3): lo que guarda y lo que suma cada hora de lluvia al aire libre.
-export const BARREL_LITERS = 60;
-export const RAIN_BARREL_LITERS = 4;
+export const BARREL_LITERS = 80;
+export const RAIN_BARREL_LITERS = 6;
 /** V2: botellas de agua en el almacén al empezar (para los primeros viajes y por si acaso). */
 export const START_WATER_BOTTLES = 6;
 /** V2: los fregaderos y cisternas de los sitios, con su propio azar (semilla ^ esto). */

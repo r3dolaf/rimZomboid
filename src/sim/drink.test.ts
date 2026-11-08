@@ -33,11 +33,11 @@ function home(): World {
   return w;
 }
 
-test('la sed baja 100 al día; con fiebre, una vez y media más', () => {
+test('la sed baja 70 al día; con fiebre, una vez y media más', () => {
   const w = emptyWorld(3, 3);
   const s = w.survivors[0]!;
   for (let i = 0; i < TICKS_PER_DAY / 4; i++) needsSystem(w);
-  expect(s.needs.thirst).toBeCloseTo(75, 5);
+  expect(s.needs.thirst).toBeCloseTo(100 - 17.5, 5);
   s.fever = {
     cause: 'flu',
     since: 0,
@@ -48,7 +48,7 @@ test('la sed baja 100 al día; con fiebre, una vez y media más', () => {
     checks: 0,
   };
   for (let i = 0; i < TICKS_PER_DAY / 4; i++) needsSystem(w);
-  expect(s.needs.thirst).toBeCloseTo(75 - 25 * 1.5, 5);
+  expect(s.needs.thirst).toBeCloseTo(100 - 17.5 - 17.5 * 1.5, 5);
 });
 
 test('con sed baja el ánimo; deshidratado, más, y pierde sangre hasta morir de sed', () => {

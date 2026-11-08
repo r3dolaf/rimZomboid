@@ -13,11 +13,11 @@ compite con el huerto y con lavar.
 
 ## 1. La sed
 
-- Necesidad nueva **Sed** (`Needs.thirst`, 0–100, 100 = bien): baja 100 al día (con fiebre, ×1,5) y
+- Necesidad nueva **Sed** (`Needs.thirst`, 0–100, 100 = bien): baja 70 al día (con fiebre, ×1,5) y
   se empieza entre 60 y 100, como el hambre.
-- **Beber** cuando baja de 40: 1 litro sube 50 (unos 2 litros al día por persona). Tarda 2 minutos.
+- **Beber** cuando baja de 40: 1 litro sube 50 (unos 1,4 litros al día por persona). Tarda 2 minutos.
 - **Ánimo:** «Con sed» (−10) por debajo de 25; «Deshidratado» (−25) a 0.
-- **A 0:** pierde 4 de sangre por hora (desnutrido, 2): se desmaya en unas 16 h y muere en unas 25.
+- **A 0:** pierde 3 de sangre por hora (desnutrido, 2): se desmaya en unas 22 h y muere en unas 33.
   Causa de muerte nueva: «de sed».
 - Beber va antes que comer y que dormir; quien está en crisis deja la crisis para beber por debajo
   de 10 (como para comer).
@@ -38,7 +38,7 @@ Si la fuente se queda sin agua mientras va, lo deja y busca otra.
 
 - Mueble que se construye (**Construir → Barril de lluvia**): 6 tablas y una hora de trabajo, sobre
   suelo libre.
-- Guarda hasta **60 litros**. Al aire libre, cada hora de lluvia suma 4 (el barreño, 2; la cisterna,
+- Guarda hasta **80 litros**. Al aire libre, cada hora de lluvia suma 6 (el barreño, 2; la cisterna,
   5).
 - **Llenar** (Transportar, como el barreño desde H5b): los barriles y los barreños se llenan con
   cubos desde un fregadero con agua corriente o una cisterna, o vaciando las botellas del almacén

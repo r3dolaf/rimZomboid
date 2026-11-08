@@ -55,7 +55,7 @@ test('frío, helado y calor en el ánimo', () => {
   expect(moodModifiers(s, 0)).toContainEqual({ id: 'cold', value: COLD_MOOD });
   s.feels = -3;
   expect(moodModifiers(s, 0)).toContainEqual({ id: 'freezing', value: FREEZING_MOOD });
-  s.feels = 40;
+  s.feels = 41;
   expect(moodModifiers(s, 0)).toContainEqual({ id: 'hot', value: HOT_MOOD });
   s.feels = 20;
   expect(moodModifiers(s, 0).some((m) => ['cold', 'freezing', 'hot'].includes(m.id))).toBe(false);
@@ -76,7 +76,7 @@ test('helado pierde 3 de sangre por hora y puede morir de frío', () => {
 test('con calor la sed baja una vez y media más rápido', () => {
   const w = emptyWorld(3, 3);
   const s = w.survivors[0]!;
-  s.feels = 40;
+  s.feels = 41;
   for (let i = 0; i < TICKS_PER_DAY / 10; i++) needsSystem(w);
   expect(s.needs.thirst).toBeCloseTo(100 - (THIRST_PER_DAY / 10) * 1.5, 5);
 });

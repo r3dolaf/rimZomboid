@@ -33,9 +33,9 @@ mordiscos, talar sirve para algo más que construir, y la partida tiene un arco 
 - **Sensación térmica** de cada uno: la temperatura de donde está más lo que abriga su ropa. Se
   calcula cada pocos ticks (`Survivor.feels`).
 - **Ánimo:** por debajo de 10, «Tiene frío» (−6); por debajo de 0, «Helado» (−20); por encima de
-  32, «Pasa calor» (−5).
+  40, «Pasa calor» (−5).
 - **Helado** (por debajo de 0): pierde 3 de sangre por hora; quien muere así muere **de frío**. Con
-  calor (por encima de 32), la sed baja una vez y media más rápido.
+  calor (por encima de 40), la sed baja una vez y media más rápido.
 - De viaje, al aire libre (y de noche, sin hoguera).
 
 ## 4. La hoguera gasta leña

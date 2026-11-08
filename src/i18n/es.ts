@@ -383,7 +383,7 @@ export const es = {
     campfire: 'Una hoguera: de noche alumbra y anima a quien está cerca (y la ven los zombis)',
     tub: 'Un barreño: recoge el agua de la lluvia y sirve para lavar la ropa',
     barrel:
-      'Un barril de lluvia: guarda 60 litros para beber y regar; se llena con la lluvia o a cubos',
+      'Un barril de lluvia: guarda 80 litros para beber y regar; se llena con la lluvia o a cubos',
     woodWall: 'Un muro de madera: arrastra para hacer una fila',
     woodDoor: 'Una puerta de madera, en un hueco o en una fila de muros',
     board: 'Tapiar una ventana con tablas: aguanta a los zombis',

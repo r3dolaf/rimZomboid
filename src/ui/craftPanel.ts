@@ -65,6 +65,8 @@ function whyNot(w: World, id: RecipeId): string | null {
       return t.station[b.station];
     case 'water':
       return t.water;
+    case 'fire':
+      return t.fire; // V3
     case 'tool':
       return t.tool[b.tool];
     case 'input':

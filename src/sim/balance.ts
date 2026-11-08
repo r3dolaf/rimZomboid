@@ -88,6 +88,12 @@ export const FREEZING_BLOOD = 3;
 export const HOT_ABOVE = 38;
 export const HOT_MOOD = -5;
 export const HOT_THIRST = 1.5;
+// La leña de la hoguera (V3 §4), en horas: la que trae al construirla, el máximo, cuándo se lleva más
+// y lo que da cada tabla.
+export const CAMPFIRE_FUEL_START = 12;
+export const CAMPFIRE_FUEL_MAX = 24;
+export const CAMPFIRE_REFUEL_BELOW = 8;
+export const FUEL_PER_WOOD = 4;
 
 // Personas (H2)
 export const NEED_START_MIN = 60;

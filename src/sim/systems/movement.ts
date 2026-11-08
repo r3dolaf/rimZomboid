@@ -33,6 +33,7 @@ import { startCraftActivity } from '../jobs/craft';
 import { startPryActivity } from '../jobs/pry';
 import { startSwapWeapon } from '../jobs/weapons';
 import { startFarmActivity } from '../jobs/farm';
+import { startFuelActivity } from '../jobs/fuel';
 import { stillDrinkable } from '../drink';
 import { startDress } from '../jobs/dress';
 import { startWaterActivity } from '../jobs/water';
@@ -116,6 +117,9 @@ function startActivity(s: Survivor, activity: Activity, w: World): Action {
       return { type: 'eat', ticksLeft: EAT_TICKS };
     case 'warmUp': // V3: ya está donde se calienta
       return { type: 'idle', ticksLeft: 0 };
+    case 'takeFuel': // V3
+    case 'fuel':
+      return startFuelActivity(s, w, activity);
     case 'drink': // V2
       return stillDrinkable(w, activity.sourceId)
         ? { type: 'drink', ticksLeft: DRINK_TICKS, sourceId: activity.sourceId }

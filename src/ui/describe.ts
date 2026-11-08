@@ -166,6 +166,8 @@ export function furnitureLabel(w: World, f: Furniture): string | null {
   const l = Math.round(f.water ?? 0);
   if (f.kind === 'tub') return t.tub(l, TUB_LITERS);
   if (f.kind === 'barrel') return t.barrel(l, BARREL_LITERS); // V2
+  if (f.kind === 'campfire' && f.fuel !== undefined)
+    return f.fuel > 0 ? t.campfire(Math.ceil(f.fuel)) : t.campfireOut; // V3
   if (f.kind === 'cistern') return t.cistern(l, CISTERN_LITERS);
   if (f.kind === 'sink') return mainsOn(w) ? t.sinkOn : t.sinkOff;
   return null;
@@ -339,6 +341,8 @@ export function activityText(s: Survivor, w?: World): string {
       if (a.then?.type === 'eat') return t.goEat;
       if (a.then?.type === 'drink') return t.goDrink; // V2
       if (a.then?.type === 'warmUp') return t.goWarmUp; // V3
+      if (a.then?.type === 'takeFuel') return t.takeFuel;
+      if (a.then?.type === 'fuel') return t.goFuel;
       if (a.then?.type === 'sleep') return t.goSleep;
       if (a.then?.type === 'crisis') return t.crisis;
       if (a.then?.type === 'console') return t.goConsole(name(a.then.otherId));

@@ -1,5 +1,12 @@
 // Construir (spec H4a §4): trabajar en un plano con toda su madera y lo que sale al terminar.
-import { BUILD, BUILD_NOISE_TICKS, CURTAINS_COST, NOISE, UNBOARD_WOOD } from '../balance';
+import {
+  BUILD,
+  BUILD_NOISE_TICKS,
+  CAMPFIRE_FUEL_START,
+  CURTAINS_COST,
+  NOISE,
+  UNBOARD_WOOD,
+} from '../balance';
 import { isRepairPlan, WALL_KINDS } from '../build';
 import { emptyInventory } from '../items';
 import { logEvent } from '../log';
@@ -126,8 +133,15 @@ export function finishBuild(w: World, b: Blueprint, builder: Survivor): void {
       break;
     }
     case 'table':
-    case 'campfire':
       w.furniture.push({ id: w.common.nextId++, kind: b.kind, pos: { x, y } });
+      break;
+    case 'campfire': // V3: con la leña de construirla
+      w.furniture.push({
+        id: w.common.nextId++,
+        kind: 'campfire',
+        pos: { x, y },
+        fuel: CAMPFIRE_FUEL_START,
+      });
       break;
     case 'tub': // H5b: vacío
     case 'barrel': // V2: también

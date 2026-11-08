@@ -47,6 +47,7 @@ import {
 } from '../sim/types';
 import { buildingTitle, furnitureLabel, pileLabel, plotLabel, zombieLabel } from '../ui/describe';
 import { canPlot, plotAt, plotPos } from '../sim/farm';
+import { isLitFire } from '../sim/furniture';
 import { pileAt } from '../sim/piles';
 import { isRaining, mainsOn } from '../sim/water';
 import { visibleTiles } from '../sim/vision';
@@ -1614,7 +1615,7 @@ export class GameScene extends Phaser.Scene {
       case 'table':
         return 'table';
       case 'campfire':
-        return campfireFrame(this.frame);
+        return isLitFire(f) ? campfireFrame(this.frame) : 'campfireOut'; // V3: sin leña, apagada
       case 'tub':
         return `tub${waterLevel(f.water ?? 0, TUB_LITERS)}`;
       case 'cistern':
@@ -1816,7 +1817,7 @@ export class GameScene extends Phaser.Scene {
     const lights: Light[] = [];
     if (sky > 0)
       for (const f of w.furniture) {
-        if (f.kind !== 'campfire' || w.seen[f.pos.y * w.grid.width + f.pos.x] !== 1) continue;
+        if (!isLitFire(f) || w.seen[f.pos.y * w.grid.width + f.pos.x] !== 1) continue; // V3
         const flicker = 1 + FLICKER * Math.sin(this.frame / 5 + f.id);
         const radius = (CAMPFIRE_RANGE + LIGHT_BEYOND) * flicker;
         lights.push({ x: f.pos.x + 0.5, y: f.pos.y + 0.5, radius });

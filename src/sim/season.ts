@@ -26,6 +26,7 @@ import {
 import { gameTime } from './clock';
 import { logEvent } from './log';
 import { baseFloor } from './base';
+import { isLitFire } from './furniture';
 import { standBeside } from './jobs/stand';
 import { pick } from './rng';
 import type { Action, Garment, Point, Survivor, World } from './types';
@@ -85,12 +86,7 @@ export function outdoorTemp(w: World, tick = w.tick): number {
 /** ¿Hay una hoguera encendida a CAMPFIRE_RANGE casillas o menos? */
 export function nearLitFire(w: World, p: Point): boolean {
   const r2 = CAMPFIRE_RANGE * CAMPFIRE_RANGE;
-  return w.furniture.some(
-    (f) =>
-      f.kind === 'campfire' &&
-      (f.fuel === undefined || f.fuel > 0) &&
-      (f.pos.x - p.x) ** 2 + (f.pos.y - p.y) ** 2 <= r2,
-  );
+  return w.furniture.some((f) => isLitFire(f) && (f.pos.x - p.x) ** 2 + (f.pos.y - p.y) ** 2 <= r2);
 }
 
 /** La temperatura de una casilla: la de fuera, bajo techo más templada, y junto al fuego, más. */
@@ -141,7 +137,7 @@ export function warmUpDecision(s: Survivor, w: World): Action | null {
   if (nearLitFire(w, here)) return null;
   let best: { stand: Point; d: number } | null = null;
   for (const f of w.furniture) {
-    if (f.kind !== 'campfire' || (f.fuel !== undefined && f.fuel <= 0)) continue;
+    if (!isLitFire(f)) continue;
     const d = (f.pos.x - here.x) ** 2 + (f.pos.y - here.y) ** 2;
     if (best && d >= best.d) continue;
     const stand = standBeside(w, s, f.pos);

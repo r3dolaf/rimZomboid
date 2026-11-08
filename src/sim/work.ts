@@ -13,6 +13,7 @@ import { buildJob, buildStillWorth } from './jobs/build';
 import { chopJob, chopStillWorth, returnAxeJob } from './jobs/chop';
 import { pryJob, pryStillWorth } from './jobs/pry';
 import { farmJob, farmStillWorth, sowJob } from './jobs/farm';
+import { fuelJob, fuelStillWorth } from './jobs/fuel';
 import { craftJob, craftStillWorth } from './jobs/craft';
 import { deliverJob, haulJob, haulStillWorth } from './jobs/haul';
 import { healJob, healStillWorth } from './jobs/heal';
@@ -160,7 +161,8 @@ export function findWork(s: Survivor, w: World): Action | null {
     ['farm', () => farmJob(s, w)], // V1: lo maduro se pudre y lo seco se pierde
     ['craft', () => craftJob(s, w)],
     // H5b: también llenar el barreño; H5b2: y las bolsas guardadas.
-    ['haul', () => haulJob(s, w) ?? waterJob(s, w) ?? packJob(s, w)],
+    // V3: lo primero, la leña de las hogueras (en invierno, apagadas hielan).
+    ['haul', () => fuelJob(s, w) ?? haulJob(s, w) ?? waterJob(s, w) ?? packJob(s, w)],
     ['chop', () => chopJob(s, w)],
     // Saquear: antes, forzar las puertas atrancadas de las casas marcadas (H4d).
     ['loot', () => pryJob(s, w) ?? lootJob(s, w)],
@@ -211,6 +213,8 @@ const WORK_ACTIONS: ReadonlySet<string> = new Set([
   'takeSeeds', // V1
   'fillCan',
   'tend',
+  'takeFuel', // V3
+  'fuel',
 ]);
 
 /** ¿Está trabajando (o yendo a trabajar)? */
@@ -247,6 +251,7 @@ export function stillWorthIt(s: Survivor, w: World): boolean {
     return waterStillWorth(s, w);
   if (what === 'build') return buildStillWorth(s, w);
   if (what === 'takeSeeds' || what === 'fillCan' || what === 'tend') return farmStillWorth(s, w);
+  if (what === 'takeFuel' || what === 'fuel') return fuelStillWorth(s, w);
   if (what === 'swapWeapon') return swapWeaponStillWorth(s, w);
   if (what === 'dress') return dressStillWorth(s);
   if (what === 'bags') return bagStillWorth(s);

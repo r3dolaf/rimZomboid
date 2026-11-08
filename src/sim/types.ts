@@ -306,7 +306,10 @@ export type Activity =
   // Beber (V2 §2): en un mueble con agua o, con `sourceId` null, una botella del almacén.
   | { type: 'drink'; sourceId: number | null }
   // Calentarse (V3 §3): helado, ir junto a una hoguera encendida o bajo techo.
-  | { type: 'warmUp' };
+  | { type: 'warmUp' }
+  // Leña (V3 §4): cogerla en el almacén y echarla en la hoguera.
+  | { type: 'takeFuel'; fireId: number }
+  | { type: 'fuel'; fireId: number };
 
 export type Action =
   /** `wait`: esperando tras no encontrar camino (no se consulta al cerebro) o tras negarse a trabajar. */
@@ -471,14 +474,7 @@ export interface Fever {
 }
 
 /** De qué se muere (H5 §8). */
-export type DeathCause =
-  | 'blood'
-  | 'wounds'
-  | 'infection'
-  | 'mercy'
-  | 'hunger'
-  | 'thirst'
-  | 'cold';
+export type DeathCause = 'blood' | 'wounds' | 'infection' | 'mercy' | 'hunger' | 'thirst' | 'cold';
 
 /** Uno o dos desconocidos que esperan a la puerta a que el jugador decida (su decisión caduca). */
 export interface Stranger {

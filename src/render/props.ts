@@ -392,8 +392,11 @@ function vessel(level: number, kind: 'tub' | 'cistern' | 'barrel'): string[] {
   return rowsOf(px, top);
 }
 
-/** La hoguera: un corro de piedras, dos troncos cruzados y la llama, que cambia en cada dibujo. */
-function campfire(frame: number): string[] {
+/**
+ * La hoguera: un corro de piedras, dos troncos cruzados y la llama, que cambia en cada dibujo; sin
+ * leña (V3), sin llama y con ceniza.
+ */
+function campfire(frame: number, lit = true): string[] {
   const px: Pixels = new Map();
   const [cx, cy] = [7.5, 11];
   for (let k = 0; k < 8; k++) {
@@ -411,6 +414,16 @@ function campfire(frame: number): string[] {
       px.set(key(x, y), 'W');
       px.set(key(x, y + 1), 'q');
     }
+  }
+  if (!lit) {
+    for (const [x, y] of [
+      [6, 11],
+      [7, 10],
+      [8, 11],
+      [9, 10],
+    ] as const)
+      px.set(key(x, y), 't');
+    return rowsOf(px, 0);
   }
   const height = [7, 8, 6][frame % 3]!;
   const sway = [0, 0.7, -0.7][frame % 3]!;
@@ -447,6 +460,7 @@ function planks(n: number): string[] {
 }
 
 for (let f = 0; f < 3; f++) PROP_SPRITES[`campfire${f}`] = campfire(f);
+PROP_SPRITES.campfireOut = campfire(0, false); // V3
 for (let l = 0; l <= 4; l++) {
   PROP_SPRITES[`tub${l}`] = vessel(l, 'tub');
   PROP_SPRITES[`cistern${l}`] = vessel(l, 'cistern');

@@ -163,6 +163,8 @@ export const es = {
   furnitureLabels: {
     tub: (l: number, max: number) => `Barreño: ${l} / ${max} litros`,
     barrel: (l: number, max: number) => `Barril de lluvia: ${l} / ${max} litros`, // V2
+    campfire: (hours: number) => `Hoguera: leña para ${hours} h`, // V3
+    campfireOut: 'Hoguera apagada: hace falta leña',
     cistern: (l: number, max: number) => `Cisterna: ${l} / ${max} litros`,
     sinkOn: 'Fregadero (con agua corriente)',
     sinkOff: 'Fregadero (sin agua)',
@@ -285,6 +287,7 @@ export const es = {
       campfire: 'Hace falta una hoguera',
     },
     water: 'Hace falta un barreño con agua',
+    fire: 'La hoguera está apagada: hace falta leña', // V3
     tool: { needle: 'Falta una aguja', knife: 'Falta un cuchillo' },
     input: (what: string, n: number) => `${n === 1 ? 'Falta' : 'Faltan'} ${what}`,
     material: 'Falta tela, retal o tira',
@@ -1347,6 +1350,8 @@ export const es = {
     eat: 'Comiendo',
     goDrink: 'Va a beber', // V2
     goWarmUp: 'Va a calentarse', // V3
+    takeFuel: 'Va a por leña para la hoguera',
+    goFuel: 'Lleva leña a la hoguera',
     drink: 'Bebiendo',
     goSleep: 'Va a dormir',
     sleepInBed: 'Durmiendo en su cama',

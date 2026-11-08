@@ -3,6 +3,7 @@
 import { darkness } from '../sim/clock';
 import { isRaining } from '../sim/water';
 import { Tile, type Point, type World } from '../sim/types';
+import { isLitFire } from '../sim/furniture';
 import type { SfxId } from './catalog';
 import { placeSound, type ListenerView } from './space';
 
@@ -147,7 +148,7 @@ export function ambienceOf(w: World, v: ListenerView): Ambience {
   const dark = darkness(w.tick);
   let fire = 0;
   for (const f of w.furniture) {
-    if (f.kind !== 'campfire') continue;
+    if (!isLitFire(f)) continue; // V3: apagada no suena
     fire = Math.max(fire, placeSound({ x: f.pos.x + 0.5, y: f.pos.y + 0.5 }, v)?.gain ?? 0);
   }
   return {

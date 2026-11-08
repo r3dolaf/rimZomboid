@@ -2,6 +2,7 @@ import {
   BODY_HP,
   BUILD,
   BUILDINGS,
+  CAMPFIRE_FUEL_MAX,
   DEPOT_LITERS,
   CURTAINS_COST,
   OPINION_LIMIT,
@@ -396,6 +397,13 @@ function checkMap(w: World, everyone: readonly Survivor[], allBeds: readonly Bed
       b.done < 0
     )
       problems.push(`pedido ${b.id}: ${b.recipe}, ${b.mode}, N ${b.target}, hechos ${b.done}`);
+  // Leña (V3 §4): entre 0 y lo que cabe.
+  for (const f of w.furniture)
+    if (
+      f.fuel !== undefined &&
+      (!Number.isFinite(f.fuel) || f.fuel < 0 || f.fuel > CAMPFIRE_FUEL_MAX)
+    )
+      problems.push(`hoguera #${f.id}: leña ${f.fuel} fuera de 0–${CAMPFIRE_FUEL_MAX}`);
   // Agua (H5b §6): entre 0 y lo que cabe.
   for (const f of w.furniture) {
     const max = DEPOT_LITERS[f.kind] ?? null;

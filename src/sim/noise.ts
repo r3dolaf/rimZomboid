@@ -1,5 +1,6 @@
 // Ruido y luz que atraen a los zombis (spec H4b §3).
 import { CAMPFIRE_SIGHT } from './balance';
+import { isLitFire } from './furniture';
 import { darkness } from './clock';
 import type { Point, World, Zombie } from './types';
 import { lineOfSight } from './vision';
@@ -28,7 +29,7 @@ export function visibleCampfire(w: World, z: Zombie): Point | null {
   let best: Point | null = null;
   let bestD = CAMPFIRE_SIGHT * CAMPFIRE_SIGHT;
   for (const f of w.furniture) {
-    if (f.kind !== 'campfire') continue;
+    if (!isLitFire(f)) continue; // V3: apagada no se ve
     const d = (f.pos.x + 0.5 - z.pos.x) ** 2 + (f.pos.y + 0.5 - z.pos.y) ** 2;
     if (d > bestD || !lineOfSight(w.grid, at, f.pos)) continue;
     best = { ...f.pos };

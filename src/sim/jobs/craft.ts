@@ -26,6 +26,7 @@ import type {
   Survivor,
   World,
 } from '../types';
+import { isLitFire } from '../furniture';
 import { tileOf } from '../world';
 import { hasCargo } from './medical';
 import { atOrBeside, standOnOrBeside } from './stand';
@@ -101,6 +102,7 @@ const hasPiece = (w: World, r: Recipe) => r.piece === undefined || pieceFor(w, r
 export type CraftBlock =
   | { kind: 'station'; station: 'table' | 'tub' | 'campfire' }
   | { kind: 'water' }
+  | { kind: 'fire' } // V3: la hoguera, sin leña
   | { kind: 'tool'; tool: 'needle' | 'knife' }
   | { kind: 'input'; item: ItemKind; missing: number }
   | { kind: 'material' }
@@ -110,6 +112,7 @@ export type CraftBlock =
 export function craftBlocker(w: World, r: Recipe): CraftBlock | null {
   const station = r.station ?? 'table';
   if (!w.furniture.some((f) => f.kind === station)) return { kind: 'station', station };
+  if (station === 'campfire' && !w.furniture.some(isLitFire)) return { kind: 'fire' }; // V3
   if (!w.furniture.some((f) => isStation(r, f))) return { kind: 'water' };
   if (
     r.tool !== null &&
@@ -148,7 +151,9 @@ export function billWanted(w: World, b: Bill): boolean {
 
 /** ¿Sirve ese mueble para la receta? (La mesa; el barreño, con agua bastante, H5b.) */
 const isStation = (r: Recipe, f: Furniture) =>
-  f.kind === (r.station ?? 'table') && (f.water ?? 0) >= (r.water ?? 0);
+  f.kind === (r.station ?? 'table') &&
+  (f.water ?? 0) >= (r.water ?? 0) &&
+  (f.kind !== 'campfire' || isLitFire(f)); // V3: se cocina con la hoguera encendida
 
 /** La mesa (o el barreño) más cercana a la que puede llegar, con dónde ponerse. */
 function nearestTable(

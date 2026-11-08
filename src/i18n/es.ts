@@ -1,5 +1,6 @@
 // Textos visibles del juego en español. Todo texto de la interfaz sale de aquí.
 import { BIRTHDAY_CANS } from '../sim/balance';
+import type { Season } from '../sim/season';
 import type { MoodModifierId } from '../sim/mood';
 import type { ItemKind } from '../sim/items';
 import type { RelationLabel } from '../sim/social';
@@ -742,6 +743,7 @@ export const es = {
     roadJoinerLeft: 'Sigue su camino',
     waterCut: 'Se ha cortado el agua', // H5b
     lowWater: 'Queda poca agua', // V2
+    winter: 'Llega el invierno', // V3
     skillUp: 'Mejora',
     // H5
     died: 'Muerte',
@@ -1036,6 +1038,14 @@ export const es = {
     rescued: (who: string, other: string) => `${who} ha rescatado a ${other}`,
     waterCut: 'Se ha cortado el agua',
     lowWater: 'Queda poca agua en la base: haced barriles o id a por agua',
+    /** V3: «Empieza el otoño». */
+    season: (season: Season) =>
+      ({
+        summer: 'Empieza el verano',
+        autumn: 'Empieza el otoño: hay que preparar el invierno',
+        winter: 'Empieza el invierno: no crece nada y hace frío',
+        spring: 'Empieza la primavera',
+      })[season],
     /** V1: «Se han estropeado 3 hortalizas y 1 guiso en el almacén». */
     spoiled: (veg: number, meal: number) => {
       const parts = [

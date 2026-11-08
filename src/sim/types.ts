@@ -633,6 +633,8 @@ export interface Furniture {
   kind: 'table' | 'campfire' | 'tub' | 'sink' | 'cistern' | 'barrel';
   pos: Point;
   water?: number;
+  /** Las horas de leña de una hoguera (V3 §4); sin el campo, nunca se apaga (las de antes). */
+  fuel?: number;
 }
 
 /** Almacén de la base. */
@@ -879,6 +881,8 @@ export interface Common {
   departed: { id: number; how: 'died' | 'banished'; mapId: number | null }[];
   /** Los nombres que ha llevado alguien en la partida (H6c §2.9): no se repiten mientras queden. */
   usedNames: string[];
+  /** Una ola de frío o de calor (V3 §8): grados de más o de menos hasta ese tick. */
+  tempShift?: { value: number; until: number } | null;
 }
 
 export interface World {

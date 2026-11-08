@@ -1,4 +1,5 @@
 import { LOG_MAX } from './balance';
+import type { Season } from './season';
 import type { Inventory, ItemKind } from './items';
 import type {
   SiteInfo,
@@ -71,6 +72,7 @@ export type LogEvent =
   | { kind: 'clothesTorn'; survivorId: number; garment: GarmentKind; part: BodyPart }
   | { kind: 'waterCut' }
   | { kind: 'lowWater' } // V2
+  | { kind: 'season'; season: Season } // V3
   // V1: lo que se ha estropeado hoy en el almacén.
   | { kind: 'spoiled'; veg: number; meal: number }
   // V1: cultivos perdidos esta hora, secos y podridos sin cosechar.

@@ -39,6 +39,26 @@ export const IDLE_TICKS_MIN = 20;
 export const IDLE_TICKS_MAX = 80;
 export const NO_PATH_RETRY_TICKS = 10;
 
+// Estaciones y temperatura (spec V3 §1–§2)
+export const SEASON_DAYS = 15;
+export const YEAR_DAYS = 4 * SEASON_DAYS;
+/** Media del año y lo que sube o baja: unos 24 grados en pleno verano y −2 en pleno invierno. */
+export const TEMP_MEAN = 11;
+export const TEMP_SWING = 13;
+/** Lo que cambia a lo largo del día (lo más frío a las 03:00, lo más caliente a las 15:00). */
+export const TEMP_DAY_SWING = 5;
+export const TEMP_COLDEST_HOUR = 3;
+/** Cuánto se aparta cada día de la media (lo mismo con la misma semilla). */
+export const TEMP_DAY_NOISE = 4;
+export const TEMP_RAIN = -3;
+export const TEMP_STORM = -5;
+/** Bajo techo, la temperatura se acerca a 20 (como mucho 8 más y 4 menos que fuera). */
+export const INDOOR_TARGET = 20;
+export const INDOOR_UP = 8;
+export const INDOOR_DOWN = 4;
+/** Junto a una hoguera encendida (a CAMPFIRE_RANGE casillas). */
+export const FIRE_WARMTH = 12;
+
 // Personas (H2)
 export const NEED_START_MIN = 60;
 export const NEED_START_MAX = 100;

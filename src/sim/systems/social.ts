@@ -1,4 +1,5 @@
-import { has, spend } from '../bags';
+import { spend } from '../bags';
+import { packFood } from '../food';
 import {
   BREAKUP_BELOW,
   BREAKUP_OPINION_LOSS,
@@ -113,13 +114,14 @@ export function applyChat(w: World, a: Survivor, b: Survivor, kind: ChatKind): v
   if (kind === 'pleasant' || kind === 'neutral') maybeShareFood(w, a, b);
 }
 
-/** Si `b` tiene hambre y `a` lleva comida y le cae bien, le da una lata. */
+/** Si `b` tiene hambre y `a` lleva comida y le cae bien, le da una (V1: la que antes comería). */
 function maybeShareFood(w: World, a: Survivor, b: Survivor): void {
-  if (b.needs.hunger >= SHARE_HUNGER_BELOW || has(a, 'food') === 0) return;
+  const kind = packFood(a);
+  if (b.needs.hunger >= SHARE_HUNGER_BELOW || kind === null) return;
   if (opinionOf(a, b.id) < 0) return;
-  if (weightOf(b.carrying) + ITEM_WEIGHT_KG.food > capacityKg(b) + 1e-9) return;
-  spend(a, 'food'); // también de sus bolsas (H5b2)
-  b.carrying.food++;
+  if (weightOf(b.carrying) + ITEM_WEIGHT_KG[kind] > capacityKg(b) + 1e-9) return;
+  spend(a, kind); // también de sus bolsas (H5b2)
+  b.carrying[kind]++;
   changeOpinion(a, b.id, SHARE_OPINION);
   changeOpinion(b, a.id, SHARE_OPINION);
   addMemory(b, 'sharedFood', w.tick, a.id);

@@ -1,11 +1,14 @@
 // Cifras de toda la colonia.
 import { EAT_RESTORE, HUNGER_PER_DAY } from './balance';
-import { has } from './bags';
+import { foodUnits, packFoodUnits } from './food';
 import type { World } from './types';
 
-/** Latas que hay en total: almacén y lo que llevan encima (también en sus bolsas). */
+/**
+ * Comida que hay en total, contada en latas (V1: guisos y hortalizas por lo que quitan): almacén y
+ * lo que llevan encima (también en sus bolsas).
+ */
 export function totalFood(w: World): number {
-  return w.storage.items.food + w.survivors.reduce((acc, s) => acc + has(s, 'food'), 0);
+  return foodUnits(w.storage.items) + w.survivors.reduce((acc, s) => acc + packFoodUnits(s), 0);
 }
 
 /** Días de comida: latas entre lo que comen todos al día (cada uno, unas 70/60 latas). */

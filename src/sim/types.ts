@@ -207,6 +207,7 @@ export type MemoryId =
   | 'forgottenBirthday'
   | 'storm'
   | 'goodDay' // H6c
+  | 'hotMeal' // V1
   // Muebles (H4a)
   | 'ateAtTable'
   | 'byTheFire'

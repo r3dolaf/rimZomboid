@@ -96,6 +96,9 @@ test('invariantes: planos con madera de más, montones raros, marcas que no son 
       hatchet: 0,
       roadMap: 0,
       note: 0,
+      seeds: 0,
+      veg: 0,
+      meal: 0,
       pieces: [],
     },
   });

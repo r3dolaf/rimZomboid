@@ -96,6 +96,7 @@ export const MEMORY_EFFECTS = {
   forgottenBirthday: { value: -8, hours: 48 },
   storm: { value: -6, hours: 18 },
   goodDay: { value: 6, hours: 12 }, // H6c
+  hotMeal: { value: 8, hours: 8 }, // V1: comer un guiso (en vez de «Ha comido»)
   ateAtTable: { value: 3, hours: 6 },
   byTheFire: { value: 4, hours: 1 },
   downed: { value: -15, hours: 24 },
@@ -112,6 +113,9 @@ export const MEMORY_EFFECTS = {
 } as const;
 export const EAT_BELOW = 35;
 export const EAT_RESTORE = 60;
+// Huerto y cocina (spec V1 §1): lo que quitan las hortalizas y el guiso (la lata, EAT_RESTORE).
+export const VEG_RESTORE = 35;
+export const MEAL_RESTORE = 80;
 export const EAT_TICKS = 30; // 6 minutos de juego
 // De noche casi todos se acuestan (< 95) y nadie se levanta hasta las 06:00: así los ritmos se
 // sincronizan con la noche aunque alguien eche una siesta de día (< 10).
@@ -146,6 +150,9 @@ export const ITEM_WEIGHT_KG = {
   hatchet: 1, // H5b2
   roadMap: 0.05, // H5c1
   note: 0.05,
+  seeds: 0.02, // V1
+  veg: 0.5,
+  meal: 0.6,
 } as const;
 export const START_WEAPON = 'knife' as const; // H4b: sin arma, caían enseguida
 

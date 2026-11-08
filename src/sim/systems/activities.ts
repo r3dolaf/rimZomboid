@@ -1,6 +1,7 @@
 import { readFindings } from '../sites';
-import { spend, takeInto, unloadAt } from '../bags';
-import { CHOP_NOISE_TICKS, EAT_RESTORE, NOISE, PRY_NOISE_TICKS } from '../balance';
+import { takeInto, unloadAt } from '../bags';
+import { CHOP_NOISE_TICKS, NOISE, PRY_NOISE_TICKS } from '../balance';
+import { eatFrom, eatFromPack, hasFood } from '../food';
 import { setTile } from '../map/grid';
 import { isNight } from '../clock';
 import { finishConsoling } from '../consoling';
@@ -25,12 +26,13 @@ export function activitiesSystem(w: World): void {
       if (--a.ticksLeft > 0) continue;
       // Puede que otro se haya comido la última lata del almacén mientras tanto.
       // De lo que lleva, también de sus bolsas (H5b2 §3).
+      // V1: lo primero que haya (guiso, hortalizas, latas); el guiso es comida caliente.
       const store = w.storage.items;
-      const ate = a.fromPack ? spend(s, 'food') === 1 : store.food > 0 && store.food-- > 0;
+      const ate = a.fromPack ? eatFromPack(s) : eatFrom(store);
       if (ate) {
-        if (!a.fromPack && store.food === 0) logEvent(w, { kind: 'outOfFood' });
-        s.needs.hunger = Math.min(100, s.needs.hunger + EAT_RESTORE);
-        addMemory(s, 'ate', w.tick);
+        if (!a.fromPack && !hasFood(store)) logEvent(w, { kind: 'outOfFood' });
+        s.needs.hunger = Math.min(100, s.needs.hunger + ate.restore);
+        addMemory(s, ate.kind === 'meal' ? 'hotMeal' : 'ate', w.tick);
         if (nearTable(w, s)) addMemory(s, 'ateAtTable', w.tick);
       }
       s.action = { type: 'idle', ticksLeft: 0 };

@@ -4,7 +4,6 @@
 import {
   BANDAGE_CLEAN_HOURS,
   EAT_BELOW,
-  EAT_RESTORE,
   FLOOR_SLEEP_FACTOR,
   HUNGER_PER_TICK,
   SLEEP_DRAIN_PER_TICK,
@@ -21,6 +20,7 @@ import { bloodTick } from './blood';
 import { gameTime } from './clock';
 import { piecesGone } from './clothes';
 import { exitTile } from './expeditions';
+import { eatFromPack, packFood, packFoodUnits } from './food';
 import { WEAPONS } from './jobs/weapons';
 import { logEvent } from './log';
 import { catchUp, reveal, siteMap } from './sites';
@@ -120,12 +120,13 @@ function travelerTick(base: World, t: Travel, s: Survivor, night: boolean): void
     n.sleep = clamp(n.sleep - SLEEP_DRAIN_PER_TICK);
   }
   // Con hambre, de lo suyo; si no le queda, de lo del compañero que más lleva (H5c3 §3).
+  // V1: cualquier comida, en su orden; el compañero, el que más lleva contado en latas.
   if (n.hunger < EAT_BELOW) {
-    const giver =
-      has(s, 'food') > 0
-        ? s
-        : t.members.reduce((a, b) => (has(b, 'food') > has(a, 'food') ? b : a));
-    if (spend(giver, 'food') === 1) n.hunger = clamp(n.hunger + EAT_RESTORE);
+    const giver = packFood(s)
+      ? s
+      : t.members.reduce((a, b) => (packFoodUnits(b) > packFoodUnits(a) ? b : a));
+    const ate = eatFromPack(giver);
+    if (ate) n.hunger = clamp(n.hunger + ate.restore);
   }
   const bleeding = s.wounds.find((wd) => wd.bleeding);
   if (bleeding && has(s, 'bandage') > 0) {

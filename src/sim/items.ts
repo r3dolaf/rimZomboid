@@ -28,7 +28,11 @@ export type ItemKind =
   | 'hatchet'
   // H5c1: un mapa de carreteras y una nota descubren un sitio
   | 'roadMap'
-  | 'note';
+  | 'note'
+  // V1: semillas, hortalizas y guisos (las dos últimas se estropean)
+  | 'seeds'
+  | 'veg'
+  | 'meal';
 
 /** Orden en el que se cogen las cosas al registrar un contenedor. */
 export const ITEM_KINDS: readonly ItemKind[] = [
@@ -54,6 +58,9 @@ export const ITEM_KINDS: readonly ItemKind[] = [
   'hatchet',
   'roadMap',
   'note',
+  'seeds', // V1
+  'veg',
+  'meal',
 ];
 
 /**
@@ -87,6 +94,9 @@ export function emptyInventory(): Inventory {
     hatchet: 0,
     roadMap: 0,
     note: 0,
+    seeds: 0, // V1
+    veg: 0,
+    meal: 0,
     pieces: [],
   };
 }

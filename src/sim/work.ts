@@ -6,6 +6,7 @@ import { bagAllowed, bagRoom, isBag, personal, wornBags } from './bags';
 import { armFactor } from './body';
 import { capacityKg } from './skills';
 import { foodDays } from './colony';
+import { FOODS, hasFood } from './food';
 import { isNight } from './clock';
 import { contains } from './geom';
 import { buildJob, buildStillWorth } from './jobs/build';
@@ -121,7 +122,9 @@ export function findWork(s: Survivor, w: World): Action | null {
   if (hasCargo(s)) {
     // Si en el almacén no queda comida y él lleva (en las manos o en sus bolsas, salvo la de sus
     // listas y su «Llevar siempre», H5b2), lo primero es llevarla para que coman todos.
-    if (personal(s, 'food') > (s.keep.food ?? 0) && w.storage.items.food === 0) return goUnload(w);
+    // V1: cualquier comida.
+    const spare = FOODS.some((k) => personal(s, k) > (s.keep[k] ?? 0));
+    if (spare && !hasFood(w.storage.items)) return goUnload(w);
     // La madera que lleva, a un plano que la necesite.
     const deliver = may(s, 'haul') ? deliverJob(s, w) : null;
     if (deliver) return deliver;

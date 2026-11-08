@@ -130,6 +130,9 @@ test('desaparecen: registrado y vacío, al cabo de un día; si no, se pudre a lo
     hatchet: 0,
     roadMap: 0,
     note: 0,
+    seeds: 0,
+    veg: 0,
+    meal: 0,
     pieces: [],
   };
   a.searched = true;

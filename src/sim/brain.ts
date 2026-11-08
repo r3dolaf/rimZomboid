@@ -1,4 +1,3 @@
-import { has } from './bags';
 import {
   CRISIS_BREAK_HUNGER,
   EAT_TICKS,
@@ -12,6 +11,7 @@ import {
   WAKE_RANGE,
 } from './balance';
 import { baseFloor } from './base';
+import { hasFood, packFood } from './food';
 import { isNight } from './clock';
 import { findConsoleTarget, inCrisis as crisisNow, stillConsoling } from './consoling';
 import { dangerDecision, zombieInSight } from './danger';
@@ -50,7 +50,7 @@ const AiBrain: Brain = {
     const inCrisis = crisisNow(s);
 
     // Si la comida se acaba mientras va a comer o come, lo deja.
-    if (((a.type === 'eat' && !a.fromPack) || goingTo === 'eat') && w.storage.items.food === 0)
+    if (((a.type === 'eat' && !a.fromPack) || goingTo === 'eat') && !hasFood(w.storage.items))
       return { type: 'idle', ticksLeft: 0 };
     // Comer, dormir y pelear se terminan; la crisis solo se corta por algo urgente.
     if (a.type === 'eat' || a.type === 'sleep' || goingTo === 'eat' || goingTo === 'sleep')
@@ -133,12 +133,12 @@ function wantsToSleep(s: Survivor, w: World): boolean {
 
 /**
  * Come: en la base, primero del almacén (H6c: lo de la mochila, para cuando no hay); fuera, de lo
- * que lleva encima; si no lleva, va al almacén si queda comida.
+ * que lleva encima; si no lleva, va al almacén si queda comida (V1: cualquier comida).
  */
 function eatSomething(s: Survivor, w: World): Action | null {
-  const store = w.storage.items.food > 0;
+  const store = hasFood(w.storage.items);
   if (store && inBase(w, s)) return goEat(w);
-  if (has(s, 'food') > 0) return { type: 'eat', ticksLeft: EAT_TICKS, fromPack: true };
+  if (packFood(s)) return { type: 'eat', ticksLeft: EAT_TICKS, fromPack: true };
   if (store) return goEat(w);
   return null;
 }

@@ -7,7 +7,6 @@ import {
   BANDAGE_RANGE,
   BANDAGE_TICKS,
   EAT_BELOW,
-  EAT_RESTORE,
   ITEM_WEIGHT_KG,
   PAINKILLER_HOURS,
   REST_BELOW,
@@ -20,6 +19,7 @@ import { baseFloor } from '../base';
 import { armFactor, canWalk } from '../body';
 import { seenByColony } from '../danger';
 import { contains } from '../geom';
+import { bestFood, eatFromPack, hasFood, packFood } from '../food';
 import { weightOf, type ItemKind } from '../items';
 import { logEvent } from '../log';
 import { findPath, regionOf } from '../path/astar';
@@ -334,7 +334,7 @@ const goGiveFood = (p: Survivor): Action => ({
   then: { type: 'giveFood', patientId: p.id },
 });
 
-/** Sanar (H6c): llevar una lata del almacén a un derribado con hambre. */
+/** Sanar (H6c): llevar comida del almacén a un derribado con hambre. */
 export function feedJob(s: Survivor, w: World): Action | null {
   const p = w.survivors.find(
     (o) =>
@@ -344,8 +344,8 @@ export function feedJob(s: Survivor, w: World): Action | null {
       !w.survivors.some((x) => x !== s && foodTargetId(x) === o.id),
   );
   if (!p) return null;
-  if (has(s, 'food') > 0) return goGiveFood(p);
-  if (w.storage.items.food === 0 || !reachesStorage(w, s)) return null;
+  if (packFood(s)) return goGiveFood(p);
+  if (!hasFood(w.storage.items) || !reachesStorage(w, s)) return null;
   return {
     type: 'moveTo',
     target: pick(w.rng, w.storage.tiles),
@@ -368,10 +368,12 @@ export function startFeedActivity(
   const idle: Action = { type: 'idle', ticksLeft: 0 };
   const p = w.survivors.find((x) => x.id === activity.patientId);
   if (activity.type === 'fetchFood') {
-    if (has(s, 'food') === 0) {
-      if (w.storage.items.food === 0 || room(s, 'food') === 0) return idle;
-      w.storage.items.food--;
-      s.carrying.food++;
+    // V1: la comida que antes se comería (guiso, hortalizas, latas).
+    const kind = bestFood(w.storage.items);
+    if (!packFood(s)) {
+      if (!kind || room(s, kind) === 0) return idle;
+      w.storage.items[kind]--;
+      s.carrying[kind]++;
     }
     if (!p || !needsFood(w, p)) return idle;
     const path = findPath(w.grid, tileOf(s.pos), tileOf(p.pos));
@@ -379,9 +381,9 @@ export function startFeedActivity(
     s.path = path;
     return goGiveFood(p);
   }
-  if (!p || !needsFood(w, p) || has(s, 'food') === 0 || !near(s, p)) return idle;
-  spend(s, 'food');
-  p.needs.hunger = Math.min(100, p.needs.hunger + EAT_RESTORE);
+  if (!p || !needsFood(w, p) || !packFood(s) || !near(s, p)) return idle;
+  const ate = eatFromPack(s)!;
+  p.needs.hunger = Math.min(100, p.needs.hunger + ate.restore);
   logEvent(w, { kind: 'fed', survivorId: s.id, otherId: p.id });
   return idle;
 }

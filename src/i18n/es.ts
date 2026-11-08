@@ -890,6 +890,9 @@ export const es = {
     hatchet: ['hachuela', 'hachuelas'], // H5b2
     roadMap: ['mapa de carreteras', 'mapas de carreteras'], // H5c1
     note: ['nota', 'notas'],
+    seeds: ['semilla', 'semillas'], // V1
+    veg: ['hortaliza', 'hortalizas'],
+    meal: ['guiso', 'guisos'],
   } satisfies Record<ItemKind, [string, string]>,
   log: {
     found: (who: string, what: string, where: string) => `${who} ha encontrado ${what} en ${where}`,
@@ -1172,6 +1175,7 @@ export const es = {
     forgottenBirthday: 'Nadie celebró su cumpleaños',
     storm: 'Tormenta',
     goodDay: 'Un buen día',
+    hotMeal: 'Comida caliente', // V1
     ateAtTable: 'Comió en la mesa',
     byTheFire: 'Junto al fuego',
     hurt: 'Con heridas',

@@ -104,6 +104,9 @@ export const ROT_COLD = [
   { below: 15, mult: 0.6 },
 ] as const;
 export const ZOMBIE_COLD_SPEED = 0.8;
+/** V3 §8: las olas de frío (otoño e invierno) y de calor (verano): grados y días. */
+export const COLD_SNAP = { degrees: -8, days: 2 } as const;
+export const HEAT_WAVE = { degrees: 8, days: 2 } as const;
 
 // Personas (H2)
 export const NEED_START_MIN = 60;

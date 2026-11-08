@@ -15,6 +15,7 @@ import { strangersEvent } from './strangers';
 import { suppliesEvent } from './supplies';
 import { theftEvent } from './theft';
 import { wanderersEvent } from './wanderers';
+import { coldSnapEvent, heatWaveEvent } from './weatherWaves';
 import type { GameEvent } from './types';
 
 /** Todos los sucesos que puede sacar el narrador. */
@@ -36,4 +37,6 @@ export const CATALOG: readonly GameEvent[] = [
   rainEvent, // H5b
   suppliesEvent, // H6c
   goodDayEvent,
+  coldSnapEvent, // V3
+  heatWaveEvent,
 ];

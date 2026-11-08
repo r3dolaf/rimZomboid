@@ -78,3 +78,22 @@ test('helados, los zombis van un 20 % más despacio', () => {
   setTemp(w, -5);
   expect(zombieSpeed(w)).toBeCloseTo(ZOMBIE_SPEED * ZOMBIE_COLD_SPEED, 9);
 });
+
+test('ola de frío en otoño e invierno y de calor en verano: 8 grados, 2 días, una a la vez', async () => {
+  const { coldSnapEvent, heatWaveEvent } = await import('./events/weatherWaves');
+  const { TICKS_PER_DAY } = await import('./balance');
+  const w = emptyWorld(3, 3);
+  w.tick = dayStart(5);
+  expect(coldSnapEvent.canHappen(w)).toBe(false);
+  expect(heatWaveEvent.canHappen(w)).toBe(true);
+  const before = outdoorTemp(w);
+  heatWaveEvent.happen(w);
+  expect(outdoorTemp(w)).toBeCloseTo(before + 8, 5);
+  expect(heatWaveEvent.canHappen(w)).toBe(false); // ya hay una
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'heatWave' });
+  w.tick = dayStart(20);
+  expect(coldSnapEvent.canHappen(w)).toBe(true);
+  coldSnapEvent.happen(w);
+  expect(w.common.tempShift).toEqual({ value: -8, until: w.tick + 2 * TICKS_PER_DAY });
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'coldSnap' });
+});

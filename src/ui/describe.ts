@@ -620,6 +620,12 @@ function logSentence(e: LogEntry, w: World, here: World): string {
     case 'storm':
       text = l.storm;
       break;
+    case 'coldSnap': // V3
+      text = l.coldSnap;
+      break;
+    case 'heatWave':
+      text = l.heatWave;
+      break;
     case 'fever':
       text = l.fever(name(e.survivorId));
       break;
@@ -867,6 +873,10 @@ export function noticeFor(e: LogEntry): NoticeInfo | null {
       return { tone: 'good', title: t.goodDay, focusId: null };
     case 'storm':
       return { tone: 'bad', title: t.storm, focusId: null };
+    case 'coldSnap': // V3
+      return { tone: 'bad', title: t.coldSnap, focusId: null };
+    case 'heatWave':
+      return { tone: 'bad', title: t.heatWave, focusId: null };
     case 'waterCut': // H5b: amarillo, sin pausa
       return { tone: 'mixed', title: t.waterCut, focusId: null };
     case 'lowWater': // V2: igual

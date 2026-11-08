@@ -121,6 +121,8 @@ export type LogEvent =
   | { kind: 'birthdaySkipped'; survivorId: number }
   | { kind: 'cache'; survivorId: number; houseId: number; cans: number }
   | { kind: 'storm' }
+  | { kind: 'coldSnap' } // V3
+  | { kind: 'heatWave' }
   // La fiebre (H5 §7): igual para la gripe y la infección.
   | { kind: 'fever'; survivorId: number }
   | { kind: 'feverWorse'; survivorId: number }

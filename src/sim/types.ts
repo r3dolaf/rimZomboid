@@ -705,7 +705,10 @@ export type EventId =
   | 'rain'
   // Sucesos buenos (H6c)
   | 'supplies'
-  | 'goodDay';
+  | 'goodDay'
+  // Olas de frío y de calor (V3)
+  | 'coldSnap'
+  | 'heatWave';
 
 /** El narrador (spec H3c §2): cuándo y de qué tono pasan cosas. */
 export interface Narrator {

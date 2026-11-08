@@ -769,6 +769,8 @@ export const es = {
     supplies: 'Provisiones en la puerta',
     goodDay: 'Un buen día',
     storm: 'Tormenta',
+    coldSnap: 'Ola de frío', // V3
+    heatWave: 'Ola de calor',
     theftPunished: 'Castigo',
     birthdayParty: 'Cumpleaños',
     birthdayRuined: 'Cumpleaños amargado',
@@ -1174,6 +1176,8 @@ export const es = {
             : 'echado abajo un muro'
       }${inBase ? ' de la base' : ''}`,
     storm: 'Se desata una tormenta',
+    coldSnap: 'Llega una ola de frío: dos días helando', // V3
+    heatWave: 'Llega una ola de calor: dos días de bochorno',
     fever: (who: string) => `${who} tiene fiebre`,
     feverWorse: (who: string) => `${who} está peor`,
     feverRest: (who: string) => `${who} guarda reposo`,

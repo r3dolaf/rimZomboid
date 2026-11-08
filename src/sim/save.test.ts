@@ -90,3 +90,48 @@ test('un archivo a medias (con versión y algo de forma) tampoco se carga, y nun
   badMeta.meta.day = 'x';
   expect(loadGame(JSON.stringify(badMeta))).toEqual({ error: 'broken' });
 });
+
+/** Quita de una partida guardada lo que no había en la versión 1 (V1: el huerto y lo nuevo). */
+function asVersion1(text: string): string {
+  const file = JSON.parse(text) as { version: number; world: unknown };
+  file.version = 1;
+  const strip = (x: unknown): void => {
+    if (typeof x !== 'object' || x === null) return;
+    if (Array.isArray(x)) return x.forEach(strip);
+    const o = x as Record<string, unknown>;
+    if (Array.isArray(o.pieces) && typeof o.food === 'number') {
+      delete o.seeds;
+      delete o.veg;
+      delete o.meal;
+    }
+    for (const k of ['work', 'priorities', 'skills'])
+      if (typeof o[k] === 'object' && o[k] !== null) delete (o[k] as Record<string, unknown>).farm;
+    if ('chopMarks' in o) delete o.plots;
+    Object.values(o).forEach(strip);
+  };
+  strip(file.world);
+  return JSON.stringify(file);
+}
+
+test('V1: una partida de la versión 1 se sigue cargando, con lo nuevo a 0 y Cultivar', () => {
+  expect(SAVE_VERSION).toBe(2);
+  const w = createWorld(7);
+  for (let i = 0; i < 600; i++) stepGame(w);
+  const old = asVersion1(saveGame(w, meta));
+  expect(old).not.toContain('"seeds"');
+  const loaded = loadGame(old);
+  if ('error' in loaded) throw new Error(loaded.error);
+  const lw = loaded.world;
+  expect(lw.plots).toEqual([]);
+  expect(lw.storage.items.seeds).toBe(0);
+  expect(lw.storage.items.meal).toBe(0);
+  for (const s of lw.survivors) {
+    expect(s.work.farm).toBe(true);
+    expect(s.priorities.farm).toBe(3);
+    expect(s.skills.farm).toEqual({ level: 0, xp: 0 });
+    expect(s.carrying.veg).toBe(0);
+  }
+  expect(checkInvariants(lw)).toEqual([]);
+  for (let i = 0; i < 600; i++) stepGame(lw); // y se sigue jugando
+  expect(checkInvariants(lw)).toEqual([]);
+});

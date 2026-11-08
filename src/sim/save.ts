@@ -2,10 +2,14 @@
 // para enseñarla. La caja común va una sola vez (los sitios la comparten con la base) y al cargar se
 // vuelve a enlazar, así la partida sigue exactamente igual.
 import { checkInvariants } from './invariants';
+import { ITEM_KINDS } from './items';
 import type { NarratorStyle, World, ZombieLevel } from './types';
 
-/** Cambia cuando una partida guardada antes ya no sirve. */
-export const SAVE_VERSION = 1;
+/**
+ * Cambia con cada cambio de forma de la partida. Las de versiones anteriores se ponen al día al
+ * cargarlas (`migrate`); las de una versión desconocida no se cargan.
+ */
+export const SAVE_VERSION = 2;
 
 /** Lo que se enseña de una partida guardada. */
 export interface SaveMeta {
@@ -60,10 +64,11 @@ export function loadGame(
     const file = JSON.parse(text) as Partial<SaveFile> | null;
     if (typeof file !== 'object' || file === null || typeof file.version !== 'number')
       return { error: 'broken' };
-    if (file.version !== SAVE_VERSION) return { error: 'version' };
+    if (file.version < 1 || file.version > SAVE_VERSION) return { error: 'version' };
     const world = file.world;
     if (!isMeta(file.meta) || typeof world !== 'object' || world === null)
       return { error: 'broken' };
+    if (file.version < 2) toV2(world);
     const c = world.common;
     if (!c?.expedition || !c.atlas || !world.grid || !Array.isArray(world.siteMaps))
       return { error: 'broken' };
@@ -87,4 +92,41 @@ export function loadGame(
   } catch {
     return { error: 'broken' };
   }
+}
+
+type Json = Record<string, unknown>;
+const isObject = (x: unknown): x is Json => typeof x === 'object' && x !== null;
+
+/** Recorre todo lo que hay dentro de `x` (objetos y listas), una vez cada cosa. */
+function walk(x: unknown, visit: (o: Json) => void, seen = new Set<unknown>()): void {
+  if (!isObject(x) || seen.has(x)) return;
+  seen.add(x);
+  if (Array.isArray(x)) {
+    for (const v of x) walk(v, visit, seen);
+    return;
+  }
+  visit(x);
+  for (const v of Object.values(x)) walk(v, visit, seen);
+}
+
+/**
+ * De la versión 1 a la 2 (V1, el huerto): las cosas nuevas a 0 en todo lo que guarda cosas, el
+ * trabajo y la habilidad Cultivar en cada persona y el huerto vacío en cada mapa.
+ */
+function toV2(world: World): void {
+  walk(world, (o) => {
+    if (Array.isArray(o.pieces) && typeof o.food === 'number')
+      for (const k of ITEM_KINDS) if (typeof o[k] !== 'number') o[k] = 0;
+    const { work, priorities, skills } = o as Partial<Record<string, Json>>;
+    if (isObject(work) && isObject(priorities) && isObject(skills)) {
+      work.farm ??= true;
+      priorities.farm ??= 3;
+      skills.farm ??= { level: 0, xp: 0 };
+    }
+  });
+  const maps = [
+    world,
+    ...(Array.isArray(world.siteMaps) ? world.siteMaps.map((m) => m.world) : []),
+  ];
+  for (const m of maps) if (isObject(m) && !Array.isArray(m.plots)) m.plots = [];
 }

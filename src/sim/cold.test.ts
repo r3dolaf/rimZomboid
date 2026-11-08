@@ -99,3 +99,28 @@ test('helado fuera, va a calentarse junto a una hoguera encendida o, si no hay, 
       (brains.ai.decide(s, w) as { then?: { type: string } }).then?.type,
   ).not.toBe('warmUp');
 });
+
+test('al vestirse con frío cuenta el abrigo: en pleno invierno cambia la chaqueta de cuero por el abrigo; en verano, no', async () => {
+  const { startDress, warmthValue } = await import('./jobs/dress');
+  const setup = (tick: number) => {
+    const w = emptyWorld(4, 4);
+    const s = w.survivors[0]!;
+    s.worn = [
+      { ...garment('leatherJacket'), id: 501 },
+      { ...garment('jeans'), id: 502 },
+    ];
+    w.storage.items.pieces = [{ ...garment('coat'), id: 503 }];
+    s.pos = { x: 0.5, y: 3.5 };
+    w.tick = tick;
+    return { w, s };
+  };
+  const summer = setup(dayStart(5) + 12 * TICKS_PER_HOUR);
+  expect(warmthValue(summer.w)).toBe(0);
+  startDress(summer.s, summer.w);
+  expect(summer.s.worn.map((g) => g.kind)).toContain('leatherJacket');
+  const winter = setup(dayStart(37) + 12 * TICKS_PER_HOUR);
+  expect(warmthValue(winter.w)).toBeGreaterThan(3);
+  startDress(winter.s, winter.w);
+  expect(winter.s.worn.map((g) => g.kind)).toContain('coat');
+  expect(winter.w.storage.items.pieces.map((g) => g.kind)).toContain('leatherJacket');
+});

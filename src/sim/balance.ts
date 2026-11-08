@@ -1253,6 +1253,13 @@ export const OUTFIT_NAME_MAX = 24;
 export const DRESS_TICKS = TICKS_PER_HOUR / 12;
 /** "Claramente mejor": sube el valor más de un 20 % de lo que aportaba lo que se quita… */
 export const DRESS_MARGIN = 0.2;
+/**
+ * V3 §5: al elegir ropa con frío, cada punto de abrigo vale esto por cada 10 grados que la media del
+ * día baje de 15 (hasta una vez y media): en pleno invierno un abrigo gana a una chaqueta de cuero.
+ */
+export const WARMTH_SCORE = 3;
+export const WARMTH_FROM = 15;
+export const WARMTH_MAX_FACTOR = 1.5;
 /** …y, como poco, esto (para no ir al almacén por casi nada). */
 export const DRESS_MIN_GAIN = 0.5;
 /** Cambios de ropa en una visita al almacén, como mucho. */

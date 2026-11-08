@@ -42,8 +42,8 @@ export const es = {
   seed: (s: number) => `Semilla: ${s}`,
   // H6c: con icono, para que la barra de arriba quepa (el nombre, al pasar el ratón).
   food: (n: number) => `🥫 ${n}`,
-  /** V2: el agua guardada en la base; con agua corriente, con el grifo delante. */
-  water: (liters: number, mains: boolean) => `💧 ${mains ? '🚰 ' : ''}${liters}`,
+  /** V2: el agua guardada en la base (con agua corriente, «+»: el grifo aún da). */
+  water: (liters: number, mains: boolean) => `💧 ${liters}${mains ? '+' : ''}`,
   hudWaterTitle: (liters: number, bottles: number, mains: boolean) =>
     `Agua: ${liters} ${liters === 1 ? 'litro' : 'litros'} en barreños y barriles y ${bottles} ${
       bottles === 1 ? 'botella' : 'botellas'

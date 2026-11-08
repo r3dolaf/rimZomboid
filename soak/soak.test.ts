@@ -855,7 +855,16 @@ test('con zombis se pelea, alguien cae, algo se rompe, se fabrica y se registran
 });
 
 /** V1: lo del huerto en las partidas largas. */
-const farmTotals = { harvested: 0, cooked: 0, lost: 0, spoiled: 0, survived: [] as number[] };
+const farmTotals = {
+  harvested: 0,
+  cooked: 0,
+  lost: 0,
+  spoiled: 0,
+  survived: [] as number[],
+  // V2: de dónde se bebe y quién muere de sed.
+  drank: { sink: 0, depot: 0, store: 0, pack: 0 },
+  thirstDeaths: 0,
+};
 
 /** Un huerto de `n` parcelas junto a la base (las casillas vistas más cercanas a su centro). */
 function plantGarden(w: World, n: number): void {
@@ -898,6 +907,13 @@ test.each([1, 2, 3])(
         ms += performance.now() - t0;
         const problems = checkInvariants(w);
         if (problems.length > 0) expect(problems, `tick ${w.tick}`).toEqual([]);
+        for (const s of w.survivors) {
+          const a = s.action;
+          if (a.type !== 'drink' || a.ticksLeft !== 1) continue;
+          const f = a.sourceId === null ? null : w.furniture.find((x) => x.id === a.sourceId);
+          const from = a.fromPack ? 'pack' : !f ? 'store' : f.kind === 'sink' ? 'sink' : 'depot';
+          farmTotals.drank[from]++;
+        }
         for (const e of w.common.log.slice(last ? w.common.log.lastIndexOf(last) + 1 : 0)) {
           if (e.kind === 'crafted' && e.recipe === 'cook') farmTotals.cooked++;
           if (e.kind === 'cropsLost') farmTotals.lost += e.dried + e.rotted;
@@ -906,6 +922,7 @@ test.each([1, 2, 3])(
       }
     expect(ms / (w.tick || 1), 'ms por tick').toBeLessThan(1.5);
     farmTotals.harvested += w.common.stats.harvested;
+    farmTotals.thirstDeaths += w.common.dead.filter((d) => d.cause === 'thirst').length;
     farmTotals.survived.push(w.common.over ? gameTime(w.common.over.tick).day : DAYS);
   },
   900_000,
@@ -915,5 +932,7 @@ test('con huerto se cosecha y se cocina', () => {
   if (DAYS < 15) return;
   expect(farmTotals.harvested, 'hortalizas cosechadas').toBeGreaterThan(0);
   expect(farmTotals.cooked, 'guisos').toBeGreaterThan(0);
+  // V2: se bebe (del fregadero mientras hay agua corriente, y luego de lo que haya).
+  expect(farmTotals.drank.sink, 'del fregadero').toBeGreaterThan(0);
   console.log('V1, en las 3 partidas con huerto:', farmTotals);
 });

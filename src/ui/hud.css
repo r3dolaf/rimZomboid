@@ -24,7 +24,7 @@
   user-select: none;
 }
 .hud-time {
-  min-width: 110px;
+  min-width: 100px; /* V2: 10 menos, para que quepa el agua a 1280 px («Día 99, 23:59» cabe) */
   font-variant-numeric: tabular-nums;
 }
 .hud-speeds {

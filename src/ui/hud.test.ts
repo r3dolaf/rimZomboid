@@ -386,7 +386,7 @@ test('M3: con ?debug=1, «🐞 Depuración» en el menú ☰ (en el móvil no ha
   expect((other.querySelector('[data-testid="hud-menu-debug"]') as HTMLElement).hidden).toBe(true);
 });
 
-test('V2: el agua de la base, con el grifo mientras hay agua corriente, y el desglose al pasar el ratón', () => {
+test('V2: el agua de la base, con «+» mientras hay agua corriente, y el desglose al pasar el ratón', () => {
   const root = document.createElement('div');
   const hud = mountHud(root, { seed: 1, time: createTimeController() });
   const water = root.querySelector('[data-testid="hud-water"]') as HTMLElement;
@@ -398,7 +398,7 @@ test('V2: el agua de la base, con el grifo mientras hay agua corriente, y el des
     mains: true,
   });
   expect(water.hidden).toBe(false);
-  expect(water.textContent).toBe('💧 🚰 15');
+  expect(water.textContent).toBe('💧 15+');
   expect(water.title).toBe(
     'Agua: 12 litros en barreños y barriles y 3 botellas · hay agua corriente',
   );

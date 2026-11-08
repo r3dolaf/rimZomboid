@@ -98,6 +98,6 @@ test('Almacén con Materiales y Ropa; el barreño en el menú de Construir', asy
   );
   await page.keyboard.press('Escape');
   await page.getByTestId('hud-build-tool').click();
-  await expect(page.getByTestId('build-tub')).toContainText('Barreño — 4 tablas'); // H5c1
+  await expect(page.getByTestId('build-tub')).toContainText('Barreño · 4'); // H5c1; U1 §1
   expect(errores).toEqual([]);
 });

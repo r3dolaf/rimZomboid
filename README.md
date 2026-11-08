@@ -26,7 +26,7 @@ En tu ordenador, instala antes el navegador con `npx playwright install chromium
 
 ## Jugar con una semilla concreta
 
-Cada partida se genera a partir de una semilla, que aparece arriba a la derecha.
+Cada partida se genera a partir de una semilla, que aparece en el panel **Partida**.
 Para repetir una partida exacta, añade `?seed=NÚMERO` a la dirección.
 
 Controles (también en el juego, en **❓ Ayuda**, con `H` o `?`):

@@ -113,7 +113,7 @@ export function mountCoach(
 
   const save = (patch: Partial<GuideState>) => store.set({ ...store.get(), ...patch });
 
-  /** Lo hecho desde la última vez; dice si ha cambiado algo. */
+  /** Apunta los pasos hechos desde la última vez. */
   const checkSteps = () => {
     const s = store.get();
     const fresh = GUIDE_STEPS.filter((k) => !s.done.includes(k) && stepDone(k, opts.world, seen));
@@ -121,10 +121,11 @@ export function mountCoach(
   };
 
   const checkTip = () => {
-    const s = store.get();
-    if (tip || s.tipsOff) return;
+    // El aviso cuenta solo ahora (después, una pausa sería por otra cosa).
     const pausedByNotice = noticePending && opts.time.speed === 0;
     noticePending = false;
+    const s = store.get();
+    if (tip || s.tipsOff) return;
     const ctx = { pausedByNotice, zombiesSeen: opts.zombiesSeen?.() ?? 0 };
     const due = dueTip(opts.world, ctx, s.tipsShown);
     if (!due) return;

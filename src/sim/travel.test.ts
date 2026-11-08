@@ -212,5 +212,4 @@ test('V2: botellas por persona para el viaje, como las latas', () => {
   expect(tripWater(0, true)).toBe(1); // solo el margen
   expect(tripWater(14, false)).toBe(2 + 1); // un día: 1,4 litros (2 botellas) y el margen
   expect(tripWater(14, true)).toBe(3 + 1); // ida y vuelta: 2,8 litros
-
 });

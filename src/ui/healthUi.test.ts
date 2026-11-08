@@ -167,7 +167,7 @@ test('arriba, también los analgésicos', () => {
     narrator: 'balanced',
     toggleWork: () => {},
     toggleCraft: () => {},
-    toggleNotices: () => {},
+    toggleGame: () => {},
   });
   w.storage.items.painkillers = 3;
   hud.update({ day: 1, hour: 8, minute: 0 }, w.storage.items);

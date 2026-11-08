@@ -49,7 +49,8 @@ test('panel Atuendos: crear uno, renombrarlo y quitarle una prenda', async ({ pa
   const errores = watchErrors(page);
   await page.goto('/?seed=6&debug=1');
   await page.locator('[data-speed="0"]').click();
-  await page.getByTestId('hud-outfits').click();
+  await page.getByTestId('hud-work').click(); // U1 §3: Atuendos, pestaña de Trabajos
+  await page.getByTestId('work-panel').getByTestId('tab-outfits').click();
   const panel = page.getByTestId('outfits-panel');
   await expect(panel).toBeVisible();
   await expect(panel.locator('[data-testid^="outfit-tab-"]')).toHaveText([
@@ -97,6 +98,6 @@ test('Almacén con Materiales y Ropa; el barreño en el menú de Construir', asy
   );
   await page.keyboard.press('Escape');
   await page.getByTestId('hud-build-tool').click();
-  await expect(page.getByTestId('build-tub')).toContainText('Barreño — 4 tablas'); // H5c1
+  await expect(page.getByTestId('build-tub')).toContainText('Barreño · 4'); // H5c1; U1 §1
   expect(errores).toEqual([]);
 });

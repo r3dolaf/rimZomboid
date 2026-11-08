@@ -52,13 +52,16 @@ test('vista de las bolsas: cada hueco con su bolsa, kilos, lo de dentro y su lis
   expect(v.keep).toEqual([{ item: 'bandage', n: 2, name: 'vendas' }]);
 });
 
-test('pestaña Bolsas: fijar, cambiar la lista con + y −, añadir y «Llevar siempre»', () => {
+test('bolsas (en Equipo, U1 §5): fijar, cambiar la lista con + y −, añadir y «Llevar siempre»', () => {
   const { root, w, s, sheet } = sheetWorld();
   const b = newBag(w, 'duffel');
   s.bags.hand = b;
   sheet.update();
-  (root.querySelector('[data-testid="sheet-tab-bags"]') as HTMLButtonElement).click();
+  (root.querySelector('[data-testid="sheet-tab-clothes"]') as HTMLButtonElement).click();
+  const equipo = root.querySelector('[data-testid="sheet-pane-clothes"]') as HTMLElement;
   const pane = root.querySelector('[data-testid="sheet-pane-bags"]') as HTMLElement;
+  expect(equipo.hidden).toBe(false);
+  expect(equipo.contains(pane)).toBe(true);
   expect(pane.hidden).toBe(false);
   expect(pane.querySelector('[data-testid="bags-hand"]')!.textContent).toContain(
     'Bolsa de deporte',

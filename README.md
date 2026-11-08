@@ -26,27 +26,36 @@ En tu ordenador, instala antes el navegador con `npx playwright install chromium
 
 ## Jugar con una semilla concreta
 
-Cada partida se genera a partir de una semilla, que aparece arriba a la derecha.
+Cada partida se genera a partir de una semilla, que aparece en el panel **Partida**.
 Para repetir una partida exacta, añade `?seed=NÚMERO` a la dirección.
 
-Controles:
+Controles (también en el juego, en **❓ Ayuda**, con `H` o `?`):
 
-- `Espacio` pausa · `1` `2` `3` velocidad.
+- `Espacio` pausa · `1` `2` `3` velocidad. En pausa (también cuando la pone un aviso rojo), arriba
+  sale **⏸ En pausa**.
 - `WASD` o flechas mueven la cámara · arrastrar con el botón derecho · rueda para el zoom.
 - Clic izquierdo en un superviviente (o en su tarjeta) abre su ficha; en una casa, la ficha de la casa.
-- `L` o el botón **Saquear** activan la herramienta: clic en una casa (o en un contenedor ya visto)
-  para marcarla o desmarcarla. `Esc` sale de la herramienta y cierra las fichas.
-- `H` o el botón **Huerto** marcan el huerto: clic en una casilla de hierba junto a la base, o
-  arrastrar para un rectángulo. Lo siembran, riegan y cosechan quienes tienen **Cultivar**; las
-  hortalizas se cocinan en la hoguera (Fabricar → Cocinar) y se estropean con los días.
+- Clic derecho en un sitio: lo que se puede hacer allí (saquear una casa, un mueble o un cuerpo,
+  talar un árbol, tapiar o reparar, cortinas, fabricar en la mesa, ver la casa).
+- Herramientas, para marcar muchas cosas arrastrando: `L` Saquear, `T` Talar, `G` Huerto, `B`
+  Construir. Abajo dicen qué hacer; **Hecho** (o `Esc`) las quita.
+- Paneles: `I` Almacén, `J` Trabajos (con Atuendos), `F` Fabricar, `E` Expediciones, `P` Partida
+  (con Avisos y el sonido). `R` modo combate · `M` sonido · `Esc` cierra lo de arriba.
+
+Al empezar, una tarjeta abajo a la derecha enseña los primeros pasos, uno a uno, y luego salen
+consejos cuando pasa algo por primera vez (se pueden apagar en la Ayuda).
+
+Asentarse (huerto, agua y estaciones):
+
+- **Huerto** (`G`): clic en una casilla de hierba junto a la base, o arrastrar para un rectángulo.
+  Lo siembran, riegan y cosechan quienes tienen **Cultivar**; las hortalizas se cocinan en la
+  hoguera (Fabricar → Cocinar) y se estropean con los días.
 - **Agua** (💧 arriba): se bebe del fregadero mientras hay agua corriente (se corta entre los días 7
   y 14); después, de barriles de lluvia (Construir), barreños, cisternas y botellas. Para las
   expediciones, botellas (o un río por el camino).
 - **Estaciones**: el año dura 60 días y empieza en verano. En invierno no crece nada y hiela: hace
   falta ropa de abrigo y hogueras con leña (Transportar se la lleva). La estación y la temperatura
   están junto a las pestañas de mapa.
-- `M` silencia o vuelve a dar sonido. Los volúmenes (General, Música y Efectos) están en el panel
-  **Partida**.
 
 ## Sonido
 
@@ -67,6 +76,8 @@ Con el dedo (móvil en horizontal o tableta):
   modo combate y menú contextual).
 - Arrastrar un dedo mueve la cámara (con una herramienta activa, marca); mantener y arrastrar elige
   a varios con un rectángulo; dos dedos acercan, alejan y mueven la cámara.
+- Mantener pulsado un sitio (una casa, un árbol, una ventana…) saca lo que se puede hacer allí: casi
+  no hace falta cambiar de herramienta.
 - Mantener pulsada una tarjeta añade o quita a ese colono de los elegidos.
 - En el móvil, los paneles están en el menú ☰ (arriba a la derecha) y las herramientas, en la columna
   de la derecha. Desde el navegador se puede **añadir a la pantalla de inicio** para jugar a pantalla

@@ -1,21 +1,34 @@
 // El menú del clic derecho (spec H5c1 §8): en una ventana, una puerta, un muro dañado o un plano,
-// lo que se puede hacer allí, con lo que gasta y lo que tienes. Solo cuando el clic derecho no es
-// una orden de modo combate.
+// lo que se puede hacer allí, con lo que gasta y lo que tienes. U1 §7: además, saquear un mueble,
+// un cuerpo o una casa, ver la casa, talar un árbol y fabricar en la mesa (así casi no hace falta
+// cambiar de herramienta). Solo cuando el clic derecho no es una orden de modo combate.
 import { es } from '../i18n/es';
-import { liveBlueprints, pendingPlacements } from '../game/tools';
+import { toggleContainer, toggleHouse } from '../game/designate';
+import { containerAt, houseAt, tableAt } from '../game/pick';
+import { liveBlueprints, pendingPlacements, toggleTree } from '../game/tools';
 import { BUILD, CURTAINS_COST } from '../sim/balance';
-import { canPlace } from '../sim/build';
+import { canPlace, treeMarked } from '../sim/build';
 import { getTile } from '../sim/map/grid';
-import { issue } from '../sim/orders';
+import { effectiveDesignated, houseMarked, issue, markable } from '../sim/orders';
 import { Tile, type BuildKind, type Point, type World } from '../sim/types';
+import { buildingThe } from './describe';
 import './panels.css';
 
+/** Lo que no es un plano (U1 §7). */
+type OtherKind = 'cancel' | 'loot' | 'lootHouse' | 'viewHouse' | 'chop' | 'craft';
+
 export interface ContextOption {
-  /** El plano que pone, o `cancel`. */
-  kind: BuildKind | 'cancel';
+  /** El plano que pone, o lo demás (`cancel`, `loot`…): para su `data-testid`, `ctx-<kind>`. */
+  kind: BuildKind | OtherKind;
   label: string;
   /** Da la orden. */
   choose(): void;
+}
+
+/** Lo que el menú abre fuera del mapa (U1 §7): Fabricar y la ficha de una casa. */
+export interface ContextActions {
+  onCraft?: () => void;
+  onHouse?: (houseId: number) => void;
 }
 
 /** Lo que se puede poner con el clic derecho, en este orden; cada uno, solo donde encaja. */
@@ -30,9 +43,13 @@ const KINDS: readonly BuildKind[] = [
   'fixDoor',
 ];
 
-/** Lo que se puede hacer en esa casilla (con lo pedido en pausa ya aplicado); vacío si nada. */
-export function contextOptions(w: World, p: Point): ContextOption[] {
-  if (w.seen[p.y * w.grid.width + p.x] !== 1) return [];
+/**
+ * Lo que se puede hacer en esa casilla (con lo pedido en pausa ya aplicado); vacío si nada. Lo de
+ * una casa vale aunque no se haya visto por dentro (como con la herramienta Saquear).
+ */
+export function contextOptions(w: World, p: Point, acts: ContextActions = {}): ContextOption[] {
+  const seen = w.seen[p.y * w.grid.width + p.x] === 1;
+  if (!seen) return houseOptions(w, p, false, acts);
   const at = (q: Point) => q.x === p.x && q.y === p.y;
   if (w.blueprints.some((b) => at(b.pos))) {
     const b = liveBlueprints(w).find((x) => at(x.pos));
@@ -42,11 +59,61 @@ export function contextOptions(w: World, p: Point): ContextOption[] {
   }
   if (pendingPlacements(w).some((x) => at(x.pos))) return [];
   const have = w.storage.items;
-  return KINDS.filter((k) => canPlace(w, k, p)).map((kind) => ({
+  const out: ContextOption[] = KINDS.filter((k) => canPlace(w, k, p)).map((kind) => ({
     kind,
     label: label(w, kind, p, have.wood, have.curtains),
     choose: () => issue(w, { type: 'placeBlueprint', kind, x: p.x, y: p.y }),
   }));
+  const t = es.contextMenu;
+  // U1 §7: un mueble o un cuerpo con algo dentro (o sin registrar).
+  const c = containerAt(w, p.x, p.y);
+  if (c && markable(c)) {
+    const on = effectiveDesignated(w, c);
+    const what = theOf(es.containers[c.kind]);
+    const text =
+      c.kind === 'corpse' ? (on ? t.unsearch : t.search) : on ? t.unloot(what) : t.loot(what);
+    out.push({ kind: 'loot', label: text, choose: () => toggleContainer(w, c.id) });
+  }
+  // La mesa: Fabricar.
+  if (acts.onCraft && tableAt(w, p.x, p.y))
+    out.push({ kind: 'craft', label: t.craft, choose: acts.onCraft });
+  // Un árbol: talar o no.
+  if (getTile(w.grid, p.x, p.y) === Tile.Tree) {
+    const on = treeMarked(w, p.x, p.y);
+    out.push({
+      kind: 'chop',
+      label: on ? t.unchop : t.chop,
+      choose: () => toggleTree(w, p.x, p.y),
+    });
+  }
+  return [...out, ...houseOptions(w, p, true, acts)];
+}
+
+/** U1 §7: en una casa (no la base), saquearla o dejarlo y, si se ha visto, ver su ficha. */
+function houseOptions(w: World, p: Point, seen: boolean, acts: ContextActions): ContextOption[] {
+  const h = houseAt(w, p.x, p.y);
+  if (!h) return [];
+  const t = es.contextMenu;
+  const the = buildingThe(w, h.id);
+  const out: ContextOption[] = [];
+  const marked = houseMarked(w, h.id);
+  const left = w.containers.some((c) => c.houseId === h.id && markable(c));
+  if (marked || left)
+    out.push({
+      kind: 'lootHouse',
+      label: marked ? t.unlootHouse(the) : t.lootHouse(the),
+      choose: () => toggleHouse(w, h.id),
+    });
+  if (seen && acts.onHouse) {
+    const open = acts.onHouse;
+    out.push({ kind: 'viewHouse', label: t.viewHouse(the), choose: () => open(h.id) });
+  }
+  return out;
+}
+
+/** «una nevera» → «la nevera», «un armario» → «el armario». */
+function theOf(a: string): string {
+  return a.replace(/^una /, 'la ').replace(/^un /, 'el ');
 }
 
 function label(w: World, kind: BuildKind, p: Point, wood: number, curtains: number): string {
@@ -66,7 +133,7 @@ function label(w: World, kind: BuildKind, p: Point, wood: number, curtains: numb
  */
 export function mountContextMenu(
   root: HTMLElement,
-  opts: { world: World },
+  opts: { world: World } & ContextActions,
 ): {
   open(tile: Point, screen: Point): boolean;
   close(): boolean;
@@ -89,7 +156,7 @@ export function mountContextMenu(
   });
   return {
     open(tile, screen) {
-      const options = contextOptions(opts.world, tile);
+      const options = contextOptions(opts.world, tile, opts);
       close();
       if (options.length === 0) return false;
       menu.replaceChildren(

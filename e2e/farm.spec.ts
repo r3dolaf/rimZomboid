@@ -69,8 +69,8 @@ test('herramienta Huerto: clic marca una parcela, arrastrar un rectángulo', asy
   await page.locator('[data-speed="1"]').click();
   await expect.poll(() => plots(page)).toBe(6);
   await page.screenshot({ path: 'test-results/huerto.png' });
-  // H quita la herramienta.
-  await page.keyboard.press('h');
+  // G quita la herramienta (la H es la Ayuda).
+  await page.keyboard.press('g');
   await expect(page.getByTestId('hud-farm-tool')).not.toHaveClass(/active/);
   expect(errores).toEqual([]);
 });

@@ -20,6 +20,8 @@ export function mountStartScreen(
     onContinue?: () => void;
     /** H6b: «Importar partida» desde un archivo. */
     onImport?: (text: string) => void;
+    /** U1 §10: «❓ Cómo se juega», que abre la Ayuda. */
+    onHelp?: () => void;
   },
 ): { remove(): void; say(text: string): void } {
   const screen = document.createElement('div');
@@ -33,6 +35,27 @@ export function mountStartScreen(
   const subtitle = document.createElement('p');
   subtitle.className = 'start-subtitle';
   subtitle.textContent = es.start.subtitle;
+  // U1 §10: de qué va, y la Ayuda.
+  const pitch = document.createElement('p');
+  pitch.className = 'start-pitch';
+  pitch.dataset.testid = 'start-pitch';
+  pitch.textContent = es.start.pitch;
+  if (opts.onHelp) {
+    const help = document.createElement('button');
+    help.type = 'button';
+    help.className = 'start-help';
+    help.dataset.testid = 'start-help';
+    help.textContent = es.help.startButton;
+    help.addEventListener('click', () => opts.onHelp?.());
+    pitch.append(' ', help);
+  }
+  /** U1 §10: «Para empezar», en lo recomendado para la primera partida. */
+  const starter = () => {
+    const tag = document.createElement('em');
+    tag.className = 'start-starter';
+    tag.textContent = es.start.forStarters;
+    return tag;
+  };
   const choose = document.createElement('h2');
   choose.textContent = es.start.choose;
 
@@ -49,6 +72,7 @@ export function mountStartScreen(
     const desc = document.createElement('span');
     desc.textContent = es.narrators[s].desc;
     b.append(name, desc);
+    if (s === 'calm') b.append(starter());
     b.addEventListener('click', () => {
       style = s;
       refresh();
@@ -72,6 +96,7 @@ export function mountStartScreen(
     b.type = 'button';
     b.dataset.testid = `zombies-${level}`;
     b.textContent = es.zombieLevels[level];
+    if (level === 'few') b.append(' ', starter());
     b.addEventListener('click', () => {
       zombies = level;
       refreshLevels();
@@ -129,9 +154,9 @@ export function mountStartScreen(
   }
   if (opts.onImport) {
     const label = document.createElement('label');
-    label.className = 'start-import';
+    label.className = 'start-import file-button';
     label.append(
-      document.createTextNode(`${es.game.importStart} `),
+      document.createTextNode(es.game.importStart),
       importInput('start-import', opts.onImport),
     );
     bottom.push(label);
@@ -139,7 +164,19 @@ export function mountStartScreen(
   const message = document.createElement('p');
   message.className = 'start-message';
   message.dataset.testid = 'start-message';
-  panel.append(title, subtitle, ...top, choose, cards, zombiesRow, seedRow, go, ...bottom, message);
+  panel.append(
+    title,
+    subtitle,
+    pitch,
+    ...top,
+    choose,
+    cards,
+    zombiesRow,
+    seedRow,
+    go,
+    ...bottom,
+    message,
+  );
   screen.append(panel);
   root.append(screen);
   return { remove: () => screen.remove(), say: (text) => (message.textContent = text) };

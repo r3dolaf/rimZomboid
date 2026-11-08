@@ -5,6 +5,19 @@
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-l: env(safe-area-inset-left, 0px);
 }
+/* U1 §1: lo que tiene `hidden` no se ve nunca, aunque su estilo diga otra cosa (la ficha enseñaba
+   las Habilidades en todas las pestañas porque `display: grid` le ganaba a `[hidden]`). */
+#hud [hidden] {
+  display: none !important;
+}
+/* U1 §1: con el teclado se ve dónde está el foco. */
+#hud button:focus-visible,
+#hud select:focus-visible,
+#hud input:focus-visible,
+#hud [tabindex]:focus-visible {
+  outline: 2px solid #f2c641;
+  outline-offset: 1px;
+}
 .hud-bar {
   position: fixed;
   top: 0;
@@ -112,6 +125,59 @@ body.tool-build canvas {
   font-weight: bold;
 }
 
+/* U1 §2: «⏸ En pausa», un letrero naranja junto a las velocidades (no se pulsa: deja pasar el dedo
+   al mapa, como lo demás de la barra que no es un botón). */
+.hud-speeds .hud-paused {
+  align-self: center;
+  padding: 3px 8px;
+  border: 1px solid #e08a2c;
+  border-radius: 4px;
+  background: #4a2e12;
+  color: #ffd6a8;
+  font-weight: 600;
+  white-space: nowrap;
+  animation: hud-paused-pulse 1.6s ease-in-out infinite;
+}
+@keyframes hud-paused-pulse {
+  50% {
+    border-color: #ffb469;
+    background: #5e3a16;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hud-speeds .hud-paused {
+    animation: none;
+  }
+}
+/* U1 §2: la Ayuda, en la punta derecha (antes del ☰ cuando lo hay). */
+.hud-help {
+  margin-left: auto;
+  min-width: 32px;
+  font-size: 15px;
+}
+/* La tecla de cada panel en el ☰: solo con ratón (con el dedo no hay teclado). */
+.hud-menu kbd {
+  margin-left: auto;
+  padding: 0 5px;
+  border: 1px solid #555;
+  border-radius: 3px;
+  color: #bbb;
+  font:
+    11px/1.5 ui-monospace,
+    monospace;
+}
+@media not ((hover: hover) and (pointer: fine)) {
+  .hud-menu kbd {
+    display: none;
+  }
+}
+
+/* U1 §2: las herramientas, con su icono también en la barra (el mismo de la columna del móvil y de
+   los primeros pasos). */
+.hud-tools .hud-tool::before {
+  content: attr(data-icon) ' ';
+}
+
 /* M2: las herramientas y los paneles, cada grupo en su caja; en pantalla ancha, en la fila. */
 .hud-tools,
 .hud-panels {
@@ -167,15 +233,32 @@ body.tool-build canvas {
   text-align: center;
 }
 
+/* V1–V2: entre 1200 y 1279, con el Huerto y el agua, la barra va un poco más justa para caber. */
+@media (min-width: 1200px) and (max-width: 1279px) {
+  .hud-bar {
+    gap: 3px;
+  }
+  .hud-time {
+    min-width: 0;
+  }
+}
+
 /* Mediana y pequeña (M2 §1): los paneles, en el menú ☰ de la punta derecha. */
 @media (max-width: 1199px), (max-height: 500px) {
+  /* V1–V2: con el Huerto y el agua, un poco más justo para que quepa en una tableta (1024). */
+  .hud-bar {
+    gap: 4px;
+  }
+  .hud-time {
+    min-width: 0;
+  }
   .hud-panels {
     display: none;
   }
   .hud-more {
     display: inline-block;
     min-width: 36px;
-    margin-left: auto;
+    margin-left: 0;
     font-size: 16px;
   }
   .hud-menu {
@@ -219,13 +302,18 @@ body.tool-build canvas {
      derecha, pero el ☰ queda siempre en su sitio. */
   .hud-bar {
     overflow: hidden;
-    padding-right: calc(62px + var(--safe-r));
+    padding-right: calc(112px + var(--safe-r));
   }
-  .hud-more {
+  .hud-more,
+  .hud-help {
     position: absolute;
     top: calc(4px + var(--safe-t));
     bottom: 4px;
     right: calc(10px + var(--safe-r));
+  }
+  .hud-help {
+    right: calc(60px + var(--safe-r));
+    min-width: 44px;
   }
 }
 
@@ -242,7 +330,8 @@ body.tool-build canvas {
     min-height: 44px;
   }
   #hud .hud-speeds button,
-  #hud .hud-more {
+  #hud .hud-more,
+  #hud .hud-help {
     min-width: 44px;
   }
 }

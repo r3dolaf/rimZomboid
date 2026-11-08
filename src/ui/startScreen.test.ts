@@ -47,3 +47,20 @@ test('remove la quita de la página', () => {
   screen.remove();
   expect(root.querySelector('[data-testid="start"]')).toBeNull();
 });
+
+test('U1 §10: de qué va en una línea, «Para empezar» en Tranquilo y Pocos, y la Ayuda', () => {
+  const root = document.createElement('div');
+  const onHelp = vi.fn();
+  mountStartScreen(root, { seed: 1, randomSeed: () => 2, onStart: vi.fn(), onHelp });
+  const q = (id: string) => root.querySelector(`[data-testid="${id}"]`) as HTMLElement;
+  expect(q('start-pitch').textContent).toContain('trabajan solos');
+  expect(q('narrator-calm').textContent).toContain('Para empezar');
+  expect(q('narrator-balanced').textContent).not.toContain('Para empezar');
+  expect(q('zombies-few').textContent).toContain('Para empezar');
+  q('start-help').click();
+  expect(onHelp).toHaveBeenCalledTimes(1);
+  // Sin Ayuda (en algún test), sin botón.
+  const other = document.createElement('div');
+  mountStartScreen(other, { seed: 1, randomSeed: () => 2, onStart: vi.fn() });
+  expect(other.querySelector('[data-testid="start-help"]')).toBeNull();
+});

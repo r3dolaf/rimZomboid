@@ -11,6 +11,7 @@ import { opinionOf, relationLabel } from '../sim/social';
 import type { Survivor, World } from '../sim/types';
 import {
   activityText,
+  barLevel,
   clothesView,
   formatItems,
   formatModifier,
@@ -33,8 +34,9 @@ import {
 import './panels.css';
 
 /**
- * Ficha del superviviente seleccionado, en dos pestañas: General (qué hace, trabajos, postura, arma,
- * carga, rasgos, necesidades, por qué de su ánimo y relaciones) y Habilidades (H4c).
+ * Ficha del superviviente seleccionado, en cuatro pestañas (U1 §5): General (qué hace, Combate y
+ * postura, sus barras con nombre, ánimo y por qué, rasgos y relaciones), Trabajos (cada trabajo con
+ * su prioridad y su nivel, H4c), Salud (H5) y Equipo (arma, carga, ropa y bolsas).
  */
 export function mountSheet(
   root: HTMLElement,
@@ -67,23 +69,23 @@ export function mountSheet(
   x.addEventListener('click', close);
   head.append(title, x);
 
-  // Las prioridades de trabajo (H4d) también son fijas, por lo mismo que la ✕.
-  const work = document.createElement('div');
-  work.className = 'work';
+  // Las prioridades de trabajo (H4d) también son fijas, por lo mismo que la ✕. U1 §5: van en la
+  // pestaña Trabajos, en la fila de su habilidad (el botón solo lleva el número).
   const cells = WORKS.map((k) => {
     const cell = document.createElement('button');
     cell.type = 'button';
+    cell.className = 'work-prio';
     cell.dataset.testid = `sheet-work-${k}`;
+    cell.setAttribute('aria-label', es.sheetPriority(es.works[k]));
     const prio = document.createElement('span');
     prio.className = 'prio';
-    cell.append(prio, document.createTextNode(es.works[k]));
+    cell.append(prio);
     cell.addEventListener('click', () => {
       const s = opts.world.survivors.find((x) => x.id === opts.selection.id);
       if (s) cyclePriority(opts.world, s, k);
       cell.blur();
     });
-    work.append(cell);
-    return { cell, prio };
+    return { k, cell, prio };
   });
   // Modo combate (H4e): el botón Combate, fijo como lo demás.
   const draft = document.createElement('button');
@@ -137,12 +139,41 @@ export function mountSheet(
   const carrying = document.createElement('p');
   carrying.className = 'carrying';
 
+  const top = document.createElement('div');
   const body = document.createElement('div');
+  // U1 §5: Combate y Postura juntos, arriba (en un apuro hay que llegar rápido).
+  const actions = document.createElement('div');
+  actions.className = 'actions';
+  actions.append(draft, stanceRow);
+  // U1 §5: sus barras, con su nombre y el color de la tarjeta (así se aprende qué es cada una).
+  const meters = document.createElement('div');
+  meters.className = 'meters';
+  meters.dataset.testid = 'sheet-meters';
+  const METERS = ['health', 'blood', 'hunger', 'thirst', 'sleep', 'social', 'mood'] as const; // V2: Sed
+  const meterRows = METERS.map((k) => {
+    const row = document.createElement('div');
+    row.className = 'meter';
+    row.dataset.testid = `sheet-meter-${k}`;
+    const name = document.createElement('span');
+    name.className = 'name';
+    name.textContent = `${es.meters[k].icon} ${es.meters[k].name}`;
+    const bar = document.createElement('span');
+    bar.className = 'bar';
+    bar.dataset.need = k;
+    const fill = document.createElement('span');
+    fill.className = 'fill';
+    bar.append(fill);
+    const value = document.createElement('span');
+    value.className = 'value';
+    row.append(name, bar, value);
+    meters.append(row);
+    return { k, fill, value };
+  });
 
-  // Pestañas (H4c): General, lo de siempre; Habilidades, sus niveles y la práctica.
+  // Pestañas (H4c, U1 §5): General, Trabajos, Salud y Equipo.
   const general = document.createElement('div');
   general.dataset.testid = 'sheet-pane-general';
-  general.append(work, draft, stanceRow, weaponRow, carrying, body);
+  general.append(top, actions, meters, body);
   const skillsPane = document.createElement('div');
   skillsPane.className = 'skills';
   skillsPane.dataset.testid = 'sheet-pane-skills';
@@ -153,6 +184,9 @@ export function mountSheet(
     const name = document.createElement('span');
     name.className = 'name';
     name.textContent = es.skills[k];
+    // U1 §5: la prioridad del trabajo (Pelear no tiene: lo manda la postura).
+    const cell = cells.find((c) => c.k === k)?.cell ?? document.createElement('span');
+    cell.classList.add('prio-cell');
     const level = document.createElement('span');
     level.className = 'level';
     const bar = document.createElement('span');
@@ -162,10 +196,14 @@ export function mountSheet(
     bar.append(fill);
     const note = document.createElement('span');
     note.className = 'note';
-    row.append(name, level, bar, note);
+    row.append(name, cell, level, bar, note);
     skillsPane.append(row);
     return { k, level, fill, note };
   });
+  const skillsHead = document.createElement('p');
+  skillsHead.className = 'muted skills-head';
+  skillsHead.textContent = es.sheetSkillsHint;
+  skillsPane.prepend(skillsHead);
   // Salud (H5 §10): el cuerpo, la Sangre, lo que sufre y Dar analgésico.
   const healthPane = document.createElement('div');
   healthPane.className = 'health';
@@ -204,7 +242,8 @@ export function mountSheet(
   });
   outfitRow.append(outfitSelect);
   const clothesBody = document.createElement('div');
-  clothesPane.append(outfitRow, clothesBody);
+  // U1 §5: Equipo: lo de la mano y lo que carga, la ropa y (abajo) las bolsas.
+  clothesPane.append(weaponRow, carrying, outfitRow, clothesBody);
   let clothesShown = '';
   let outfitsShown = '';
 
@@ -216,12 +255,12 @@ export function mountSheet(
 
   const tabs = document.createElement('nav');
   tabs.className = 'tabs';
+  clothesPane.append(bags.pane);
   const panes: Record<SheetTab, HTMLElement> = {
     general,
     skills: skillsPane,
     health: healthPane,
     clothes: clothesPane,
-    bags: bags.pane,
   };
   let tab = loadTab();
   const tabButtons = SHEET_TABS.map((k) => {
@@ -243,7 +282,7 @@ export function mountSheet(
     for (const k of SHEET_TABS) panes[k].hidden = k !== tab;
   };
   showTab();
-  panel.append(head, tabs, general, skillsPane, healthPane, clothesPane, bags.pane);
+  panel.append(head, tabs, general, skillsPane, healthPane, clothesPane);
 
   let shown = ''; // firma de lo pintado, para no rehacer el DOM en cada fotograma
 
@@ -266,12 +305,6 @@ export function mountSheet(
         where: world.mapId === 0 ? null : es.maps.inSite(mapThe(world)),
         doing: activityText(s, world),
         traits: s.traits.map((t) => es.traits[t]),
-        needs: [
-          `${es.health}: ${Math.round(s.health)}`,
-          ...(['hunger', 'thirst', 'sleep', 'social'] as const).map(
-            (k) => `${es.needs[k]}: ${Math.round(s.needs[k])}`,
-          ),
-        ],
         mood: es.moodArrow(
           Math.round(s.needs.mood),
           Math.round(moodTarget(s, world.tick, world.base.rect)),
@@ -286,6 +319,19 @@ export function mountSheet(
         cell.classList.toggle('off', !effectiveWork(world, s, WORKS[i]!));
         if (cell.title !== prio.title) cell.title = prio.title;
       });
+      // Sus barras (U1 §5), como en la tarjeta.
+      for (const m of meterRows) {
+        const v = Math.round(
+          m.k === 'health' ? s.health : m.k === 'blood' ? s.blood : s.needs[m.k],
+        );
+        const width = `${v}%`;
+        if (m.fill.style.width !== width) m.fill.style.width = width;
+        const level =
+          m.k === 'blood' ? 'ok' : barLevel(v, m.k === 'mood' || m.k === 'social' ? m.k : 'need');
+        const cls = `fill ${level}`;
+        if (m.fill.className !== cls) m.fill.className = cls;
+        if (m.value.textContent !== String(v)) m.value.textContent = String(v);
+      }
       const carryText = es.carrying(
         formatItems(s.carrying),
         weightOf(s.carrying).toFixed(1).replace('.', ','),
@@ -356,6 +402,7 @@ export function mountSheet(
       if (key === shown) return;
       shown = key;
       title.textContent = view.name;
+      top.replaceChildren(renderTop(view));
       body.replaceChildren(render(view));
     },
   };
@@ -367,14 +414,18 @@ const kg = (n: number) =>
     ? String(Math.round(n))
     : n.toFixed(1).replace('.', ',');
 
-const SHEET_TABS = ['general', 'skills', 'health', 'clothes', 'bags'] as const;
+const SHEET_TABS = ['general', 'skills', 'health', 'clothes'] as const;
 type SheetTab = (typeof SHEET_TABS)[number];
 const TAB_KEY = 'rimzomboid.sheetTab';
 
-/** La última pestaña que abrió; si el navegador no deja guardarlo, General. */
+/**
+ * La última pestaña que abrió; si el navegador no deja guardarlo, General. La de Bolsas (antes de
+ * U1) es ahora Equipo.
+ */
 function loadTab(): SheetTab {
   try {
-    const saved = localStorage.getItem(TAB_KEY);
+    const raw = localStorage.getItem(TAB_KEY);
+    const saved = raw === 'bags' ? 'clothes' : raw;
     return SHEET_TABS.find((t) => t === saved) ?? 'general';
   } catch {
     return 'general';
@@ -463,12 +514,25 @@ function relations(s: Survivor, w: World): string[] {
     });
 }
 
-/** El cuerpo de la ficha, debajo de la cabecera. */
+/** Lo de arriba de General: dónde está (si no es en la base) y qué hace. */
+function renderTop(v: { where: string | null; doing: string }): DocumentFragment {
+  const f = document.createDocumentFragment();
+  if (v.where) {
+    const p = document.createElement('p');
+    p.className = 'where';
+    p.textContent = `${es.maps.awayIcon} ${v.where}`;
+    f.append(p);
+  }
+  const doing = document.createElement('p');
+  doing.className = 'doing';
+  doing.textContent = v.doing;
+  f.append(doing);
+  return f;
+}
+
+/** El resto de General, debajo de sus barras: ánimo y por qué, rasgos y relaciones. */
 function render(v: {
-  where: string | null;
-  doing: string;
   traits: { name: string; desc: string }[];
-  needs: string[];
   mood: string;
   mods: string[];
   partner: string | null;
@@ -481,23 +545,6 @@ function render(v: {
     if (cls) e.className = cls;
     return e;
   };
-
-  if (v.where) f.append(el('p', `${es.maps.awayIcon} ${v.where}`, 'where'));
-  f.append(el('p', v.doing, 'doing'));
-
-  f.append(el('h3', es.traitsTitle));
-  const traits = el('ul');
-  for (const t of v.traits) {
-    const li = el('li');
-    li.append(el('strong', t.name), document.createTextNode(` — ${t.desc}`));
-    traits.append(li);
-  }
-  f.append(traits);
-
-  f.append(el('h3', es.needsTitle));
-  const needs = el('ul', undefined, 'needs');
-  for (const n of v.needs) needs.append(el('li', n));
-  f.append(needs);
 
   const moodHead = el('h3', `${es.moodTitle}: `);
   const mood = el('span', v.mood);
@@ -513,6 +560,15 @@ function render(v: {
     mods.append(li);
   }
   f.append(mods);
+
+  f.append(el('h3', es.traitsTitle));
+  const traits = el('ul');
+  for (const t of v.traits) {
+    const li = el('li');
+    li.append(el('strong', t.name), document.createTextNode(` — ${t.desc}`));
+    traits.append(li);
+  }
+  f.append(traits);
 
   f.append(el('h3', es.relationsTitle));
   if (v.partner !== null) f.append(el('p', es.partner(v.partner), 'partner'));

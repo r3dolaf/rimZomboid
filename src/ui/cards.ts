@@ -206,6 +206,13 @@ export function mountCards(
           c.status.textContent = text;
           c.status.title = icon?.label ?? '';
         }
+        // U1 §6: para los lectores de pantalla, su nombre y sus barras en una frase.
+        const label = es.cardLabel(s.name, [
+          [es.meters.health.name, Math.round(s.health)],
+          [es.meters.blood.name, Math.round(s.blood)],
+          ...NEEDS.map((k) => [es.needs[k], Math.round(s.needs[k])] as [string, number]),
+        ]);
+        if (c.card.getAttribute('aria-label') !== label) c.card.setAttribute('aria-label', label);
         const coupled = s.partnerId !== null;
         if (c.love.hidden === coupled) c.love.hidden = !coupled;
         c.card.classList.toggle('selected', opts.selection.ids.includes(s.id));

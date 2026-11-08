@@ -15,8 +15,8 @@ const GROUPS: readonly { title: keyof typeof es.buildGroups; kinds: readonly Bui
 
 /**
  * Menú de la herramienta Construir (spec H4a §5): qué se coloca al hacer clic en el mapa, por
- * grupos, cada cosa con lo que gasta y lo que hay en el almacén (del mapa que se ve), y abajo qué
- * hace lo elegido (H5c1 §8).
+ * grupos, cada cosa con lo que gasta (U1: «Cama · 6 🪵», más apagado si no alcanza) y, arriba, lo
+ * que hay en el almacén (del mapa que se ve); abajo, qué hace lo elegido (H5c1 §8).
  */
 export function mountBuildMenu(
   root: HTMLElement,
@@ -27,6 +27,11 @@ export function mountBuildMenu(
   menu.dataset.testid = 'build-menu';
   menu.title = es.buildMenuHint;
   menu.hidden = true;
+  // U1 §1: la madera que hay, una vez arriba (no en cada opción).
+  const have = document.createElement('p');
+  have.className = 'build-have';
+  have.dataset.testid = 'build-have';
+  menu.append(have);
   const buttons: { kind: BuildKind; b: HTMLButtonElement }[] = [];
   for (const g of GROUPS) {
     const group = document.createElement('div');
@@ -58,12 +63,19 @@ export function mountBuildMenu(
       const show = opts.tool.mode === 'build';
       if (menu.hidden === show) menu.hidden = !show;
       if (!show) return;
-      const have = opts.world.storage.items.wood;
+      const wood = opts.world.storage.items.wood;
+      const haveText = es.buildHave(wood);
+      if (have.textContent !== haveText) have.textContent = haveText;
       for (const { kind, b } of buttons) {
         b.classList.toggle('selected', opts.tool.buildKind === kind);
-        const wood = kind === 'repair' ? es.repairWood : BUILD[kind].wood;
-        const text = es.buildOption(es.buildMenu[kind], wood, have);
+        const cost = kind === 'repair' ? es.repairWood : BUILD[kind].wood;
+        const text = es.buildChoice(es.buildMenu[kind], cost);
         if (b.textContent !== text) b.textContent = text;
+        // Sin madera bastante, más apagado (se puede poner igual: el plano espera).
+        const short = typeof cost === 'number' && cost > wood;
+        b.classList.toggle('short', short);
+        const title = short ? `${es.buildDesc[kind]} · ${es.buildShort}` : es.buildDesc[kind];
+        if (b.title !== title) b.title = title;
       }
       const text = es.buildDesc[opts.tool.buildKind];
       if (desc.textContent !== text) desc.textContent = text;

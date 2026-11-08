@@ -13,14 +13,13 @@ interface Box {
 
 const phone = { viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true };
 
-/** Los paneles del menú ☰: su línea, el panel y su botón de cerrar. */
+/** Los paneles del menú ☰: su línea, el panel y su botón de cerrar (U1: Atuendos y Avisos, como
+ * pestañas de Trabajos y Partida). */
 const PANELS = [
   ['storage', 'storage-panel', '[data-testid="storage-close"]'],
   ['work', 'work-panel', '[data-testid="work-close"]'],
   ['craft', 'craft-panel', '[data-testid="craft-close"]'],
-  ['outfits', 'outfits-panel', '[data-testid="outfits-close"]'],
   ['expeditions', 'expeditions-panel', '[data-testid="expeditions-close"]'],
-  ['notices', 'notice-menu', '[data-testid="notice-menu-close"]'],
   ['game', 'game-panel', '.close'],
 ] as const;
 
@@ -88,6 +87,9 @@ test.describe('móvil en horizontal (844 × 390)', () => {
     await expect(page.getByTestId('log-filter-social')).toBeHidden();
     await page.getByTestId('log-toggle').tap();
     await expect(log).not.toHaveClass(/collapsed/);
+    // U1: los filtros, tras «Filtrar».
+    await expect(page.getByTestId('log-filter-social')).toBeHidden();
+    await page.getByTestId('log-filter-toggle').tap();
     await expect(page.getByTestId('log-filter-social')).toBeVisible();
     const r = await room(page);
     inside((await log.boundingBox())!, { top: r.top, bottom: r.bottom }, sizes.width);
@@ -110,6 +112,21 @@ test.describe('móvil en horizontal (844 × 390)', () => {
       await expect(panel).toBeVisible();
       inside((await panel.boundingBox())!, r, width);
       await panel.locator(close).first().tap();
+      await expect(panel).toBeHidden();
+    }
+    // U1 §3: Atuendos y Avisos, como pestañas de Trabajos y Partida, en el mismo sitio.
+    for (const [key, tab, panelId, other] of [
+      ['work', 'tab-outfits', 'outfits-panel', 'work-panel'],
+      ['game', 'tab-notices', 'notice-menu', 'game-panel'],
+    ] as const) {
+      await page.getByTestId('hud-more').tap();
+      await page.getByTestId(`hud-menu-${key}`).tap();
+      await page.getByTestId(other).getByTestId(tab).tap();
+      const panel = page.getByTestId(panelId);
+      await expect(panel).toBeVisible();
+      await expect(page.getByTestId(other)).toBeHidden();
+      inside((await panel.boundingBox())!, r, width);
+      await panel.locator('.close').first().tap();
       await expect(panel).toBeHidden();
     }
     // Tocar fuera cierra el menú sin abrir nada.

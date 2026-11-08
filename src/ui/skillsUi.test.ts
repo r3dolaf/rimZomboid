@@ -28,21 +28,53 @@ function setup() {
 
 beforeEach(() => localStorage.clear());
 
-test('ficha con dos pestañas: General (lo de siempre) y Habilidades', () => {
+test('U1 §5: ficha con cuatro pestañas: General, Trabajos, Salud y Equipo', () => {
   const { root, sheet } = setup();
   const general = q(root, 'sheet-pane-general');
   const skills = q(root, 'sheet-pane-skills');
-  expect(q(root, 'sheet-tab-general').textContent).toBe('General');
-  expect(q(root, 'sheet-tab-skills').textContent).toBe('Habilidades');
+  const tabs = [...root.querySelectorAll('[data-testid^="sheet-tab-"]')].map((t) => t.textContent);
+  expect(tabs).toEqual(['General', 'Trabajos', 'Salud', 'Equipo']);
   expect(q(root, 'sheet-tab-general').classList.contains('selected')).toBe(true);
   expect(general.hidden).toBe(false);
   expect(skills.hidden).toBe(true);
-  expect(general.contains(q(root, 'sheet-weapon'))).toBe(true);
+  // General: Combate y Postura arriba, y sus barras con nombre; el arma, en Equipo.
+  expect(general.contains(q(root, 'sheet-draft'))).toBe(true);
+  expect(general.contains(q(root, 'sheet-stance-fight'))).toBe(true);
+  expect(
+    [...general.querySelectorAll('[data-testid^="sheet-meter-"]')].map(
+      (m) => m.querySelector('.name')!.textContent,
+    ),
+  ).toEqual(['❤️ Salud', '🩸 Sangre', '🍗 Hambre', '💧 Sed', '💤 Sueño', '💬 Social', '🙂 Ánimo']);
+  expect(q(root, 'sheet-pane-clothes').contains(q(root, 'sheet-weapon'))).toBe(true);
   q(root, 'sheet-tab-skills').click();
   sheet.update();
   expect(general.hidden).toBe(true);
   expect(skills.hidden).toBe(false);
   expect(q(root, 'sheet-tab-skills').classList.contains('selected')).toBe(true);
+  // Trabajos: cada fila con su prioridad (Pelear no tiene).
+  expect(q(root, 'sheet-skill-build').contains(q(root, 'sheet-work-build'))).toBe(true);
+  expect(q(root, 'sheet-skill-fight').querySelector('button')).toBeNull();
+});
+
+test('U1 §5: las barras de General, con el valor y el color de la tarjeta', () => {
+  const { root, sheet, s } = setup();
+  s.needs.hunger = 12;
+  s.health = 80;
+  sheet.update();
+  const hunger = q(root, 'sheet-meter-hunger');
+  expect(hunger.querySelector('.value')!.textContent).toBe('12');
+  expect((hunger.querySelector('.bar') as HTMLElement).dataset.need).toBe('hunger');
+  expect(hunger.querySelector('.fill')!.className).toBe('fill bad');
+  expect((q(root, 'sheet-meter-health').querySelector('.fill') as HTMLElement).style.width).toBe(
+    '80%',
+  );
+});
+
+test('U1 §5: la pestaña guardada «bags» (de antes) abre Equipo', () => {
+  localStorage.setItem('rimzomboid.sheetTab', 'bags');
+  const { root } = setup();
+  expect(q(root, 'sheet-pane-clothes').hidden).toBe(false);
+  expect(q(root, 'sheet-tab-clothes').classList.contains('selected')).toBe(true);
 });
 
 test('Habilidades: una fila por habilidad con su nivel y la barrita de la práctica ("máx." a 10)', () => {

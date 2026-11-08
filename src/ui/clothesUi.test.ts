@@ -233,9 +233,7 @@ test('Construir: el barreño (4 tablas); en el mapa, su agua y la de las cistern
   const menu = mountBuildMenu(root, { tool, world: w });
   tool.toggle('build');
   menu.update();
-  expect(root.querySelector('[data-testid="build-tub"]')!.textContent).toBe(
-    'Barreño — 4 tablas (tienes 0)',
-  );
+  expect(root.querySelector('[data-testid="build-tub"]')!.textContent).toBe('Barreño · 4 🪵');
   expect(furnitureLabel(w, { id: 1, kind: 'tub', pos: { x: 0, y: 0 }, water: 12 })).toBe(
     'Barreño: 12 / 20 litros',
   );
@@ -252,7 +250,7 @@ test('Construir: el barreño (4 tablas); en el mapa, su agua y la de las cistern
   expect(furnitureLabel(w, { id: 4, kind: 'table', pos: { x: 0, y: 0 } })).toBeNull();
 });
 
-test('arriba, el botón Atuendos', () => {
+test('arriba, Trabajos (con Atuendos dentro, como pestaña: U1 §3)', () => {
   const root = document.createElement('div');
   let opened = 0;
   mountHud(root, {
@@ -260,11 +258,11 @@ test('arriba, el botón Atuendos', () => {
     time: createTimeController(),
     tool: createTool(),
     narrator: 'balanced',
-    toggleOutfits: () => opened++,
+    toggleWork: () => opened++,
   });
-  const b = root.querySelector('[data-testid="hud-outfits"]') as HTMLButtonElement;
+  expect(root.querySelector('[data-testid="hud-outfits"]')).toBeNull();
+  const b = root.querySelector('[data-testid="hud-work"]') as HTMLButtonElement;
   expect(b.hidden).toBe(false);
-  expect(b.textContent).toBe('Atuendos');
   b.click();
   expect(opened).toBe(1);
 });

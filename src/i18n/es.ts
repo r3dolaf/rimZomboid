@@ -77,13 +77,16 @@ export const es = {
   },
   lootTool: 'Saquear',
   chopTool: 'Talar',
-  chopToolHint: 'Marcar árboles para talar: clic o arrastrar (T)',
+  chopToolHint: 'Marcar árboles para talar: clic o arrastrar',
   farmTool: 'Huerto', // V1
-  farmToolHint: 'Marcar el huerto en la hierba: clic o arrastrar (H)',
+  farmToolHint: 'Marcar el huerto en la hierba: clic o arrastrar',
   buildTool: 'Construir',
-  buildToolHint: 'Construir con madera (B)',
+  buildToolHint: 'Construir con madera',
   workPanel: 'Trabajos',
-  workPanelHint: 'Quién hace qué (J)',
+  workPanelHint: 'Quién hace qué, y qué ropa se pone cada uno',
+  /** U1: debajo de la tabla de Trabajos. */
+  workHint:
+    'En cada casilla, la prioridad (pulsa para cambiarla: 1 lo primero, 4 lo último, — nunca) y el nivel (en amarillo, el mejor de cada trabajo).',
   wood: (n: number) => `🪵 ${n}`,
   inHand: (what: string) => `En la mano: ${what}`,
   /** Trabajos, en el orden del panel. */
@@ -99,10 +102,22 @@ export const es = {
   } satisfies Record<WorkType, string>,
   sheetTabs: {
     general: 'General',
-    skills: 'Habilidades',
+    skills: 'Trabajos',
     health: 'Salud',
-    clothes: 'Ropa',
-    bags: 'Bolsas',
+    clothes: 'Equipo',
+  },
+  /** U1 §5: en la ficha, la prioridad de cada trabajo y lo que explica la pestaña. */
+  sheetPriority: (work: string) => `Prioridad de ${work}`,
+  sheetSkillsHint: 'Prioridad (1 primero, 4 último, — no lo hace) y nivel de cada trabajo',
+  /** U1 §5: las barras de la tarjeta, con su nombre e icono (ficha y Ayuda). */
+  meters: {
+    health: { icon: '❤️', name: 'Salud' },
+    blood: { icon: '🩸', name: 'Sangre' },
+    hunger: { icon: '🍗', name: 'Hambre' },
+    thirst: { icon: '💧', name: 'Sed' }, // V2
+    sleep: { icon: '💤', name: 'Sueño' },
+    social: { icon: '💬', name: 'Social' },
+    mood: { icon: '🙂', name: 'Ánimo' },
   },
   // Bolsas (H5b2 §7)
   storageBags: { title: 'Bolsas' },
@@ -250,7 +265,7 @@ export const es = {
   } as Partial<Record<ItemKind, string>>,
   lostItem: (n: number, what: string) => `−${n} de ${what}`,
   craftPanel: 'Fabricar',
-  craftPanelHint: 'Pedidos en la mesa (F)',
+  craftPanelHint: 'Pedidos en la mesa',
   craftStock: (parts: string[]) => `En el almacén: ${parts.join(' · ')}`,
   craftNoTable: 'Hace falta una mesa',
   craftNoFire: 'Hace falta una hoguera', // V1
@@ -367,6 +382,10 @@ export const es = {
   /** «Cama — 6 tablas (tienes 12)» (H5c1 §8). */
   buildOption: (name: string, wood: number | string, have: number) =>
     `${name} — ${wood} ${wood === 1 ? 'tabla' : 'tablas'} (tienes ${have})`,
+  /** U1 §1: en el menú Construir, corto: «Cama · 6 🪵»; lo que hay, una vez arriba. */
+  buildChoice: (name: string, wood: number | string) => `${name} · ${wood} 🪵`,
+  buildHave: (have: number) => `Tienes ${have} 🪵`,
+  buildShort: 'Falta madera: el plano esperará a que la traigan',
   buildGroups: { furniture: 'Muebles', walls: 'Muros y puertas', fix: 'Arreglar' },
   /** El menú del clic derecho (H5c1 §8). */
   contextMenu: {
@@ -375,6 +394,17 @@ export const es = {
     cancel: 'Cancelar plano',
     withCurtains: (name: string, n: number, have: number) =>
       `${name} — ${n} ${n === 1 ? 'juego' : 'juegos'} de cortinas (tienes ${have})`,
+    // U1 §7: saquear, talar, ver la casa y fabricar.
+    loot: (what: string) => `🎒 Saquear ${what}`,
+    unloot: (what: string) => `🎒 Dejar de saquear ${what}`,
+    search: '🎒 Registrar el cuerpo',
+    unsearch: '🎒 No registrar el cuerpo',
+    lootHouse: (the: string) => `🎒 Saquear ${the}`,
+    unlootHouse: (the: string) => `🎒 Dejar de saquear ${the}`,
+    viewHouse: (the: string) => `🏠 Ver ${the}`,
+    chop: '🪓 Talar el árbol',
+    unchop: '🪓 No talar el árbol',
+    craft: '🧵 Fabricar…',
   },
   /** Qué hace cada cosa, abajo del menú. */
   buildDesc: {
@@ -411,6 +441,11 @@ export const es = {
   } satisfies Record<NarratorStyle, { name: string; desc: string }>,
   start: {
     subtitle: 'Sobrevivir juntos, o no',
+    /** U1 §10: de qué va, en una línea. */
+    pitch:
+      'Tus supervivientes trabajan solos: tú decides qué saquear, qué construir y quién hace qué.',
+    /** U1 §10: lo recomendado para la primera partida. */
+    forStarters: 'Para empezar',
     choose: 'Elige narrador',
     zombies: 'Zombis',
     seed: 'Semilla',
@@ -459,6 +494,256 @@ export const es = {
   },
   /** M2: el menú de los paneles, cuando no caben en la barra. */
   hudMenu: { button: '☰', hint: 'Paneles', debug: 'Depuración' },
+  /** U1 §2: la tecla de cada cosa, en su ayuda: «Almacén (I)». */
+  withKey: (hint: string, key: string) => `${hint} (${key})`,
+  /** U1 §2: el letrero de la pausa. */
+  paused: { text: '⏸ En pausa', hint: 'El juego está en pausa: x1 (o Espacio) para seguir' },
+  /** U1 §4: con una herramienta, qué hacer (con el dedo, «toca»; con ratón, «haz clic»). */
+  toolHint: {
+    loot: (touch: boolean) =>
+      touch
+        ? 'Toca una casa o un mueble para saquearlo (otra vez, para dejarlo). Arrastra para marcar cuerpos.'
+        : 'Haz clic en una casa o un mueble para saquearlo (otra vez, para dejarlo). Arrastra para marcar cuerpos.',
+    chop: (touch: boolean) =>
+      touch
+        ? 'Toca un árbol para talarlo, o arrastra para marcar varios.'
+        : 'Haz clic en un árbol para talarlo, o arrastra para marcar varios.',
+    // V1: el huerto
+    farm: (touch: boolean) =>
+      touch
+        ? 'Toca la hierba junto a la base para hacer huerto (otra vez, para quitarlo), o arrastra para un rectángulo.'
+        : 'Haz clic en la hierba junto a la base para hacer huerto (otra vez, para quitarlo), o arrastra para un rectángulo.',
+    build: (touch: boolean) =>
+      touch
+        ? 'Elige qué construir y toca donde va. Los muros, arrastrando. Tocar un plano lo quita.'
+        : 'Elige qué construir y haz clic donde va. Los muros, arrastrando. Clic en un plano lo quita.',
+    done: 'Hecho',
+    doneHint: 'Dejar la herramienta (Esc)',
+  },
+  /** U1 §6: la tarjeta, para los lectores de pantalla: «Ana: Salud 100, Sangre 100, …». */
+  cardLabel: (name: string, bars: [string, number][]) =>
+    `${name}: ${bars.map(([k, v]) => `${k} ${v}`).join(', ')}`,
+  /** U1 §9: los primeros pasos (con el dedo, «toca» y «mantén pulsado»; con ratón, «clic»). */
+  guide: {
+    title: 'Primeros pasos',
+    progress: (n: number, of: number) => `Paso ${n} de ${of}`,
+    hide: 'Ocultar',
+    hideHint: 'No enseñar más los primeros pasos (vuelven desde ❓ Ayuda)',
+    fold: 'Plegar',
+    unfold: 'Ver el paso',
+    folded: (n: number, of: number) => `📋 Primeros pasos · ${n}/${of}`,
+    steps: {
+      people: {
+        title: 'Conoce a tu gente',
+        text: (touch: boolean) =>
+          `${touch ? 'Toca' : 'Haz clic en'} una tarjeta de abajo para ver su ficha: qué hace, cómo está y qué se le da bien. Trabajan solos: tú no los manejas uno a uno.`,
+      },
+      loot: {
+        title: 'Busca comida',
+        text: (touch: boolean) =>
+          touch
+            ? 'Toca 🎒 y luego una casa, o mantén pulsada la casa y elige Saquear. Irán a por lo que haya y lo traerán al almacén.'
+            : 'Pulsa 🎒 Saquear (L) y haz clic en una casa, o clic derecho en la casa y Saquear. Irán a por lo que haya y lo traerán al almacén.',
+      },
+      wood: {
+        title: 'Consigue madera',
+        text: (touch: boolean) =>
+          `Con 🪓 Talar${touch ? '' : ' (T)'}, marca unos árboles cerca de la base (arrastrando, varios a la vez). La madera sirve para construir y para tapiar.`,
+      },
+      windows: {
+        title: 'Protege las ventanas',
+        text: (touch: boolean) =>
+          `Los zombis entran rompiendo ventanas. ${touch ? 'Mantén pulsada' : 'Haz clic derecho en'} una ventana de la base y elige Tapiar (con 3 tablas).`,
+      },
+      time: {
+        title: 'Maneja el tiempo',
+        text: (touch: boolean) =>
+          `Arriba: ⏸ pausa para pensar, x2 y x3 aceleran cuando todo va bien${touch ? '' : ' (Espacio, 1, 2 y 3)'}. Prueba x2.`,
+      },
+      work: {
+        title: 'Decide quién hace qué',
+        text: (touch: boolean) =>
+          `Abre 📋 Trabajos${touch ? ' (arriba o en ☰)' : ' (J)'}: cada uno hace antes lo que tiene en 1; con «—», nunca.`,
+      },
+      table: {
+        title: 'Pon una mesa',
+        text: (touch: boolean) =>
+          `Con 🔨 Construir${touch ? '' : ' (B)'}, elige Mesa y ponla en la base. En ella se fabrican vendas con tela (🧵 Fabricar).`,
+      },
+    },
+    finished: {
+      title: '¡Ya sabes lo básico!',
+      text: 'Lo demás lo irás viendo. Si dudas, ❓ Ayuda.',
+      close: 'Cerrar',
+    },
+  },
+  /** U1 §9: los consejos, una vez cada uno. */
+  tips: {
+    icon: '💡',
+    ok: 'Entendido',
+    pause: {
+      title: 'El juego se ha pausado',
+      text: () =>
+        'Los avisos rojos y las preguntas pausan el juego para que no se te pase nada (arriba sale «⏸ En pausa»). Cuando lo hayas visto, pulsa x1 para seguir.',
+    },
+    night: {
+      title: 'Llega la noche',
+      text: () =>
+        'De noche llegan más zombis y la hoguera los atrae desde lejos. Mejor con las ventanas tapiadas y todos dentro.',
+    },
+    zombies: {
+      title: 'Zombis a la vista',
+      text: (touch: boolean) =>
+        `Tu gente pelea o huye sola según su Postura (en su ficha). Para mandarlos tú: elígelos, pulsa ⚔️ Combate${touch ? '' : ' (R)'} y luego ${touch ? 'mantén pulsado' : 'haz clic derecho'} adonde ir o en un zombi.`,
+    },
+    bleeding: {
+      title: (who: string) => `${who} sangra`,
+      text: () =>
+        'Se vendará si lleva vendas o las hay en el almacén (🩹 arriba). Sin vendas se desangra: búscalas en casas y farmacias, o hazlas con tela en una mesa.',
+    },
+    bite: {
+      title: (who: string) => `A ${who} le han mordido`,
+      text: () =>
+        'Un mordisco infecta siempre y no tiene cura: en dos o tres días se convertirá. Un arañazo solo infecta a veces y, si da fiebre, los antibióticos lo curan a tiempo.',
+    },
+    food: {
+      title: 'Queda poca comida',
+      text: () =>
+        'Hay menos de una lata por persona. Marca más casas para saquear; los supermercados tienen mucha.',
+    },
+    mood: {
+      title: (who: string) => `El ánimo de ${who} está muy bajo`,
+      text: () =>
+        'Si llega al fondo tendrá una crisis. En su ficha se ve por qué: hambre, sueño, soledad, la ropa…',
+    },
+    siege: {
+      title: 'Viene una horda',
+      text: () =>
+        'Tienes unos días (la cuenta atrás está arriba): tapia ventanas, levanta muros, guarda vendas y que nadie esté lejos cuando llegue.',
+    },
+  },
+  /** U1 §8: la Ayuda. */
+  help: {
+    title: 'Ayuda',
+    tabs: {
+      basics: 'Cómo se juega',
+      controls: 'Controles',
+      screen: 'La pantalla',
+      tips: 'Consejos',
+    },
+    intro:
+      'Tienes un grupo de supervivientes en un mundo lleno de zombis. No los manejas uno a uno: trabajan solos, según sus prioridades. Tú decides qué saquear, qué talar y construir, y quién hace qué. La partida dura mientras quede alguien vivo.',
+    basics: [
+      [
+        '🥫 Comida',
+        'Cada uno come más o menos una lata al día del almacén. Sin comida se debilitan y pierden sangre. Se consigue saqueando casas y tiendas.',
+      ],
+      [
+        '💤 Sueño',
+        'Duermen de noche en sus camas. Sin cama duermen en el suelo, y se les nota en el ánimo.',
+      ],
+      [
+        '🎒 Saqueo',
+        'Marca casas, muebles o cuerpos para saquear. Quien tenga el trabajo Saquear irá, cogerá lo que pueda cargar y lo traerá al almacén.',
+      ],
+      [
+        '🪓 Madera y 🔨 construir',
+        'Tala árboles para tener madera. Con ella se hacen camas, mesa, hoguera, muros y puertas, se tapian ventanas y se repara lo roto.',
+      ],
+      [
+        '🧟 Zombis',
+        'Los atrae el ruido (talar, construir, pelear) y, de noche, la luz de la hoguera. Rompen ventanas, puertas y muros para entrar.',
+      ],
+      [
+        '🩹 Heridas',
+        'Una herida sangra hasta que se venda; sin vendas, se desangran. Quien tenga Sanar cura a los demás. Un mordisco infecta siempre y no tiene cura; un arañazo, a veces, y los antibióticos lo curan a tiempo.',
+      ],
+      [
+        '🙂 Ánimo',
+        'Comer, dormir, la compañía, la ropa y lo que pasa suben o bajan el ánimo. Muy bajo, tienen crisis.',
+      ],
+      [
+        '📢 Narrador',
+        'Trae sucesos: visitas, robos, fiebres, tormentas, hordas. Algunos te preguntan qué hacer. Los avisos rojos y las preguntas pausan el juego.',
+      ],
+      ['🧭 Expediciones', 'Cuando cerca no quede nada, manda grupos a otros sitios del 🌍 Mundo.'],
+    ] as [string, string][],
+    controlsMouse: 'Con ratón y teclado',
+    controlsTouch: 'Con el dedo',
+    mouse: [
+      [
+        'Ver a alguien',
+        'Clic en él o en su tarjeta (Mayús para elegir a varios; arrastrar, un rectángulo)',
+      ],
+      ['Ver una casa o una cama', 'Clic en ella'],
+      [
+        'Qué se puede hacer en un sitio',
+        'Clic derecho: saquear, talar, tapiar, reparar, cortinas…',
+      ],
+      ['Mover la cámara', 'WASD, flechas o arrastrar con el botón derecho'],
+      ['Acercar y alejar', 'Rueda del ratón'],
+      ['Pausa y velocidad', 'Espacio · 1, 2 y 3'],
+      ['Herramientas', 'L Saquear · T Talar · G Huerto · B Construir'],
+      ['Paneles', 'I Almacén · J Trabajos · F Fabricar · E Expediciones · P Partida'],
+      [
+        'Mandar tú',
+        'R (modo combate) con alguien elegido; luego clic derecho para ir, atacar o rescatar',
+      ],
+      ['Sonido · Ayuda · Cerrar', 'M · H o ? · Esc'],
+    ] as [string, string][],
+    touch: [
+      [
+        'Ver a alguien',
+        'Tócalo o toca su tarjeta (mantener pulsada una tarjeta lo añade a los elegidos)',
+      ],
+      ['Elegir a varios', 'Mantén pulsado y arrastra'],
+      ['Ver una casa o una cama', 'Tócala'],
+      [
+        'Qué se puede hacer en un sitio',
+        'Mantén pulsado medio segundo y suelta: saquear, talar, tapiar…',
+      ],
+      ['Mover la cámara', 'Arrastra un dedo'],
+      ['Acercar y alejar', 'Pellizca con dos dedos'],
+      ['Herramientas', 'La columna de la derecha (🎒 🪓 🌱 🔨); «Hecho» para dejarla'],
+      ['Paneles', 'El menú ☰'],
+      ['Mandar tú', '⚔️ Combate en su ficha; luego mantén pulsado adonde ir'],
+    ] as [string, string][],
+    screen: [
+      [
+        'Arriba',
+        'El día y la hora; la velocidad (⏸, x1, x2, x3); lo que hay en el almacén: 🥫 comida, 💧 agua (con «+» mientras hay agua corriente), 🩹 vendas, 💊 analgésicos, 🪵 madera; 🧟 zombis a la vista; herramientas y paneles. Debajo, las pestañas de mapa y la estación con la temperatura.',
+      ],
+      [
+        'Las tarjetas',
+        'Una por superviviente, abajo. Sus barras se ponen naranjas y rojas cuando van mal; los iconos dicen qué le pasa (🤒 fiebre, 🩸 sangra…); con borde rojo, está en modo combate.',
+      ],
+      ['Sucesos', 'Abajo a la izquierda: todo lo que pasa. «Filtrar» elige qué se ve.'],
+      [
+        'Avisos',
+        'Arriba a la izquierda: lo importante. Tócalos para ir allí. Los rojos y las preguntas pausan el juego (en Partida → Avisos eliges cuáles).',
+      ],
+      ['Pestañas de mapa', 'La base, los sitios donde hay gente tuya y 🌍 Mundo.'],
+    ] as [string, string][],
+    barsTitle: 'Las barras de cada tarjeta, de arriba abajo:',
+    tips: [
+      'Antes de la primera noche, tapia las ventanas de la base.',
+      'Saquea primero lo cercano: cuanto más lejos, más tiempo fuera y más riesgo.',
+      'Pon pronto una mesa: con una tela salen dos vendas.',
+      'Guarda siempre algunas vendas: quien sangra sin vendas se desangra.',
+      'Una hoguera da luz y ánimo, pero de noche atrae a los zombis que la ven.',
+      'En 📋 Trabajos, pon Sanar en 1 a quien mejor lo haga.',
+      'Los asedios se anuncian con días de margen: aprovéchalos para levantar muros.',
+      'Si alguien está muy hundido, mira en su ficha por qué.',
+      'Con calma, acelera a x3; si algo se tuerce, pausa y piensa.',
+      'Las herramientas sirven para marcar muchas cosas arrastrando; para una sola, basta el clic derecho (mantener pulsado).',
+    ],
+    guideAgain: '📋 Ver otra vez los primeros pasos',
+    showTips: 'Mostrar consejos',
+    close: 'Cerrar',
+    startButton: '❓ Cómo se juega',
+  },
+  /** U1 §2: el botón de la Ayuda, siempre a la vista. */
+  helpButton: { icon: '❓', hint: 'Ayuda: cómo se juega, controles y consejos' },
   /** M3: pantalla completa (menú ☰) y el aviso de girar el móvil. */
   fullscreen: { enter: 'Pantalla completa', exit: 'Salir de pantalla completa', icon: '⛶' },
   rotateHint: {
@@ -477,6 +762,12 @@ export const es = {
   lockWeapon: 'Fijar',
   lockWeaponHint: 'No cambia ni devuelve lo que lleva en la mano',
   logToggle: { hide: 'Minimizar el registro', show: 'Abrir el registro' },
+  /** U1 §1: el botón que enseña los filtros del registro. */
+  logFilter: {
+    button: 'Filtrar',
+    hint: 'Elegir qué sucesos se ven',
+    some: (n: number) => `Filtrar (${n} ${n === 1 ? 'oculto' : 'ocultos'})`,
+  },
   /** Filtros del registro (H5 §10). */
   logCategories: {
     social: 'Social',
@@ -829,7 +1120,7 @@ export const es = {
   // Guardar y cargar la partida (H6b).
   game: {
     button: 'Partida',
-    hint: 'Guardar, cargar, exportar o importar la partida',
+    hint: 'Guardar, cargar, exportar o importar la partida; sonido y avisos',
     title: 'Partida',
     save: 'Guardar ahora',
     saved: 'Partida guardada',
@@ -838,11 +1129,11 @@ export const es = {
     loadWarning: '¿Seguro? Se pierde lo que no esté guardado.',
     loadConfirm: 'Sí, cargar',
     export: 'Exportar a un archivo',
-    import: 'Importar un archivo:',
+    import: '📂 Importar un archivo…',
     broken: 'Ese archivo no es una partida de rimZomboid',
     version: 'Esa partida es de otra versión del juego y no se puede cargar',
     continue: (day: number) => `Continuar (día ${day})`,
-    importStart: 'Importar partida:',
+    importStart: '📂 Importar partida…',
   },
   // El sonido (S1): sus ajustes en el panel Partida y el muestrario del modo depuración.
   sound: {
@@ -914,7 +1205,7 @@ export const es = {
       options: readonly string[];
     }
   >,
-  lootToolHint: 'Marcar casas, muebles o cuerpos para saquear; arrastrar marca los cuerpos (L)',
+  lootToolHint: 'Marcar casas, muebles o cuerpos para saquear; arrastrar marca los cuerpos',
   pause: 'Pausa',
   pauseIcon: '⏸',
   speed: (n: number) => `x${n}`,

@@ -18,15 +18,27 @@ test('el menú Construir solo se ve con la herramienta y elige qué construir', 
   expect(el.hidden).toBe(false);
   const options = [...el.querySelectorAll('button')];
   expect(options.map((b) => b.textContent)).toEqual([
-    'Cama — 6 tablas (tienes 7)',
-    'Mesa — 4 tablas (tienes 7)',
-    'Hoguera — 3 tablas (tienes 7)',
-    'Barreño — 4 tablas (tienes 7)', // H5b
-    'Barril de lluvia — 6 tablas (tienes 7)', // V2
-    'Muro — 2 tablas (tienes 7)',
-    'Puerta — 4 tablas (tienes 7)',
-    'Reparar — 1–3 tablas (tienes 7)',
+    'Cama · 6 🪵',
+    'Mesa · 4 🪵',
+    'Hoguera · 3 🪵',
+    'Barreño · 4 🪵', // H5b
+    'Barril de lluvia · 6 🪵', // V2
+    'Muro · 2 🪵',
+    'Puerta · 4 🪵',
+    'Reparar · 1–3 🪵',
   ]);
+  // U1 §1: lo que hay, una vez arriba; lo que no alcanza, más apagado.
+  expect(root.querySelector('[data-testid="build-have"]')!.textContent).toBe('Tienes 7 🪵');
+  const short = options.filter((b) => b.classList.contains('short')).map((b) => b.dataset.testid);
+  expect(short).toEqual([]);
+  world.storage.items.wood = 3;
+  menu.update();
+  expect(options.filter((b) => b.classList.contains('short')).map((b) => b.dataset.testid)).toEqual(
+    ['build-bed', 'build-table', 'build-tub', 'build-barrel', 'build-woodDoor'],
+  );
+  expect(root.querySelector('[data-testid="build-bed"]')!.getAttribute('title')).toContain(
+    'Falta madera',
+  );
   (root.querySelector('[data-testid="build-bed"]') as HTMLButtonElement).click();
   expect(tool.buildKind).toBe('bed');
   menu.update();

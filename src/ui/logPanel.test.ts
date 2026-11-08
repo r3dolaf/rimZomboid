@@ -256,6 +256,41 @@ test('filtros: un botón por categoría; apagarlo oculta sus sucesos y se recuer
   localStorage.removeItem('rimzomboid.logFilters');
 });
 
+test('U1: los filtros se esconden tras «Filtrar» (al principio no se ven); se recuerda', () => {
+  localStorage.removeItem('rimzomboid.logShowFilters');
+  localStorage.removeItem('rimzomboid.logFilters');
+  localStorage.setItem('rimzomboid.logCollapsed', '0');
+  const root = document.createElement('div');
+  mountLog(root, { world: createWorld(2) });
+  const filters = root.querySelector('.log-filters') as HTMLElement;
+  const button = root.querySelector('[data-testid="log-filter-toggle"]') as HTMLButtonElement;
+  expect(filters.hidden).toBe(true);
+  expect(button.textContent).toBe('Filtrar');
+  button.click();
+  expect(filters.hidden).toBe(false);
+  expect(button.getAttribute('aria-pressed')).toBe('true');
+  expect(localStorage.getItem('rimzomboid.logShowFilters')).toBe('1');
+  // Con algo apagado, el botón lo dice.
+  (root.querySelector('[data-testid="log-filter-loot"]') as HTMLButtonElement).click();
+  expect(button.textContent).toBe('Filtrar (1 oculto)');
+  // Otra vez: se ven al abrir.
+  const again = document.createElement('div');
+  mountLog(again, { world: createWorld(2) });
+  expect((again.querySelector('.log-filters') as HTMLElement).hidden).toBe(false);
+  expect(again.querySelector('[data-testid="log-filter-toggle"]')!.textContent).toBe(
+    'Filtrar (1 oculto)',
+  );
+  // Plegado, ni filtros ni «Filtrar».
+  (again.querySelector('[data-testid="log-toggle"]') as HTMLButtonElement).click();
+  expect((again.querySelector('.log-filters') as HTMLElement).hidden).toBe(true);
+  expect((again.querySelector('[data-testid="log-filter-toggle"]') as HTMLElement).hidden).toBe(
+    true,
+  );
+  localStorage.removeItem('rimzomboid.logShowFilters');
+  localStorage.removeItem('rimzomboid.logFilters');
+  localStorage.removeItem('rimzomboid.logCollapsed');
+});
+
 test('los filtros van abajo del registro, después de la lista (siempre a mano)', () => {
   const root = document.createElement('div');
   mountLog(root, { world: createWorld(2) });

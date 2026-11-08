@@ -7,6 +7,8 @@ import {
   DRINK_TICKS,
   LOW_WATER_PER_COLONIST,
   NEAR_WATER,
+  NO_WATER_WARN_HOURS,
+  THIRSTY_BELOW,
   TICKS_PER_HOUR,
 } from './balance';
 import { logEvent } from './log';
@@ -114,4 +116,13 @@ export function lowWaterSystem(w: World): void {
   const low = !mains && liters + bottles < LOW_WATER_PER_COLONIST * w.survivors.length;
   if (low && !w.waterLow) logEvent(w, { kind: 'lowWater' });
   w.waterLow = low;
+}
+
+/** Con mucha sed y sin dónde beber, se avisa (como mucho cada NO_WATER_WARN_HOURS por persona). */
+export function warnNoWater(s: Survivor, w: World): void {
+  if (s.needs.thirst >= THIRSTY_BELOW) return;
+  if (s.noWaterAt !== undefined && w.tick < s.noWaterAt + NO_WATER_WARN_HOURS * TICKS_PER_HOUR)
+    return;
+  s.noWaterAt = w.tick;
+  logEvent(w, { kind: 'noWater', survivorId: s.id });
 }

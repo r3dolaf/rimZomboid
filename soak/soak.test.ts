@@ -694,6 +694,7 @@ function expeditionPlan(base: World, day: number, since: Map<number, number>): v
     const items = {
       food: Math.min(4, base.storage.items.food),
       bandage: Math.min(2, base.storage.items.bandage),
+      waterBottle: Math.min(4, base.storage.items.waterBottle), // V2: y agua
     };
     // Dos si se puede; siempre se queda alguien libre (así hay varios sitios a la vez).
     const survivorIds = free.slice(0, Math.min(2, free.length - 1)).map((s) => s.id);

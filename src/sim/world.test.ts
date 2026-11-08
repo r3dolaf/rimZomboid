@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { START_ANTIBIOTICS, START_SEEDS } from './balance';
+import { START_ANTIBIOTICS, START_SEEDS, START_WATER_BOTTLES } from './balance';
 import { emptyInventory } from './items';
 import { contains } from './geom';
 import { checkInvariants } from './invariants';
@@ -79,6 +79,7 @@ test('almacén de 2 casillas junto a la puerta, con 10 latas, los antibióticos 
     food: 10,
     antibiotics: START_ANTIBIOTICS,
     seeds: START_SEEDS,
+    waterBottle: START_WATER_BOTTLES, // V2
   });
 });
 

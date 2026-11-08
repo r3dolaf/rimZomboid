@@ -14,7 +14,7 @@ import {
 } from './balance';
 import { baseFloor } from './base';
 import { hasFood, packFood } from './food';
-import { drinkSomething, stillDrinkable } from './drink';
+import { drinkSomething, stillDrinkable, warnNoWater } from './drink';
 import { warmUpDecision } from './season';
 import { isNight } from './clock';
 import { findConsoleTarget, inCrisis as crisisNow, stillConsoling } from './consoling';
@@ -142,6 +142,7 @@ function rest(s: Survivor, w: World): Action | null {
   if (s.needs.thirst < DRINK_BELOW) {
     const drink = drinkSomething(s, w);
     if (drink) return drink;
+    warnNoWater(s, w); // V2: sin dónde beber, se avisa
   }
   if (s.needs.hunger < EAT_BELOW) {
     const eat = eatSomething(s, w);

@@ -760,6 +760,7 @@ export const es = {
     roadJoinerLeft: 'Sigue su camino',
     waterCut: 'Se ha cortado el agua', // H5b
     lowWater: 'Queda poca agua', // V2
+    noWater: 'Sed sin agua',
     winter: 'Llega el invierno', // V3
     skillUp: 'Mejora',
     // H5
@@ -1057,6 +1058,7 @@ export const es = {
     rescued: (who: string, other: string) => `${who} ha rescatado a ${other}`,
     waterCut: 'Se ha cortado el agua',
     lowWater: 'Queda poca agua en la base: haced barriles o id a por agua',
+    noWater: (who: string) => `${who} tiene mucha sed y no encuentra dónde beber`,
     /** V3: «Empieza el otoño». */
     season: (season: Season) =>
       ({

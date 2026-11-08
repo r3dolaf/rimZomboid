@@ -4,6 +4,7 @@ import {
   BUILDINGS,
   CLOTHES_SALT,
   SEEDS_SALT,
+  SITE_FIXTURES_SALT,
   INITIAL_REVEAL,
   NOTE_SURVIVORS,
   RADIO_SURVIVORS,
@@ -23,6 +24,7 @@ import {
   ROADMAP_RADIUS,
   SITE_LOOT,
 } from './balance';
+import { placeFixtures } from './water';
 import { placeBlueprint } from './build';
 import { emptyInventory, ITEM_KINDS } from './items';
 import { piecesGone } from './clothes';
@@ -97,6 +99,15 @@ export function siteMap(base: World, info: SiteInfo): World {
   fillHatchets(g.houses, containers, clothesRng);
   fillFindings(g.houses, containers, clothesRng);
   fillSeeds(g.houses, containers, createRng((seed ^ SEEDS_SALT) >>> 0), true); // V1
+  // V2: sus fregaderos (sin agua corriente) y cisternas (llenas), con su propio azar.
+  const fixtures = placeFixtures(
+    g.grid,
+    g.houses,
+    containers,
+    createRng((seed ^ SITE_FIXTURES_SALT) >>> 0),
+    base.common.nextId,
+  );
+  base.common.nextId += fixtures.length;
   for (const c of containers) c.designated = true; // al llegar, todo marcado para saquear
   base.common.woodLog.start += containers.reduce((n, c) => n + c.items.wood, 0);
   // Y las armas del botín (para que cuadren las cuentas de todo el juego).
@@ -128,7 +139,7 @@ export function siteMap(base: World, info: SiteInfo): World {
     decisions: [],
     piles: [],
     blueprints: [],
-    furniture: [],
+    furniture: fixtures,
     chopMarks: [],
     plots: [], // V1
     zombies: [],

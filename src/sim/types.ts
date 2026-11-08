@@ -443,6 +443,8 @@ export interface Survivor {
   waterCan?: number;
   /** Sensación térmica (V3 §3), en grados: la temperatura de donde está más lo que abriga su ropa. */
   feels?: number;
+  /** Cuándo se avisó de que tiene sed y no encuentra agua (V2), para no repetirlo. */
+  noWaterAt?: number;
 }
 
 /** Un atuendo (H5b §4): las prendas que se puede poner y si acepta ropa de muertos. */

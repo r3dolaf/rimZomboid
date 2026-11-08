@@ -199,3 +199,29 @@ test('sin agua corriente y con menos de 2 litros por persona en la base, «Queda
   lowWaterSystem(v);
   expect(v.common.log).toHaveLength(0);
 });
+
+test('con mucha sed y sin dónde beber, se avisa (como mucho cada 12 h)', async () => {
+  const { warnNoWater } = await import('./drink');
+  const w = home();
+  const s = w.survivors[0]!;
+  s.needs.thirst = 30;
+  warnNoWater(s, w);
+  expect(w.common.log).toHaveLength(0); // aún no tanta
+  s.needs.thirst = 10;
+  warnNoWater(s, w);
+  warnNoWater(s, w);
+  expect(w.common.log.filter((e) => e.kind === 'noWater')).toHaveLength(1);
+  w.tick += 12 * TICKS_PER_HOUR;
+  warnNoWater(s, w);
+  expect(w.common.log.filter((e) => e.kind === 'noWater')).toHaveLength(2);
+});
+
+test('los sitios del mapa del mundo tienen sus fregaderos y cisternas (la granja, una cisterna llena)', async () => {
+  const { discoverSite, siteMap } = await import('./sites');
+  const w = createWorld(4);
+  const farm = w.common.expedition.sites.find((x) => x.kind === 'farm')!;
+  const site = siteMap(w, farm);
+  expect(site.furniture.some((f) => f.kind === 'cistern' && (f.water ?? 0) > 0)).toBe(true);
+  void discoverSite;
+  expect(checkInvariants(w)).toEqual([]);
+});

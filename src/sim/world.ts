@@ -18,6 +18,7 @@ import {
   START_ANTIBIOTICS,
   START_FOOD,
   START_SEEDS,
+  START_WATER_BOTTLES,
   START_OPINION_MAX,
   START_OPINION_MIN,
   START_WEAPON,
@@ -179,6 +180,7 @@ export function createWorld(
       food: START_FOOD,
       antibiotics: START_ANTIBIOTICS,
       seeds: START_SEEDS, // V1
+      waterBottle: START_WATER_BOTTLES, // V2
     },
   };
 

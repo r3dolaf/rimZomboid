@@ -235,6 +235,12 @@ export const DEPOT_DETOUR = 8;
 // El barril de lluvia (V2 §3): lo que guarda y lo que suma cada hora de lluvia al aire libre.
 export const BARREL_LITERS = 60;
 export const RAIN_BARREL_LITERS = 4;
+/** V2: botellas de agua en el almacén al empezar (para los primeros viajes y por si acaso). */
+export const START_WATER_BOTTLES = 6;
+/** V2: los fregaderos y cisternas de los sitios, con su propio azar (semilla ^ esto). */
+export const SITE_FIXTURES_SALT = 0x5a7e2;
+/** V2: con menos de esta sed y sin agua a mano, se avisa (como mucho cada 12 h por persona). */
+export const NO_WATER_WARN_HOURS = 12;
 /** V2 §7: sin agua corriente y con menos de esto por persona (litros y botellas), «Queda poca agua». */
 export const LOW_WATER_PER_COLONIST = 2;
 /** Botellas del almacén que no se vacían en los depósitos: para beber y para los viajes. */

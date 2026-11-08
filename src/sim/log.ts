@@ -72,6 +72,7 @@ export type LogEvent =
   | { kind: 'clothesTorn'; survivorId: number; garment: GarmentKind; part: BodyPart }
   | { kind: 'waterCut' }
   | { kind: 'lowWater' } // V2
+  | { kind: 'noWater'; survivorId: number }
   | { kind: 'season'; season: Season } // V3
   // V1: lo que se ha estropeado hoy en el almacén.
   | { kind: 'spoiled'; veg: number; meal: number }

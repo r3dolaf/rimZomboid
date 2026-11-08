@@ -802,6 +802,9 @@ function logSentence(e: LogEntry, w: World, here: World): string {
     case 'lowWater': // V2
       text = l.lowWater;
       break;
+    case 'noWater':
+      text = l.noWater(name(e.survivorId));
+      break;
     case 'season': // V3
       text = l.season(e.season);
       break;
@@ -897,6 +900,8 @@ export function noticeFor(e: LogEntry): NoticeInfo | null {
       return { tone: 'mixed', title: t.waterCut, focusId: null };
     case 'lowWater': // V2: igual
       return { tone: 'mixed', title: t.lowWater, focusId: null };
+    case 'noWater':
+      return { tone: 'bad', title: t.noWater, focusId: e.survivorId };
     case 'season': // V3: el invierno avisa (amarillo); las demás, solo en el registro
       return e.season === 'winter' ? { tone: 'mixed', title: t.winter, focusId: null } : null;
     case 'theftPunished':

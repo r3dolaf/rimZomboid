@@ -611,6 +611,10 @@ export const es = {
     foodNeed: (hours: number, cans: number) =>
       `Para este viaje (unas ${hours} h de camino por trayecto): unas ${cans} latas por persona`,
     foodShort: 'Os falta comida para el viaje',
+    /** V2: el agua propuesta (los ríos del camino ayudan). */
+    waterNeed: (bottles: number) =>
+      `Y unas ${bottles} botellas de agua por persona (junto a un río se bebe sin gastarlas)`,
+    waterShort: 'Os falta agua para el viaje',
     onMap: 'Ver en el mapa',
     zoneOnMap: 'La zona elegida en el mapa',
     chooseSite: 'Elige un sitio…',

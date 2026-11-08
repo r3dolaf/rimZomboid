@@ -3,6 +3,10 @@
 // la base) por el borde de su lado.
 import {
   BANDAGE_CLEAN_HOURS,
+  DRINK_BELOW,
+  DRINK_RESTORE,
+  FEVER_THIRST,
+  THIRST_PER_TICK,
   EAT_BELOW,
   FLOOR_SLEEP_FACTOR,
   HUNGER_PER_TICK,
@@ -29,7 +33,7 @@ import { endRoadWaits } from './road/joiner';
 import { giveBed } from './systems/strangers';
 import { addDecision } from './decisions';
 import { rollRoad } from './road/roll';
-import { sideFrom } from './atlas/hex';
+import { neighbors, sideFrom } from './atlas/hex';
 import { findRoute, hexHours } from './atlas/route';
 import { addWound, BODY_PARTS } from './body';
 import { takeAntibiotics } from './illness';
@@ -108,7 +112,15 @@ function reroute(base: World, t: Travel): void {
       : 0;
 }
 
-/** Un tick de viaje de alguien: hambre, sueño, comer y vendarse con lo suyo, sangre, morir. */
+/** ¿Hay agua en el hexágono en que está el grupo o al lado (un río, un lago)? (V2 §5) */
+export function byWater(base: World, t: Travel): boolean {
+  const { atlas } = base.common;
+  const here = t.path[t.at];
+  if (here === undefined) return false;
+  return [here, ...neighbors(atlas, here)].some((h) => atlas.terrain[h] === 'water');
+}
+
+/** Un tick de viaje de alguien: hambre, sed, sueño, comer, beber y vendarse con lo suyo, sangre, morir. */
 function travelerTick(base: World, t: Travel, s: Survivor, night: boolean): void {
   const n = s.needs;
   n.hunger = clamp(n.hunger - HUNGER_PER_TICK);
@@ -127,6 +139,19 @@ function travelerTick(base: World, t: Travel, s: Survivor, night: boolean): void
       : t.members.reduce((a, b) => (packFoodUnits(b) > packFoodUnits(a) ? b : a));
     const ate = eatFromPack(giver);
     if (ate) n.hunger = clamp(n.hunger + ate.restore);
+  }
+  // V2 §5: la sed; con agua al lado (un río, un lago) se bebe allí; si no, de sus botellas o de
+  // las del compañero que más lleva.
+  n.thirst = clamp(n.thirst - THIRST_PER_TICK * (s.fever ? FEVER_THIRST : 1));
+  if (n.thirst < DRINK_BELOW) {
+    if (byWater(base, t)) n.thirst = clamp(n.thirst + DRINK_RESTORE);
+    else {
+      const giver =
+        has(s, 'waterBottle') > 0
+          ? s
+          : t.members.reduce((a, b) => (has(b, 'waterBottle') > has(a, 'waterBottle') ? b : a));
+      if (spend(giver, 'waterBottle') === 1) n.thirst = clamp(n.thirst + DRINK_RESTORE);
+    }
   }
   const bleeding = s.wounds.find((wd) => wd.bleeding);
   if (bleeding && has(s, 'bandage') > 0) {

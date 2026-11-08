@@ -3,7 +3,7 @@ import { ACTIVE_SITES_MAX, EXPLORE_DIST, EXPLORE_MAX, TICKS_PER_DAY } from '../s
 import { sideFrom } from '../sim/atlas/hex';
 import { findRoute, routeHours } from '../sim/atlas/route';
 import { activeSiteIds, canGo, hexOfMap, hexToward } from '../sim/expeditions';
-import { tripFood } from '../sim/road/food';
+import { tripFood, tripWater } from '../sim/road/food';
 import { allMaps } from '../sim/game';
 import { ITEM_KINDS, type ItemKind } from '../sim/items';
 import { issue, type Order } from '../sim/orders';
@@ -105,6 +105,7 @@ export function mountExpeditionsPanel(
   let items: Partial<Record<ItemKind, number>> = {};
   /** Si el jugador ha cambiado la comida (H5c3): entonces ya no se propone hasta otro destino. */
   let foodTouched = false;
+  let waterTouched = false; // V2
   let side: MapSide = 0;
   /** La zona a explorar elegida en el mapa del mundo; si no, hacia `side`. */
   let zone: number | null = null;
@@ -151,7 +152,7 @@ export function mountExpeditionsPanel(
     opts.plan?.set(ends?.[0] ?? null, ends?.[1] ?? null);
   };
   /** Las horas de ruta hasta el destino elegido (con las paradas planeadas) y la comida por persona. */
-  const tripPlan = (): { hours: number; need: number } | null => {
+  const tripPlan = (): { hours: number; need: number; water: number } | null => {
     const w = base();
     const { atlas } = w.common;
     const site = known().find((s) => s.id === siteId);
@@ -163,7 +164,7 @@ export function mountExpeditionsPanel(
         : findRoute(atlas, atlas.base, site.hex);
     if (!route) return null;
     const hours = routeHours(atlas, route);
-    return { hours, need: tripFood(hours, true) };
+    return { hours, need: tripFood(hours, true), water: tripWater(hours, true) };
   };
   /** Las paradas de la ruta planeada, si va de `a` a `b`. */
   const stops = (a: number | null, b: number): { waypoints?: number[] } => {
@@ -234,6 +235,7 @@ export function mountExpeditionsPanel(
     } else if (b.dataset.bag === 'group' && b.dataset.item) {
       const k = b.dataset.item as ItemKind;
       if (k === 'food') foodTouched = true;
+      if (k === 'waterBottle') waterTouched = true;
       const n = (items[k] ?? 0) + Number(b.dataset.delta);
       items[k] = Math.max(0, Math.min(w.storage.items[k], n));
     } else return;
@@ -244,6 +246,7 @@ export function mountExpeditionsPanel(
     if (e.dataset.testid === 'expedition-site') {
       siteId = e.value ? Number(e.value) : null;
       foodTouched = false;
+      waterTouched = false;
       focus = 'send';
     } else if (e.dataset.testid === 'expedition-from') {
       from = Number(e.value);
@@ -258,6 +261,7 @@ export function mountExpeditionsPanel(
     } else if (e.dataset.bag === 'group' && e.value) {
       const k = e.value as ItemKind;
       if (k === 'food') foodTouched = true;
+      if (k === 'waterBottle') waterTouched = true;
       if ((items[k] ?? 0) === 0) items[k] = Math.min(1, base().storage.items[k]);
     }
   });
@@ -404,10 +408,15 @@ export function mountExpeditionsPanel(
     const trip = from === 0 ? tripPlan() : null;
     if (trip && !foodTouched) items.food = Math.min(w.storage.items.food, trip.need * members.size);
     const short = trip !== null && (items.food ?? 0) < trip.need * members.size;
+    // V2: y el agua.
+    if (trip && !waterTouched)
+      items.waterBottle = Math.min(w.storage.items.waterBottle, trip.water * members.size);
+    const dry = trip !== null && (items.waterBottle ?? 0) < trip.water * members.size;
     const view = {
       from,
       trip,
       short,
+      dry,
       froms: peopled().map((x) => [x.siteId, mapName(w, x.siteId)]),
       siteId,
       sites: dests.map((s) => [s.id, mapName(w, s.id)]),
@@ -449,6 +458,8 @@ export function mountExpeditionsPanel(
     food.dataset.testid = 'expedition-food';
     if (trip) food.append(el('p', t.foodNeed(Math.round(trip.hours), trip.need)));
     if (short) food.append(el('p', t.foodShort, 'warn'));
+    if (trip) food.append(el('p', t.waterNeed(trip.water))); // V2
+    if (dry) food.append(el('p', t.waterShort, 'warn'));
     form.replaceChildren(
       el('h3', t.groupTitle),
       el('p', t.from, 'label'),

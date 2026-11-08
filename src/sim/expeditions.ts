@@ -3,7 +3,7 @@
 import { ACTIVE_SITES_MAX, EXPLORE_FOOD, EXPLORE_MAX, HEX_HOURS } from './balance';
 import { hexesWithin, hexIndex, hexOf, sideFrom } from './atlas/hex';
 import { findRoute, hexHours, routeHours } from './atlas/route';
-import { tripFood } from './road/food';
+import { tripFood, tripWater } from './road/food';
 import type { ExpeditionOrder } from './orders';
 import { stashOne, takeInto, unloadAt } from './bags';
 import { WEAPONS } from './jobs/weapons';
@@ -354,7 +354,13 @@ function explore(
   if (members.length === 0) return;
   const t = newTravel(base, 'explore', null, base.common.atlas.base, target, waypoints);
   if (!t) return;
-  // Cada uno, la comida de ida y vuelta (H5c3 §3; como mínimo su lata, como en H5c1).
-  const food = Math.max(EXPLORE_FOOD, tripFood(routeHours(base.common.atlas, t.path), true));
-  board(base, t, members, { food: food * members.length });
+  // Cada uno, la comida de ida y vuelta (H5c3 §3; como mínimo su lata, como en H5c1) y el agua (V2:
+  // la que haya en el almacén, sin dejarlo sin nada).
+  const hours = routeHours(base.common.atlas, t.path);
+  const food = Math.max(EXPLORE_FOOD, tripFood(hours, true));
+  const water = Math.min(
+    tripWater(hours, true) * members.length,
+    Math.max(0, base.storage.items.waterBottle - 1),
+  );
+  board(base, t, members, { food: food * members.length, waterBottle: water });
 }

@@ -9,7 +9,7 @@ import { dayStart } from '../sim/clock';
 import { hexToward } from '../sim/expeditions';
 import type { logEvent } from '../sim/log';
 import { roadEvent } from '../sim/road/events';
-import { tripFood } from '../sim/road/food';
+import { tripFood, tripWater } from '../sim/road/food';
 import { addSurvivor, emptyWorld, travelFor } from '../sim/testing/fixtures';
 import type { LogEntry } from '../sim/log';
 import type { SiteInfo } from '../sim/types';
@@ -194,6 +194,10 @@ test('Expediciones: propone la comida del viaje; si se toca, no se recalcula; av
   expect(q('expedition-list').textContent).toContain(`${need * 2} latas`);
   expect(q('expedition-food').textContent).toContain(`unas ${need} latas por persona`);
   expect(q('expedition-food').textContent).not.toContain('Os falta comida');
+  // V2: también el agua (sin botellas en el almacén, falta).
+  const water = tripWater(routeHours(atlas, findRoute(atlas, atlas.base, far.hex)!), true);
+  expect(q('expedition-food').textContent).toContain(`unas ${water} botellas de agua por persona`);
+  expect(q('expedition-food').textContent).toContain('Os falta agua para el viaje');
   (
     root.querySelector('[data-bag="group"][data-item="food"][data-delta="-1"]') as HTMLButtonElement
   ).click();

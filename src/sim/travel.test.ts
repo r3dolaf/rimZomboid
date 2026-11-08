@@ -8,6 +8,9 @@ import { dayStart } from './clock';
 import { newBag } from './bags';
 import { allAsleep } from './colony';
 import { exitTile, hexToward } from './expeditions';
+import { neighbors } from './atlas/hex';
+import { tripWater } from './road/food';
+import { byWater } from './travel';
 import { allColonists, mapById, stepGame } from './game';
 import { checkInvariants } from './invariants';
 import { discoverSite } from './sites';
@@ -173,4 +176,40 @@ test('explorar tiene riesgo: al llegar, a veces un arañazo o un corte (más si 
   }
   expect(hurt).toBeGreaterThan(4);
   expect(hurt).toBeLessThan(24);
+});
+
+test('V2: de viaje beben de sus botellas, luego de las del compañero; junto a un río, sin gastarlas', () => {
+  const w = world();
+  const ana = onTheRoad(w, 'go', 8, null);
+  const t = w.common.expedition.travels[0]!;
+  const { atlas } = w.common;
+  // Sin agua alrededor.
+  for (const h of [t.path[t.at]!, ...neighbors(atlas, t.path[t.at]!)]) atlas.terrain[h] = 'field';
+  at(w, 1, 8);
+  ana.carrying.waterBottle = 1;
+  ana.needs.thirst = 20;
+  stepGame(w);
+  expect(ana.needs.thirst).toBeGreaterThan(60);
+  expect(ana.carrying.waterBottle).toBe(0);
+  // Con un compañero que lleva dos.
+  const bea = { ...structuredClone(ana), id: 77, name: 'Bea' };
+  bea.carrying.waterBottle = 2;
+  t.members.push(bea);
+  ana.needs.thirst = 20;
+  stepGame(w);
+  expect(ana.needs.thirst).toBeGreaterThan(60);
+  expect(bea.carrying.waterBottle).toBe(1);
+  // Junto a un río, beben allí.
+  atlas.terrain[neighbors(atlas, t.path[t.at]!)[0]!] = 'water';
+  expect(byWater(w, t)).toBe(true);
+  ana.needs.thirst = 20;
+  stepGame(w);
+  expect(ana.needs.thirst).toBeGreaterThan(60);
+  expect(bea.carrying.waterBottle).toBe(1);
+});
+
+test('V2: botellas por persona para el viaje, como las latas', () => {
+  expect(tripWater(0, true)).toBe(1); // solo el margen
+  expect(tripWater(14, false)).toBe(2 + 1); // un día: 2 litros y el margen
+  expect(tripWater(14, true)).toBe(4 + 1);
 });

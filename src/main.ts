@@ -44,6 +44,8 @@ import { createRoutePlan } from './ui/routePlan';
 import { mountWorldCard } from './ui/worldPanel';
 import { createSelection } from './ui/selection';
 import { trackHeight } from './ui/screen';
+import { createFullscreen } from './ui/fullscreen';
+import { mountRotateHint } from './ui/rotateHint';
 import { mountSheet } from './ui/sheet';
 import { mountOutfitsPanel } from './ui/outfitsPanel';
 import { mountStoragePanel } from './ui/storagePanel';
@@ -52,6 +54,7 @@ import { createTool } from './ui/tool';
 import { mountWorkPanel } from './ui/workPanel';
 
 const ui = document.getElementById('hud')!;
+mountRotateHint(ui); // M3: en un móvil en vertical, «gira el móvil» (también en la portada)
 
 const store = createSaveStore(); // H6b: la partida guardada en el navegador
 
@@ -130,6 +133,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
   const expeditionsOpen = createFlag(); // el panel Expediciones (H5c1)
   const gameOpen = createFlag(); // el panel Partida (H6b)
   const debugOpen = createFlag(); // el modo depuración, F3 (H6c)
+  const debugUrl = new URLSearchParams(location.search).get('debug') === '1';
   const perf = { fps: 60, msPerTick: 0 };
   // Los paneles salen en el mismo sitio: abrir uno cierra los otros.
   const panels = [
@@ -160,6 +164,9 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
     toggleOutfits: outfitsOpen.toggle,
     toggleExpeditions: expeditionsOpen.toggle,
     toggleGame: gameOpen.toggle,
+    fullscreen: createFullscreen(), // M3: en el menú ☰, si el navegador deja
+    // M3: con ?debug=1, el modo depuración también desde el menú ☰ (en el móvil no hay F3).
+    toggleDebug: debugUrl ? debugOpen.toggle : undefined,
   });
   // H6b: guardar (solo cada mañana y a mano), cargar, exportar e importar.
   if (loaded) time.setSpeed(0); // la partida cargada empieza en pausa
@@ -179,6 +186,8 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
   const autosave = createAutosave({
     startDay: gameTime(world.tick).day,
     save,
+    loaded: loaded !== undefined, // la cargada ya es la guardada (M3 §3)
+    over: () => world.common.over !== null,
     onSaved: () => {},
     // Si no se puede, se dice (abriendo el panel): si no, se creería guardada.
     onFail: () => {
@@ -191,7 +200,11 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
     seed,
     narrator: style,
     hasSave: () => store.read() !== null,
-    onSave: save,
+    onSave: () => {
+      const ok = save();
+      if (ok) autosave.saved(); // desde ahora es la guardada: también se guarda al salir (M3)
+      return ok;
+    },
     onLoad: () => location.assign(loadHere()),
     onExport: () => downloadFile(exportName(meta()), saveGame(world, meta())),
     onImport(text) {
@@ -202,6 +215,12 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
     },
     sound: soundPrefs,
   });
+  // M3 §3: al esconder la pestaña (otra app, pantalla apagada), se guarda: el móvil la puede cerrar
+  // sin avisar.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') autosave.leave();
+  });
+  window.addEventListener('pagehide', () => autosave.leave());
   // H5c1: las pestañas de mapa; lo de cada mapa (arriba, Almacén, Fabricar, Trabajos, fichas)
   // es del que se ve; las tarjetas, el registro y los avisos, de todos.
   const tabs = mountMapTabs(ui, { view });
@@ -373,7 +392,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
     houseSelection,
     bedSelection,
     tool,
-    debug: new URLSearchParams(location.search).get('debug') === '1',
+    debug: debugUrl,
     debugOpen,
     perf,
     openCraft: () => craftOpen.set(true),

@@ -5,7 +5,8 @@
   bottom: 0;
   display: flex;
   gap: 8px;
-  padding: 8px 12px;
+  padding: 8px calc(12px + var(--safe-r, 0px)) calc(8px + var(--safe-b, 0px))
+    calc(12px + var(--safe-l, 0px));
   background: rgba(15, 17, 20, 0.8);
   pointer-events: none;
   overflow-x: auto;
@@ -1183,7 +1184,8 @@ body.with-map-tabs .work-panel {
 @media (max-width: 799px), (max-height: 500px) {
   .cards {
     gap: 6px;
-    padding: 4px 8px;
+    padding: 4px calc(8px + var(--safe-r, 0px)) calc(4px + var(--safe-b, 0px))
+      calc(8px + var(--safe-l, 0px));
   }
   .card {
     width: 116px;
@@ -1217,7 +1219,7 @@ body.with-map-tabs .work-panel {
   }
 
   .log {
-    left: 8px;
+    left: calc(8px + var(--safe-l, 0px));
     bottom: calc(var(--cards-h, 64px) + 6px);
     width: min(360px, 50vw);
     max-height: 40vh;
@@ -1225,12 +1227,12 @@ body.with-map-tabs .work-panel {
 
   .map-tabs {
     top: calc(var(--bar-h, 36px) + 4px);
-    left: 8px;
+    left: calc(8px + var(--safe-l, 0px));
     transform: none;
   }
   .notices {
     top: calc(var(--bar-h, 36px) + 40px);
-    left: 8px;
+    left: calc(8px + var(--safe-l, 0px));
     width: min(300px, 45vw);
     max-height: calc(100vh - var(--bar-h, 36px) - var(--cards-h, 64px) - 90px);
   }
@@ -1246,10 +1248,10 @@ body.with-map-tabs .work-panel {
   body.with-map-tabs .work-panel {
     position: fixed;
     top: calc(var(--bar-h, 36px) + 4px);
-    right: 4px;
+    right: calc(4px + var(--safe-r, 0px));
     left: auto;
     box-sizing: border-box;
-    width: min(400px, calc(100vw - 8px));
+    width: min(400px, calc(100vw - 8px - var(--safe-l, 0px) - var(--safe-r, 0px)));
     min-width: 0;
     max-width: none;
     max-height: calc(100vh - var(--bar-h, 36px) - var(--cards-h, 64px) - 8px);
@@ -1261,16 +1263,28 @@ body.with-map-tabs .work-panel {
   .notices {
     z-index: 6;
   }
+  /* La depuración (M3: desde el ☰ con ?debug=1), encima de todo y sin tapar la barra. */
+  .debug-panel {
+    position: fixed;
+    z-index: 7;
+    top: calc(var(--bar-h, 36px) + 4px);
+    bottom: auto;
+    left: calc(8px + var(--safe-l, 0px));
+    width: min(340px, 60vw);
+    max-height: calc(100vh - var(--bar-h, 36px) - var(--cards-h, 64px) - 8px);
+    overflow: auto;
+    box-sizing: border-box;
+  }
   /* Trabajos: la tabla, a todo el ancho (y de lado si no cabe). */
   .work-panel:not(.craft-panel):not(.notice-menu):not(.outfits-panel) {
-    left: 4px;
+    left: calc(4px + var(--safe-l, 0px));
     width: auto;
   }
   /* Construir: a la izquierda, para dejar libres el mapa y la columna de herramientas. */
   .build-menu,
   body.with-map-tabs .build-menu {
     top: calc(var(--bar-h, 36px) + 4px);
-    left: 4px;
+    left: calc(4px + var(--safe-l, 0px));
     justify-content: flex-start;
     width: min(320px, 50vw);
     max-width: none;
@@ -1287,4 +1301,67 @@ body.with-map-tabs .work-panel {
   .build-menu .build-desc {
     text-align: left;
   }
+}
+
+/* M3 §1: con el dedo, ningún botón ni desplegable de menos de 36 px; cerrar, 40 × 40; casillas de
+   22 px. (44 px en todo no cabe en 390 de alto con los paneles llenos.) */
+@media (pointer: coarse) {
+  #hud button,
+  #hud select {
+    min-height: 36px;
+  }
+  #hud .close {
+    min-width: 40px;
+    min-height: 40px;
+  }
+  #hud input[type='checkbox'],
+  #hud input[type='radio'] {
+    width: 22px;
+    height: 22px;
+  }
+  .notice {
+    padding-right: 46px;
+  }
+  .notice.decision {
+    padding-right: 10px;
+  }
+}
+
+/* M3 §5: en un móvil en vertical, «Se juega mejor en horizontal». */
+.rotate-hint {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  background: rgba(10, 11, 13, 0.96);
+  color: #e8e6e3;
+  text-align: center;
+  font:
+    17px/1.4 system-ui,
+    sans-serif;
+}
+.rotate-hint[hidden] {
+  display: none;
+}
+.rotate-hint p {
+  max-width: 280px;
+  margin: 0;
+}
+.rotate-hint .rotate-icon {
+  font-size: 48px;
+}
+.rotate-hint button {
+  min-height: 44px;
+  padding: 10px 22px;
+  border: 1px solid #555;
+  border-radius: 6px;
+  background: #2a2d31;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
 }

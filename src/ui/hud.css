@@ -1,3 +1,10 @@
+/* M3: lo que ocupa el notch en cada borde (0 sin notch). */
+:root {
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+}
 .hud-bar {
   position: fixed;
   top: 0;
@@ -6,7 +13,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 10px;
+  padding: calc(6px + var(--safe-t)) calc(10px + var(--safe-r)) 6px calc(10px + var(--safe-l));
   white-space: nowrap;
   background: rgba(15, 17, 20, 0.8);
   color: #e8e6e3;
@@ -171,6 +178,9 @@ body.tool-build canvas {
     margin-left: auto;
     font-size: 16px;
   }
+  .hud-menu {
+    right: calc(8px + var(--safe-r));
+  }
 }
 
 /* Pequeña (M2 §2): las herramientas, en una columna junto al borde derecho, solo con el icono. */
@@ -181,7 +191,7 @@ body.tool-build canvas {
   .hud-tools {
     position: fixed;
     top: calc(var(--bar-h, 36px) + 8px);
-    right: 8px;
+    right: calc(8px + var(--safe-r));
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -204,5 +214,44 @@ body.tool-build canvas {
   .hud-siege,
   body.with-map-tabs .hud-siege {
     top: calc(var(--bar-h, 36px) + 4px);
+  }
+  /* Si algo no cabe (tormenta y «durmiendo» a la vez en un móvil pequeño), se corta por la
+     derecha, pero el ☰ queda siempre en su sitio. */
+  .hud-bar {
+    overflow: hidden;
+    padding-right: calc(62px + var(--safe-r));
+  }
+  .hud-more {
+    position: absolute;
+    top: calc(4px + var(--safe-t));
+    bottom: 4px;
+    right: calc(10px + var(--safe-r));
+  }
+}
+
+/* M3 §1: con el dedo, botones que se acierten: la barra, la columna y el menú, de 44 px. */
+@media (pointer: coarse) {
+  .hud-bar {
+    padding-top: calc(4px + var(--safe-t));
+    padding-bottom: 4px;
+  }
+  /* (con #hud, para ganar a los 36 px de los demás botones) */
+  #hud .hud-speeds button,
+  #hud .hud-tool,
+  #hud .hud-menu button {
+    min-height: 44px;
+  }
+  #hud .hud-speeds button,
+  #hud .hud-more {
+    min-width: 44px;
+  }
+}
+@media (pointer: coarse) and (max-width: 799px), (pointer: coarse) and (max-height: 500px) {
+  .hud-tools .hud-tool {
+    width: 44px;
+    height: 44px;
+  }
+  .hud-tools .hud-tool::before {
+    line-height: 44px;
   }
 }

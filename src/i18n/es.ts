@@ -391,9 +391,17 @@ export const es = {
     expeditions: '🧭',
     notices: '🔔',
     game: '💾',
+    debug: '🐞',
   },
   /** M2: el menú de los paneles, cuando no caben en la barra. */
-  hudMenu: { button: '☰', hint: 'Paneles' },
+  hudMenu: { button: '☰', hint: 'Paneles', debug: 'Depuración' },
+  /** M3: pantalla completa (menú ☰) y el aviso de girar el móvil. */
+  fullscreen: { enter: 'Pantalla completa', exit: 'Salir de pantalla completa', icon: '⛶' },
+  rotateHint: {
+    icon: '📱↻',
+    text: 'Se juega mejor en horizontal: gira el móvil',
+    dismiss: 'Seguir así',
+  },
   noticeMenu: {
     title: 'Avisos',
     show: 'Aparece',

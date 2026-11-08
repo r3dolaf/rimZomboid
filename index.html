@@ -2,9 +2,18 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- M3: la página llega a los bordes (el notch lo aparta el CSS) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>rimZomboid</title>
-    <link rel="icon" href="data:," />
+    <!-- M3: instalable, a pantalla completa y con su icono -->
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" type="image/png" href="icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <meta name="theme-color" content="#111111" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="rimZomboid" />
     <style>
       html,
       body {
@@ -12,8 +21,12 @@
         height: 100%;
         overflow: hidden;
         background: #111;
-        /* M1: sin el zoom de dos toques seguidos (molesta en los botones de velocidad). */
-        touch-action: manipulation;
+        /* M1 y M3: sin el zoom de la página (dos toques o dos dedos fuera del mapa, que lo
+           descolocaba todo), pero los paneles se siguen desplazando. */
+        touch-action: pan-x pan-y;
+        /* M3: sin «tirar para recargar» en Android ni el destello gris al tocar un botón. */
+        overscroll-behavior: none;
+        -webkit-tap-highlight-color: transparent;
       }
       #game {
         position: fixed;

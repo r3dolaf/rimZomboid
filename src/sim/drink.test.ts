@@ -172,3 +172,30 @@ test('las invariantes vigilan la sed', () => {
   w.survivors[0]!.needs.thirst = -1;
   expect(checkInvariants(w).join(' | ')).toContain('thirst fuera de 0–100');
 });
+
+test('sin agua corriente y con menos de 2 litros por persona en la base, «Queda poca agua» (una vez)', async () => {
+  const { lowWaterSystem, baseWater } = await import('./drink');
+  const w = home();
+  w.waterCutAt = 0;
+  w.furniture.push({ id: 80, kind: 'barrel', pos: { x: 12, y: 6 }, water: 1 });
+  expect(baseWater(w)).toEqual({ liters: 1, bottles: 0, mains: false });
+  w.tick = TICKS_PER_HOUR;
+  lowWaterSystem(w);
+  expect(w.common.log.filter((e) => e.kind === 'lowWater')).toHaveLength(1);
+  w.tick = 2 * TICKS_PER_HOUR;
+  lowWaterSystem(w);
+  expect(w.common.log.filter((e) => e.kind === 'lowWater')).toHaveLength(1); // no se repite
+  w.furniture[0]!.water = 30; // vuelve a haber
+  w.tick = 3 * TICKS_PER_HOUR;
+  lowWaterSystem(w);
+  expect(w.waterLow).toBe(false);
+  w.furniture[0]!.water = 0;
+  w.tick = 4 * TICKS_PER_HOUR;
+  lowWaterSystem(w);
+  expect(w.common.log.filter((e) => e.kind === 'lowWater')).toHaveLength(2);
+  // Con agua corriente, nunca.
+  const v = home();
+  v.tick = TICKS_PER_HOUR;
+  lowWaterSystem(v);
+  expect(v.common.log).toHaveLength(0);
+});

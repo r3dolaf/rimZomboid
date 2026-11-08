@@ -11,6 +11,7 @@ import { WorldScene, type WorldSceneData } from './render/WorldScene';
 import { darkness, gameTime } from './sim/clock';
 import { zombiesInSight } from './sim/danger';
 import type { NarratorStyle, World, ZombieLevel } from './sim/types';
+import { baseWater } from './sim/drink';
 import { loadGame, saveGame, type SaveMeta } from './sim/save';
 import { es } from './i18n/es';
 import { mountGamePanel } from './ui/gamePanel';
@@ -408,6 +409,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
         world.tick < world.common.stormUntil,
         seen,
         siegeText(world),
+        baseWater(world), // V2
       );
       hearFrame(here, seen);
       cards.update();

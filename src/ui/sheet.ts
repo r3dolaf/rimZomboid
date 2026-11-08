@@ -268,7 +268,7 @@ export function mountSheet(
         traits: s.traits.map((t) => es.traits[t]),
         needs: [
           `${es.health}: ${Math.round(s.health)}`,
-          ...(['hunger', 'sleep', 'social'] as const).map(
+          ...(['hunger', 'thirst', 'sleep', 'social'] as const).map(
             (k) => `${es.needs[k]}: ${Math.round(s.needs[k])}`,
           ),
         ],

@@ -16,6 +16,7 @@ import { needsSystem } from './systems/needs';
 import { socialSystem } from './systems/social';
 import { spoilSystem } from './spoil';
 import { farmSystem } from './farm';
+import { lowWaterSystem } from './drink';
 import { strangerSystem } from './systems/strangers';
 import type { World } from './types';
 import { visionSystem } from './vision';
@@ -35,6 +36,7 @@ export function step(w: World): void {
   waterSystem(w); // H5b: el corte del agua y la lluvia
   spoilSystem(w); // V1: lo fresco se estropea
   farmSystem(w); // V1: el huerto crece
+  lowWaterSystem(w); // V2: queda poca agua
   moodSystem(w);
   socialSystem(w);
   narratorSystem(w);

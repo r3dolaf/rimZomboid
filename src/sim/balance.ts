@@ -166,6 +166,8 @@ export const DEPOT_DETOUR = 8;
 // El barril de lluvia (V2 §3): lo que guarda y lo que suma cada hora de lluvia al aire libre.
 export const BARREL_LITERS = 60;
 export const RAIN_BARREL_LITERS = 4;
+/** V2 §7: sin agua corriente y con menos de esto por persona (litros y botellas), «Queda poca agua». */
+export const LOW_WATER_PER_COLONIST = 2;
 /** Botellas del almacén que no se vacían en los depósitos: para beber y para los viajes. */
 export const BOTTLES_KEEP = 4;
 

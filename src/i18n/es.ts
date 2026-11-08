@@ -42,6 +42,12 @@ export const es = {
   seed: (s: number) => `Semilla: ${s}`,
   // H6c: con icono, para que la barra de arriba quepa (el nombre, al pasar el ratón).
   food: (n: number) => `🥫 ${n}`,
+  /** V2: el agua guardada en la base; con agua corriente, con el grifo delante. */
+  water: (liters: number, mains: boolean) => `💧 ${mains ? '🚰 ' : ''}${liters}`,
+  hudWaterTitle: (liters: number, bottles: number, mains: boolean) =>
+    `Agua: ${liters} ${liters === 1 ? 'litro' : 'litros'} en barreños y barriles y ${bottles} ${
+      bottles === 1 ? 'botella' : 'botellas'
+    }${mains ? ' · hay agua corriente' : ' · sin agua corriente'}`,
   /** V1: «Comida: 10 latas, 4 hortalizas y 2 guisos». */
   hudFoodTitle: (cans: number, veg: number, meals: number) =>
     `Comida: ${list(
@@ -735,6 +741,7 @@ export const es = {
     roadJoined: 'Alguien se une por el camino',
     roadJoinerLeft: 'Sigue su camino',
     waterCut: 'Se ha cortado el agua', // H5b
+    lowWater: 'Queda poca agua', // V2
     skillUp: 'Mejora',
     // H5
     died: 'Muerte',
@@ -1028,6 +1035,7 @@ export const es = {
     wanderersSighted: 'Una horda errante cruza el mapa',
     rescued: (who: string, other: string) => `${who} ha rescatado a ${other}`,
     waterCut: 'Se ha cortado el agua',
+    lowWater: 'Queda poca agua en la base: haced barriles o id a por agua',
     /** V1: «Se han estropeado 3 hortalizas y 1 guiso en el almacén». */
     spoiled: (veg: number, meal: number) => {
       const parts = [

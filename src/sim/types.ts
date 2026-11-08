@@ -948,6 +948,8 @@ export interface World {
   gone: { id: number; name: string }[];
   /** Tick en que se corta el agua corriente (H5b §6). */
   waterCutAt: number;
+  /** Ya se ha avisado de que queda poca agua (V2 §7), hasta que vuelva a haber. */
+  waterLow?: boolean;
 }
 
 /** Uno que echaron y que vuelve en `at` por donde se fue (`pos`). */

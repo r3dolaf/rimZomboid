@@ -772,6 +772,9 @@ function logSentence(e: LogEntry, w: World, here: World): string {
     case 'waterCut':
       text = l.waterCut;
       break;
+    case 'lowWater': // V2
+      text = l.lowWater;
+      break;
     case 'spoiled': // V1
       text = l.spoiled(e.veg, e.meal);
       break;
@@ -855,6 +858,8 @@ export function noticeFor(e: LogEntry): NoticeInfo | null {
       return { tone: 'bad', title: t.storm, focusId: null };
     case 'waterCut': // H5b: amarillo, sin pausa
       return { tone: 'mixed', title: t.waterCut, focusId: null };
+    case 'lowWater': // V2: igual
+      return { tone: 'mixed', title: t.lowWater, focusId: null };
     case 'theftPunished':
       return { tone: e.guilty ? 'mixed' : 'bad', title: t.theftPunished, focusId: e.suspectId };
     case 'birthdayParty':

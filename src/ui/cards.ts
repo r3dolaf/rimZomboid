@@ -8,7 +8,7 @@ import type { MapView } from './mapView';
 import type { Selection } from './selection';
 import './panels.css';
 
-const NEEDS: readonly (keyof Needs)[] = ['hunger', 'sleep', 'social', 'mood'];
+const NEEDS: readonly (keyof Needs)[] = ['hunger', 'thirst', 'sleep', 'social', 'mood']; // V2: Sed
 
 interface Card {
   card: HTMLButtonElement;

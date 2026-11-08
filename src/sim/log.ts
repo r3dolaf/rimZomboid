@@ -70,6 +70,7 @@ export type LogEvent =
   // Ropa (H5b)
   | { kind: 'clothesTorn'; survivorId: number; garment: GarmentKind; part: BodyPart }
   | { kind: 'waterCut' }
+  | { kind: 'lowWater' } // V2
   // V1: lo que se ha estropeado hoy en el almacén.
   | { kind: 'spoiled'; veg: number; meal: number }
   // V1: cultivos perdidos esta hora, secos y podridos sin cosechar.

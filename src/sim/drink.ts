@@ -1,7 +1,15 @@
 // Beber (spec V2 §2): de dónde y en qué orden. Lo que no se acaba (el fregadero con agua corriente),
 // primero; luego los depósitos (barreño, barril de lluvia, cisterna); las botellas del almacén,
 // para cuando no hay otra cosa; y las propias, fuera de la base o en último lugar.
-import { DEPOT_DETOUR, DRINK_RESTORE, DRINK_TICKS, NEAR_WATER } from './balance';
+import {
+  DEPOT_DETOUR,
+  DRINK_RESTORE,
+  DRINK_TICKS,
+  LOW_WATER_PER_COLONIST,
+  NEAR_WATER,
+  TICKS_PER_HOUR,
+} from './balance';
+import { logEvent } from './log';
 import { has, spend } from './bags';
 import { inBase, reachesStorage } from './jobs/medical';
 import { standOnOrBeside } from './jobs/stand';
@@ -86,4 +94,24 @@ export function finishDrink(
   }
   if (drank) s.needs.thirst = Math.min(100, s.needs.thirst + DRINK_RESTORE);
   return drank;
+}
+
+/** El agua guardada en la base (V2 §7): litros en barreños y barriles, y botellas del almacén. */
+export function baseWater(w: World): { liters: number; bottles: number; mains: boolean } {
+  let liters = 0;
+  for (const f of w.furniture)
+    if (f.kind === 'tub' || f.kind === 'barrel') liters += Math.floor(f.water ?? 0);
+  return { liters, bottles: w.storage.items.waterBottle, mains: mainsOn(w) };
+}
+
+/**
+ * Cada hora, en la base: sin agua corriente y con menos de LOW_WATER_PER_COLONIST litros por persona
+ * (contando las botellas), se avisa una vez, hasta que vuelva a haber.
+ */
+export function lowWaterSystem(w: World): void {
+  if (w.mapId !== 0 || w.tick % TICKS_PER_HOUR !== 0 || w.survivors.length === 0) return;
+  const { liters, bottles, mains } = baseWater(w);
+  const low = !mains && liters + bottles < LOW_WATER_PER_COLONIST * w.survivors.length;
+  if (low && !w.waterLow) logEvent(w, { kind: 'lowWater' });
+  w.waterLow = low;
 }

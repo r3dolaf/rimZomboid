@@ -54,6 +54,8 @@ export function mountHud(
     storm?: boolean,
     zombies?: number,
     siege?: string | null,
+    /** V2: el agua de la base (litros en depósitos, botellas del almacén y si hay agua corriente). */
+    water?: { liters: number; bottles: number; mains: boolean },
   ): void;
   /** Cierra el menú ☰ (Esc); dice si estaba abierto. */
   closeMenu(): boolean;
@@ -93,6 +95,11 @@ export function mountHud(
   food.className = 'hud-food';
   food.dataset.testid = 'hud-food';
   food.title = es.hudTitles.food;
+
+  const water = document.createElement('span'); // V2
+  water.className = 'hud-water';
+  water.dataset.testid = 'hud-water';
+  water.hidden = true;
 
   const bandages = document.createElement('span');
   bandages.className = 'hud-bandages';
@@ -295,6 +302,7 @@ export function mountHud(
     time,
     speeds,
     food,
+    water,
     bandages,
     painkillers,
     wood,
@@ -319,7 +327,7 @@ export function mountHud(
   refreshSpeed();
 
   return {
-    update(t, stock, storm = false, inSight = 0, siegeText = null) {
+    update(t, stock, storm = false, inSight = 0, siegeText = null, waterNow) {
       if (siege.hidden !== (siegeText === null)) siege.hidden = siegeText === null;
       if (siegeText !== null && siege.textContent !== siegeText) siege.textContent = siegeText;
       const zombiesText = es.zombiesInSight(inSight);
@@ -333,6 +341,13 @@ export function mountHud(
       if (food.textContent !== foodText) food.textContent = foodText;
       const foodTitle = es.hudFoodTitle(stock.food, stock.veg, stock.meal);
       if (food.title !== foodTitle) food.title = foodTitle;
+      if (water.hidden !== !waterNow) water.hidden = !waterNow;
+      if (waterNow) {
+        const waterText = es.water(waterNow.liters + waterNow.bottles, waterNow.mains);
+        if (water.textContent !== waterText) water.textContent = waterText;
+        const waterTitle = es.hudWaterTitle(waterNow.liters, waterNow.bottles, waterNow.mains);
+        if (water.title !== waterTitle) water.title = waterTitle;
+      }
       const bandagesText = es.bandages(stock.bandage);
       if (bandages.textContent !== bandagesText) bandages.textContent = bandagesText;
       const painkillersText = es.painkillers(stock.painkillers);

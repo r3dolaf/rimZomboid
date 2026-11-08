@@ -210,6 +210,10 @@ export type MemoryId =
   | 'storm'
   | 'goodDay' // H6c
   | 'hotMeal' // V1
+  // La amputación (B1)
+  | 'lostArm'
+  | 'lostLeg'
+  | 'sawAmputation'
   // Muebles (H4a)
   | 'ateAtTable'
   | 'byTheFire'
@@ -417,7 +421,14 @@ export interface Survivor {
    * La infección (H5), oculta. H6a: si fue de un mordisco (entonces no la curan los antibióticos) y si
    * ya se tomó antibióticos por ella (de viaje, para no tomar otro).
    */
-  infection: { at: number; deathAt: number; bite?: boolean; treated?: boolean } | null;
+  infection: {
+    at: number;
+    deathAt: number;
+    bite?: boolean;
+    treated?: boolean;
+    /** B1: la parte de la herida que la empezó (para saber si amputarla la cura). */
+    part?: BodyPart;
+  } | null;
   /** La ropa que lleva puesta (H5b §2; no cuenta como carga). */
   worn: Garment[];
   /** Su prenda favorita y la que odia (H5b §5), distintas. */
@@ -445,6 +456,8 @@ export interface Survivor {
   feels?: number;
   /** Cuándo se avisó de que tiene sed y no encuentra agua (V2), para no repetirlo. */
   noWaterAt?: number;
+  /** Los brazos o piernas que ha perdido (B1: amputados), para siempre. */
+  missing?: BodyPart[];
 }
 
 /** Un atuendo (H5b §4): las prendas que se puede poner y si acepta ropa de muertos. */
@@ -726,7 +739,7 @@ export interface Narrator {
 /** Algo que el jugador tiene que decidir; si no contesta antes de `expiresAt`, se aplica la opción por defecto. */
 export interface Decision {
   id: number;
-  kind: 'theft' | 'birthday' | 'fever' | 'stranger' | 'horde' | 'joiner';
+  kind: 'theft' | 'birthday' | 'fever' | 'stranger' | 'horde' | 'joiner' | 'amputate';
   survivorIds: number[];
   expiresAt: number;
   /** H5c3: el viaje de esta decisión (horda o quien pide unirse) y el hexágono de la horda. */
@@ -736,6 +749,8 @@ export interface Decision {
   guilty?: boolean;
   /** Fiebre (H5): el segundo aviso, "está peor". */
   worse?: boolean;
+  /** Amputar (B1): el brazo o la pierna mordidos. */
+  part?: BodyPart;
 }
 
 /** Sitios (H5c1 §2): de qué tipo es y si es especial. */

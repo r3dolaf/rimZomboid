@@ -83,6 +83,7 @@ export const LOG_CATEGORY: Record<LogEvent['kind'], LogCategory> = {
   craftFailed: 'work',
   skillUp: 'work',
   wounded: 'health',
+  amputated: 'health', // B1
   bandaged: 'health',
   painkiller: 'health',
   rescued: 'health',

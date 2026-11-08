@@ -268,7 +268,9 @@ export function healthView(
       name: es.bodyParts[p].name,
       hp: Math.round(partHp(s, p)),
       max: BODY_HP[p],
-      wounds: s.wounds.filter((wd) => wd.part === p).map((wd) => woundText(wd, w.tick)),
+      wounds: s.missing?.includes(p)
+        ? [es.healthUi.amputated] // B1
+        : s.wounds.filter((wd) => wd.part === p).map((wd) => woundText(wd, w.tick)),
     })),
     blood: Math.round(s.blood),
     symptoms,
@@ -724,6 +726,9 @@ function logSentence(e: LogEntry, w: World, here: World): string {
       break;
     case 'wounded':
       text = l.wounded(name(e.survivorId), e.part, e.wound);
+      break;
+    case 'amputated': // B1
+      text = l.amputated(name(e.survivorId), e.part, e.ok);
       break;
     case 'clothesTorn':
       text = l.clothesTorn(name(e.survivorId), e.garment, e.part);

@@ -17,6 +17,7 @@ import {
   WITHER_DRY_HOURS,
 } from './balance';
 import { hexDistance } from './atlas/hex';
+import { LIMBS } from './amputation';
 import { BAG_SLOTS, bagsIn, isBag, wornBags } from './bags';
 import { clashes, coversOf, forEachPieceList, forEachTravelerPieceList } from './clothes';
 import { ITEM_KINDS, weightOf, type Inventory } from './items';
@@ -139,6 +140,14 @@ function checkMap(w: World, everyone: readonly Survivor[], allBeds: readonly Bed
   if (!Number.isInteger(w.tick) || w.tick < 0) problems.push(`tick no válido: ${w.tick}`);
 
   checkPlots(w, problems); // V1
+  // B1: lo amputado es un brazo o una pierna, una vez, y sin heridas.
+  for (const s of w.survivors) {
+    const gone = s.missing ?? [];
+    if (new Set(gone).size !== gone.length || gone.some((p) => !LIMBS.includes(p)))
+      problems.push(`${s.name}: partes perdidas raras (${gone.join(', ')})`);
+    if (s.wounds.some((wd) => gone.includes(wd.part)))
+      problems.push(`${s.name}: herida en una parte amputada`);
+  }
 
   const ids = new Set<number>();
   for (const s of w.survivors) {

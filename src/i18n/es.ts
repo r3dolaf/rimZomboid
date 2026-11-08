@@ -973,6 +973,7 @@ export const es = {
   } satisfies Record<WoundKind, string>,
   /** La salud en pantalla (H5 §10). */
   healthUi: {
+    amputated: 'Amputado', // B1
     blood: 'Sangre',
     bloodValue: (n: number) => `Sangre: ${n}`,
     bodyTitle: 'Cuerpo',
@@ -1147,6 +1148,13 @@ export const es = {
     mood: 'Música:',
     auto: 'automática',
   },
+  /** B1: la decisión de amputar, con la parte, y lo que falta para hacerlo. */
+  amputateText: (who: string, part: BodyPart) =>
+    `A ${who} le ha mordido un zombi en ${es.bodyParts[part].the}. Si no se corta en unas horas, la infección le matará. ¿Amputar?`,
+  amputateMissing: {
+    cutter: 'Amputar (falta algo para cortar)',
+    bandages: 'Amputar (faltan 2 vendas)',
+  },
   /** H6a: «Antibióticos y que descanse (quedan 2)». */
   antibioticsLeft: (label: string, n: number) => `${label} (quedan ${n})`,
   decisions: {
@@ -1187,6 +1195,12 @@ export const es = {
       title: 'Alguien en el camino',
       text: (who: string) => `${who} pide unirse al grupo.`,
       options: ['Aceptar', 'Rechazar'],
+    },
+    // B1: el texto con la parte va en `amputateText` (aquí, por si falta).
+    amputate: {
+      title: 'Mordisco: ¿amputar?',
+      text: (who: string) => `A ${who} le ha mordido un zombi. ¿Amputar?`,
+      options: ['Amputar', 'No'],
     },
   } satisfies Record<
     Decision['kind'],
@@ -1456,6 +1470,9 @@ export const es = {
     },
     wounded: (who: string, part: BodyPart, wound: WoundKind) =>
       `Un zombi ${es.woundVerb[wound]} a ${who} en ${es.bodyParts[part].the}`,
+    /** B1: «Han amputado el brazo izquierdo de Ana» (y si sale mal, la sangre). */
+    amputated: (who: string, part: BodyPart, ok: boolean) =>
+      `Han amputado ${es.bodyParts[part].the} de ${who}${ok ? '' : ', que ha perdido mucha sangre'}`,
     bandaged: (who: string, other: string) =>
       who === other ? `${who} se ha vendado` : `${who} ha vendado a ${other}`,
     died: (who: string, cause: DeathCause) => `${who} ha muerto ${es.deathCauses[cause]}`,
@@ -1584,6 +1601,9 @@ export const es = {
     storm: 'Tormenta',
     goodDay: 'Un buen día',
     hotMeal: 'Comida caliente', // V1
+    lostArm: 'Perdió un brazo', // B1
+    lostLeg: 'Perdió una pierna',
+    sawAmputation: 'Una amputación',
     ateAtTable: 'Comió en la mesa',
     byTheFire: 'Junto al fuego',
     hurt: 'Con heridas',

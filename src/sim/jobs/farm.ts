@@ -35,7 +35,7 @@ const TICKS: Record<TendKind, number> = {
 /** Lo que pide cada parcela. */
 const WANTS: Record<TendKind, (p: Plot) => boolean> = {
   harvest: (p) => cropStage(p) === 'ripe',
-  water: needsWater,
+  water: (p) => needsWater(p), // (llamándola: con un ciclo de imports aún no estaría al cargar)
   sow: (p) => cropStage(p) === 'empty',
 };
 

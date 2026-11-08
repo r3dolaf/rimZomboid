@@ -283,3 +283,22 @@ test('S1: cada aviso que aparece suena con su tono y su tipo; los ocultos, no', 
   notices.update();
   expect(onNotice).toHaveBeenLastCalledWith('bad', 'decision:theft');
 });
+
+test('B1: ¿amputar? dice la parte; sin algo para cortar o sin vendas, el botón lo dice y no se puede', () => {
+  const { root, world, notices } = setup();
+  const ana = world.survivors[0]!;
+  for (const s of world.survivors) s.equipped = null;
+  world.storage.items.knife = 0;
+  world.storage.items.bandage = 2;
+  addDecision(world, 'amputate', [ana.id], { part: 'rightLeg' });
+  notices.update();
+  const card = root.querySelector('[data-testid="decision-amputate"]') as HTMLElement;
+  expect(card.textContent).toContain('la pierna derecha');
+  const cut = card.querySelector('[data-testid="decision-option-0"]') as HTMLButtonElement;
+  expect(cut.disabled).toBe(true);
+  expect(cut.textContent).toBe('Amputar (falta algo para cortar)');
+  world.storage.items.knife = 1;
+  notices.update();
+  expect(cut.disabled).toBe(false);
+  expect(cut.textContent).toBe('Amputar');
+});

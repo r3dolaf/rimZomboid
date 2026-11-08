@@ -14,6 +14,7 @@ import {
   TICKS_PER_HOUR,
   WOUNDS,
 } from './balance';
+import { offerAmputation } from './amputation';
 import { logEvent } from './log';
 import { nextFloat, nextInt } from './rng';
 import type { BodyPart, Survivor, World, Wound, WoundKind } from './types';
@@ -33,6 +34,7 @@ const colonist = (w: World, s: Survivor) => w.survivors.includes(s);
 
 /** Vida que le queda a una parte: su máximo menos el daño de sus heridas (como poco, 0). */
 export function partHp(s: Survivor, part: BodyPart): number {
+  if (s.missing?.includes(part)) return 0; // B1: amputada
   let hp: number = BODY_HP[part];
   for (const wd of s.wounds) if (wd.part === part) hp -= wd.damage;
   return Math.max(0, hp);
@@ -102,17 +104,24 @@ export function knockDown(w: World, s: Survivor): void {
  * La infección (H5 §7.1), oculta: el mordisco infecta siempre, el arañazo a veces (azar de los
  * zombis); muere de ella a las 48–72 h.
  */
-function infect(w: World, s: Survivor, kind: WoundKind): void {
+function infect(w: World, s: Survivor, kind: WoundKind, part: BodyPart): void {
   const chance = WOUNDS[kind].infect;
   // H6a: un mordisco sobre una infección de arañazo la vuelve de mordisco (ya no la curan).
   if (s.infection && kind === 'bite') s.infection.bite = true;
   if (s.infection || chance === 0 || (chance < 1 && nextFloat(w.zombieRng) >= chance)) return;
   const hours = nextInt(w.zombieRng, INFECTION_DEATH_HOURS_MIN, INFECTION_DEATH_HOURS_MAX);
-  s.infection = { at: w.tick, deathAt: w.tick + hours * TICKS_PER_HOUR, bite: kind === 'bite' };
+  s.infection = {
+    at: w.tick,
+    deathAt: w.tick + hours * TICKS_PER_HOUR,
+    bite: kind === 'bite',
+    part, // B1: amputar esa parte la cura
+  };
 }
 
 /** Le deja una herida; si el dolor le deja a 0, cae derribado. */
-export function addWound(w: World, s: Survivor, part: BodyPart, kind: WoundKind): Wound {
+export function addWound(w: World, s: Survivor, where: BodyPart, kind: WoundKind): Wound {
+  // B1: donde ya no hay brazo o pierna, el golpe va al torso.
+  const part: BodyPart = s.missing?.includes(where) ? 'torso' : where;
   const size = WOUNDS[kind].damage;
   const wd: Wound = {
     id: w.common.nextWoundId++,
@@ -125,8 +134,10 @@ export function addWound(w: World, s: Survivor, part: BodyPart, kind: WoundKind)
     cleanUntil: 0,
   };
   s.wounds.push(wd);
-  infect(w, s, kind);
+  infect(w, s, kind, part);
   if (colonist(w, s)) logEvent(w, { kind: 'wounded', survivorId: s.id, part, wound: kind });
+  // B1: un mordisco en un brazo o una pierna: ¿amputar?
+  if (kind === 'bite' && colonist(w, s)) offerAmputation(w, s, part);
   refreshHealth(w, s);
   if (s.health <= 0) knockDown(w, s);
   return wd;

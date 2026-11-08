@@ -169,6 +169,8 @@ export type LogEvent =
   | { kind: 'rescued'; survivorId: number; otherId: number }
   // Heridas (H5)
   | { kind: 'wounded'; survivorId: number; part: BodyPart; wound: WoundKind }
+  // B1: le han amputado esa parte (`ok`: sin perder mucha sangre).
+  | { kind: 'amputated'; survivorId: number; part: BodyPart; ok: boolean }
   | { kind: 'bandaged'; survivorId: number; otherId: number }
   | { kind: 'painkiller'; survivorId: number; otherId: number }
   // La muerte (H5 §8): ya no está en la colonia, se guarda su nombre.

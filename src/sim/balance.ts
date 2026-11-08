@@ -39,6 +39,16 @@ export const IDLE_TICKS_MIN = 20;
 export const IDLE_TICKS_MAX = 80;
 export const NO_PATH_RETRY_TICKS = 10;
 
+// La amputación (spec B1): cuánto hay para decidir, lo que gasta, cómo sale y lo que cuesta.
+export const AMPUTATE_HOURS = 8;
+export const AMPUTATE_BANDAGES = 2;
+export const AMPUTATE_OK_BASE = 0.6;
+export const AMPUTATE_OK_PER_LEVEL = 0.04;
+export const AMPUTATE_DOWN_HOURS = 6;
+export const AMPUTATE_BLOOD = { ok: 25, bad: 45 } as const;
+/** Lo que sirve para cortar (en la mano, encima o en el almacén de su mapa). */
+export const CUTTING_TOOLS = ['knife', 'machete', 'axe', 'hatchet'] as const;
+
 // Estaciones y temperatura (spec V3 §1–§2)
 export const SEASON_DAYS = 15;
 export const YEAR_DAYS = 4 * SEASON_DAYS;
@@ -166,6 +176,9 @@ export const MEMORY_EFFECTS = {
   storm: { value: -6, hours: 18 },
   goodDay: { value: 6, hours: 12 }, // H6c
   hotMeal: { value: 8, hours: 8 }, // V1: comer un guiso (en vez de «Ha comido»)
+  lostArm: { value: -20, hours: 240 }, // B1: perder un brazo o una pierna, y verlo
+  lostLeg: { value: -20, hours: 240 },
+  sawAmputation: { value: -4, hours: 24 },
   ateAtTable: { value: 3, hours: 6 },
   byTheFire: { value: 4, hours: 1 },
   downed: { value: -15, hours: 24 },

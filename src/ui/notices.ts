@@ -3,6 +3,7 @@ import { es } from '../i18n/es';
 import { BIRTHDAY_CANS, TICKS_PER_DAY } from '../sim/balance';
 import { decisionAnswered } from '../sim/decisions';
 import { antibioticsAt } from '../sim/illness';
+import { amputationBlock } from '../sim/amputation';
 import { allMaps } from '../sim/game';
 import type { DecisionOption } from '../sim/events/resolve';
 import type { LogEntry } from '../sim/log';
@@ -20,6 +21,7 @@ const DECISION_TONE: Record<Decision['kind'], Tone> = {
   stranger: 'mixed',
   horde: 'bad', // H5c3
   joiner: 'mixed',
+  amputate: 'bad', // B1
 };
 
 /**
@@ -143,7 +145,9 @@ export function mountNotices(
             : []
           : d.kind === 'horde'
             ? [t.text(listNames((travel?.members ?? []).map((s) => s.name)))]
-            : [(d.worse && t.worse ? t.worse : t.text)(name(d.survivorIds[0]!))];
+            : d.kind === 'amputate' && d.part
+              ? [es.amputateText(name(d.survivorIds[0]!), d.part)]
+              : [(d.worse && t.worse ? t.worse : t.text)(name(d.survivorIds[0]!))];
     const focusId = d.travelId !== undefined || d.kind === 'stranger' ? null : d.survivorIds[0]!;
     const title = w.mapId === 0 ? t.title : `${mapName(w, w.mapId)}: ${t.title}`;
     const el = card(DECISION_TONE[d.kind], title, lines, focusId);
@@ -200,6 +204,13 @@ export function mountNotices(
         if (x.el.hidden !== answered) x.el.hidden = answered;
         if (d.kind === 'birthday')
           x.buttons[0]!.disabled = x.map.storage.items.food < BIRTHDAY_CANS;
+        // B1: amputar, solo con algo para cortar y vendas (si falta, lo dice el botón).
+        if (d.kind === 'amputate') {
+          const block = amputationBlock(x.map);
+          const label = block ? es.amputateMissing[block] : es.decisions.amputate.options[0]!;
+          if (x.buttons[0]!.textContent !== label) x.buttons[0]!.textContent = label;
+          x.buttons[0]!.disabled = block !== null;
+        }
         // H6a: los antibióticos que quedan (los suyos y los del almacén); sin ninguno, apagado.
         const pills = x.buttons[3];
         const sick = x.map.survivors.find((s) => s.id === d.survivorIds[0]);

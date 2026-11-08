@@ -468,6 +468,41 @@ for (let l = 0; l <= 4; l++) {
 }
 for (let n = 1; n <= 3; n++) PROP_SPRITES[`planks${n}`] = planks(n);
 
+/**
+ * La radio (C1): una caja verde del ejército con la rejilla del altavoz, el dial (encendido, se
+ * ilumina) y la antena; encendida y con carga, las ondas salen de la antena (`waves`, 1 o 2).
+ */
+function radio(on: boolean, waves: 0 | 1 | 2): string[] {
+  const px: Pixels = new Map();
+  for (let y = 7; y <= 14; y++)
+    for (let x = 2; x <= 13; x++) px.set(key(x, y), y === 7 ? 'O' : y === 14 ? 'Q' : 'O');
+  for (let y = 9; y <= 12; y++)
+    for (let x = 3; x <= 7; x++) px.set(key(x, y), (x + y) % 2 === 0 ? 'h' : 'Q');
+  for (let x = 9; x <= 12; x++) for (const y of [9, 10]) px.set(key(x, y), on ? 'F' : 'S');
+  px.set(key(10, 9), 'k');
+  px.set(key(10, 12), 'j');
+  px.set(key(12, 12), 'j');
+  for (let x = 5; x <= 9; x++) px.set(key(x, 5), 'G');
+  px.set(key(5, 6), 'G');
+  px.set(key(9, 6), 'G');
+  for (let y = -5; y <= 6; y++) px.set(key(12, y), 'J');
+  px.set(key(12, -6), 'g');
+  const arc = (dx: number, c: string, half: number) => {
+    for (let y = -6 - half; y <= -6 + half; y++) {
+      px.set(key(12 + dx, y), c);
+      px.set(key(12 - dx, y), c);
+    }
+  };
+  if (waves >= 1) arc(2, 'y', 1);
+  if (waves >= 2) arc(3, 'F', 2);
+  const top = -8;
+  outline(px, top);
+  return rowsOf(px, top);
+}
+PROP_SPRITES.radioOff = radio(false, 0);
+PROP_SPRITES.radio0 = radio(true, 1);
+PROP_SPRITES.radio1 = radio(true, 2);
+
 /** Un charco de sangre seca bajo un cuerpo (A3), con el borde irregular. */
 function bloodPool(): string[] {
   const px: Pixels = new Map();
@@ -608,6 +643,10 @@ export function waterLevel(water: number, max: number): number {
 const CAMPFIRE_FRAMES = 8;
 export const campfireFrame = (frame: number) =>
   `campfire${Math.floor(frame / CAMPFIRE_FRAMES) % 3}`;
+
+/** Las ondas de la radio encendida cambian cada `RADIO_FRAMES` fotogramas (C1). */
+const RADIO_FRAMES = 12;
+export const radioFrame = (frame: number) => `radio${Math.floor(frame / RADIO_FRAMES) % 2}`;
 
 /** Lo que se ve de un montón: hasta 3 tablas y, si hay, una bolsa o una caja con lo demás. */
 export function pileFrames(items: Inventory): string[] {

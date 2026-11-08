@@ -54,6 +54,8 @@ test('update cambia la hora y refleja cambios de velocidad hechos con el teclado
       seeds: 0,
       veg: 0,
       meal: 0,
+      radio: 0,
+      battery: 0,
       pieces: [],
     },
   );
@@ -109,6 +111,8 @@ test('muestra la comida del almacén', () => {
       seeds: 0,
       veg: 4,
       meal: 1,
+      radio: 0,
+      battery: 0,
       pieces: [],
     },
   );
@@ -170,6 +174,8 @@ test('muestra la madera del almacén y el botón Trabajos abre el panel', () => 
       seeds: 0,
       veg: 0,
       meal: 0,
+      radio: 0,
+      battery: 0,
       pieces: [],
     },
   );
@@ -209,6 +215,8 @@ test('muestra la tormenta mientras dura (el narrador, en el panel Partida, H6c)'
     seeds: 0,
     veg: 0,
     meal: 0,
+    radio: 0,
+    battery: 0,
     pieces: [],
   };
   hud.update({ day: 1, hour: 9, minute: 0 }, stock, false);

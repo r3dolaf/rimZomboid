@@ -189,7 +189,6 @@ test('V2: una partida de la versión 2 se sigue cargando, con la sed y el fregad
 });
 
 test('V3: una partida de la versión 3 se sigue cargando, con sus hogueras con 12 h de leña', () => {
-  expect(SAVE_VERSION).toBe(4);
   const w = createWorld(7);
   w.furniture.push({
     id: w.common.nextId++,
@@ -201,4 +200,32 @@ test('V3: una partida de la versión 3 se sigue cargando, con sus hogueras con 1
   const loaded = loadGame(JSON.stringify(file));
   if ('error' in loaded) throw new Error(loaded.error);
   expect(loaded.world.furniture.find((f) => f.kind === 'campfire')?.fuel).toBe(12);
+});
+
+test('C1: una partida de la versión 4 se sigue cargando, con radio y pilas a 0 en todo lo que guarda cosas', () => {
+  expect(SAVE_VERSION).toBe(5);
+  const w = createWorld(7);
+  const file = JSON.parse(saveGame(w, meta)) as { version: number; world: World };
+  file.version = 4;
+  // Como era: sin radio ni pilas en el almacén, los muebles, las cargas ni las bolsas.
+  const strip = (x: unknown): void => {
+    if (typeof x !== 'object' || x === null) return;
+    if (Array.isArray(x)) return x.forEach(strip);
+    const o = x as Record<string, unknown>;
+    if (Array.isArray(o.pieces) && typeof o.food === 'number') {
+      delete o.radio;
+      delete o.battery;
+    }
+    Object.values(o).forEach(strip);
+  };
+  strip(file.world);
+  expect(file.world.storage.items.battery).toBeUndefined();
+  const loaded = loadGame(JSON.stringify(file));
+  if ('error' in loaded) throw new Error(loaded.error);
+  const lw = loaded.world;
+  expect(lw.storage.items.radio).toBe(0);
+  expect(lw.storage.items.battery).toBe(0);
+  expect(lw.containers.every((c) => c.items.battery >= 0 && c.items.radio === 0)).toBe(true);
+  expect(lw.survivors.every((s) => s.carrying.battery === 0)).toBe(true);
+  expect(checkInvariants(lw)).toEqual([]);
 });

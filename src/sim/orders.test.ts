@@ -59,6 +59,8 @@ test('marcar una casa no marca los contenedores ya registrados y vacíos', () =>
     seeds: 0,
     veg: 0,
     meal: 0,
+    radio: 0,
+    battery: 0,
     pieces: [],
   };
   issue(w, { type: 'designateHouse', houseId: h.id, on: true });

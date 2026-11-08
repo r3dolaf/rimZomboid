@@ -1,4 +1,5 @@
 // Construir (spec H4a §4): dónde se puede, marcas de talar y planos.
+import { contains } from './geom';
 import { emptyInventory } from './items';
 import { getTile, inBounds } from './map/grid';
 import { dropPile, pileAt } from './piles';
@@ -50,7 +51,20 @@ export function canPlace(w: World, kind: BuildKind, p: Point): boolean {
   if (!inBounds(w.grid, p.x, p.y) || w.seen[p.y * w.grid.width + p.x] !== 1) return false;
   if (w.blueprints.some((b) => b.pos.x === p.x && b.pos.y === p.y)) return false;
   if (!tileFits(w, kind, p)) return false;
+  if (kind === 'radio' && !radioAllowed(w)) return false;
   return !GROUND_KINDS.has(kind) || !occupied(w, p.x, p.y);
+}
+
+/**
+ * La radio (C1 §1): hace falta una en el almacén para poner el plano, y solo una por base (ni otra
+ * construida ni otro plano).
+ */
+export function radioAllowed(w: World): boolean {
+  return (
+    w.storage.items.radio > 0 &&
+    !w.furniture.some((f) => f.kind === 'radio') &&
+    !w.blueprints.some((b) => b.kind === 'radio')
+  );
 }
 
 /** Lo que se construye sobre suelo libre (el resto va sobre una ventana, una puerta…). */
@@ -62,6 +76,7 @@ const GROUND_KINDS: ReadonlySet<BuildKind> = new Set([
   'woodDoor',
   'tub', // H5b
   'barrel', // V2
+  'radio', // C1
 ]);
 
 /** ¿Tiene cortinas esa ventana? (H4d) */
@@ -92,6 +107,8 @@ export function tileFits(w: World, kind: BuildKind, p: Point): boolean {
     case 'woodWall':
     case 'woodDoor':
       return WALL_GROUND.has(t);
+    case 'radio': // C1: en el suelo de la base
+      return t === Tile.Floor && contains(w.base.rect, p);
     default:
       return BUILDABLE_GROUND.has(t);
   }

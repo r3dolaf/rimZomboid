@@ -616,7 +616,9 @@ export type BuildKind =
   // El barreño (H5b §6).
   | 'tub'
   // El barril de lluvia (V2 §3).
-  | 'barrel';
+  | 'barrel'
+  // La radio (C1 §1).
+  | 'radio';
 
 /**
  * Lo sembrado en una parcela (spec V1 §3), en horas: las que ha crecido con humedad, las que lleva
@@ -652,11 +654,16 @@ export interface Blueprint {
  */
 export interface Furniture {
   id: number;
-  kind: 'table' | 'campfire' | 'tub' | 'sink' | 'cistern' | 'barrel';
+  kind: 'table' | 'campfire' | 'tub' | 'sink' | 'cistern' | 'barrel' | 'radio';
   pos: Point;
   water?: number;
-  /** Las horas de leña de una hoguera (V3 §4); sin el campo, nunca se apaga (las de antes). */
+  /**
+   * Las horas de leña de una hoguera (V3 §4; sin el campo, nunca se apaga: las de antes) o de carga
+   * de la radio (C1 §1).
+   */
   fuel?: number;
+  /** La radio (C1 §1): encendida. */
+  on?: boolean;
 }
 
 /** Almacén de la base. */

@@ -115,6 +115,7 @@ import {
 } from './people';
 import {
   campfireFrame,
+  radioFrame,
   cropFrame,
   itemCount,
   makePropAtlas,
@@ -1638,6 +1639,8 @@ export class GameScene extends Phaser.Scene {
         return `barrel${waterLevel(f.water ?? 0, BARREL_LITERS)}`; // V2
       case 'sink':
         return mainsOn(this.world) ? 'sinkWet' : 'sinkDry';
+      case 'radio': // C1: encendida y con carga, con sus ondas
+        return f.on && (f.fuel ?? 0) > 0 ? radioFrame(this.frame) : 'radioOff';
     }
   }
 

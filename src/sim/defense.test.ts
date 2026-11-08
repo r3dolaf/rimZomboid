@@ -100,6 +100,8 @@ test('invariantes: planos con madera de más, montones raros, marcas que no son 
       seeds: 0,
       veg: 0,
       meal: 0,
+      radio: 0,
+      battery: 0,
       pieces: [],
     },
   });

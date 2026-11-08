@@ -5,6 +5,7 @@ import { applyExpeditionOrder } from './expeditions';
 import { isEmpty, type ItemKind } from './items';
 import { resolveDecision } from './events/resolve';
 import { cancelBlueprint, markTree, placeBlueprint } from './build';
+import { setRadio } from './radio';
 import { markPlot } from './farm';
 import { BILL_DEFAULT_TARGET, RECIPES } from './balance';
 import { applyDraftOrder } from './draft';
@@ -37,6 +38,8 @@ export type Order =
   | { type: 'markTree'; x: number; y: number; on: boolean }
   // El huerto (V1)
   | { type: 'markPlot'; x: number; y: number; on: boolean }
+  // La radio (C1): encenderla o apagarla.
+  | { type: 'setRadio'; on: boolean }
   | { type: 'placeBlueprint'; kind: BuildKind; x: number; y: number }
   | { type: 'cancelBlueprint'; id: number }
   // Zombis (H4b)
@@ -207,6 +210,9 @@ export function ordersSystem(w: World): void {
         break;
       case 'markPlot':
         markPlot(w, o.x, o.y, o.on);
+        break;
+      case 'setRadio':
+        setRadio(w, o.on);
         break;
       case 'placeBlueprint':
         placeBlueprint(w, o.kind, o.x, o.y);

@@ -32,10 +32,13 @@ import { atOrBeside, standBeside, standOnOrBeside } from './stand';
 export const FAR = 1e9;
 
 /** Muebles: se construyen de pie encima del plano. El resto, desde al lado. */
-const ON_TILE: ReadonlySet<BuildKind> = new Set(['bed', 'table', 'campfire']);
+const ON_TILE: ReadonlySet<BuildKind> = new Set(['bed', 'table', 'campfire', 'radio']);
 
-const ready = (b: Blueprint) =>
-  b.wood >= BUILD[b.kind].wood && (b.curtains ?? 0) >= (CURTAINS_COST[b.kind] ?? 0);
+/** Con toda su madera (y cortinas); la radio (C1), además, con una radio en el almacén. */
+const ready = (b: Blueprint, w: World) =>
+  b.wood >= BUILD[b.kind].wood &&
+  (b.curtains ?? 0) >= (CURTAINS_COST[b.kind] ?? 0) &&
+  (b.kind !== 'radio' || w.storage.items.radio > 0);
 
 /** Plano en el que trabaja o al que va a trabajar, o `null`. */
 export function buildTarget(s: Survivor): number | null {
@@ -50,7 +53,7 @@ export function buildJob(s: Survivor, w: World): Action | null {
   const t = tileOf(s.pos);
   let best: { b: Blueprint; stand: { x: number; y: number }; d: number } | null = null;
   for (const b of w.blueprints) {
-    if (!ready(b) || claimed.has(b.id)) continue;
+    if (!ready(b, w) || claimed.has(b.id)) continue;
     // Reparar va antes (spec H4b §4.2): a igualdad de tipo, el más cercano.
     const d = (isRepairPlan(w, b) ? 0 : FAR) + (b.pos.x - t.x) ** 2 + (b.pos.y - t.y) ** 2;
     if (best && d >= best.d) continue;
@@ -65,19 +68,19 @@ export function buildJob(s: Survivor, w: World): Action | null {
 export function buildStillWorth(s: Survivor, w: World): boolean {
   const id = buildTarget(s);
   const b = id === null ? undefined : w.blueprints.find((x) => x.id === id);
-  return b !== undefined && ready(b) && s.work.build;
+  return b !== undefined && ready(b, w) && s.work.build;
 }
 
 export function startBuildActivity(s: Survivor, w: World, blueprintId: number): Action {
   const b = w.blueprints.find((x) => x.id === blueprintId);
-  if (!b || !ready(b) || !atOrBeside(s, b.pos)) return { type: 'idle', ticksLeft: 0 };
+  if (!b || !ready(b, w) || !atOrBeside(s, b.pos)) return { type: 'idle', ticksLeft: 0 };
   return { type: 'build', blueprintId };
 }
 
 /** Un tick de trabajo. Devuelve si ha terminado (o ya no tiene sentido seguir). */
 export function workOnBlueprint(w: World, s: Survivor, blueprintId: number): boolean {
   const b = w.blueprints.find((x) => x.id === blueprintId);
-  if (!b || !ready(b) || !s.work.build) return true;
+  if (!b || !ready(b, w) || !s.work.build) return true;
   const ticks = BUILD[b.kind].ticks;
   if (b.progress < ticks) {
     // Avanza según la habilidad (spec H4c §3.1); se aprende aunque luego falle.
@@ -142,6 +145,10 @@ export function finishBuild(w: World, b: Blueprint, builder: Survivor): void {
         pos: { x, y },
         fuel: CAMPFIRE_FUEL_START,
       });
+      break;
+    case 'radio': // C1: se gasta la radio del almacén; encendida y sin carga
+      w.storage.items.radio--;
+      w.furniture.push({ id: w.common.nextId++, kind: 'radio', pos: { x, y }, fuel: 0, on: true });
       break;
     case 'tub': // H5b: vacío
     case 'barrel': // V2: también

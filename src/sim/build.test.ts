@@ -118,6 +118,8 @@ test('dónde se puede construir cada cosa', () => {
       seeds: 0,
       veg: 0,
       meal: 0,
+      radio: 0,
+      battery: 0,
       pieces: [],
     },
   });

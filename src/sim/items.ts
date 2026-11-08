@@ -32,7 +32,10 @@ export type ItemKind =
   // V1: semillas, hortalizas y guisos (las dos últimas se estropean)
   | 'seeds'
   | 'veg'
-  | 'meal';
+  | 'meal'
+  // C1: la radio (para construirla en la base) y las pilas que le dan carga
+  | 'radio'
+  | 'battery';
 
 /** Orden en el que se cogen las cosas al registrar un contenedor. */
 export const ITEM_KINDS: readonly ItemKind[] = [
@@ -61,6 +64,8 @@ export const ITEM_KINDS: readonly ItemKind[] = [
   'seeds', // V1
   'veg',
   'meal',
+  'radio', // C1
+  'battery',
 ];
 
 /**
@@ -97,6 +102,8 @@ export function emptyInventory(): Inventory {
     seeds: 0, // V1
     veg: 0,
     meal: 0,
+    radio: 0, // C1
+    battery: 0,
     pieces: [],
   };
 }

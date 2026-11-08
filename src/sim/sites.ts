@@ -4,6 +4,7 @@ import {
   BUILDINGS,
   CLOTHES_SALT,
   SEEDS_SALT,
+  RADIO_SALT,
   SITE_FIXTURES_SALT,
   INITIAL_REVEAL,
   NOTE_SURVIVORS,
@@ -33,6 +34,8 @@ import { hexDistance, hexesWithin, sideFrom } from './atlas/hex';
 import { findRoute, routeHours } from './atlas/route';
 import {
   fillBags,
+  fillBatteries,
+  fillRadio,
   fillBuilding,
   fillFindings,
   fillSeeds,
@@ -99,6 +102,10 @@ export function siteMap(base: World, info: SiteInfo): World {
   fillHatchets(g.houses, containers, clothesRng);
   fillFindings(g.houses, containers, clothesRng);
   fillSeeds(g.houses, containers, createRng((seed ^ SEEDS_SALT) >>> 0), true); // V1
+  // C1: la radio y las pilas, con su propio azar.
+  const radioRng = createRng((seed ^ RADIO_SALT) >>> 0);
+  fillBatteries(g.houses, containers, radioRng);
+  fillRadio(info.kind, containers, radioRng);
   // V2: sus fregaderos (sin agua corriente) y cisternas (llenas), con su propio azar.
   const fixtures = placeFixtures(
     g.grid,

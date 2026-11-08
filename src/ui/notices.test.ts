@@ -163,6 +163,8 @@ test('desconocidos: nombres, rasgos y lo que llevan; Aceptar da la orden', () =>
     seeds: 0,
     veg: 0,
     meal: 0,
+    radio: 0,
+    battery: 0,
     pieces: [],
   };
   notices.update();

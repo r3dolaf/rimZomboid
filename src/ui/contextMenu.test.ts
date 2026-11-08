@@ -200,3 +200,12 @@ test('U1 §7: el menú en pantalla pasa Fabricar y Ver la casa', () => {
   (root.querySelector('[data-testid="ctx-viewHouse"]') as HTMLButtonElement).click();
   expect(onHouse).toHaveBeenCalledWith(4);
 });
+
+test('C1: en la radio, encenderla o apagarla (y lo pedido en pausa ya cuenta)', () => {
+  const w = world();
+  w.furniture.push({ id: 70, kind: 'radio', pos: { x: 4, y: 4 }, fuel: 0, on: true });
+  expect(labels(w, 4, 4)).toEqual(['📻 Apagar la radio']);
+  contextOptions(w, { x: 4, y: 4 })[0]!.choose();
+  expect(labels(w, 4, 4)).toEqual(['📻 Encender la radio']);
+  expect(labels(w, 5, 4)).toEqual([]);
+});

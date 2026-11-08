@@ -378,6 +378,7 @@ export const es = {
     smashWindow: 'Romper ventana',
     tub: 'Barreño', // H5b
     barrel: 'Barril de lluvia', // V2
+    radio: 'Radio', // C1
   } satisfies Record<BuildKind, string>,
   /** «Cama — 6 tablas (tienes 12)» (H5c1 §8). */
   buildOption: (name: string, wood: number | string, have: number) =>
@@ -405,6 +406,8 @@ export const es = {
     chop: '🪓 Talar el árbol',
     unchop: '🪓 No talar el árbol',
     craft: '🧵 Fabricar…',
+    radioOn: '📻 Encender la radio', // C1
+    radioOff: '📻 Apagar la radio',
   },
   /** Qué hace cada cosa, abajo del menú. */
   buildDesc: {
@@ -425,6 +428,8 @@ export const es = {
     takeDownCurtains: 'Descolgar las cortinas (vuelven al almacén)',
     hangCurtains: 'Colgar unas cortinas',
     smashWindow: 'Romper una ventana para entrar (hace ruido)',
+    radio:
+      'La radio: con pilas y encendida, oiréis las emisiones del ejército (y quizá un rescate); hace falta una radio en el almacén',
   } satisfies Record<BuildKind, string>,
   repairWood: '1–3',
   buildMenuHint:
@@ -1276,6 +1281,8 @@ export const es = {
     seeds: ['semilla', 'semillas'], // V1
     veg: ['hortaliza', 'hortalizas'],
     meal: ['guiso', 'guisos'],
+    radio: ['radio', 'radios'], // C1
+    battery: ['pila', 'pilas'],
   } satisfies Record<ItemKind, [string, string]>,
   log: {
     found: (who: string, what: string, where: string) => `${who} ha encontrado ${what} en ${where}`,
@@ -1757,6 +1764,7 @@ export const es = {
     smashWindow: 'Se ha roto una ventana para entrar',
     tub: 'Barreño construido',
     barrel: 'Barril de lluvia construido',
+    radio: 'Radio construida',
   } satisfies Record<BuildKind, string>,
   /** Lo que intentaba quien falla al construir: "ha fallado al levantar el muro". */
   buildFail: {
@@ -1775,6 +1783,7 @@ export const es = {
     smashWindow: 'romper la ventana',
     tub: 'construir el barreño',
     barrel: 'construir el barril de lluvia',
+    radio: 'montar la radio',
   } satisfies Record<BuildKind, string>,
   /** Lo que hace quien trabaja en cada plano. */
   building: {
@@ -1793,6 +1802,7 @@ export const es = {
     smashWindow: 'Rompiendo una ventana',
     tub: 'Construyendo un barreño',
     barrel: 'Construyendo un barril de lluvia',
+    radio: 'Montando la radio',
   } satisfies Record<BuildKind, string>,
   /** Cada plano, para las frases ("Llevando madera a una cama"). */
   builds: {
@@ -1811,6 +1821,7 @@ export const es = {
     smashWindow: 'una ventana',
     tub: 'un barreño',
     barrel: 'un barril de lluvia',
+    radio: 'la radio',
   } satisfies Record<BuildKind, string>,
 
   /** Iconos sobre la cabeza en el mapa. */

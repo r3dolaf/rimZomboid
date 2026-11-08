@@ -13,7 +13,7 @@ import type { NarratorStyle, World, ZombieLevel } from './types';
  * Cambia con cada cambio de forma de la partida. Las de versiones anteriores se ponen al día al
  * cargarlas (`migrate`); las de una versión desconocida no se cargan.
  */
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 /** Lo que se enseña de una partida guardada. */
 export interface SaveMeta {
@@ -75,6 +75,7 @@ export function loadGame(
     if (file.version < 2) toV2(world);
     if (file.version < 3) toV3(world);
     if (file.version < 4) toV4(world);
+    if (file.version < 5) toV5(world);
     const c = world.common;
     if (!c?.expedition || !c.atlas || !world.grid || !Array.isArray(world.siteMaps))
       return { error: 'broken' };
@@ -115,14 +116,19 @@ function walk(x: unknown, visit: (o: Json) => void, seen = new Set<unknown>()): 
   for (const v of Object.values(x)) walk(v, visit, seen);
 }
 
+/** Lo que guarda cosas (tiene piezas y latas): las que le falten, a 0. */
+function fillStacks(o: Json): void {
+  if (Array.isArray(o.pieces) && typeof o.food === 'number')
+    for (const k of ITEM_KINDS) if (typeof o[k] !== 'number') o[k] = 0;
+}
+
 /**
  * De la versión 1 a la 2 (V1, el huerto): las cosas nuevas a 0 en todo lo que guarda cosas, el
  * trabajo y la habilidad Cultivar en cada persona y el huerto vacío en cada mapa.
  */
 function toV2(world: World): void {
   walk(world, (o) => {
-    if (Array.isArray(o.pieces) && typeof o.food === 'number')
-      for (const k of ITEM_KINDS) if (typeof o[k] !== 'number') o[k] = 0;
+    fillStacks(o);
     if (typeof o.kills === 'number' && typeof o.siegesRepelled === 'number') o.harvested ??= 0;
     const { work, priorities, skills } = o as Partial<Record<string, Json>>;
     if (isObject(work) && isObject(priorities) && isObject(skills)) {
@@ -170,4 +176,9 @@ function toV4(world: World): void {
   for (const m of maps)
     for (const f of Array.isArray(m?.furniture) ? m.furniture : [])
       if (f.kind === 'campfire' && f.fuel === undefined) f.fuel = CAMPFIRE_FUEL_START;
+}
+
+/** De la versión 4 a la 5 (C1, la radio): radio y pilas a 0 en todo lo que guarda cosas. */
+function toV5(world: World): void {
+  walk(world, fillStacks);
 }

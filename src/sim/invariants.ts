@@ -3,6 +3,7 @@ import {
   BUILD,
   BUILDINGS,
   CAMPFIRE_FUEL_MAX,
+  RADIO_CHARGE_MAX,
   DEPOT_LITERS,
   CURTAINS_COST,
   OPINION_LIMIT,
@@ -406,13 +407,18 @@ function checkMap(w: World, everyone: readonly Survivor[], allBeds: readonly Bed
       b.done < 0
     )
       problems.push(`pedido ${b.id}: ${b.recipe}, ${b.mode}, N ${b.target}, hechos ${b.done}`);
-  // Leña (V3 §4): entre 0 y lo que cabe.
-  for (const f of w.furniture)
-    if (
-      f.fuel !== undefined &&
-      (!Number.isFinite(f.fuel) || f.fuel < 0 || f.fuel > CAMPFIRE_FUEL_MAX)
-    )
-      problems.push(`hoguera #${f.id}: leña ${f.fuel} fuera de 0–${CAMPFIRE_FUEL_MAX}`);
+  // Leña (V3 §4) y carga de la radio (C1 §1): entre 0 y lo que cabe.
+  for (const f of w.furniture) {
+    const max = f.kind === 'radio' ? RADIO_CHARGE_MAX : CAMPFIRE_FUEL_MAX;
+    if (f.fuel !== undefined && (!Number.isFinite(f.fuel) || f.fuel < 0 || f.fuel > max))
+      problems.push(`${f.kind} #${f.id}: ${f.fuel} horas, fuera de 0–${max}`);
+  }
+  // Una radio por mapa como mucho, con su carga (C1 §1).
+  const radios = w.furniture.filter((f) => f.kind === 'radio');
+  if (radios.length > 1) problems.push(`${radios.length} radios en el mapa ${w.mapId}`);
+  for (const r of radios)
+    if (r.fuel === undefined || typeof r.on !== 'boolean')
+      problems.push(`radio #${r.id}: sin carga o sin encendida/apagada`);
   // Agua (H5b §6): entre 0 y lo que cabe.
   for (const f of w.furniture) {
     const max = DEPOT_LITERS[f.kind] ?? null;

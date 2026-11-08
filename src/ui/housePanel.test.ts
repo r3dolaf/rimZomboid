@@ -44,6 +44,8 @@ test('muestra la casa seleccionada con sus contenedores y se cierra con la ✕',
     seeds: 0,
     veg: 0,
     meal: 0,
+    radio: 0,
+    battery: 0,
     pieces: [],
   };
   cs[1]!.designated = true;

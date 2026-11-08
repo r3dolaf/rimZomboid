@@ -10,12 +10,13 @@ import { BUILD, CURTAINS_COST } from '../sim/balance';
 import { canPlace, treeMarked } from '../sim/build';
 import { getTile } from '../sim/map/grid';
 import { effectiveDesignated, houseMarked, issue, markable } from '../sim/orders';
+import { radioOf, radioOn } from '../sim/radio';
 import { Tile, type BuildKind, type Point, type World } from '../sim/types';
 import { buildingThe } from './describe';
 import './panels.css';
 
 /** Lo que no es un plano (U1 §7). */
-type OtherKind = 'cancel' | 'loot' | 'lootHouse' | 'viewHouse' | 'chop' | 'craft';
+type OtherKind = 'cancel' | 'loot' | 'lootHouse' | 'viewHouse' | 'chop' | 'craft' | 'radio';
 
 export interface ContextOption {
   /** El plano que pone, o lo demás (`cancel`, `loot`…): para su `data-testid`, `ctx-<kind>`. */
@@ -73,6 +74,16 @@ export function contextOptions(w: World, p: Point, acts: ContextActions = {}): C
     const text =
       c.kind === 'corpse' ? (on ? t.unsearch : t.search) : on ? t.unloot(what) : t.loot(what);
     out.push({ kind: 'loot', label: text, choose: () => toggleContainer(w, c.id) });
+  }
+  // C1: la radio, encenderla o apagarla (con lo pedido en pausa).
+  const radio = radioOf(w);
+  if (radio && radio.pos.x === p.x && radio.pos.y === p.y) {
+    const on = radioOn(w);
+    out.push({
+      kind: 'radio',
+      label: on ? t.radioOff : t.radioOn,
+      choose: () => issue(w, { type: 'setRadio', on: !on }),
+    });
   }
   // La mesa: Fabricar.
   if (acts.onCraft && tableAt(w, p.x, p.y))

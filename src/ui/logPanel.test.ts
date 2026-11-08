@@ -35,6 +35,8 @@ test('formatItems: plurales y lista legible', () => {
       seeds: 0,
       veg: 0,
       meal: 0,
+      radio: 0,
+      battery: 0,
       pieces: [],
     }),
   ).toBe('4 latas, 1 venda y 2 bates');
@@ -65,6 +67,8 @@ test('formatItems: plurales y lista legible', () => {
       seeds: 0,
       veg: 0,
       meal: 0,
+      radio: 0,
+      battery: 0,
       pieces: [],
     }),
   ).toBe('1 lata y 1 cuchillo');
@@ -95,6 +99,8 @@ test('formatItems: plurales y lista legible', () => {
       seeds: 0,
       veg: 0,
       meal: 0,
+      radio: 0,
+      battery: 0,
       pieces: [],
     }),
   ).toBe('nada');
@@ -134,6 +140,8 @@ test('cada suceso se convierte en una frase con día y hora', () => {
       seeds: 0,
       veg: 0,
       meal: 0,
+      radio: 0,
+      battery: 0,
       pieces: [],
     },
   });

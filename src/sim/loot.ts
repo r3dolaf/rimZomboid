@@ -5,6 +5,8 @@ import {
   LOOT_GARMENTS,
   SEEDS_LOOT,
   SITE_SEEDS_LOOT,
+  BATTERY_LOOT,
+  SITE_RADIO,
   THREAD_PER_SPOOL,
   type LootAmount,
   type LootItem,
@@ -21,6 +23,7 @@ import type {
   GarmentKind,
   LootKind,
   Point,
+  SiteKind,
 } from './types';
 
 /** Lo que se reparte, siempre en este orden (para que el azar dé lo mismo con la misma semilla). */
@@ -68,6 +71,8 @@ const HOME: Record<LootItem, readonly ContainerKind[]> = {
   roadMap: ['counter'], // H5c1
   note: ['wardrobe'],
   seeds: ['crate'], // V1
+  radio: ['crate'], // C1
+  battery: ['crate'],
 };
 
 /** Los muebles de la ropa (H5b §2); también las estanterías y los mostradores. */
@@ -259,4 +264,25 @@ export function fillSeeds(
     const pool = placesFor(cs, 'seeds');
     for (let k = 0; k < n; k++) pool[nextInt(rng, 0, pool.length - 1)]!.items.seeds++;
   }
+}
+
+/** Las pilas (C1 §1), con su propio azar, por tipo de edificio (en el pueblo y en los sitios). */
+export function fillBatteries(houses: Building[], containers: Container[], rng: RngState): void {
+  for (const h of houses) {
+    if (h.kind === 'base') continue;
+    const cs = containers.filter((c) => c.houseId === h.id);
+    const n = roll(rng, BATTERY_LOOT[h.kind]);
+    if (cs.length === 0 || n === 0) continue;
+    const pool = placesFor(cs, 'battery');
+    for (let k = 0; k < n; k++) pool[nextInt(rng, 0, pool.length - 1)]!.items.battery++;
+  }
+}
+
+/** La radio de un sitio del mapa del mundo (C1 §1): según su tipo, una o ninguna, en un mueble. */
+export function fillRadio(kind: SiteKind, containers: Container[], rng: RngState): void {
+  const chance = SITE_RADIO[kind] ?? 0;
+  const cs = containers.filter((c) => c.houseId > 0);
+  if (cs.length === 0 || nextFloat(rng) >= chance) return;
+  const pool = placesFor(cs, 'radio');
+  pool[nextInt(rng, 0, pool.length - 1)]!.items.radio++;
 }

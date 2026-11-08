@@ -1,10 +1,14 @@
 // Leña para las hogueras (spec V3 §4), en Transportar: a la que le quedan menos de 8 horas se le
-// llevan tablas del almacén hasta 24 (cada tabla, 4 horas).
+// llevan tablas del almacén hasta 24 (cada tabla, 4 horas). C1: lo mismo con las pilas de la radio
+// (con menos de 6 horas, hasta 24; cada pila, 6 horas).
 import {
   CAMPFIRE_FUEL_MAX,
   CAMPFIRE_REFUEL_BELOW,
+  CHARGE_PER_BATTERY,
   FUEL_PER_WOOD,
   ITEM_WEIGHT_KG,
+  RADIO_CHARGE_MAX,
+  RADIO_RECHARGE_BELOW,
 } from '../balance';
 import { weightOf } from '../items';
 import { findPath, regionOf } from '../path/astar';
@@ -23,10 +27,35 @@ export function fuelTarget(s: Survivor): number | null {
   return t?.type === 'takeFuel' || t?.type === 'fuel' ? t.fireId : null;
 }
 
-/** Las tablas que le harían falta para llenarla. */
-const woodFor = (f: Furniture) => Math.ceil((CAMPFIRE_FUEL_MAX - (f.fuel ?? 0)) / FUEL_PER_WOOD);
+/** Lo que gasta cada mueble: qué, cuántas horas da cada uno, hasta cuántas y por debajo de cuántas. */
+const FUELS = {
+  campfire: {
+    item: 'wood',
+    per: FUEL_PER_WOOD,
+    max: CAMPFIRE_FUEL_MAX,
+    below: CAMPFIRE_REFUEL_BELOW,
+  },
+  radio: {
+    item: 'battery',
+    per: CHARGE_PER_BATTERY,
+    max: RADIO_CHARGE_MAX,
+    below: RADIO_RECHARGE_BELOW,
+  },
+} as const;
+type Fuel = (typeof FUELS)[keyof typeof FUELS];
 
-/** La hoguera con poca leña más cercana, a la que llega y a la que nadie lleva ya. */
+/** Lo que gasta ese mueble, o `undefined` (también la hoguera de antes, sin leña que contar). */
+const fuelOf = (f: Furniture): Fuel | undefined =>
+  f.fuel === undefined
+    ? undefined
+    : f.kind === 'campfire' || f.kind === 'radio'
+      ? FUELS[f.kind]
+      : undefined;
+
+/** Lo que le haría falta para llenarlo. */
+const unitsFor = (f: Furniture, fuel: Fuel) => Math.ceil((fuel.max - (f.fuel ?? 0)) / fuel.per);
+
+/** El mueble con poco más cercano, con qué llenarlo en el almacén, al que llega y nadie lleva ya. */
 function fireToFeed(s: Survivor, w: World): Furniture | null {
   const busy = new Set(w.survivors.filter((o) => o !== s).map(fuelTarget));
   const at = tileOf(s.pos);
@@ -34,7 +63,8 @@ function fireToFeed(s: Survivor, w: World): Furniture | null {
   let best: Furniture | null = null;
   let bestD = Infinity;
   for (const f of w.furniture) {
-    if (f.kind !== 'campfire' || f.fuel === undefined || f.fuel >= CAMPFIRE_REFUEL_BELOW) continue;
+    const fuel = fuelOf(f);
+    if (!fuel || f.fuel! >= fuel.below || w.storage.items[fuel.item] === 0) continue;
     if (busy.has(f.id)) continue;
     const d = (f.pos.x - at.x) ** 2 + (f.pos.y - at.y) ** 2;
     if (d >= bestD) continue;
@@ -46,9 +76,8 @@ function fireToFeed(s: Survivor, w: World): Furniture | null {
   return best;
 }
 
-/** Si hay una hoguera que alimentar y tablas en el almacén, va a por ellas. */
+/** Si hay una hoguera (o una radio) que llenar y con qué en el almacén, va a por ello. */
 export function fuelJob(s: Survivor, w: World): Action | null {
-  if (w.storage.items.wood === 0) return null;
   const fire = fireToFeed(s, w);
   if (!fire) return null;
   return {
@@ -63,24 +92,27 @@ export function fuelStillWorth(s: Survivor, w: World): boolean {
   const id = fuelTarget(s);
   if (id === null || !s.work.haul) return false;
   const f = w.furniture.find((x) => x.id === id);
-  if (!f || f.fuel === undefined) return false;
+  const fuel = f && fuelOf(f);
+  if (!f || !fuel) return false;
   const a = s.action;
   return a.type === 'moveTo' && a.then?.type === 'takeFuel'
-    ? w.storage.items.wood > 0 && f.fuel < CAMPFIRE_REFUEL_BELOW
-    : s.carrying.wood > 0;
+    ? w.storage.items[fuel.item] > 0 && f.fuel! < fuel.below
+    : s.carrying[fuel.item] > 0;
 }
 
-/** En el almacén coge las tablas; junto a la hoguera, las echa (y se gastan). */
+/** En el almacén coge las tablas (o las pilas); junto al mueble, las echa (y se gastan). */
 export function startFuelActivity(s: Survivor, w: World, activity: FuelActivity): Action {
   const idle: Action = { type: 'idle', ticksLeft: 0 };
   const f = w.furniture.find((x) => x.id === activity.fireId);
-  if (!f || f.kind !== 'campfire' || f.fuel === undefined) return idle;
+  const fuel = f && fuelOf(f);
+  if (!f || !fuel) return idle;
+  const item = fuel.item;
   if (activity.type === 'takeFuel') {
-    const fit = Math.floor((capacityKg(s) - weightOf(s.carrying)) / ITEM_WEIGHT_KG.wood + 1e-9);
-    const n = Math.min(w.storage.items.wood, woodFor(f), fit);
+    const fit = Math.floor((capacityKg(s) - weightOf(s.carrying)) / ITEM_WEIGHT_KG[item] + 1e-9);
+    const n = Math.min(w.storage.items[item], unitsFor(f, fuel), fit);
     if (n < 1) return idle;
-    w.storage.items.wood -= n;
-    s.carrying.wood += n;
+    w.storage.items[item] -= n;
+    s.carrying[item] += n;
     const stand = standBeside(w, s, f.pos);
     const path = stand && findPath(w.grid, tileOf(s.pos), stand);
     if (!stand || !path) return idle;
@@ -88,9 +120,9 @@ export function startFuelActivity(s: Survivor, w: World, activity: FuelActivity)
     return { type: 'moveTo', target: stand, then: { type: 'fuel', fireId: f.id } };
   }
   if (!atOrBeside(s, f.pos)) return idle;
-  const n = Math.min(s.carrying.wood, woodFor(f));
-  s.carrying.wood -= n;
-  f.fuel = Math.min(CAMPFIRE_FUEL_MAX, f.fuel + n * FUEL_PER_WOOD);
-  w.common.woodLog.spent += n; // se quema
+  const n = Math.min(s.carrying[item], unitsFor(f, fuel));
+  s.carrying[item] -= n;
+  f.fuel = Math.min(fuel.max, f.fuel! + n * fuel.per);
+  if (item === 'wood') w.common.woodLog.spent += n; // se quema
   return idle;
 }

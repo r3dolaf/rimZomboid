@@ -288,6 +288,8 @@ export const ITEM_WEIGHT_KG = {
   seeds: 0.02, // V1
   veg: 0.5,
   meal: 0.6,
+  radio: 1.5, // C1
+  battery: 0.1,
 } as const;
 export const START_WEAPON = 'knife' as const; // H4b: sin arma, caían enseguida
 
@@ -613,6 +615,7 @@ export const BUILD = {
   // El barreño (H5b §6).
   tub: { wood: 4, ticks: TICKS_PER_HOUR },
   barrel: { wood: 6, ticks: TICKS_PER_HOUR }, // V2
+  radio: { wood: 2, ticks: TICKS_PER_HOUR }, // C1
 } as const;
 /** Cortinas que necesita cada plano (H4d). */
 export const CURTAINS_COST: Partial<Record<BuildKind, number>> = { hangCurtains: 1 };
@@ -842,6 +845,8 @@ export type LootItem =
   | 'roadMap' // H5c1
   | 'note'
   | 'seeds' // V1 (se reparten aparte: SEEDS_LOOT)
+  | 'radio' // C1 (aparte: SITE_RADIO y BATTERY_LOOT)
+  | 'battery'
   | Weapon;
 
 /** El botín de cada tipo de edificio (spec H4f §4). */
@@ -1165,6 +1170,26 @@ export const SEEDS_LOOT: Partial<Record<LootKind, LootAmount>> = {
 /** En los sitios del mapa del mundo, la granja da más (como su comida, H6a). */
 export const SITE_SEEDS_LOOT: Partial<Record<LootKind, LootAmount>> = { farm: [6, 12] };
 export const START_SEEDS = 6;
+// La radio y las pilas (C1 §1), con su propio azar: el resto del botín no cambia.
+export const RADIO_SALT = 0x7ad10;
+/** La radio, solo en los sitios del mapa del mundo: probabilidad de que el sitio tenga una. */
+export const SITE_RADIO: Partial<Record<SiteKind, number>> = {
+  warehouse: 1,
+  gas: 1 / 3,
+  village: 0.5,
+};
+/** La carga de la radio, en horas: hasta 24; cada pila da 6; Transportar le lleva con menos de 6. */
+export const RADIO_CHARGE_MAX = 24;
+export const CHARGE_PER_BATTERY = 6;
+export const RADIO_RECHARGE_BELOW = 6;
+/** Las pilas, por tipo de edificio (también en el pueblo de la base). */
+export const BATTERY_LOOT: Partial<Record<LootKind, LootAmount>> = {
+  house: [0, 1],
+  gas: [2, 4],
+  warehouse: [2, 4],
+  supermarket: [1, 3],
+  police: [1, 2],
+};
 /** La ropa del principio: camiseta, vaqueros o chándal y, a veces, algo más (H5b §2). */
 export const START_EXTRA_CHANCE = 0.5;
 export const START_EXTRAS = ['hoodie', 'shirt', 'cap'] as const satisfies readonly GarmentKind[];

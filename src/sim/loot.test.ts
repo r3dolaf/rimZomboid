@@ -105,6 +105,8 @@ test('cada cosa va a su mueble (comida a la nevera, vendas al botiquín, tela al
     roadMap: ['counter'], // H5c1
     note: ['wardrobe'],
     seeds: ['crate'], // V1
+    radio: ['crate'], // C1
+    battery: ['crate'],
   };
   for (const kind of Object.keys(LOOT) as LootKind[]) {
     const cs = furniture(KINDS);

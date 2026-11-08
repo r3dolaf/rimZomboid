@@ -247,6 +247,8 @@ test('alijo en una casa ya saqueada: una despensa escondida que vuelve a estar p
       seeds: 0,
       veg: 0,
       meal: 0,
+      radio: 0,
+      battery: 0,
       pieces: [],
     }; // la madera no se toca: tiene que cuadrar
   }

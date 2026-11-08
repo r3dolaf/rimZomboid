@@ -3,6 +3,7 @@ import { es } from '../i18n/es';
 import type { GameTime } from '../sim/clock';
 import type { Inventory } from '../sim/items';
 import type { NarratorStyle } from '../sim/types';
+import type { Fullscreen } from './fullscreen';
 import type { Tool } from './tool';
 import './hud.css';
 
@@ -41,6 +42,10 @@ export function mountHud(
     toggleExpeditions?: () => void;
     /** H6b: el panel «Partida». */
     toggleGame?: () => void;
+    /** M3: «⛶ Pantalla completa» en el menú ☰ (si el navegador deja). */
+    fullscreen?: Fullscreen;
+    /** M3: con `?debug=1`, «🐞 Depuración» en el menú ☰ (el F3 del móvil, para medir). */
+    toggleDebug?: () => void;
   },
 ): {
   update(
@@ -208,6 +213,47 @@ export function mountHud(
     });
     menu.append(item);
   }
+  // M3: la pantalla completa, al final del menú (si el navegador deja).
+  const fs = opts.fullscreen;
+  const full = document.createElement('button');
+  full.type = 'button';
+  full.setAttribute('role', 'menuitem');
+  full.dataset.testid = 'hud-menu-fullscreen';
+  full.hidden = !fs?.available;
+  const fullIcon = document.createElement('span');
+  fullIcon.className = 'icon';
+  fullIcon.textContent = es.fullscreen.icon;
+  const fullLabel = document.createElement('span');
+  fullLabel.className = 'label';
+  const refreshFull = () => {
+    fullLabel.textContent = fs?.active ? es.fullscreen.exit : es.fullscreen.enter;
+  };
+  refreshFull();
+  fs?.onChange(refreshFull);
+  full.append(fullIcon, fullLabel);
+  full.addEventListener('click', () => {
+    setMenu(false);
+    void fs?.toggle();
+  });
+  menu.append(full);
+  const debug = document.createElement('button');
+  debug.type = 'button';
+  debug.setAttribute('role', 'menuitem');
+  debug.dataset.testid = 'hud-menu-debug';
+  debug.hidden = !opts.toggleDebug;
+  const debugIcon = document.createElement('span');
+  debugIcon.className = 'icon';
+  debugIcon.textContent = es.hudIcons.debug;
+  const debugLabel = document.createElement('span');
+  debugLabel.className = 'label';
+  debugLabel.textContent = es.hudMenu.debug;
+  debug.append(debugIcon, debugLabel);
+  debug.addEventListener('click', () => {
+    setMenu(false);
+    opts.toggleDebug?.();
+  });
+  menu.append(debug);
+
   // Tocar o pulsar fuera lo cierra (el ☰ ya lo hace con su clic).
   document.addEventListener('pointerdown', (ev) => {
     const t = ev.target as Node;

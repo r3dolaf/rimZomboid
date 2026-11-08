@@ -318,3 +318,54 @@ test('M2: cada botón de la barra lleva su icono, que pinta el CSS (el texto no 
   expect(root.querySelectorAll('.hud-tools .hud-tool')).toHaveLength(3);
   expect(root.querySelectorAll('.hud-panels .hud-tool')).toHaveLength(PANELS.length);
 });
+
+test('M3: «⛶ Pantalla completa» en el menú ☰, solo si se puede; cambia a «Salir…»', () => {
+  const root = document.createElement('div');
+  let on = false;
+  const listeners: ((v: boolean) => void)[] = [];
+  const fullscreen = {
+    available: true,
+    get active() {
+      return on;
+    },
+    toggle: vi.fn(async () => {
+      on = !on;
+      listeners.forEach((f) => f(on));
+    }),
+    onChange: (f: (v: boolean) => void) => listeners.push(f),
+  };
+  mountHud(root, { seed: 1, time: createTimeController(), fullscreen });
+  const item = root.querySelector('[data-testid="hud-menu-fullscreen"]') as HTMLButtonElement;
+  const menu = root.querySelector('[data-testid="hud-menu"]') as HTMLElement;
+  expect(item.hidden).toBe(false);
+  expect(item.querySelector('.label')!.textContent).toBe('Pantalla completa');
+  (root.querySelector('[data-testid="hud-more"]') as HTMLButtonElement).click();
+  item.click();
+  expect(fullscreen.toggle).toHaveBeenCalledTimes(1);
+  expect(menu.hidden).toBe(true);
+  expect(item.querySelector('.label')!.textContent).toBe('Salir de pantalla completa');
+
+  const other = document.createElement('div');
+  mountHud(other, {
+    seed: 1,
+    time: createTimeController(),
+    fullscreen: { ...fullscreen, available: false },
+  });
+  expect((other.querySelector('[data-testid="hud-menu-fullscreen"]') as HTMLElement).hidden).toBe(
+    true,
+  );
+});
+
+test('M3: con ?debug=1, «🐞 Depuración» en el menú ☰ (en el móvil no hay F3); si no, no sale', () => {
+  const root = document.createElement('div');
+  const toggleDebug = vi.fn();
+  mountHud(root, { seed: 1, time: createTimeController(), toggleDebug });
+  const item = root.querySelector('[data-testid="hud-menu-debug"]') as HTMLButtonElement;
+  expect(item.hidden).toBe(false);
+  expect(item.querySelector('.label')!.textContent).toBe('Depuración');
+  item.click();
+  expect(toggleDebug).toHaveBeenCalledTimes(1);
+  const other = document.createElement('div');
+  mountHud(other, { seed: 1, time: createTimeController() });
+  expect((other.querySelector('[data-testid="hud-menu-debug"]') as HTMLElement).hidden).toBe(true);
+});

@@ -161,3 +161,160 @@ test.describe('tableta en horizontal (1024 × 768)', () => {
     expect(errores).toEqual([]);
   });
 });
+
+// M3: botones para el dedo, el notch, guardar al salir, instalable y el aviso de girar.
+
+/** Hace como si la pestaña se escondiera (otra app, pantalla apagada). */
+const hideTab = (page: Page) =>
+  page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+const savedTick = (page: Page) =>
+  page.evaluate(() => {
+    const text = localStorage.getItem('rimzomboid.partida');
+    return text === null ? null : (JSON.parse(text) as { world: { tick: number } }).world.tick;
+  });
+const tick = (page: Page) =>
+  page.evaluate(
+    () => (window as unknown as { rimzomboid: { world: { tick: number } } }).rimzomboid.world.tick,
+  );
+
+test.describe('M3 en el móvil (844 × 390, con el dedo)', () => {
+  test.use(phone);
+
+  test('los botones de la barra y la columna miden al menos 44 px', async ({ page }) => {
+    const errores = await start(page);
+    for (const id of ['hud-more', 'hud-loot-tool', 'hud-chop-tool', 'hud-build-tool']) {
+      const b = (await page.getByTestId(id).boundingBox())!;
+      expect(b.height, id).toBeGreaterThanOrEqual(44);
+      expect(b.width, id).toBeGreaterThanOrEqual(44);
+    }
+    for (const s of [0, 1, 2, 3]) {
+      const b = (await page.locator(`[data-speed="${s}"]`).boundingBox())!;
+      expect(b.height).toBeGreaterThanOrEqual(44);
+    }
+    await page.getByTestId('hud-more').tap();
+    const item = (await page.getByTestId('hud-menu-work').boundingBox())!;
+    expect(item.height).toBeGreaterThanOrEqual(44);
+    expect(errores).toEqual([]);
+  });
+
+  test('con un notch (47 px a los lados, 21 abajo) nada queda debajo', async ({ page }) => {
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Emulation.setSafeAreaInsetsOverride', {
+      insets: { top: 0, left: 47, right: 47, bottom: 21 },
+    });
+    const errores = await start(page);
+    const { width, height } = page.viewportSize()!;
+    const box = async (id: string) => (await page.getByTestId(id).boundingBox())!;
+    expect((await box('hud-time')).x).toBeGreaterThanOrEqual(47);
+    for (const id of ['hud-more', 'hud-loot-tool', 'hud-build-tool']) {
+      const b = await box(id);
+      expect(b.x + b.width, id).toBeLessThanOrEqual(width - 47);
+    }
+    const card = await box('card-1');
+    expect(card.x).toBeGreaterThanOrEqual(47);
+    expect(card.y + card.height).toBeLessThanOrEqual(height - 21);
+    expect((await box('log')).x).toBeGreaterThanOrEqual(47);
+    await page.getByTestId('card-1').tap();
+    const sheet = await box('sheet');
+    expect(sheet.x + sheet.width).toBeLessThanOrEqual(width - 47);
+    expect(errores).toEqual([]);
+  });
+
+  test('con ?debug=1, la depuración desde el ☰ (para medir en el móvil, sin F3)', async ({
+    page,
+  }) => {
+    const errores = await start(page);
+    await page.getByTestId('hud-more').tap();
+    await page.getByTestId('hud-menu-debug').tap();
+    const panel = page.getByTestId('debug-panel');
+    await expect(panel).toBeVisible();
+    await expect(page.getByTestId('debug-perf')).toContainText('ms por tick');
+    const b = (await panel.boundingBox())!;
+    const bar = (await page.locator('.hud-bar').boundingBox())!;
+    expect(b.y).toBeGreaterThanOrEqual(bar.y + bar.height - 0.5);
+    expect(errores).toEqual([]);
+  });
+
+  test('al esconder la pestaña se guarda, pero solo si esta partida ya es la guardada', async ({
+    page,
+  }) => {
+    const errores = await start(page);
+    await page.evaluate(() => localStorage.removeItem('rimzomboid.partida'));
+    // Nueva y sin guardar: no pisa nada.
+    await hideTab(page);
+    expect(await savedTick(page)).toBeNull();
+    // Guardada a mano: desde ahora se guarda también al salir, con lo jugado después.
+    await page.getByTestId('hud-more').tap();
+    await page.getByTestId('hud-menu-game').tap();
+    await page.getByTestId('game-save').tap();
+    await expect(page.getByTestId('game-status')).toHaveText('Partida guardada');
+    const first = (await savedTick(page))!;
+    await page.getByTestId('game-panel').locator('.close').tap();
+    await page.locator('[data-speed="3"]').tap();
+    await expect.poll(() => tick(page)).toBeGreaterThan(first + 10);
+    await page.locator('[data-speed="0"]').tap();
+    const now = await tick(page);
+    await hideTab(page);
+    expect(await savedTick(page)).toBe(now);
+    expect(errores).toEqual([]);
+  });
+});
+
+test('instalable: el manifiesto, con sus iconos, y los enlaces de la página', async ({
+  page,
+  request,
+}) => {
+  await page.goto('/');
+  const href = await page.locator('link[rel="manifest"]').getAttribute('href');
+  expect(href).toBe('manifest.webmanifest');
+  const manifest = (await (await request.get(`/${href}`)).json()) as {
+    display: string;
+    orientation: string;
+    icons: { src: string; sizes: string }[];
+  };
+  expect(manifest.display).toBe('fullscreen');
+  expect(manifest.orientation).toBe('landscape');
+  expect(manifest.icons.map((i) => i.sizes)).toContain('512x512');
+  const icons = [
+    ...manifest.icons.map((i) => i.src),
+    (await page.locator('link[rel="apple-touch-icon"]').getAttribute('href'))!,
+    (await page.locator('link[rel="icon"]').getAttribute('href'))!,
+  ];
+  for (const src of icons) {
+    const res = await request.get(`/${src}`);
+    expect(res.status(), src).toBe(200);
+    expect(res.headers()['content-type'], src).toContain('image/png');
+  }
+  await expect(page.locator('meta[name="viewport"]')).toHaveAttribute(
+    'content',
+    /viewport-fit=cover/,
+  );
+});
+
+test.describe('móvil en vertical (390 × 844)', () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+
+  test('sale el aviso de girar y «Seguir así» lo quita', async ({ page }) => {
+    await page.goto('/');
+    const hint = page.getByTestId('rotate-hint');
+    await expect(hint).toBeVisible();
+    await expect(hint).toContainText('Se juega mejor en horizontal');
+    await page.getByTestId('rotate-hint-dismiss').tap();
+    await expect(hint).toBeHidden();
+    await expect(page.getByTestId('start-go')).toBeVisible();
+  });
+});
+
+test('en el ordenador (1280 × 720, con ratón) no sale el aviso de girar ni cambian los botones', async ({
+  page,
+}) => {
+  await page.goto('/?seed=5');
+  await expect(page.locator('canvas')).toBeVisible();
+  await expect(page.getByTestId('rotate-hint')).toBeHidden();
+  const b = (await page.locator('[data-speed="1"]').boundingBox())!;
+  expect(b.height).toBeLessThan(36);
+  await expect(page.getByTestId('hud-more')).toBeHidden();
+});

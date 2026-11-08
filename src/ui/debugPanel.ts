@@ -16,7 +16,7 @@ export function mountDebugPanel(
     /** La base (para contar viajes). */
     world: World;
     /** El mapa que se ve. */
-    view: { readonly world: World };
+    view: { readonly world: World; readonly base: World };
     open: Flag;
     selection: Selection;
     perf: () => { fps: number; msPerTick: number };
@@ -61,6 +61,9 @@ export function mountDebugPanel(
       const id = opts.selection.ids[0];
       if (id !== undefined) issue(map(), { type: 'debug', action: 'heal', survivorId: id });
     }),
+    // C1: la radio y el helicóptero, desde la base.
+    button(t.radio, 'debug-radio', () => issue(opts.view.base, { type: 'debug', action: 'radio' })),
+    button(t.evac, 'debug-evac', () => issue(opts.view.base, { type: 'debug', action: 'evac' })),
     button(t.hour, 'debug-hour', () => opts.onSkip(1)),
     button(t.day, 'debug-day', () => opts.onSkip(24)),
   );

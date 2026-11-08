@@ -1,12 +1,16 @@
 // Las trampas del modo depuración (spec H6c §1): órdenes como las demás, para que el juego siga
 // cuadrando (los zombis muertos dejan su cuerpo; las cosas que se dan van al almacén).
-import { DEBUG_GIVE, DEBUG_KILL_RADIUS } from './balance';
+import { DEBUG_GIVE, DEBUG_KILL_RADIUS, EVAC_WAIT_HOURS, TICKS_PER_HOUR } from './balance';
 import { leaveCorpse } from './corpses';
+import { detach } from './death';
+import { hearAll } from './radio';
+import { siteMap } from './sites';
 import type { World } from './types';
 
 export type DebugOrder = {
   type: 'debug';
-  action: 'reveal' | 'give' | 'killNear' | 'heal';
+  /** C1: `radio`, oír la radio hasta saber dónde y cuándo; `evac`, todos al punto y el helicóptero ya. */
+  action: 'reveal' | 'give' | 'killNear' | 'heal' | 'radio' | 'evac';
   survivorId?: number;
 };
 
@@ -28,6 +32,12 @@ export function applyDebugOrder(w: World, o: DebugOrder): void {
       for (const z of near) leaveCorpse(w, z);
       return;
     }
+    case 'radio':
+      if (w.mapId === 0) hearAll(w);
+      return;
+    case 'evac':
+      if (w.mapId === 0) toTheHelicopter(w);
+      return;
     case 'heal': {
       const s = w.survivors.find((x) => x.id === o.survivorId);
       if (!s) return;
@@ -44,4 +54,32 @@ export function applyDebugOrder(w: World, o: DebugOrder): void {
       return;
     }
   }
+}
+
+/**
+ * C1: lleva a todos los de la base al campamento del punto de evacuación (sabiendo ya dónde) y el
+ * helicóptero llega en un momento.
+ */
+function toTheHelicopter(base: World): void {
+  hearAll(base);
+  const r = base.common.rescue;
+  const info = base.common.expedition.sites.find((x) => x.id === r?.siteId);
+  if (!r || !info) return;
+  const map = siteMap(base, info);
+  // Las órdenes van al principio del tick de la base, que luego suma uno; el sitio nuevo no avanza
+  // hasta el siguiente: así quedan a la par.
+  map.tick = base.tick + 1;
+  info.visited = true;
+  const camp = map.storage.tiles[0]!;
+  for (const s of [...base.survivors]) {
+    detach(base, s, true);
+    base.survivors = base.survivors.filter((x) => x !== s);
+    s.pos = { x: camp.x + 0.5, y: camp.y + 0.5 };
+    s.action = { type: 'idle', ticksLeft: 0 };
+    s.path = [];
+    s.drafted = false;
+    map.survivors.push(s);
+  }
+  r.from = base.tick + 10;
+  r.until = r.from + EVAC_WAIT_HOURS * TICKS_PER_HOUR;
 }

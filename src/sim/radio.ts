@@ -103,6 +103,13 @@ function hear(w: World, r: Rescue): void {
   }
 }
 
+/** Truco de depuración (H6c): oírlo todo de golpe, hasta saber dónde y cuándo. */
+export function hearAll(base: World): void {
+  const r = rescueOf(base);
+  r.heard = Math.max(r.heard, RADIO_HEARD[2]);
+  hear(base, r);
+}
+
 /**
  * Cada hora, en la base (§2): la radio encendida y con carga gasta una hora; cuenta como escuchada
  * hasta saber dónde y cuándo, y a veces se oye una llamada que descubre un sitio oculto.

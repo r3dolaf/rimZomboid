@@ -1169,6 +1169,8 @@ export const es = {
     give: 'Dar 10 latas, vendas y antibióticos',
     kill: 'Matar zombis cerca',
     heal: 'Curar al elegido',
+    radio: '📻 Oír la radio', // C1
+    evac: '🚁 Todos al helicóptero',
     hour: 'Pasar 1 hora',
     day: 'Pasar 1 día',
   },

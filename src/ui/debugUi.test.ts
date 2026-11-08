@@ -18,7 +18,7 @@ test('el panel F3: cuántos hay, el elegido por dentro y las trampas', () => {
   const skipped: number[] = [];
   const panel = mountDebugPanel(root, {
     world: w,
-    view: { world: w },
+    view: { world: w, base: w },
     open,
     selection,
     perf: () => ({ fps: 60, msPerTick: 0.25 }),
@@ -59,7 +59,7 @@ test('S1: el muestrario de sonido: oír un efecto y forzar la música', () => {
   const forced: (string | null)[] = [];
   mountDebugPanel(root, {
     world: w,
-    view: { world: w },
+    view: { world: w, base: w },
     open,
     selection: createSelection(),
     perf: () => ({ fps: 60, msPerTick: 0 }),

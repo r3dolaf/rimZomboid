@@ -195,3 +195,19 @@ test('su pareja, en la base, queda sin pareja y sin duelo; su cama, libre', () =
   expect(base.beds.some((b) => b.ownerId === ana!.id)).toBe(false);
   expect(checkInvariants(base)).toEqual([]);
 });
+
+test('trucos de depuración: oír la radio y todos al helicóptero', async () => {
+  const { applyDebugOrder } = await import('./debug');
+  const base = createWorld(7);
+  const n = base.survivors.length;
+  applyDebugOrder(base, { type: 'debug', action: 'radio' });
+  expect(base.common.rescue?.stage).toBe(3);
+  applyDebugOrder(base, { type: 'debug', action: 'evac' });
+  const r = base.common.rescue!;
+  const map = base.siteMaps.find((m) => m.siteId === r.siteId)!.world;
+  expect(base.survivors).toHaveLength(0);
+  expect(map.survivors).toHaveLength(n);
+  expect(r.from).toBe(base.tick + 10);
+  expect(map.tick).toBe(base.tick + 1);
+  expect(checkInvariants(base)).toEqual([]);
+});

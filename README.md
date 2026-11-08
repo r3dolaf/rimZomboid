@@ -36,6 +36,9 @@ Controles:
 - Clic izquierdo en un superviviente (o en su tarjeta) abre su ficha; en una casa, la ficha de la casa.
 - `L` o el botón **Saquear** activan la herramienta: clic en una casa (o en un contenedor ya visto)
   para marcarla o desmarcarla. `Esc` sale de la herramienta y cierra las fichas.
+- `H` o el botón **Huerto** marcan el huerto: clic en una casilla de hierba junto a la base, o
+  arrastrar para un rectángulo. Lo siembran, riegan y cosechan quienes tienen **Cultivar**; las
+  hortalizas se cocinan en la hoguera (Fabricar → Cocinar) y se estropean con los días.
 - `M` silencia o vuelve a dar sonido. Los volúmenes (General, Música y Efectos) están en el panel
   **Partida**.
 

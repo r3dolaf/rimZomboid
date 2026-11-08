@@ -64,6 +64,18 @@ pasos. En vertical cabe muy poco mapa; no se busca (spec `2026-11-07-m1-tactil-d
 | **M2. Interfaz en pantalla pequeña** | Por debajo de 1200 px, los paneles en un menú ☰; en el móvil, las herramientas en una columna con su icono, «Sucesos» plegado, tarjetas más pequeñas y cada panel entre la barra y las tarjetas; spec `2026-11-08-m2-pantalla-pequena-design.md` | Hecho  |
 | **M3. Detalles de móvil**            | Botones de 44 px en la barra (36 en los paneles), el notch, guardar al salir de la pestaña, instalable con su icono, pantalla completa, aviso en vertical y el rendimiento medido; spec `2026-11-08-m3-detalles-movil-design.md`                  | Hecho  |
 
+## Asentarse
+
+Para que el juego pueda ser comercial hace falta una mitad de partida: pasar de saquear a vivir de lo
+que se cultiva, con amenazas nuevas cuando ya se es autosuficiente (pedido por el usuario tras M3,
+«bloque A»). Se adelantó el huerto a beber porque ataca lo principal: la comida no se renovaba.
+
+| Paso                      | Qué se hace                                                                                                                                                                                                                                                                                                                                                                              | Estado    |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| **V1. Huerto y cocina**   | Semillas en el botín, herramienta Huerto, trabajo y habilidad Cultivar (sembrar, regar con agua de la fuente, cosechar), crecer con humedad (la lluvia moja), secarse y pudrirse; Cocinar en la hoguera (guisos); hortalizas y guisos que se estropean; se come primero lo que se estropea antes; partidas de la versión 1 que se siguen cargando; spec `2026-11-08-v1-huerto-design.md` | Hecho     |
+| **V2. Beber**             | Sed; beber de botellas, barreños, barriles de lluvia, fregaderos y cisternas; barril de lluvia; de viaje                                                                                                                                                                                                                                                                                 | Pendiente |
+| **V3. Estaciones y frío** | Estaciones con temperatura; abrigo de la ropa; la hoguera calienta; invierno sin cosecha; conservar comida                                                                                                                                                                                                                                                                               | Pendiente |
+
 ## Pendientes
 
 Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al planificar el hito indicado.

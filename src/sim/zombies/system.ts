@@ -4,6 +4,7 @@ import {
   ZOMBIE_BREAK_DAMAGE,
   ZOMBIE_HIT_TICKS,
   ZOMBIE_REACH,
+  ZOMBIE_COLD_SPEED,
   ZOMBIE_SPEED,
   ZOMBIE_THINK_TICKS,
 } from '../balance';
@@ -12,6 +13,7 @@ import { logEvent } from '../log';
 import { isZombieWalkable } from '../map/grid';
 import { makeNoise } from '../noise';
 import { damageTile, resistanceOf } from '../structures';
+import { outdoorTemp } from '../season';
 import type { World, Zombie } from '../types';
 import { personById, thinkZombie, visibleToZombies, zombieAttack } from './brain';
 import { tileOf } from '../world';
@@ -31,6 +33,18 @@ export function zombieSystem(w: World): void {
   // Aviso: el primero que entra en la base (spec H4b §8).
   const first = already ? undefined : w.zombies.find(inBase);
   if (first) logEvent(w, { kind: 'zombiesInBase', ...tileOf(first.pos) });
+}
+
+/** La velocidad de los zombis en este tick (V3 §6): helados, un 20 % menos. Se calcula una vez. */
+let speedAt = { tick: -1, seed: 0, speed: ZOMBIE_SPEED };
+export function zombieSpeed(w: World): number {
+  if (speedAt.tick !== w.tick || speedAt.seed !== w.seed)
+    speedAt = {
+      tick: w.tick,
+      seed: w.seed,
+      speed: ZOMBIE_SPEED * (outdoorTemp(w) < 0 ? ZOMBIE_COLD_SPEED : 1),
+    };
+  return speedAt.speed;
 }
 
 /** Golpea a su presa si la tiene al lado; si no, anda o rompe lo que tiene delante. */
@@ -53,13 +67,14 @@ function act(w: World, z: Zombie): void {
     const dx = tx - z.pos.x;
     const dy = ty - z.pos.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
-    if (dist <= ZOMBIE_SPEED) {
+    const speed = zombieSpeed(w); // V3: helados, más despacio
+    if (dist <= speed) {
       z.pos = { x: tx, y: ty };
       z.path.shift();
     } else {
       z.pos = {
-        x: z.pos.x + (dx / dist) * ZOMBIE_SPEED,
-        y: z.pos.y + (dy / dist) * ZOMBIE_SPEED,
+        x: z.pos.x + (dx / dist) * speed,
+        y: z.pos.y + (dy / dist) * speed,
       };
     }
     return;

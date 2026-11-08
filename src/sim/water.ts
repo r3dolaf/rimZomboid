@@ -7,6 +7,7 @@ import {
   RAIN_BARREL_LITERS,
   RAIN_CISTERN_LITERS,
   RAIN_TUB_LITERS,
+  SNOW_FILL,
   SINK_IN,
   START_HOUR,
   TICKS_PER_DAY,
@@ -16,6 +17,7 @@ import {
   WATER_CUT_DAY_MIN,
 } from './balance';
 import { logEvent } from './log';
+import { outdoorTemp } from './season';
 import { baseLayout } from './base';
 import { wallSpots } from './map/recipes';
 import { nextInt, type RngState } from './rng';
@@ -106,6 +108,8 @@ export function waterSystem(w: World): void {
   if (w.mapId !== 0) return; // H5c1: en los sitios no hay agua corriente ni depósitos
   if (w.tick === w.waterCutAt) logEvent(w, { kind: 'waterCut' });
   if (!isRaining(w) || w.tick % TICKS_PER_HOUR !== 0) return;
+  // V3 §6: por debajo de 0 nieva: los depósitos se llenan la mitad.
+  const fill = outdoorTemp(w) < 0 ? SNOW_FILL : 1;
   for (const p of w.piles) {
     if (p.items.bucket === 0 || indoors(w, p.pos.x, p.pos.y)) continue;
     p.items.waterBucket += p.items.bucket;
@@ -113,10 +117,10 @@ export function waterSystem(w: World): void {
   }
   for (const f of w.furniture) {
     if (f.kind === 'cistern')
-      f.water = Math.min(CISTERN_LITERS, (f.water ?? 0) + RAIN_CISTERN_LITERS);
+      f.water = Math.min(CISTERN_LITERS, (f.water ?? 0) + RAIN_CISTERN_LITERS * fill);
     else if (f.kind === 'tub' && !indoors(w, f.pos.x, f.pos.y))
-      f.water = Math.min(TUB_LITERS, (f.water ?? 0) + RAIN_TUB_LITERS);
+      f.water = Math.min(TUB_LITERS, (f.water ?? 0) + RAIN_TUB_LITERS * fill);
     else if (f.kind === 'barrel' && !indoors(w, f.pos.x, f.pos.y))
-      f.water = Math.min(BARREL_LITERS, (f.water ?? 0) + RAIN_BARREL_LITERS); // V2
+      f.water = Math.min(BARREL_LITERS, (f.water ?? 0) + RAIN_BARREL_LITERS * fill); // V2
   }
 }

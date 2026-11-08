@@ -1,6 +1,8 @@
 // El huerto (spec V1 §3): dónde va, marcar y desmarcar parcelas, y cómo crece lo sembrado.
 import {
+  FROST_TEMP,
   GROW_HOURS,
+  GROW_MIN_TEMP,
   RAIN_MOISTURE_HOURS,
   RIPE_ROT_HOURS,
   TICKS_PER_HOUR,
@@ -11,6 +13,7 @@ import { occupied } from './build';
 import { logEvent } from './log';
 import { getTile, inBounds } from './map/grid';
 import { Tile, type Plot, type Point, type World } from './types';
+import { outdoorTemp } from './season';
 import { isRaining } from './water';
 import { indoors } from './zombies/spawn';
 
@@ -32,9 +35,13 @@ export const needsWater = (p: Plot): boolean =>
  */
 export function farmSystem(w: World): void {
   if (w.mapId !== 0 || w.plots.length === 0 || w.tick % TICKS_PER_HOUR !== 0) return;
-  const rain = isRaining(w);
+  // V3 §6: con helada se mueren las plantas; con frío no crecen; la nieve no moja (está helado).
+  const temp = outdoorTemp(w);
+  const frost = temp < FROST_TEMP;
+  const rain = isRaining(w) && temp >= 0;
   let dried = 0;
   let rotted = 0;
+  let frozen = 0;
   for (const p of w.plots) {
     if (rain) p.moisture = RAIN_MOISTURE_HOURS;
     const wet = p.moisture > 0;
@@ -46,6 +53,11 @@ export function farmSystem(w: World): void {
         p.crop = null;
         rotted++;
       }
+    } else if (frost) {
+      p.crop = null;
+      frozen++;
+    } else if (temp < GROW_MIN_TEMP) {
+      continue; // parado: ni crece ni se seca
     } else if (wet) {
       c.grown++;
       c.dry = 0;
@@ -55,6 +67,7 @@ export function farmSystem(w: World): void {
     }
   }
   if (dried + rotted > 0) logEvent(w, { kind: 'cropsLost', dried, rotted });
+  if (frozen > 0) logEvent(w, { kind: 'cropsFrozen', n: frozen });
 }
 
 /** La parcela de esa casilla, o `undefined`. */

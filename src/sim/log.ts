@@ -77,6 +77,8 @@ export type LogEvent =
   | { kind: 'spoiled'; veg: number; meal: number }
   // V1: cultivos perdidos esta hora, secos y podridos sin cosechar.
   | { kind: 'cropsLost'; dried: number; rotted: number }
+  // V3: los que ha matado la helada.
+  | { kind: 'cropsFrozen'; n: number }
   | { kind: 'rain' }
   | { kind: 'found'; survivorId: number; houseId: number; items: Inventory }
   | { kind: 'emptyContainer'; survivorId: number; houseId: number }

@@ -94,6 +94,16 @@ export const CAMPFIRE_FUEL_START = 12;
 export const CAMPFIRE_FUEL_MAX = 24;
 export const CAMPFIRE_REFUEL_BELOW = 8;
 export const FUEL_PER_WOOD = 4;
+// El invierno (V3 §6): el huerto crece por encima de GROW_MIN_TEMP y la helada mata lo que crece;
+// la nieve llena la mitad; lo fresco se estropea menos con frío; los zombis helados van más lentos.
+export const GROW_MIN_TEMP = 5;
+export const FROST_TEMP = -2;
+export const SNOW_FILL = 0.5;
+export const ROT_COLD = [
+  { below: 5, mult: 0.25 },
+  { below: 15, mult: 0.6 },
+] as const;
+export const ZOMBIE_COLD_SPEED = 0.8;
 
 // Personas (H2)
 export const NEED_START_MIN = 60;

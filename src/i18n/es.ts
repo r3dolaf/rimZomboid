@@ -1070,6 +1070,8 @@ export const es = {
       const text = parts.join(' y ');
       return text.charAt(0).toUpperCase() + text.slice(1);
     },
+    /** V3: «La helada ha matado 3 cultivos». */
+    cropsFrozen: (n: number) => `La helada ha matado ${n} ${n === 1 ? 'cultivo' : 'cultivos'}`,
     rain: 'Llueve',
     /** «una granja hacia el norte, a 4 horas» (con lo especial delante, si lo es). */
     siteFound: (how: string, what: string, who?: string) =>

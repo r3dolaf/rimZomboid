@@ -52,6 +52,7 @@ export const LOG_CATEGORY: Record<LogEvent['kind'], LogCategory> = {
   season: 'colony', // V3
   spoiled: 'colony', // V1
   cropsLost: 'colony',
+  cropsFrozen: 'colony', // V3
   rain: 'colony',
   downed: 'combat',
   gotUp: 'combat',

@@ -82,7 +82,7 @@ test('Construir y Fabricar por grupos, con lo que gasta, «usa → da» y los mo
     'Muros y puertas',
     'Arreglar',
   ]);
-  await expect(page.getByTestId('build-bed')).toContainText('Cama — 6 tablas (tienes');
+  await expect(page.getByTestId('build-bed')).toContainText('Cama · 6'); // U1 §1
   await page.getByTestId('build-bed').click();
   await expect(page.getByTestId('build-desc')).toContainText('se duerme mejor');
   await page.keyboard.press('Escape');

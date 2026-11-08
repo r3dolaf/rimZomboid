@@ -130,6 +130,21 @@ test('U1: escribiendo en un campo, las teclas no hacen nada (ni Espacio)', () =>
   expect(toggleCraft).not.toHaveBeenCalled();
 });
 
+test('U1: con una casilla, Espacio es suyo, pero las letras siguen funcionando', () => {
+  const time = createTimeController();
+  const tool = createTool();
+  bindTimeKeys(window, time, tool);
+  const box = document.createElement('input');
+  box.type = 'checkbox';
+  document.body.append(box);
+  const space = press(box, { code: 'Space', key: ' ' });
+  expect(space.defaultPrevented).toBe(false);
+  expect(time.speed).toBe(1);
+  press(box, { code: 'KeyL', key: 'l' });
+  expect(tool.mode).toBe('loot');
+  box.remove();
+});
+
 test('U1: con Ctrl, Alt o Cmd no hacen nada (Ctrl+F busca en la página)', () => {
   const time = createTimeController();
   const toggleCraft = vi.fn();

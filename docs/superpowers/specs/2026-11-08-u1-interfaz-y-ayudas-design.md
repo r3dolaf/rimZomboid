@@ -27,7 +27,7 @@ Hoy:
 ## 1. Arreglos de base
 
 - **`[hidden]` siempre esconde** dentro de la interfaz (`#hud [hidden] { display: none
-  !important }`): arregla la ficha y cualquier otro caso igual.
+!important }`): arregla la ficha y cualquier otro caso igual.
 - **Foco visible** con el teclado (`:focus-visible`): un borde amarillo en botones, casillas y
   desplegables.
 - **Los atajos no saltan escribiendo** en un campo de texto, número o desplegable.
@@ -50,17 +50,17 @@ Hoy:
 - **Teclas:** cada botón dice la suya en la ayuda emergente; en el ☰, a la derecha (solo con
   ratón). Nuevas: I Almacén, E Expediciones, P Partida, H o ? Ayuda.
 
-| Tecla        | Qué hace                  |
-| ------------ | ------------------------- |
-| Espacio      | Pausa y sigue             |
-| 1 2 3        | Velocidad                 |
-| L T B        | Saquear, Talar, Construir |
+| Tecla        | Qué hace                                           |
+| ------------ | -------------------------------------------------- |
+| Espacio      | Pausa y sigue                                      |
+| 1 2 3        | Velocidad                                          |
+| L T B        | Saquear, Talar, Construir                          |
 | I J F E P    | Almacén, Trabajos, Fabricar, Expediciones, Partida |
-| R            | Modo combate              |
-| M            | Sonido                    |
-| H o ?        | Ayuda                     |
-| Esc          | Cerrar lo de arriba       |
-| WASD/flechas | Mover la cámara           |
+| R            | Modo combate                                       |
+| M            | Sonido                                             |
+| H o ?        | Ayuda                                              |
+| Esc          | Cerrar lo de arriba                                |
+| WASD/flechas | Mover la cámara                                    |
 
 ## 3. Paneles con pestañas
 
@@ -133,15 +133,15 @@ herramienta activa no se ve (está el letrero de §4).
 
 Pasos (cada uno se da por hecho al hacerlo, en cualquier orden; se ve el primero sin hacer):
 
-1. **Tu gente:** toca una tarjeta de abajo para ver su ficha. *Hecho:* elegir a alguien.
-2. **Comida:** marca una casa con 🎒 Saquear (o mantén pulsada la casa). *Hecho:* algo marcado
+1. **Tu gente:** toca una tarjeta de abajo para ver su ficha. _Hecho:_ elegir a alguien.
+2. **Comida:** marca una casa con 🎒 Saquear (o mantén pulsada la casa). _Hecho:_ algo marcado
    para saquear.
-3. **Madera:** marca árboles con 🪓 Talar. *Hecho:* algún árbol marcado, o madera en el almacén.
-4. **Ventanas:** mantén pulsada (clic derecho) una ventana de la base y elige Tapiar. *Hecho:* un
+3. **Madera:** marca árboles con 🪓 Talar. _Hecho:_ algún árbol marcado, o madera en el almacén.
+4. **Ventanas:** mantén pulsada (clic derecho) una ventana de la base y elige Tapiar. _Hecho:_ un
    plano de tapiar o una ventana tapiada.
-5. **El tiempo:** ⏸ para pensar, x2 y x3 cuando todo va bien. *Hecho:* cambiar la velocidad.
-6. **Quién hace qué:** abre 📋 Trabajos. *Hecho:* abrirlo.
-7. **Una mesa:** pon una Mesa con 🔨 Construir; en ella se hacen vendas. *Hecho:* un plano de mesa
+5. **El tiempo:** ⏸ para pensar, x2 y x3 cuando todo va bien. _Hecho:_ cambiar la velocidad.
+6. **Quién hace qué:** abre 📋 Trabajos. _Hecho:_ abrirlo.
+7. **Una mesa:** pon una Mesa con 🔨 Construir; en ella se hacen vendas. _Hecho:_ un plano de mesa
    o una mesa.
 
 Al acabar: «¡Ya sabes lo básico! Más en ❓ Ayuda», que se cierra sola al poco. Lo hecho se
@@ -150,16 +150,16 @@ recuerda en el navegador (no en la partida guardada): en la siguiente partida no
 **Consejos:** en la misma tarjeta, y antes que el paso, una sola vez cada uno (se recuerda) y solo
 si están activados:
 
-| Cuándo                                    | Consejo |
-| ----------------------------------------- | ------- |
-| Primer aviso que pausa                    | Los avisos rojos y las preguntas pausan el juego; para seguir, ▶ x1 o Espacio. |
-| Primera vez que anochece                  | De noche llegan más zombis y la hoguera los atrae desde lejos: ventanas tapiadas y todos dentro. |
-| Primeros zombis a la vista                | Pelean o huyen según su Postura; para mandarlos tú, ⚔️ Combate y clic derecho (mantener) adonde ir. |
-| Primera herida que sangra                 | Se vendan solos si hay vendas (🩹); sin ellas se desangran: búscalas o hazlas en la mesa. |
-| Primer mordisco                           | Un mordisco no tiene cura; un arañazo a veces infecta y, a tiempo, los antibióticos lo curan. |
-| Poca comida (menos de una lata por colono)| Marca más casas para saquear: las latas están en cocinas y supermercados. |
-| Ánimo muy bajo (menos de 20)              | Puede tener una crisis; en su ficha está por qué. |
-| Primer asedio anunciado                   | Viene una horda: tapia, levanta muros y ten vendas. |
+| Cuándo                                     | Consejo                                                                                             |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| Primer aviso que pausa                     | Los avisos rojos y las preguntas pausan el juego; para seguir, ▶ x1 o Espacio.                      |
+| Primera vez que anochece                   | De noche llegan más zombis y la hoguera los atrae desde lejos: ventanas tapiadas y todos dentro.    |
+| Primeros zombis a la vista                 | Pelean o huyen según su Postura; para mandarlos tú, ⚔️ Combate y clic derecho (mantener) adonde ir. |
+| Primera herida que sangra                  | Se vendan solos si hay vendas (🩹); sin ellas se desangran: búscalas o hazlas en la mesa.           |
+| Primer mordisco                            | Un mordisco no tiene cura; un arañazo a veces infecta y, a tiempo, los antibióticos lo curan.       |
+| Poca comida (menos de una lata por colono) | Marca más casas para saquear: las latas están en cocinas y supermercados.                           |
+| Ánimo muy bajo (menos de 20)               | Puede tener una crisis; en su ficha está por qué.                                                   |
+| Primer asedio anunciado                    | Viene una horda: tapia, levanta muros y ten vendas.                                                 |
 
 ## 10. Portada
 

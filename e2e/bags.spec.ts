@@ -86,7 +86,7 @@ test('pestaña Bolsas: la mochila puesta, fijarla, su lista y «Llevar siempre»
   const id = await giveBag(page, 'hikingPack', 'back');
   const sid = (await world(page)).survivors[0]!.id;
   await page.getByTestId(`card-${sid}`).click();
-  await page.getByTestId('sheet-tab-bags').click();
+  await page.getByTestId('sheet-tab-clothes').click(); // U1 §5: las bolsas, en Equipo
   const pane = page.getByTestId('sheet-pane-bags');
   await expect(pane.getByTestId('bags-back')).toContainText('Mochila de excursión');
   await expect(pane.getByTestId('bags-back')).toContainText('0 / 12 kg');
@@ -119,7 +119,8 @@ test('bolsas guardadas en el Almacén y casillas de bolsas en Atuendos', async (
   await bags.getByTestId(`bag-${id}-add`).selectOption('bandage');
   await expect(bags.getByTestId(`bag-${id}-list`)).toContainText('1 venda');
   await page.keyboard.press('Escape');
-  await page.getByTestId('hud-outfits').click();
+  await page.getByTestId('hud-work').click(); // U1 §3: Atuendos, pestaña de Trabajos
+  await page.getByTestId('work-panel').getByTestId('tab-outfits').click();
   const panel = page.getByTestId('outfits-panel');
   await panel.getByTestId('outfit-tab-3').click(); // Base
   await expect(panel.getByTestId('outfit-handbag')).not.toBeChecked();

@@ -64,6 +64,15 @@ pasos. En vertical cabe muy poco mapa; no se busca (spec `2026-11-07-m1-tactil-d
 | **M2. Interfaz en pantalla pequeña** | Por debajo de 1200 px, los paneles en un menú ☰; en el móvil, las herramientas en una columna con su icono, «Sucesos» plegado, tarjetas más pequeñas y cada panel entre la barra y las tarjetas; spec `2026-11-08-m2-pantalla-pequena-design.md` | Hecho  |
 | **M3. Detalles de móvil**            | Botones de 44 px en la barra (36 en los paneles), el notch, guardar al salir de la pestaña, instalable con su icono, pantalla completa, aviso en vertical y el rendimiento medido; spec `2026-11-08-m3-detalles-movil-design.md`                  | Hecho  |
 
+## Interfaz
+
+Que alguien que no ha jugado nunca sepa qué hacer y que se llegue a todo con menos clics o toques,
+en el ordenador y en el móvil (pedido por el usuario tras M3).
+
+| Paso                            | Qué se hace                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Estado |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| **U1. Interfaz clara y ayudas** | Barra con 5 paneles (Atuendos en Trabajos y Avisos en Partida, como pestañas), «⏸ En pausa», ❓ Ayuda y la tecla de cada cosa; ficha en General, Trabajos, Salud y Equipo; letrero de la herramienta con «Hecho»; clic derecho (mantener pulsado) para saquear, talar, ver la casa y fabricar; Ayuda; primeros pasos y consejos; portada con de qué va; `[hidden]`, foco visible y atajos que no saltan al escribir; spec `2026-11-08-u1-interfaz-y-ayudas-design.md` | Hecho  |
+
 ## Pendientes
 
 Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al planificar el hito indicado.

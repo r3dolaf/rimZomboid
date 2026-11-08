@@ -6,7 +6,8 @@ import type { Tool } from './tool';
  * Saquear, Talar y Construir; I, J, F, E y P, los paneles Almacén, Trabajos, Fabricar, Expediciones
  * y Partida (U1 §2); R, el modo combate (H4e); M, silenciar (S1); H o ?, la Ayuda (U1).
  *
- * No hacen nada escribiendo en un campo ni con Ctrl, Alt o Cmd (Ctrl+F busca en la página).
+ * No hacen nada escribiendo en un campo ni con Ctrl, Alt o Cmd (Ctrl+F busca en la página); con una
+ * casilla, Espacio la marca.
  */
 export function bindTimeKeys(
   target: EventTarget,
@@ -32,8 +33,10 @@ export function bindTimeKeys(
 ): void {
   target.addEventListener('keydown', (ev) => {
     const e = ev as KeyboardEvent;
-    if (typing(e.target) || e.ctrlKey || e.metaKey || e.altKey) return;
+    const field = fieldOf(e.target);
+    if (field === 'text' || e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.code === 'Space') {
+      if (field === 'control') return; // Espacio marca la casilla (lo normal con el teclado)
       e.preventDefault(); // que no active el botón que tenga el foco
       if (!e.repeat) time.togglePause(); // mantenerlo pulsado no alterna la pausa
       return;
@@ -64,15 +67,15 @@ export function bindTimeKeys(
 }
 
 /**
- * ¿Tiene el foco un campo (de texto, número, desplegable o casilla)? Entonces las teclas son suyas:
- * se escribe, y Espacio marca la casilla, como es normal con el teclado.
+ * Qué tiene el foco: un campo donde se escribe o se elige (texto, número, desplegable: las teclas
+ * son suyas), una casilla o un deslizador (Espacio es suyo; las letras, no) o nada de eso.
  */
-function typing(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false;
-  return (
-    target.isContentEditable ||
-    target.tagName === 'INPUT' ||
-    target.tagName === 'TEXTAREA' ||
-    target.tagName === 'SELECT'
-  );
+function fieldOf(target: EventTarget | null): 'text' | 'control' | null {
+  if (!(target instanceof HTMLElement)) return null;
+  if (target.isContentEditable || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT')
+    return 'text';
+  if (!(target instanceof HTMLInputElement)) return null;
+  return ['checkbox', 'radio', 'range', 'button', 'file'].includes(target.type)
+    ? 'control'
+    : 'text';
 }

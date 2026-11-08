@@ -259,14 +259,12 @@ test('U1 §2: «⏸ En pausa» se ve en pausa (también la de los avisos) y puls
   hud.update({ day: 1, hour: 8, minute: 0 }, emptyInventory());
   expect(sign.hidden).toBe(false);
   expect(sign.textContent).toBe('⏸ En pausa');
-  expect(document.body.classList.contains('game-paused')).toBe(true);
   time.setSpeed(2);
   time.setSpeed(0);
   hud.update({ day: 1, hour: 8, minute: 0 }, emptyInventory());
   sign.click();
   expect(time.speed).toBe(2); // sigue como iba
   expect(sign.hidden).toBe(true);
-  expect(document.body.classList.contains('game-paused')).toBe(false);
 });
 
 test('U1 §2: ❓ Ayuda, siempre en la barra (también en el móvil), abre la Ayuda', () => {

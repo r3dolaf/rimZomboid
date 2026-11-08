@@ -97,7 +97,9 @@ test('menú de Avisos: se abre desde arriba y lo que se apaga sigue apagado al r
   page,
 }) => {
   await page.goto('/?seed=5&debug=1');
-  await page.getByTestId('hud-notices').click();
+  // U1 §3: Avisos es una pestaña de Partida.
+  await page.getByTestId('hud-game').click();
+  await page.getByTestId('game-panel').getByTestId('tab-notices').click();
   const menu = page.getByTestId('notice-menu');
   await expect(menu).toBeVisible();
   const fled = page.getByTestId('notice-show-fled');
@@ -105,7 +107,8 @@ test('menú de Avisos: se abre desde arriba y lo que se apaga sigue apagado al r
   await fled.uncheck();
   await expect(page.getByTestId('notice-pause-fled')).toBeDisabled();
   await page.reload();
-  await page.getByTestId('hud-notices').click();
+  await page.getByTestId('hud-game').click();
+  await page.getByTestId('game-panel').getByTestId('tab-notices').click();
   await expect(page.getByTestId('notice-show-fled')).not.toBeChecked();
   await page.getByTestId('notice-reset').click();
   await expect(page.getByTestId('notice-show-fled')).toBeChecked();

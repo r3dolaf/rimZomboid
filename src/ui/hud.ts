@@ -367,7 +367,6 @@ export function mountHud(
     buttons.forEach((b, i) => b.classList.toggle('active', SPEEDS[i] === now));
     sleepSpeed.hidden = now !== 'boosted';
     paused.hidden = now !== 0;
-    document.body?.classList.toggle('game-paused', now === 0);
   }
   refreshSpeed();
 

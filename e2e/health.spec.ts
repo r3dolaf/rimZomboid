@@ -123,6 +123,7 @@ test('aviso de fiebre con cuatro opciones (H6a: antibióticos); filtros del regi
   await page.locator('[data-speed="0"]').click();
 
   // Filtros: sin Salud, lo de la fiebre no se ve; se recuerda al recargar.
+  await page.getByTestId('log-filter-toggle').click(); // U1: los filtros, tras «Filtrar»
   await page.getByTestId('log-filter-health').click();
   await expect(log.locator('li:visible', { hasText: 'guarda reposo' })).toHaveCount(0);
   await page.reload();

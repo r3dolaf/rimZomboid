@@ -104,3 +104,105 @@ body.tool-build canvas {
   color: #ff6b5e;
   font-weight: bold;
 }
+
+/* M2: las herramientas y los paneles, cada grupo en su caja; en pantalla ancha, en la fila. */
+.hud-tools,
+.hud-panels {
+  display: contents;
+}
+.hud-more {
+  display: none;
+}
+/* El menú ☰ (M2 §2): los paneles uno debajo de otro, bajo la punta derecha de la barra. */
+.hud-menu {
+  position: fixed;
+  z-index: 30;
+  top: calc(var(--bar-h, 36px) + 4px);
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 200px;
+  max-height: calc(100vh - var(--bar-h, 36px) - 12px);
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: rgba(23, 25, 28, 0.97);
+  font:
+    14px/1.2 system-ui,
+    sans-serif;
+}
+.hud-menu[hidden],
+.hud-menu button[hidden] {
+  display: none;
+}
+.hud-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: #e8e6e3;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.hud-menu button:hover,
+.hud-menu button:focus-visible {
+  background: #33373c;
+}
+.hud-menu .icon {
+  width: 1.4em;
+  font-size: 17px;
+  text-align: center;
+}
+
+/* Mediana y pequeña (M2 §1): los paneles, en el menú ☰ de la punta derecha. */
+@media (max-width: 1199px), (max-height: 500px) {
+  .hud-panels {
+    display: none;
+  }
+  .hud-more {
+    display: inline-block;
+    min-width: 36px;
+    margin-left: auto;
+    font-size: 16px;
+  }
+}
+
+/* Pequeña (M2 §2): las herramientas, en una columna junto al borde derecho, solo con el icono. */
+@media (max-width: 799px), (max-height: 500px) {
+  .hud-time {
+    min-width: 0;
+  }
+  .hud-tools {
+    position: fixed;
+    top: calc(var(--bar-h, 36px) + 8px);
+    right: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .hud-tools .hud-tool {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: rgba(42, 45, 49, 0.92);
+    font-size: 0; /* el nombre no se ve, pero sigue ahí (ayuda y lectores de pantalla) */
+  }
+  .hud-tools .hud-tool.active {
+    background: #e08a2c;
+  }
+  .hud-tools .hud-tool::before {
+    content: attr(data-icon);
+    font-size: 20px;
+    line-height: 40px;
+  }
+  .hud-siege,
+  body.with-map-tabs .hud-siege {
+    top: calc(var(--bar-h, 36px) + 4px);
+  }
+}

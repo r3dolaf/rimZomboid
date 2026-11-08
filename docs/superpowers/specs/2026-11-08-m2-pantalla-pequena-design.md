@@ -59,8 +59,9 @@ vez de 6). Llevan lo mismo: retrato, iconos, todas las barras y dónde está.
 
 ## 6. Paneles
 
-En la pequeña, cada panel sale como una hoja pegada a un borde, desde debajo de la barra hasta
-encima de las tarjetas (que siguen a la vista para cambiar de colono), con su propio scroll:
+En la pequeña, cada panel sale como una hoja pegada a un borde, justo debajo de la barra y, como
+mucho, hasta encima de las tarjetas (que siguen a la vista para cambiar de colono), con su propio
+scroll y por encima del registro:
 
 - **A la derecha, hasta 400 px de ancho:** ficha del colono, del grupo, de la casa y de la cama;
   la ficha del hexágono (mundo); Almacén, Fabricar, Atuendos, Expediciones, Avisos y Partida.
@@ -69,8 +70,14 @@ encima de las tarjetas (que siguen a la vista para cambiar de colono), con su pr
   columna de herramientas queden libres mientras se pone.
 - La depuración (F3), como está: es para el ordenador.
 
+En los avisos con tres o cuatro respuestas (la fiebre), los botones van de dos en dos: en 300 px no
+cabían (tampoco en el ordenador). Los avisos van por encima de los paneles.
+
 La altura de la barra y la de las tarjetas se miden en la página (cambian con el tamaño de letra y
 con «dónde está» en las tarjetas) y los paneles se colocan con ellas.
+
+El registro plegado ya no enseña sus filtros (su estilo tapaba el `hidden`; pasaba en todas las
+pantallas).
 
 ## 7. Portada y pantalla final
 

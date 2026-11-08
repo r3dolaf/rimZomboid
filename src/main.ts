@@ -41,6 +41,7 @@ import { createMapView, mountMapTabs, viewed, WORLD_MAP } from './ui/mapView';
 import { createRoutePlan } from './ui/routePlan';
 import { mountWorldCard } from './ui/worldPanel';
 import { createSelection } from './ui/selection';
+import { trackHeight } from './ui/screen';
 import { mountSheet } from './ui/sheet';
 import { mountOutfitsPanel } from './ui/outfitsPanel';
 import { mountStoragePanel } from './ui/storagePanel';
@@ -193,6 +194,9 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
   // es del que se ve; las tarjetas, el registro y los avisos, de todos.
   const tabs = mountMapTabs(ui, { view });
   const cards = mountCards(ui, { world, view, selection, portrait: makePortraits() });
+  // M2: en pantalla pequeña, los paneles van entre la barra y las tarjetas (miden lo que ocupan).
+  trackHeight(ui.querySelector<HTMLElement>('.hud-bar')!, '--bar-h');
+  trackHeight(ui.querySelector<HTMLElement>('.cards')!, '--cards-h');
   const sheet = mountSheet(ui, viewed(view, { base: world, selection }));
   const group = mountGroupPanel(ui, viewed(view, { selection }));
   const housePanel = mountHousePanel(ui, viewed(view, { selection: houseSelection }));
@@ -285,6 +289,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
   // Esc cierra por capas: primero la herramienta, luego el panel de Trabajos o el de Fabricar, la
   // ficha de la casa y la del superviviente.
   bindEscape(window, [
+    () => hud.closeMenu(), // M2: el menú ☰
     () => contextMenu.close(),
     () => view.atlas && worldCard.selected >= 0 && (worldCard.close(), true),
     () => tool.active && (tool.set(null), true),

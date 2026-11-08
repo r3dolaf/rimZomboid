@@ -59,6 +59,13 @@ Con el dedo (móvil en horizontal o tableta):
 - Arrastrar un dedo mueve la cámara (con una herramienta activa, marca); mantener y arrastrar elige
   a varios con un rectángulo; dos dedos acercan, alejan y mueven la cámara.
 - Mantener pulsada una tarjeta añade o quita a ese colono de los elegidos.
+- En el móvil, los paneles están en el menú ☰ (arriba a la derecha) y las herramientas, en la columna
+  de la derecha. Desde el navegador se puede **añadir a la pantalla de inicio** para jugar a pantalla
+  completa, y en Android también desde «⛶ Pantalla completa» en el menú ☰.
+- Para ver los fotogramas por segundo en el móvil (no hay F3), añade `?debug=1` a la dirección: sale
+  «🐞 Depuración» en el menú ☰.
+
+Los iconos de la app (`public/icons/`) se generan con `node scripts/app-icons.mjs`.
 
 ## Publicar en GitHub Pages
 

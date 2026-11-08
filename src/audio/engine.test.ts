@@ -38,3 +38,23 @@ test('sin Web Audio, todo sigue, callado', () => {
   }).not.toThrow();
   expect(sound.debug.state()).toMatchObject({ context: 'none', muted: true, played: {} });
 });
+
+// M3: con el dedo, `pointerdown` no cuenta como gesto para arrancar el audio (iPhone, sobre todo);
+// soltar sí (`pointerup` y `touchend`, que llegan aunque el mapa anule el toque).
+test('el sonido se despierta también al soltar el dedo, no solo al pulsar', () => {
+  const target = new EventTarget();
+  const types: string[] = [];
+  const add = target.addEventListener.bind(target);
+  target.addEventListener = (
+    type: string,
+    ...rest: [EventListenerOrEventListenerObject | null, (boolean | AddEventListenerOptions)?]
+  ) => {
+    types.push(type);
+    add(type, ...rest);
+  };
+  createSound(createSoundPrefs(null), target);
+  expect(types).toEqual(
+    expect.arrayContaining(['pointerdown', 'keydown', 'pointerup', 'touchend']),
+  );
+  expect(() => target.dispatchEvent(new Event('touchend'))).not.toThrow();
+});

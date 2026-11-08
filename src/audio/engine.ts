@@ -191,6 +191,10 @@ export function createSound(prefs: SoundPrefsStore, target: EventTarget = window
   }
   target.addEventListener('pointerdown', unlock, true);
   target.addEventListener('keydown', unlock, true);
+  // M3: con el dedo, el navegador solo deja arrancar el audio al soltar (pulsar no cuenta, sobre
+  // todo en iPhone); `touchend` llega aunque el mapa anule el toque.
+  target.addEventListener('pointerup', unlock, true);
+  target.addEventListener('touchend', unlock, true);
   document.addEventListener('visibilitychange', () => {
     if (!mix) return;
     (document.hidden ? mix.ctx.suspend() : mix.ctx.resume()).catch(() => {});

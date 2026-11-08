@@ -450,6 +450,9 @@ export const es = {
     done: 'Hecho',
     doneHint: 'Dejar la herramienta (Esc)',
   },
+  /** U1 §6: la tarjeta, para los lectores de pantalla: «Ana: Salud 100, Sangre 100, …». */
+  cardLabel: (name: string, bars: [string, number][]) =>
+    `${name}: ${bars.map(([k, v]) => `${k} ${v}`).join(', ')}`,
   /** U1 §9: los primeros pasos (con el dedo, «toca» y «mantén pulsado»; con ratón, «clic»). */
   guide: {
     title: 'Primeros pasos',

@@ -244,3 +244,16 @@ test('A3: sin retratos, las tarjetas no llevan imagen', () => {
   const { root } = setup();
   expect(root.querySelector('img.portrait')).toBeNull();
 });
+
+test('U1 §6: la tarjeta dice su nombre y sus barras a los lectores de pantalla', () => {
+  const root = document.createElement('div');
+  const world = createWorld(5);
+  const s = world.survivors[0]!;
+  s.health = 80;
+  s.needs.hunger = 40;
+  const cards = mountCards(root, { world, selection: createSelection() });
+  cards.update();
+  const label = root.querySelector(`[data-testid="card-${s.id}"]`)!.getAttribute('aria-label')!;
+  expect(label.startsWith(`${s.name}: Salud 80, Sangre 100, Hambre 40`)).toBe(true);
+  expect(label).toContain('Ánimo');
+});

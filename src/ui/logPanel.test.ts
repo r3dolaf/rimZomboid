@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 import { logEvent } from '../sim/log';
 import { createWorld } from '../sim/world';
 import { emptyWorld } from '../sim/testing/fixtures';
 import { buildingThe, formatItems, formatLogEntry } from './describe';
 import { LOG_CATEGORIES, LOG_CATEGORY, mountLog } from './logPanel';
+import { SMALL_SCREEN } from './screen';
 
 test('formatItems: plurales y lista legible', () => {
   expect(
@@ -265,4 +266,29 @@ test('el registro se ve desde el principio, vacío: «Aún no ha pasado nada» (
   expect(root.querySelector('[data-testid="log-empty"]')!.textContent).toBe(
     'Aún no ha pasado nada',
   );
+});
+
+test('M2: en pantalla pequeña empieza plegado, salvo que se haya desplegado antes', () => {
+  vi.stubGlobal('matchMedia', (q: string) => ({ matches: q === SMALL_SCREEN }));
+  try {
+    localStorage.removeItem('rimzomboid.logCollapsed');
+    const mount = () => {
+      const root = document.createElement('div');
+      mountLog(root, { world: createWorld(2) });
+      return root.querySelector('[data-testid="log"]') as HTMLElement;
+    };
+    expect(mount().classList.contains('collapsed')).toBe(true);
+    localStorage.setItem('rimzomboid.logCollapsed', '0');
+    expect(mount().classList.contains('collapsed')).toBe(false);
+  } finally {
+    vi.unstubAllGlobals();
+    localStorage.removeItem('rimzomboid.logCollapsed');
+  }
+});
+
+test('en pantalla ancha empieza desplegado, como siempre', () => {
+  localStorage.removeItem('rimzomboid.logCollapsed');
+  const root = document.createElement('div');
+  mountLog(root, { world: createWorld(2) });
+  expect(root.querySelector('[data-testid="log"]')!.classList.contains('collapsed')).toBe(false);
 });

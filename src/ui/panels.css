@@ -414,11 +414,13 @@
 }
 .notice .buttons {
   display: flex;
+  flex-wrap: wrap; /* con tres o cuatro respuestas, de dos en dos (M2: no cabían) */
   gap: 6px;
   margin-top: 6px;
 }
 .notice .buttons button {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: calc(50% - 3px);
   padding: 4px 0;
   border: 1px solid #555;
   border-radius: 5px;
@@ -767,6 +769,10 @@
 }
 
 /* Filtros del registro (H5 §10). */
+/* Plegado, sin filtros (su `display: flex` tapaba el `hidden`). */
+.log .log-filters[hidden] {
+  display: none;
+}
 .log .log-filters {
   position: sticky;
   bottom: -6px;
@@ -801,6 +807,9 @@
   border-radius: 6px;
   color: #e8e6e3;
   pointer-events: auto;
+  font:
+    13px/1.35 system-ui,
+    sans-serif;
 }
 .storage-panel header {
   display: flex;
@@ -1164,4 +1173,118 @@ body.with-map-tabs .work-panel {
   flex-wrap: wrap;
   gap: 4px;
   margin-top: 6px;
+}
+
+/*
+ * M2: pantalla pequeña (un móvil). Tarjetas y registro compactos; las pestañas de mapa y los avisos,
+ * arriba a la izquierda; cada panel, una hoja pegada a un borde entre la barra y las tarjetas (que
+ * miden --bar-h y --cards-h).
+ */
+@media (max-width: 799px), (max-height: 500px) {
+  .cards {
+    gap: 6px;
+    padding: 4px 8px;
+  }
+  .card {
+    width: 116px;
+    padding: 4px 6px;
+    font-size: 12px;
+  }
+  .card-head {
+    margin-bottom: 2px;
+  }
+  .card-head > span:first-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .card .portrait {
+    width: 24px;
+    height: 17px;
+    margin: -2px 4px -2px 0;
+  }
+  .bar {
+    height: 3px;
+    margin-top: 2px;
+  }
+  .bar[data-need='blood'] {
+    height: 2px;
+  }
+  .card .where {
+    margin-top: 2px;
+    font-size: 10px;
+  }
+
+  .log {
+    left: 8px;
+    bottom: calc(var(--cards-h, 64px) + 6px);
+    width: min(360px, 50vw);
+    max-height: 40vh;
+  }
+
+  .map-tabs {
+    top: calc(var(--bar-h, 36px) + 4px);
+    left: 8px;
+    transform: none;
+  }
+  .notices {
+    top: calc(var(--bar-h, 36px) + 40px);
+    left: 8px;
+    width: min(300px, 45vw);
+    max-height: calc(100vh - var(--bar-h, 36px) - var(--cards-h, 64px) - 90px);
+  }
+
+  .sheet,
+  .sheet.house,
+  .bed-panel,
+  .world-card,
+  .storage-panel,
+  .game-panel,
+  .expeditions-panel,
+  .work-panel,
+  body.with-map-tabs .work-panel {
+    position: fixed;
+    top: calc(var(--bar-h, 36px) + 4px);
+    right: 4px;
+    left: auto;
+    box-sizing: border-box;
+    width: min(400px, calc(100vw - 8px));
+    min-width: 0;
+    max-width: none;
+    max-height: calc(100vh - var(--bar-h, 36px) - var(--cards-h, 64px) - 8px);
+    overflow: auto;
+    transform: none;
+    z-index: 5; /* por encima del registro */
+  }
+  /* Los avisos, por encima de los paneles (las decisiones hay que poder contestarlas). */
+  .notices {
+    z-index: 6;
+  }
+  /* Trabajos: la tabla, a todo el ancho (y de lado si no cabe). */
+  .work-panel:not(.craft-panel):not(.notice-menu):not(.outfits-panel) {
+    left: 4px;
+    width: auto;
+  }
+  /* Construir: a la izquierda, para dejar libres el mapa y la columna de herramientas. */
+  .build-menu,
+  body.with-map-tabs .build-menu {
+    top: calc(var(--bar-h, 36px) + 4px);
+    left: 4px;
+    justify-content: flex-start;
+    width: min(320px, 50vw);
+    max-width: none;
+    max-height: calc(100vh - var(--bar-h, 36px) - var(--cards-h, 64px) - 8px);
+    overflow-y: auto;
+    box-sizing: border-box;
+    transform: none;
+    z-index: 5;
+  }
+  .build-menu .build-group h3 {
+    width: 100%;
+    text-align: left;
+  }
+  .build-menu .build-desc {
+    text-align: left;
+  }
 }

@@ -12,9 +12,15 @@ export function formatDayTime(t: GameTime): string {
 
 const SPEEDS: readonly Speed[] = [0, 1, 2, 3];
 
+/** Los paneles que se abren desde la barra (o desde el menú ☰, M2), en este orden. */
+const PANELS = ['storage', 'work', 'craft', 'outfits', 'expeditions', 'notices', 'game'] as const;
+type PanelKey = (typeof PANELS)[number];
+
 /**
  * Barra superior: hora, velocidad, comida, vendas y madera del almacén, herramientas (Saquear,
- * Talar, Construir), paneles de Trabajos y Fabricar, zombis a la vista, tormenta, narrador y semilla.
+ * Talar, Construir), paneles (Almacén, Trabajos, Fabricar…), zombis a la vista y tormenta. Por
+ * debajo de 1200 px, los paneles van en un menú ☰ y, en pantalla pequeña, las herramientas en una
+ * columna a la derecha (M2: lo coloca el CSS).
  */
 export function mountHud(
   root: HTMLElement,
@@ -44,6 +50,8 @@ export function mountHud(
     zombies?: number,
     siege?: string | null,
   ): void;
+  /** Cierra el menú ☰ (Esc); dice si estaba abierto. */
+  closeMenu(): boolean;
 } {
   const bar = document.createElement('div');
   bar.className = 'hud-bar';
@@ -96,11 +104,18 @@ export function mountHud(
   wood.dataset.testid = 'hud-wood';
   wood.title = es.hudTitles.wood;
 
-  const button = (testid: string, text: string, hint: string, onClick: () => void) => {
+  const button = (
+    testid: string,
+    text: string,
+    hint: string,
+    onClick: () => void,
+    icon: string,
+  ) => {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'hud-tool';
     b.dataset.testid = testid;
+    b.dataset.icon = icon; // M2: en pantalla pequeña, solo el icono (lo pinta el CSS)
     b.textContent = text;
     b.title = hint;
     b.addEventListener('click', () => {
@@ -116,7 +131,7 @@ export function mountHud(
       ['build', 'hud-build-tool', es.buildTool, es.buildToolHint],
     ] as const
   ).map(([mode, testid, text, hint]) => {
-    const b = button(testid, text, hint, () => opts.tool?.toggle(mode));
+    const b = button(testid, text, hint, () => opts.tool?.toggle(mode), es.hudIcons[mode]);
     b.hidden = !opts.tool;
     return { mode, b };
   });
@@ -124,28 +139,80 @@ export function mountHud(
     for (const t of tools) t.b.classList.toggle('active', opts.tool?.mode === t.mode);
   };
   opts.tool?.onChange(refreshTool);
-  const work = button('hud-work', es.workPanel, es.workPanelHint, () => opts.toggleWork?.());
-  work.hidden = !opts.toggleWork;
-  const craft = button('hud-craft', es.craftPanel, es.craftPanelHint, () => opts.toggleCraft?.());
-  craft.hidden = !opts.toggleCraft;
-  const storage = button('hud-storage', es.storage.button, es.storage.hint, () =>
-    opts.toggleStorage?.(),
-  );
-  storage.hidden = !opts.toggleStorage;
-  const outfits = button('hud-outfits', es.outfitsUi.button, es.outfitsUi.hint, () =>
-    opts.toggleOutfits?.(),
-  );
-  outfits.hidden = !opts.toggleOutfits;
-  const expeditions = button('hud-expeditions', es.expeditions.button, es.expeditions.hint, () =>
-    opts.toggleExpeditions?.(),
-  );
-  expeditions.hidden = !opts.toggleExpeditions;
-  const game = button('hud-game', es.game.button, es.game.hint, () => opts.toggleGame?.());
-  game.hidden = !opts.toggleGame;
-  const notices = button('hud-notices', es.noticesButton, es.noticesButtonHint, () =>
-    opts.toggleNotices?.(),
-  );
-  notices.hidden = !opts.toggleNotices;
+  // Los paneles: su nombre, su ayuda y qué abre.
+  const panels: Record<PanelKey, { text: string; hint: string; toggle?: () => void }> = {
+    storage: { text: es.storage.button, hint: es.storage.hint, toggle: opts.toggleStorage },
+    work: { text: es.workPanel, hint: es.workPanelHint, toggle: opts.toggleWork },
+    craft: { text: es.craftPanel, hint: es.craftPanelHint, toggle: opts.toggleCraft },
+    outfits: { text: es.outfitsUi.button, hint: es.outfitsUi.hint, toggle: opts.toggleOutfits },
+    expeditions: {
+      text: es.expeditions.button,
+      hint: es.expeditions.hint,
+      toggle: opts.toggleExpeditions,
+    },
+    notices: { text: es.noticesButton, hint: es.noticesButtonHint, toggle: opts.toggleNotices },
+    game: { text: es.game.button, hint: es.game.hint, toggle: opts.toggleGame },
+  };
+  const panelButtons = PANELS.map((key) => {
+    const p = panels[key];
+    const b = button(`hud-${key}`, p.text, p.hint, () => p.toggle?.(), es.hudIcons[key]);
+    b.hidden = !p.toggle;
+    return b;
+  });
+
+  // M2: el menú ☰, con los paneles uno debajo de otro (cuando no caben en la barra).
+  const more = document.createElement('button');
+  more.type = 'button';
+  more.className = 'hud-tool hud-more';
+  more.dataset.testid = 'hud-more';
+  more.textContent = es.hudMenu.button;
+  more.title = es.hudMenu.hint;
+  more.setAttribute('aria-label', es.hudMenu.hint);
+  more.setAttribute('aria-haspopup', 'menu');
+  const menu = document.createElement('div');
+  menu.className = 'hud-menu';
+  menu.dataset.testid = 'hud-menu';
+  menu.id = 'hud-menu';
+  menu.setAttribute('role', 'menu');
+  more.setAttribute('aria-controls', menu.id);
+  let menuOpen = false;
+  const setMenu = (open: boolean) => {
+    menuOpen = open;
+    menu.hidden = !open;
+    more.setAttribute('aria-expanded', String(open));
+    more.classList.toggle('active', open);
+  };
+  setMenu(false);
+  more.addEventListener('click', () => {
+    setMenu(!menuOpen);
+    more.blur();
+  });
+  for (const key of PANELS) {
+    const p = panels[key];
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.setAttribute('role', 'menuitem');
+    item.dataset.testid = `hud-menu-${key}`;
+    item.title = p.hint;
+    item.hidden = !p.toggle;
+    const icon = document.createElement('span');
+    icon.className = 'icon';
+    icon.textContent = es.hudIcons[key];
+    const label = document.createElement('span');
+    label.className = 'label';
+    label.textContent = p.text;
+    item.append(icon, label);
+    item.addEventListener('click', () => {
+      setMenu(false);
+      p.toggle?.();
+    });
+    menu.append(item);
+  }
+  // Tocar o pulsar fuera lo cierra (el ☰ ya lo hace con su clic).
+  document.addEventListener('pointerdown', (ev) => {
+    const t = ev.target as Node;
+    if (menuOpen && !menu.contains(t) && !more.contains(t)) setMenu(false);
+  });
 
   // (La semilla está en el panel Partida, H6c: en la barra no cabía.)
 
@@ -168,6 +235,15 @@ export function mountHud(
 
   // (El narrador está en el panel Partida, H6c, como la semilla.)
 
+  // Las herramientas y los paneles, cada grupo en su caja: en pantalla ancha no se notan (el CSS
+  // los deja en la fila); en la pequeña, las herramientas van en columna y los paneles, en el ☰.
+  const toolBox = document.createElement('div');
+  toolBox.className = 'hud-tools';
+  toolBox.append(...tools.map((t) => t.b));
+  const panelBox = document.createElement('div');
+  panelBox.className = 'hud-panels';
+  panelBox.append(...panelButtons);
+
   bar.append(
     time,
     speeds,
@@ -175,19 +251,15 @@ export function mountHud(
     bandages,
     painkillers,
     wood,
-    storage,
-    ...tools.map((t) => t.b),
-    work,
-    craft,
-    outfits,
-    expeditions,
-    game,
-    notices,
+    toolBox,
+    panelBox,
     zombies,
     siege,
     weather,
+    more,
   );
-  root.append(bar);
+  // El menú, fuera de la barra: así queda por encima de los paneles abiertos.
+  root.append(bar, menu);
 
   let shownSpeed: Speed | 'boosted' | null = null;
   function refreshSpeed(): void {
@@ -218,6 +290,11 @@ export function mountHud(
       const woodText = es.wood(stock.wood);
       if (wood.textContent !== woodText) wood.textContent = woodText;
       refreshSpeed(); // la velocidad también puede cambiar con el teclado
+    },
+    closeMenu() {
+      if (!menuOpen) return false;
+      setMenu(false);
+      return true;
     },
   };
 }

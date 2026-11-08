@@ -2,6 +2,7 @@ import { es } from '../i18n/es';
 import type { LogEvent } from '../sim/log';
 import type { World } from '../sim/types';
 import { formatLogEntry } from './describe';
+import { screenIs, SMALL_SCREEN } from './screen';
 import './panels.css';
 
 const COLLAPSED_KEY = 'rimzomboid.logCollapsed';
@@ -132,13 +133,18 @@ function saveHidden(hidden: Set<LogCategory>): void {
   }
 }
 
-/** Lo que eligió la última vez (minimizado o no); si el navegador no deja guardarlo, abierto. */
+/**
+ * Lo que eligió la última vez (minimizado o no). Si no eligió nada (o el navegador no deja
+ * guardarlo): en pantalla pequeña, minimizado (M2 §4); si no, abierto.
+ */
 function loadCollapsed(): boolean {
   try {
-    return localStorage.getItem(COLLAPSED_KEY) === '1';
+    const saved = localStorage.getItem(COLLAPSED_KEY);
+    if (saved !== null) return saved === '1';
   } catch {
-    return false;
+    // Sin almacenamiento: lo de cada pantalla.
   }
+  return screenIs(SMALL_SCREEN);
 }
 
 function saveCollapsed(on: boolean): void {

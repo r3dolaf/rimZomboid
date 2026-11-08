@@ -240,3 +240,81 @@ test('con todos durmiendo muestra «x6 (durmiendo)» y ningún botón activo; al
   expect(badge.hidden).toBe(true);
   expect(root.querySelector('[data-speed="1"]')!.classList.contains('active')).toBe(true);
 });
+
+const PANELS = ['storage', 'work', 'craft', 'outfits', 'expeditions', 'notices', 'game'] as const;
+const toggleName = {
+  storage: 'toggleStorage',
+  work: 'toggleWork',
+  craft: 'toggleCraft',
+  outfits: 'toggleOutfits',
+  expeditions: 'toggleExpeditions',
+  notices: 'toggleNotices',
+  game: 'toggleGame',
+} as const;
+
+test('M2: el menú ☰ con los paneles se abre y se cierra; cada línea abre lo mismo que su botón', () => {
+  const root = document.createElement('div');
+  document.body.replaceChildren(root);
+  const calls = Object.fromEntries(PANELS.map((p) => [toggleName[p], vi.fn()]));
+  const hud = mountHud(root, { seed: 1, time: createTimeController(), ...calls });
+  const more = root.querySelector('[data-testid="hud-more"]') as HTMLButtonElement;
+  const menu = root.querySelector('[data-testid="hud-menu"]') as HTMLElement;
+  expect(more.textContent).toBe('☰');
+  expect(menu.hidden).toBe(true);
+  expect(more.getAttribute('aria-expanded')).toBe('false');
+  more.click();
+  expect(menu.hidden).toBe(false);
+  expect(more.getAttribute('aria-expanded')).toBe('true');
+  more.click();
+  expect(menu.hidden).toBe(true);
+  const items = PANELS.map((p) =>
+    menu.querySelector<HTMLButtonElement>(`[data-testid="hud-menu-${p}"]`)!,
+  );
+  expect(menu.querySelectorAll('button')[0]).toBe(items[0]); // los paneles, lo primero
+  expect([...menu.querySelectorAll('button')].slice(0, PANELS.length)).toEqual(items);
+  expect(items[1]!.querySelector('.icon')!.textContent).toBe('📋');
+  expect(items[1]!.querySelector('.label')!.textContent).toBe('Trabajos');
+  PANELS.forEach((p, i) => {
+    more.click();
+    items[i]!.click();
+    expect(calls[toggleName[p]]).toHaveBeenCalledTimes(1);
+    expect(menu.hidden).toBe(true);
+  });
+  // Esc (closeMenu) y tocar fuera también lo cierran; tocar el propio ☰, no (lo hace su clic).
+  more.click();
+  expect(hud.closeMenu()).toBe(true);
+  expect(menu.hidden).toBe(true);
+  expect(hud.closeMenu()).toBe(false);
+  more.click();
+  more.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+  menu.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+  expect(menu.hidden).toBe(false);
+  document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+  expect(menu.hidden).toBe(true);
+});
+
+test('M2: sin un panel, tampoco sale en el menú', () => {
+  const root = document.createElement('div');
+  mountHud(root, { seed: 1, time: createTimeController(), toggleWork: vi.fn() });
+  const item = (p: string) => root.querySelector(`[data-testid="hud-menu-${p}"]`) as HTMLElement;
+  expect(item('work').hidden).toBe(false);
+  expect(item('game').hidden).toBe(true);
+});
+
+test('M2: cada botón de la barra lleva su icono, que pinta el CSS (el texto no cambia)', () => {
+  const root = document.createElement('div');
+  const calls = Object.fromEntries(PANELS.map((p) => [toggleName[p], vi.fn()]));
+  mountHud(root, { seed: 1, time: createTimeController(), tool: createTool(), ...calls });
+  const icon = (id: string) =>
+    (root.querySelector(`[data-testid="${id}"]`) as HTMLElement).dataset.icon;
+  expect(['hud-loot-tool', 'hud-chop-tool', 'hud-build-tool'].map(icon)).toEqual([
+    '🎒',
+    '🪓',
+    '🔨',
+  ]);
+  expect(PANELS.map((p) => icon(`hud-${p}`))).toEqual(['📦', '📋', '🧵', '👕', '🧭', '🔔', '💾']);
+  expect(root.querySelector('[data-testid="hud-craft"]')!.textContent).toBe('Fabricar');
+  // Las herramientas y los paneles, cada grupo en su sitio (el CSS los mueve en pantalla pequeña).
+  expect(root.querySelectorAll('.hud-tools .hud-tool')).toHaveLength(3);
+  expect(root.querySelectorAll('.hud-panels .hud-tool')).toHaveLength(PANELS.length);
+});

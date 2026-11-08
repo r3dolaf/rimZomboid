@@ -379,6 +379,21 @@ export const es = {
   // Menú de Avisos (H4e)
   noticesButton: 'Avisos',
   noticesButtonHint: 'Qué avisos aparecen y cuáles pausan',
+  /** M2: los iconos de los botones de la barra (solo se ven en pantalla pequeña) y del menú ☰. */
+  hudIcons: {
+    loot: '🎒',
+    chop: '🪓',
+    build: '🔨',
+    storage: '📦',
+    work: '📋',
+    craft: '🧵',
+    outfits: '👕',
+    expeditions: '🧭',
+    notices: '🔔',
+    game: '💾',
+  },
+  /** M2: el menú de los paneles, cuando no caben en la barra. */
+  hudMenu: { button: '☰', hint: 'Paneles' },
   noticeMenu: {
     title: 'Avisos',
     show: 'Aparece',

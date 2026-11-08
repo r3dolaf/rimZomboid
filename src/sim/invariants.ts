@@ -270,10 +270,21 @@ function checkMap(w: World, everyone: readonly Survivor[], allBeds: readonly Bed
       [...t.members, ...(t.joiner ? [t.joiner] : [])].map((s) => s.id),
     ),
   );
+  // (C1: la de después del helicóptero, los que se han salvado.)
+  const rescued = new Set((w.common.rescued ?? []).map((r) => r.id));
   for (const d of w.decisions)
     for (const id of d.survivorIds)
-      if (!ids.has(id) && !strangerIds.has(id) && !(d.travelId !== undefined && travelers.has(id)))
+      if (
+        !ids.has(id) &&
+        !strangerIds.has(id) &&
+        !(d.travelId !== undefined && travelers.has(id)) &&
+        !(d.kind === 'rescued' && rescued.has(id))
+      )
         problems.push(`decisión ${d.id} (${d.kind}): el superviviente #${id} no existe`);
+  // C1: quien se ha salvado ya no está en ningún mapa ni de viaje.
+  for (const r of w.common.rescued ?? [])
+    if (ids.has(r.id) || strangerIds.has(r.id) || travelers.has(r.id))
+      problems.push(`${r.name} (#${r.id}): se ha salvado y sigue en el mundo`);
   for (const v of [
     w.narrator.nextEventAt,
     w.narrator.phaseEndsAt,

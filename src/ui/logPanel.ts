@@ -127,6 +127,11 @@ export const LOG_CATEGORY: Record<LogEvent['kind'], LogCategory> = {
   radioNews: 'narrator', // C1
   radioDirection: 'narrator',
   radioEvac: 'narrator',
+  heliArrived: 'colony',
+  boarded: 'colony',
+  heliLeft: 'colony',
+  heliGone: 'colony',
+  rescueEnd: 'colony',
 };
 
 /** Las categorías apagadas la última vez; si no hay o no se puede leer, ninguna. */

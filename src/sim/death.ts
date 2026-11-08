@@ -19,13 +19,14 @@ import {
 } from './balance';
 import { armFactor, canWalk } from './body';
 import { bagsIn, garments, isBag, noBags, wornBags } from './bags';
-import { wearable } from './clothes';
+import { piecesGone, wearable } from './clothes';
 import { gameTime } from './clock';
 import { seenByColony } from './danger';
 import { addDecision } from './decisions';
 import { addInto, emptyInventory } from './items';
 import { dropCarried } from './jobs/heal';
 import { assignBeds } from './jobs/medical';
+import { WEAPONS } from './jobs/weapons';
 import { logEvent } from './log';
 import { findPath, regionOf } from './path/astar';
 import { dropPile } from './piles';
@@ -169,6 +170,23 @@ export function killSurvivor(w: World, s: Survivor, cause: DeathCause): void {
 }
 
 /**
+ * Se salva en el helicóptero (C1 §3): sale del mundo con lo que lleva (fuera de las cuentas: piezas,
+ * madera y armas) y deja libres su cama y a su pareja, sin duelo. Si lleva a alguien en brazos, lo
+ * suelta (el llevado, en la zona, sube también).
+ */
+export function leaveByAir(w: World, s: Survivor): void {
+  if (!w.survivors.includes(s)) return;
+  detach(w, s);
+  leaveColony(w, s);
+  s.drafted = false;
+  const c = w.common;
+  piecesGone(w, [...s.worn, ...s.carrying.pieces, ...wornBags(s)]);
+  c.woodLog.wasted += s.carrying.wood;
+  c.weaponLog.rotted += WEAPONS.reduce((n, k) => n + s.carrying[k], 0) + (s.equipped ? 1 : 0);
+  c.departed.push({ id: s.id, how: 'rescued', mapId: w.mapId });
+}
+
+/**
  * Que se vaya (§7.4): deja lo que lleva y su arma en el almacén, deja de ser de la colonia y se
  * marcha a pie hacia el extremo de carretera más cercano.
  */
@@ -194,6 +212,11 @@ export function banish(w: World, s: Survivor): void {
 /** Lo que siente `o` por quien se ha ido o ha muerto en otro mapa (como en `mourn`). */
 function feelFor(w: World, o: Survivor, d: Common['departed'][number]): void {
   if (o.id === d.id) return;
+  // C1: quien se salva en el helicóptero deja libre a su pareja, sin duelo.
+  if (d.how === 'rescued') {
+    if (o.partnerId === d.id) o.partnerId = null;
+    return;
+  }
   if (o.partnerId === d.id) {
     o.partnerId = null;
     remember(w, o, d.how === 'died' ? 'partnerDied' : 'partnerBanished', d.id);
@@ -420,13 +443,16 @@ export function deathSystem(w: World): void {
     !traveling &&
     everyone.every((m) => m.survivors.length === 0)
   )
-    endGame(w);
+    endGame(w, (w.common.rescue?.boarded.length ?? 0) > 0); // C1: con gente en el helicóptero
 }
 
-/** No queda nadie (H5 §9): se acaba la partida; el que esperaba a la puerta se va. */
-function endGame(w: World): void {
-  w.common.over = { tick: w.tick };
+/**
+ * No queda nadie (H5 §9): se acaba la partida; el que esperaba a la puerta se va. C1: `won`, porque
+ * se han salvado en el helicóptero (los últimos, o se eligió ver el final).
+ */
+export function endGame(w: World, won = false): void {
+  w.common.over = won ? { tick: w.tick, won: true } : { tick: w.tick };
   if (w.stranger && !w.stranger.leaving) leaveStrangers(w);
   w.decisions = [];
-  logEvent(w, { kind: 'colonyFell' });
+  logEvent(w, won ? { kind: 'rescueEnd' } : { kind: 'colonyFell' });
 }

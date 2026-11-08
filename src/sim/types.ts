@@ -746,7 +746,7 @@ export interface Narrator {
 /** Algo que el jugador tiene que decidir; si no contesta antes de `expiresAt`, se aplica la opción por defecto. */
 export interface Decision {
   id: number;
-  kind: 'theft' | 'birthday' | 'fever' | 'stranger' | 'horde' | 'joiner' | 'amputate';
+  kind: 'theft' | 'birthday' | 'fever' | 'stranger' | 'horde' | 'joiner' | 'amputate' | 'rescued'; // C1: se han salvado algunos; ¿ver el final o seguir?
   survivorIds: number[];
   expiresAt: number;
   /** H5c3: el viaje de esta decisión (horda o quien pide unirse) y el hexágono de la horda. */
@@ -760,8 +760,7 @@ export interface Decision {
   part?: BodyPart;
 }
 
-/** Sitios (H5c1 §2): de qué tipo es y si es especial. */
-/** C1: `evac`, el punto de evacuación que se oye por la radio. */
+/** Sitios (H5c1 §2): de qué tipo es y si es especial; C1: `evac`, el punto de evacuación. */
 export type SiteKind = 'house' | 'farm' | 'gas' | 'warehouse' | 'village' | 'evac';
 export type SiteSpecial = 'survivors' | 'stash' | 'dangerous';
 
@@ -916,7 +915,7 @@ export interface Common {
    * Quien ha muerto o se ha ido de la colonia este tick, y desde qué mapa (`null`: de viaje): los
    * demás mapas se enteran al final del tick (`farewellsSystem`, desde la base).
    */
-  departed: { id: number; how: 'died' | 'banished'; mapId: number | null }[];
+  departed: { id: number; how: 'died' | 'banished' | 'rescued'; mapId: number | null }[];
   /** Los nombres que ha llevado alguien en la partida (H6c §2.9): no se repiten mientras queden. */
   usedNames: string[];
   /** Una ola de frío o de calor (V3 §8): grados de más o de menos hasta ese tick. */
@@ -1013,6 +1012,8 @@ export interface World {
   waterCutAt: number;
   /** Ya se ha avisado de que queda poca agua (V2 §7), hasta que vuelva a haber. */
   waterLow?: boolean;
+  /** C1: la zona de aterrizaje (solo en el mapa del punto de evacuación). */
+  evacZone?: Rect;
 }
 
 /** Uno que echaron y que vuelve en `at` por donde se fue (`pos`). */

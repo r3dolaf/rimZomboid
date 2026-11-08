@@ -3,6 +3,7 @@
 import { has } from '../bags';
 import { RESCUE_REACH } from '../balance';
 import { baseFloor } from '../base';
+import { heliZone, inZone, zoneTile } from '../evac';
 import { contains } from '../geom';
 import { logEvent } from '../log';
 import { findPath, regionOf } from '../path/astar';
@@ -48,6 +49,9 @@ function bedTaken(w: World, p: Point, except: Survivor): boolean {
  * (`null`).
  */
 function rescueSpot(w: World, d: Survivor): Point | 'floor' | null {
+  // C1: con el helicóptero posado, a la zona de aterrizaje (si no está ya en ella).
+  const zone = heliZone(w);
+  if (zone) return inZone(zone, d.pos) ? null : zoneTile(w, zone, d.pos);
   const hospital = freeHospitalBed(w, d);
   if (hospital) return hospital;
   const own = w.beds.find((b) => b.id === d.bedId && b.ownerId === d.id);

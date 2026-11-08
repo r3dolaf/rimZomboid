@@ -168,6 +168,7 @@ export function siteMap(base: World, info: SiteInfo): World {
     mercy: [],
     gone: [],
     waterCutAt: 0,
+    ...(g.zone ? { evacZone: g.zone } : {}), // C1
   };
   // Se conoce la carretera y lo de alrededor del campamento (como la base al empezar).
   const n = g.grid.width;

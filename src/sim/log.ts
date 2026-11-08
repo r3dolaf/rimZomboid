@@ -186,7 +186,13 @@ export type LogEvent =
   // C1: lo que se oye por la radio: que evacúan, hacia dónde (y a cuántos hexágonos), dónde y cuándo.
   | { kind: 'radioNews' }
   | { kind: 'radioDirection'; side: MapSide; dist: number }
-  | { kind: 'radioEvac'; day: number; hours: number };
+  | { kind: 'radioEvac'; day: number; hours: number }
+  // C1: el helicóptero llega, alguien sube, se va (con quiénes) o ya se había ido al llegar.
+  | { kind: 'heliArrived' }
+  | { kind: 'boarded'; name: string }
+  | { kind: 'heliLeft'; names: string[] }
+  | { kind: 'heliGone'; names: string[] }
+  | { kind: 'rescueEnd' };
 
 /** Cómo se descubre un sitio (H5c1 §3). */
 export type SiteHow = 'explore' | 'seen' | 'roadMap' | 'note' | 'smoke' | 'radio';

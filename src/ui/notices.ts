@@ -22,6 +22,7 @@ const DECISION_TONE: Record<Decision['kind'], Tone> = {
   horde: 'bad', // H5c3
   joiner: 'mixed',
   amputate: 'bad', // B1
+  rescued: 'good', // C1
 };
 
 /**

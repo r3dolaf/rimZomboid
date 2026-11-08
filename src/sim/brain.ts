@@ -22,6 +22,7 @@ import { dangerDecision, zombieInSight } from './danger';
 import { logEvent } from './log';
 import { nextFloat, pick } from './rng';
 import { equipFromPack } from './jobs/weapons';
+import { boardDecision } from './jobs/board';
 import { findWork, isWorking, stillWorthIt } from './work';
 import { mercyDecision } from './death';
 import { inBase, restDecision, selfCare } from './jobs/medical';
@@ -40,6 +41,9 @@ export interface Brain {
 const AiBrain: Brain = {
   decide(s, w) {
     equipFromPack(s, w.chopMarks.length > 0);
+    // C1: con el helicóptero posado, correr a él (antes que el peligro).
+    const board = boardDecision(s, w);
+    if (board !== undefined) return board;
     // Peligro (spec H4b §7): lo primero de todo.
     const danger = dangerDecision(s, w, () => rest(s, w));
     if (danger !== undefined) return danger;

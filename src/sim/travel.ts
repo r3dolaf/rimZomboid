@@ -239,6 +239,9 @@ export function arrive(base: World, t: Travel): void {
     enterMap(w, t.members, exitTile(w, arrivalSide(base, t)));
     const { kind, special, side, hours } = info;
     logEvent(w, { kind: 'expeditionArrived', site: { kind, special, side, hours }, names });
+    // C1: al punto de evacuación, tarde (el helicóptero ya se fue a otro sitio o ya pasó).
+    if (kind === 'evac' && base.common.rescue?.siteId !== info.id)
+      logEvent(w, { kind: 'heliGone', names });
     return;
   }
   ex.travels = ex.travels.filter((x) => x !== t);

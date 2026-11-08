@@ -1065,6 +1065,10 @@ export const es = {
     radioNews: 'La radio', // C1
     radioDirection: 'La radio: un punto de evacuación',
     radioEvac: 'La radio: ¡un helicóptero!',
+    heliArrived: '¡El helicóptero!',
+    boarded: 'A salvo',
+    heliLeft: 'Se va el helicóptero',
+    heliGone: 'Demasiado tarde',
     skillUp: 'Mejora',
     // H5
     died: 'Muerte',
@@ -1212,6 +1216,12 @@ export const es = {
       title: 'Mordisco: ¿amputar?',
       text: (who: string) => `A ${who} le ha mordido un zombi. ¿Amputar?`,
       options: ['Amputar', 'No'],
+    },
+    // C1: tras el helicóptero, con gente en la colonia (`who`, los que se han salvado).
+    rescued: {
+      title: '¡Rescatados!',
+      text: (who: string) => `${who}: a salvo en el helicóptero. ¿Y los demás?`,
+      options: ['Ver el final', 'Seguir con los que quedan'],
     },
   } satisfies Record<
     Decision['kind'],
@@ -1504,6 +1514,13 @@ export const es = {
       'En la radio: «El ejército está evacuando a los supervivientes». Seguid a la escucha',
     radioDirection: (side: string, dist: number) =>
       `En la radio: hay un punto de evacuación hacia ${side}, a unos ${dist} hexágonos`,
+    heliArrived:
+      '¡Llega el helicóptero! El ruido atrae a los zombis: corred a la zona de aterrizaje',
+    boarded: (who: string) => `${who} ha subido al helicóptero: a salvo`,
+    heliLeft: (names: string) =>
+      names ? `El helicóptero se va con ${names}` : 'El helicóptero se ha ido sin nadie',
+    heliGone: (names: string) => `${names}: el helicóptero ya se ha ido`,
+    rescueEnd: 'Os han rescatado',
     radioEvac: (day: number, hours: number) =>
       `En la radio: un helicóptero recogerá a los supervivientes en el punto de evacuación el día ${day}, de 10 a 16 h (a ${hours} h de camino)`,
     painkiller: (who: string, other: string) =>

@@ -1193,6 +1193,11 @@ export const EVAC_HINT_RADIUS = 2;
 export const EVAC_LEAD_DAYS = 6;
 export const EVAC_HOUR = 10;
 export const EVAC_WAIT_HOURS = 6;
+/** Su mapa: la zona de aterrizaje (lado, en casillas); la horda que atrae el helicóptero (por la
+ * opción Zombis) y cada cuánto vuelve a hacer ruido mientras espera. */
+export const EVAC_ZONE = 6;
+export const EVAC_HORDE: [number, number] = [15, 25];
+export const HELI_NOISE_TICKS = 50;
 /** Las pilas, por tipo de edificio (también en el pueblo de la base). */
 export const BATTERY_LOOT: Partial<Record<LootKind, LootAmount>> = {
   house: [0, 1],

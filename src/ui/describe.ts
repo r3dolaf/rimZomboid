@@ -69,6 +69,7 @@ export function personName(w: World, id: number): string {
     )[0] ??
     w.common.dead.find((d) => d.id === id)?.name ??
     maps.flatMap((m) => m.gone).find((g) => g.id === id)?.name ??
+    w.common.rescued?.find((r) => r.id === id)?.name ?? // C1
     '?'
   );
 }
@@ -864,6 +865,21 @@ function logSentence(e: LogEntry, w: World, here: World): string {
     case 'radioEvac':
       text = l.radioEvac(e.day, e.hours);
       break;
+    case 'heliArrived':
+      text = l.heliArrived;
+      break;
+    case 'boarded':
+      text = l.boarded(e.name);
+      break;
+    case 'heliLeft':
+      text = l.heliLeft(listNames(e.names));
+      break;
+    case 'heliGone':
+      text = l.heliGone(listNames(e.names));
+      break;
+    case 'rescueEnd':
+      text = l.rescueEnd;
+      break;
   }
   return text;
 }
@@ -920,6 +936,14 @@ export function noticeFor(e: LogEntry): NoticeInfo | null {
       return { tone: 'good', title: t.radioDirection, focusId: null };
     case 'radioEvac':
       return { tone: 'good', title: t.radioEvac, focusId: null };
+    case 'heliArrived':
+      return { tone: 'good', title: t.heliArrived, focusId: null };
+    case 'boarded':
+      return { tone: 'good', title: t.boarded, focusId: null };
+    case 'heliLeft':
+      return { tone: e.names.length > 0 ? 'good' : 'mixed', title: t.heliLeft, focusId: null };
+    case 'heliGone':
+      return { tone: 'mixed', title: t.heliGone, focusId: null };
     case 'noWater':
       return { tone: 'bad', title: t.noWater, focusId: e.survivorId };
     case 'season': // V3: el invierno avisa (amarillo); las demás, solo en el registro

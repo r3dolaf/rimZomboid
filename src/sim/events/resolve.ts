@@ -7,6 +7,7 @@ import { resolveFever } from '../illness';
 import { resolveHorde } from '../road/horde';
 import { resolveJoiner } from '../road/joiner';
 import { resolveAmputation } from '../amputation';
+import { resolveRescued } from '../rescue';
 import type { Decision, World } from '../types';
 
 export type DecisionOption = 0 | 1 | 2 | 3;
@@ -20,6 +21,7 @@ export const DEFAULT_OPTION: Record<Decision['kind'], DecisionOption> = {
   horde: 0, // H5c3: rodear
   joiner: 1, // H5c3: se va
   amputate: 1, // B1: sin contestar, no se amputa
+  rescued: 1, // C1: seguir con los que quedan
 };
 
 /** `timedOut`, si nadie contestó y se aplica la de por defecto. */
@@ -40,6 +42,7 @@ const RESOLVERS: Record<Decision['kind'], Resolver> = {
   horde: (w, d, option) => resolveHorde(w, d, option === 0 ? 0 : 1),
   joiner: (w, d, option) => resolveJoiner(w, d, option === 0 ? 0 : 1),
   amputate: (w, d, option) => resolveAmputation(w, d, option), // B1
+  rescued: (w, d, option) => resolveRescued(w, d, option), // C1
 };
 
 /** Quita la decisión y aplica la opción elegida. */

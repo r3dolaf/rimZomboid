@@ -1,6 +1,6 @@
 // El mapa de un sitio (spec H5c1 §2): una carretera que entra por su lado, los edificios de su
 // tipo (con las recetas y los muebles del pueblo, H4f), árboles y el campamento junto a la entrada.
-import { BUILDINGS, SITE_SIZE, VILLAGE_SIZE } from '../balance';
+import { BUILDINGS, EVAC_ZONE, SITE_SIZE, VILLAGE_SIZE } from '../balance';
 import { intersects } from '../geom';
 import { findPath } from '../path/astar';
 import { nextFloat, nextInt, pick, type RngState } from '../rng';
@@ -32,6 +32,8 @@ export interface GeneratedSite {
   camp: Point[];
   /** Donde va el plano de la hoguera. */
   campfire: Point;
+  /** C1: la zona de aterrizaje del punto de evacuación (solo en él). */
+  zone?: Rect;
 }
 
 const MAX_RETRIES = 20;
@@ -106,7 +108,8 @@ export function generateSite(
 ): GeneratedSite {
   for (let i = 0; i <= MAX_RETRIES; i++) {
     const s = tryGenerate(kind, special, side, rng);
-    if (s && s.houses.every((h) => findPath(s.grid, s.entry[1]!, h.door) !== null)) return s;
+    const reach = (p: Point) => s !== null && findPath(s.grid, s.entry[1]!, p) !== null;
+    if (s && s.houses.every((h) => reach(h.door)) && (!s.zone || reach(s.zone))) return s;
   }
   throw new Error('generateSite: no se pudo generar un sitio válido');
 }
@@ -138,6 +141,12 @@ function tryGenerate(
     }
   const campRect = boxToRect(side, n, 3, -6, 3, 3);
   const campfire = at(4, -8);
+  // C1: la zona de aterrizaje, al fondo, al otro lado de la carretera (asfaltada).
+  const zone =
+    kind === 'evac' ? boxToRect(side, n, n - EVAC_ZONE - 8, 4, EVAC_ZONE, EVAC_ZONE) : null;
+  if (zone)
+    for (let y = zone.y; y < zone.y + zone.h; y++)
+      for (let x = zone.x; x < zone.x + zone.w; x++) setTile(grid, x, y, Tile.Road);
   // Los edificios, a los dos lados de la carretera, mirándola.
   const lots: Lot[] = [];
   for (const b of buildingsFor(kind, special, rng)) {
@@ -153,6 +162,7 @@ function tryGenerate(
       const u0 = nextInt(rng, FIRST_LOT, maxU);
       const rect = boxToRect(side, n, u0, v0, front, depth);
       if (lots.some((l) => intersects(expand(rect, GAP), l.rect))) continue;
+      if (zone && intersects(expand(rect, GAP), zone)) continue;
       lot = { kind: b, rect, side: facing(side, right) };
     }
     if (!lot) return null;
@@ -163,7 +173,11 @@ function tryGenerate(
     furnish(grid, rng, h).map((f) => ({ houseId: h.id, ...f })),
   );
   // Árboles, lejos de la carretera, los edificios y el campamento.
-  const clear = [...lots.map((l) => expand(l.rect, 2)), expand(campRect, 3)];
+  const clear = [
+    ...lots.map((l) => expand(l.rect, 2)),
+    expand(campRect, 3),
+    ...(zone ? [expand(zone, 2)] : []),
+  ];
   for (let y = 0; y < n; y++)
     for (let x = 0; x < n; x++) {
       if (getTile(grid, x, y) !== Tile.Grass) continue;
@@ -173,5 +187,5 @@ function tryGenerate(
     }
   // El campamento hace de base del mapa (su centro, de «puerta»).
   const base: Building = { id: 0, kind: 'base', rect: campRect, door: camp[4]! };
-  return { grid, base, houses, furniture, entry, camp, campfire };
+  return { grid, base, houses, furniture, entry, camp, campfire, ...(zone ? { zone } : {}) };
 }

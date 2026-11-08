@@ -65,6 +65,9 @@ async function giveBag(page: Page, kind: string, where: 'back' | 'storage'): Pro
         'hatchet',
         'roadMap',
         'note',
+        'seeds', // V1
+        'veg',
+        'meal',
       ])
         items[k] = 0;
       const bag: DebugBag = { id: w.common.nextPieceId++, kind: kind!, items, list: {} };

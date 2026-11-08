@@ -91,6 +91,7 @@ test('Construir y Fabricar por grupos, con lo que gasta, «usa → da» y los mo
   const craft = page.getByTestId('craft-panel');
   await expect(craft.locator('.craft-group h3')).toHaveText([
     'Curar',
+    'Cocina', // V1
     'Tela y cortinas',
     'Ropa',
     'Bolsas',

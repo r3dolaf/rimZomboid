@@ -729,6 +729,7 @@ export const es = {
     mercy: 'para no sufrir más',
     hunger: 'de hambre',
     thirst: 'de sed', // V2
+    cold: 'de frío', // V3
   } satisfies Record<DeathCause, string>,
   wounds: { scratch: 'Arañazo', cut: 'Corte', bite: 'Mordisco' } satisfies Record<
     WoundKind,
@@ -1219,6 +1220,9 @@ export const es = {
     starving: 'Desnutrido',
     thirsty: 'Con sed', // V2
     dehydrated: 'Deshidratado',
+    cold: 'Tiene frío', // V3
+    freezing: 'Helado',
+    hot: 'Pasa calor',
     tired: 'Cansado',
     lonely: 'Soledad',
     fever: 'Tiene fiebre',
@@ -1342,6 +1346,7 @@ export const es = {
     goEat: 'Va a comer',
     eat: 'Comiendo',
     goDrink: 'Va a beber', // V2
+    goWarmUp: 'Va a calentarse', // V3
     drink: 'Bebiendo',
     goSleep: 'Va a dormir',
     sleepInBed: 'Durmiendo en su cama',

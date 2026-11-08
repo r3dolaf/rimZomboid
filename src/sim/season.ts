@@ -2,6 +2,10 @@
 // estado (salvo una ola de frío o de calor, `Common.tempShift`) ni se toca el azar de la partida.
 import {
   CAMPFIRE_RANGE,
+  FREEZING_BELOW,
+  FEELS_EVERY_TICKS,
+  GARMENT_WARMTH,
+  HOLE_WARMTH_LOSS,
   FIRE_WARMTH,
   INDOOR_DOWN,
   INDOOR_TARGET,
@@ -21,7 +25,11 @@ import {
 } from './balance';
 import { gameTime } from './clock';
 import { logEvent } from './log';
-import type { Point, World } from './types';
+import { baseFloor } from './base';
+import { standBeside } from './jobs/stand';
+import { pick } from './rng';
+import type { Action, Garment, Point, Survivor, World } from './types';
+import { tileOf } from './world';
 import { isRaining } from './water';
 import { indoors } from './zombies/spawn';
 
@@ -106,4 +114,43 @@ export function seasonSystem(w: World): void {
   if (w.mapId !== 0) return;
   const season = seasonStarts(w.tick);
   if (season) logEvent(w, { kind: 'season', season });
+}
+
+/** Lo que abriga la ropa puesta (V3 §3): cada prenda, menos un 20 % por agujero. */
+export function warmthOf(worn: readonly Garment[]): number {
+  return worn.reduce(
+    (n, g) => n + GARMENT_WARMTH[g.kind] * Math.max(0, 1 - HOLE_WARMTH_LOSS * g.holes.length),
+    0,
+  );
+}
+
+/** Cada pocos ticks, la sensación térmica de cada colono del mapa. */
+export function feelsSystem(w: World): void {
+  if (w.tick % FEELS_EVERY_TICKS !== 0 || w.survivors.length === 0) return;
+  const outside = outdoorTemp(w);
+  for (const s of w.survivors) s.feels = tempAt(w, tileOf(s.pos), outside) + warmthOf(s.worn);
+}
+
+/**
+ * Helado (V3 §3), va a calentarse: junto a la hoguera encendida más cercana a la que llega o, si no
+ * hay, a la base (bajo techo). Junto al fuego o ya bajo techo sin hoguera, no hace nada.
+ */
+export function warmUpDecision(s: Survivor, w: World): Action | null {
+  if (s.feels === undefined || s.feels >= FREEZING_BELOW) return null;
+  const here = tileOf(s.pos);
+  if (nearLitFire(w, here)) return null;
+  let best: { stand: Point; d: number } | null = null;
+  for (const f of w.furniture) {
+    if (f.kind !== 'campfire' || (f.fuel !== undefined && f.fuel <= 0)) continue;
+    const d = (f.pos.x - here.x) ** 2 + (f.pos.y - here.y) ** 2;
+    if (best && d >= best.d) continue;
+    const stand = standBeside(w, s, f.pos);
+    if (stand) best = { stand, d };
+  }
+  if (best) return { type: 'moveTo', target: best.stand, then: { type: 'warmUp' } };
+  if (indoors(w, here.x, here.y) || w.mapId !== 0) return null;
+  const floor = baseFloor(w);
+  return floor.length > 0
+    ? { type: 'moveTo', target: pick(w.rng, floor), then: { type: 'warmUp' } }
+    : null;
 }

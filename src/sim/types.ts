@@ -304,7 +304,9 @@ export type Activity =
   | { type: 'fillCan'; sourceId: number }
   | { type: 'tend'; tile: number; what: TendKind }
   // Beber (V2 §2): en un mueble con agua o, con `sourceId` null, una botella del almacén.
-  | { type: 'drink'; sourceId: number | null };
+  | { type: 'drink'; sourceId: number | null }
+  // Calentarse (V3 §3): helado, ir junto a una hoguera encendida o bajo techo.
+  | { type: 'warmUp' };
 
 export type Action =
   /** `wait`: esperando tras no encontrar camino (no se consulta al cerebro) o tras negarse a trabajar. */
@@ -436,6 +438,8 @@ export interface Survivor {
   haulingBag?: number;
   /** Litros que lleva para regar el huerto (V1 §4; no pesan y se quedan para la próxima vez). */
   waterCan?: number;
+  /** Sensación térmica (V3 §3), en grados: la temperatura de donde está más lo que abriga su ropa. */
+  feels?: number;
 }
 
 /** Un atuendo (H5b §4): las prendas que se puede poner y si acepta ropa de muertos. */
@@ -467,7 +471,14 @@ export interface Fever {
 }
 
 /** De qué se muere (H5 §8). */
-export type DeathCause = 'blood' | 'wounds' | 'infection' | 'mercy' | 'hunger' | 'thirst';
+export type DeathCause =
+  | 'blood'
+  | 'wounds'
+  | 'infection'
+  | 'mercy'
+  | 'hunger'
+  | 'thirst'
+  | 'cold';
 
 /** Uno o dos desconocidos que esperan a la puerta a que el jugador decida (su decisión caduca). */
 export interface Stranger {

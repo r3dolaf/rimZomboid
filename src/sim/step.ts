@@ -17,7 +17,7 @@ import { socialSystem } from './systems/social';
 import { spoilSystem } from './spoil';
 import { farmSystem } from './farm';
 import { lowWaterSystem } from './drink';
-import { seasonSystem } from './season';
+import { feelsSystem, seasonSystem } from './season';
 import { strangerSystem } from './systems/strangers';
 import type { World } from './types';
 import { visionSystem } from './vision';
@@ -39,6 +39,7 @@ export function step(w: World): void {
   farmSystem(w); // V1: el huerto crece
   lowWaterSystem(w); // V2: queda poca agua
   seasonSystem(w); // V3: empieza una estación
+  feelsSystem(w); // V3: el frío y el calor
   moodSystem(w);
   socialSystem(w);
   narratorSystem(w);

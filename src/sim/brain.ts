@@ -15,6 +15,7 @@ import {
 import { baseFloor } from './base';
 import { hasFood, packFood } from './food';
 import { drinkSomething, stillDrinkable } from './drink';
+import { warmUpDecision } from './season';
 import { isNight } from './clock';
 import { findConsoleTarget, inCrisis as crisisNow, stillConsoling } from './consoling';
 import { dangerDecision, zombieInSight } from './danger';
@@ -58,14 +59,15 @@ const AiBrain: Brain = {
     // V2: lo mismo si se seca el agua adonde va a beber.
     if (a.type === 'moveTo' && a.then?.type === 'drink' && !stillDrinkable(w, a.then.sourceId))
       return { type: 'idle', ticksLeft: 0 };
-    // Comer, beber, dormir y pelear se terminan; la crisis solo se corta por algo urgente.
+    // Comer, beber, dormir, calentarse y pelear se terminan; la crisis solo se corta por algo urgente.
     if (
       a.type === 'eat' ||
       a.type === 'drink' ||
       a.type === 'sleep' ||
       goingTo === 'eat' ||
       goingTo === 'drink' ||
-      goingTo === 'sleep'
+      goingTo === 'sleep' ||
+      goingTo === 'warmUp'
     )
       return null;
     // Pelear y consolar son cosas de dos y duran poco: las termina activitiesSystem.
@@ -130,8 +132,13 @@ export function crisisDue(s: Survivor, w: World): boolean {
   return s.needs.mood < MOOD_CRISIS && !calmed;
 }
 
-/** Beber si tiene sed (V2), comer si tiene hambre (y hay qué) o, si no, dormir si tiene sueño. */
+/**
+ * Calentarse si está helado (V3), beber si tiene sed (V2), comer si tiene hambre (y hay qué) o, si
+ * no, dormir si tiene sueño.
+ */
 function rest(s: Survivor, w: World): Action | null {
+  const warm = warmUpDecision(s, w);
+  if (warm) return warm;
   if (s.needs.thirst < DRINK_BELOW) {
     const drink = drinkSomething(s, w);
     if (drink) return drink;

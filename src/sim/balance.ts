@@ -58,6 +58,36 @@ export const INDOOR_UP = 8;
 export const INDOOR_DOWN = 4;
 /** Junto a una hoguera encendida (a CAMPFIRE_RANGE casillas). */
 export const FIRE_WARMTH = 12;
+// El frío y el calor (V3 §3): la sensación térmica (la temperatura de donde está más lo que abriga la
+// ropa; cada agujero le quita un 20 %), cada cuánto se calcula, y sus efectos.
+export const GARMENT_WARMTH: Record<GarmentKind, number> = {
+  tshirt: 1,
+  longSleeve: 2,
+  shirt: 2,
+  hoodie: 4,
+  sweater: 5,
+  denimJacket: 4,
+  leatherJacket: 5,
+  coat: 9,
+  vest: 1,
+  tracksuit: 3,
+  jeans: 2,
+  workPants: 3,
+  chaps: 2,
+  cap: 0.5,
+  beanie: 2,
+  helmet: 1,
+};
+export const HOLE_WARMTH_LOSS = 0.2;
+export const FEELS_EVERY_TICKS = 10;
+export const COLD_BELOW = 10;
+export const COLD_MOOD = -6;
+export const FREEZING_BELOW = 0;
+export const FREEZING_MOOD = -20;
+export const FREEZING_BLOOD = 3;
+export const HOT_ABOVE = 38;
+export const HOT_MOOD = -5;
+export const HOT_THIRST = 1.5;
 
 // Personas (H2)
 export const NEED_START_MIN = 60;

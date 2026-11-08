@@ -114,6 +114,8 @@ function startActivity(s: Survivor, activity: Activity, w: World): Action {
   switch (activity.type) {
     case 'eat':
       return { type: 'eat', ticksLeft: EAT_TICKS };
+    case 'warmUp': // V3: ya está donde se calienta
+      return { type: 'idle', ticksLeft: 0 };
     case 'drink': // V2
       return stillDrinkable(w, activity.sourceId)
         ? { type: 'drink', ticksLeft: DRINK_TICKS, sourceId: activity.sourceId }

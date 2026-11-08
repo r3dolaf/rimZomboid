@@ -14,6 +14,12 @@ import {
   SCARED_OUTSIDE_MOOD,
   STARVING_MOOD,
   DEHYDRATED_MOOD,
+  COLD_BELOW,
+  COLD_MOOD,
+  FREEZING_BELOW,
+  FREEZING_MOOD,
+  HOT_ABOVE,
+  HOT_MOOD,
   THIRSTY_BELOW,
   THIRSTY_MOOD,
   TICKS_PER_HOUR,
@@ -29,6 +35,9 @@ export type MoodModifierId =
   | 'starving'
   | 'thirsty' // V2
   | 'dehydrated'
+  | 'cold' // V3
+  | 'freezing'
+  | 'hot'
   | 'tired'
   | 'lonely'
   | 'fever'
@@ -58,6 +67,12 @@ export function moodModifiers(s: Survivor, tick: number, base?: Rect): MoodModif
   else if (s.needs.hunger < HUNGRY_BELOW) mods.push({ id: 'hungry', value: HUNGRY_MOOD });
   if (s.needs.thirst <= 0) mods.push({ id: 'dehydrated', value: DEHYDRATED_MOOD });
   else if (s.needs.thirst < THIRSTY_BELOW) mods.push({ id: 'thirsty', value: THIRSTY_MOOD });
+  // V3: el frío y el calor (con su sensación térmica, si ya se ha calculado).
+  if (s.feels !== undefined) {
+    if (s.feels < FREEZING_BELOW) mods.push({ id: 'freezing', value: FREEZING_MOOD });
+    else if (s.feels < COLD_BELOW) mods.push({ id: 'cold', value: COLD_MOOD });
+    else if (s.feels > HOT_ABOVE) mods.push({ id: 'hot', value: HOT_MOOD });
+  }
   if (s.needs.sleep < TIRED_BELOW) mods.push({ id: 'tired', value: TIRED_MOOD });
   if (s.needs.social < LONELY_BELOW) mods.push({ id: 'lonely', value: LONELY_MOOD });
   if (s.health < HURT_BELOW) mods.push({ id: 'hurt', value: HURT_MOOD });

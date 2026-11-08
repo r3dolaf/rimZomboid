@@ -1,5 +1,7 @@
 import {
   FEVER_THIRST,
+  HOT_ABOVE,
+  HOT_THIRST,
   FLOOR_SLEEP_FACTOR,
   GLUTTON_HUNGER_MULT,
   HUNGER_PER_TICK,
@@ -22,7 +24,9 @@ export function needsSystem(w: World): void {
     const hungerMult = (s.traits.includes('glutton') ? GLUTTON_HUNGER_MULT : 1) * feverHunger(s);
     n.hunger = clamp(n.hunger - HUNGER_PER_TICK * hungerMult);
     n.social = clamp(n.social - SOCIAL_PER_TICK);
-    n.thirst = clamp(n.thirst - THIRST_PER_TICK * (s.fever ? FEVER_THIRST : 1)); // V2
+    // V2: la sed (con fiebre, más; V3: con calor, también).
+    const hot = s.feels !== undefined && s.feels > HOT_ABOVE ? HOT_THIRST : 1;
+    n.thirst = clamp(n.thirst - THIRST_PER_TICK * (s.fever ? FEVER_THIRST : 1) * hot);
 
     if (s.action.type === 'sleep') {
       const factor =

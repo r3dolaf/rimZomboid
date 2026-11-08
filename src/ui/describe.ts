@@ -338,6 +338,7 @@ export function activityText(s: Survivor, w?: World): string {
       if (a.then?.type === 'unload') return t.goUnload;
       if (a.then?.type === 'eat') return t.goEat;
       if (a.then?.type === 'drink') return t.goDrink; // V2
+      if (a.then?.type === 'warmUp') return t.goWarmUp; // V3
       if (a.then?.type === 'sleep') return t.goSleep;
       if (a.then?.type === 'crisis') return t.crisis;
       if (a.then?.type === 'console') return t.goConsole(name(a.then.otherId));

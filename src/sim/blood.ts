@@ -4,6 +4,8 @@ import {
   BLOOD_REGEN,
   CLEAN_BANDAGE_HEAL,
   DEHYDRATED_BLOOD,
+  FREEZING_BELOW,
+  FREEZING_BLOOD,
   HOSPITAL_HEAL,
   REST_HEAL,
   STARVING_BLOOD,
@@ -43,14 +45,17 @@ export function bloodTick(w: World, s: Survivor): void {
 
   const starving = s.needs.hunger <= 0;
   const dry = s.needs.thirst <= 0; // V2: deshidratado
+  const frozen = s.feels !== undefined && s.feels < FREEZING_BELOW; // V3: helado
   let perHour = 0;
   if (bleed > 0) perHour -= bleed;
   if (starving) perHour -= STARVING_BLOOD;
   if (dry) perHour -= DEHYDRATED_BLOOD;
-  if (bleed === 0 && !starving && !dry)
+  if (frozen) perHour -= FREEZING_BLOOD;
+  if (bleed === 0 && !starving && !dry && !frozen)
     perHour += hospital ? BLOOD_REGEN.hospital : rest ? BLOOD_REGEN.rest : BLOOD_REGEN.awake;
   s.blood = Math.max(0, Math.min(100, s.blood + perHour / TICKS_PER_HOUR));
 
   if (s.blood <= 0 && !s.dying)
-    s.dying = bleed > 0 ? 'blood' : dry ? 'thirst' : starving ? 'hunger' : 'blood';
+    s.dying =
+      bleed > 0 ? 'blood' : dry ? 'thirst' : frozen ? 'cold' : starving ? 'hunger' : 'blood';
 }

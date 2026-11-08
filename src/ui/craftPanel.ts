@@ -11,6 +11,7 @@ import './panels.css';
 /** Las recetas por grupos (H5c1 §8). */
 const GROUPS: readonly { title: keyof typeof es.craftGroups; recipes: readonly RecipeId[] }[] = [
   { title: 'heal', recipes: ['bandages'] },
+  { title: 'kitchen', recipes: ['cook'] }, // V1
   { title: 'cloth', recipes: ['curtains', 'unpick'] },
   // H5b: sobre prendas
   { title: 'clothes', recipes: ['mend', 'pad', 'unpickGarment', 'wash'] },
@@ -18,7 +19,15 @@ const GROUPS: readonly { title: keyof typeof es.craftGroups; recipes: readonly R
 ];
 
 /** Lo que se enseña del almacén (spec H4d §8; H5b, los retales y las tiras). */
-const STOCK: readonly ItemKind[] = ['cloth', 'denim', 'leather', 'thread', 'curtains', 'needle'];
+const STOCK: readonly ItemKind[] = [
+  'cloth',
+  'denim',
+  'leather',
+  'thread',
+  'curtains',
+  'needle',
+  'veg', // V1: para cocinar
+];
 
 const count = (k: ItemKind, n: number) => `${n} ${es.items[k][n === 1 ? 0 : 1]}`;
 const entries = (part: Partial<Record<ItemKind, number>>) =>
@@ -117,6 +126,10 @@ export function mountCraftPanel(
   noTub.className = 'craft-warning';
   noTub.dataset.testid = 'craft-no-tub';
   noTub.textContent = es.craftNoTub;
+  const noFire = document.createElement('p'); // V1: para cocinar
+  noFire.className = 'craft-warning';
+  noFire.dataset.testid = 'craft-no-fire';
+  noFire.textContent = es.craftNoFire;
   const empty = document.createElement('p');
   empty.className = 'craft-empty';
   empty.dataset.testid = 'craft-empty';
@@ -162,7 +175,7 @@ export function mountCraftPanel(
     }
     add.append(group);
   }
-  panel.append(head, stock, noTable, noTub, empty, list, add);
+  panel.append(head, stock, noTable, noTub, noFire, empty, list, add);
   root.append(panel);
 
   const button = (testid: string, text: string, hint: string, onClick: () => void) => {
@@ -246,7 +259,7 @@ export function mountCraftPanel(
       if (stock.textContent !== stockText) stock.textContent = stockText;
       const bills = effectiveBills(world);
       // Falta la mesa (o el barreño, para lavar) si hay algún pedido que la necesite… o ninguno.
-      const needs = (station: 'table' | 'tub') =>
+      const needs = (station: 'table' | 'tub' | 'campfire') =>
         bills.length === 0
           ? station === 'table'
           : bills.some((b) => (RECIPES[b.recipe].station ?? 'table') === station);
@@ -254,9 +267,15 @@ export function mountCraftPanel(
       if (noTable.hidden !== hasTable) noTable.hidden = hasTable;
       const hasTub = !needs('tub') || world.furniture.some((f) => f.kind === 'tub');
       if (noTub.hidden !== hasTub) noTub.hidden = hasTub;
+      const hasFire = !needs('campfire') || world.furniture.some((f) => f.kind === 'campfire');
+      if (noFire.hidden !== hasFire) noFire.hidden = hasFire;
       if (empty.hidden !== bills.length > 0) empty.hidden = bills.length > 0;
       // Si arriba ya dice que falta la mesa o el barreño, no se repite en cada receta.
-      const said = [!noTable.hidden && es.craftNoTable, !noTub.hidden && es.craftNoTub];
+      const said = [
+        !noTable.hidden && es.craftNoTable,
+        !noTub.hidden && es.craftNoTub,
+        !noFire.hidden && es.craftNoFire,
+      ];
       for (const { recipe, el } of whys) {
         const raw = whyNot(world, recipe);
         const why = raw !== null && said.includes(raw) ? null : raw;

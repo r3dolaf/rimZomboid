@@ -67,7 +67,8 @@ test('Construir por grupos: cada botón con lo que gasta y lo que tienes; abajo,
 test('Fabricar por grupos: cada receta dice «usa → da · dónde · tiempo»', () => {
   const { root, q } = craft();
   const groups = [...root.querySelectorAll('.craft-group h3')].map((h) => h.textContent);
-  expect(groups).toEqual(['Curar', 'Tela y cortinas', 'Ropa', 'Bolsas']);
+  expect(groups).toEqual(['Curar', 'Cocina', 'Tela y cortinas', 'Ropa', 'Bolsas']);
+  expect(q('craft-line-cook').textContent).toBe('2 hortalizas → 1 guiso · hoguera · 30 min'); // V1
   expect(q('craft-add-curtains').textContent).toBe('+ Coser cortinas');
   expect(q('craft-line-bandages').textContent).toBe('1 tela → 2 vendas · mesa · 15 min');
   expect(q('craft-line-curtains').textContent).toBe(
@@ -85,6 +86,17 @@ test('Fabricar por grupos: cada receta dice «usa → da · dónde · tiempo»',
   expect(q('craft-line-sewBag').textContent).toBe(
     '4 telas y 2 usos de hilo, con aguja → 1 bolsa de tela · mesa · 1 h',
   );
+});
+
+test('V1: para cocinar hace falta una hoguera, y lo dice arriba', () => {
+  const { world, panel, q } = craft();
+  expect(q('craft-no-fire').hidden).toBe(true); // sin pedidos de cocina, no
+  world.bills = [{ id: 1, recipe: 'cook', mode: 'count', target: 1, done: 0 }];
+  panel.update();
+  expect(q('craft-no-fire').hidden).toBe(false);
+  world.furniture.push({ id: 99, kind: 'campfire', pos: { x: 1, y: 1 } });
+  panel.update();
+  expect(q('craft-no-fire').hidden).toBe(true);
 });
 
 test('si ahora no se puede, dice por qué', () => {

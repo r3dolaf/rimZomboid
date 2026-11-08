@@ -377,8 +377,11 @@ export interface Recipe {
   material?: number;
   /** Sobre qué prenda del almacén trabaja: con agujeros, que se pueda reforzar, destrozada o sucia. */
   piece?: 'holed' | 'paddable' | 'destroyed' | 'dirty';
-  /** Dónde se hace (H5b): en la mesa (lo normal) o en el barreño, con estos litros de agua. */
-  station?: 'table' | 'tub';
+  /**
+   * Dónde se hace (H5b): en la mesa (lo normal), en el barreño, con estos litros de agua, o en la
+   * hoguera (V1).
+   */
+  station?: 'table' | 'tub' | 'campfire';
   water?: number;
   /** No falla nunca (lavar). */
   safe?: boolean;
@@ -446,6 +449,13 @@ export const RECIPES: Record<RecipeId, Recipe> = {
     output: {},
     ticks: TICKS_PER_HOUR,
     makes: 'clothBag',
+  }, // V1 §5: 2 hortalizas, un guiso, en la hoguera.
+  cook: {
+    input: { veg: 2 },
+    tool: null,
+    output: { meal: 1 },
+    ticks: 0.5 * TICKS_PER_HOUR,
+    station: 'campfire',
   },
 };
 export const BILL_DEFAULT_TARGET = 5; // un pedido nuevo: "hasta tener 5"

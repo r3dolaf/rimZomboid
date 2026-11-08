@@ -194,6 +194,12 @@ export const es = {
       done: 'ha cosido una bolsa de tela',
       fail: 'coser la bolsa de tela',
     },
+    cook: {
+      name: 'Cocinar', // V1
+      doing: 'Cocinando un guiso',
+      done: 'ha cocinado un guiso',
+      fail: 'cocinar el guiso',
+    },
   } satisfies Record<RecipeId, { name: string; doing: string; done: string; fail: string }>,
   /** Materiales que se pierden al fallar (sin plural): "−2 de tela". */
   materials: {
@@ -208,10 +214,17 @@ export const es = {
   craftPanelHint: 'Pedidos en la mesa (F)',
   craftStock: (parts: string[]) => `En el almacén: ${parts.join(' · ')}`,
   craftNoTable: 'Hace falta una mesa',
+  craftNoFire: 'Hace falta una hoguera', // V1
   craftEmpty: 'Sin pedidos: añade uno abajo',
   craftAdd: (name: string) => `+ ${name}`,
   /** Fabricar por grupos (H5c1 §8). */
-  craftGroups: { heal: 'Curar', cloth: 'Tela y cortinas', clothes: 'Ropa', bags: 'Bolsas' },
+  craftGroups: {
+    heal: 'Curar',
+    kitchen: 'Cocina', // V1
+    cloth: 'Tela y cortinas',
+    clothes: 'Ropa',
+    bags: 'Bolsas',
+  },
   /** Cada receta: «usa → da · dónde · tiempo». */
   craftLine: (uses: string, gives: string, where: string, time: string) =>
     `${uses} → ${gives} · ${where} · ${time}`,
@@ -230,7 +243,7 @@ export const es = {
     unpickGarment: 'telas, retales o tiras',
     wash: 'la prenda limpia',
   } as Partial<Record<RecipeId, string>>,
-  stations: { table: 'mesa', tub: 'barreño' },
+  stations: { table: 'mesa', tub: 'barreño', campfire: 'hoguera' },
   /** "15 min", "1 h", "1 h 30 min". */
   duration: (min: number) =>
     min < 60
@@ -240,7 +253,11 @@ export const es = {
         : `${Math.floor(min / 60)} h ${min % 60} min`,
   /** Por qué no se puede ahora (H5c1 §8). */
   craftWhy: {
-    station: { table: 'Hace falta una mesa', tub: 'Hace falta un barreño' },
+    station: {
+      table: 'Hace falta una mesa',
+      tub: 'Hace falta un barreño',
+      campfire: 'Hace falta una hoguera',
+    },
     water: 'Hace falta un barreño con agua',
     tool: { needle: 'Falta una aguja', knife: 'Falta un cuchillo' },
     input: (what: string, n: number) => `${n === 1 ? 'Falta' : 'Faltan'} ${what}`,

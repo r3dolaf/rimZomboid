@@ -99,7 +99,7 @@ const hasPiece = (w: World, r: Recipe) => r.piece === undefined || pieceFor(w, r
 
 /** Por qué no se puede hacer ahora una receta (H5c1 §8), lo primero que habría que arreglar. */
 export type CraftBlock =
-  | { kind: 'station'; station: 'table' | 'tub' }
+  | { kind: 'station'; station: 'table' | 'tub' | 'campfire' }
   | { kind: 'water' }
   | { kind: 'tool'; tool: 'needle' | 'knife' }
   | { kind: 'input'; item: ItemKind; missing: number }

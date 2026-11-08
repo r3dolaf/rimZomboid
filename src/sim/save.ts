@@ -1,6 +1,7 @@
 // Guardar y cargar la partida (spec H6b §1): la partida entera en JSON, con su versión y unos datos
 // para enseñarla. La caja común va una sola vez (los sitios la comparten con la base) y al cargar se
 // vuelve a enlazar, así la partida sigue exactamente igual.
+import { CAMPFIRE_FUEL_START } from './balance';
 import { occupied } from './build';
 import { contains } from './geom';
 import { checkInvariants } from './invariants';
@@ -12,7 +13,7 @@ import type { NarratorStyle, World, ZombieLevel } from './types';
  * Cambia con cada cambio de forma de la partida. Las de versiones anteriores se ponen al día al
  * cargarlas (`migrate`); las de una versión desconocida no se cargan.
  */
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 /** Lo que se enseña de una partida guardada. */
 export interface SaveMeta {
@@ -73,6 +74,7 @@ export function loadGame(
       return { error: 'broken' };
     if (file.version < 2) toV2(world);
     if (file.version < 3) toV3(world);
+    if (file.version < 4) toV4(world);
     const c = world.common;
     if (!c?.expedition || !c.atlas || !world.grid || !Array.isArray(world.siteMaps))
       return { error: 'broken' };
@@ -157,4 +159,15 @@ function toV3(world: World): void {
   if (!sink) return;
   world.common.nextId++;
   world.furniture.push(sink);
+}
+
+/** De la versión 3 a la 4 (V3, estaciones y frío): las hogueras, con la leña de una recién hecha. */
+function toV4(world: World): void {
+  const maps = [
+    world,
+    ...(Array.isArray(world.siteMaps) ? world.siteMaps.map((m) => m.world) : []),
+  ];
+  for (const m of maps)
+    for (const f of Array.isArray(m?.furniture) ? m.furniture : [])
+      if (f.kind === 'campfire' && f.fuel === undefined) f.fuel = CAMPFIRE_FUEL_START;
 }

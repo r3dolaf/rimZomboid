@@ -12,7 +12,9 @@ interface Debug {
   canPlace(kind: string, x: number, y: number): boolean;
 }
 
-test('agua en la barra de arriba y barril de lluvia en Construir', async ({ page }) => {
+test('agua en la barra de arriba, la estación y barril de lluvia en Construir', async ({
+  page,
+}) => {
   const errores: string[] = [];
   page.on('pageerror', (e) => errores.push(e.message));
   page.on('console', (m) => {
@@ -25,6 +27,9 @@ test('agua en la barra de arriba y barril de lluvia en Construir', async ({ page
   await expect(water).toBeVisible();
   await expect(water).toContainText('+');
   await expect(water).toHaveAttribute('title', /hay agua corriente/);
+  // V3: la estación y la temperatura, junto a las pestañas de mapa.
+  await expect(page.getByTestId('hud-season')).toContainText('Verano');
+  await expect(page.getByTestId('hud-season')).toContainText('°C');
 
   // Construir → Barril de lluvia, en la casilla libre más cercana a la base que se vea.
   await page.keyboard.press('b');

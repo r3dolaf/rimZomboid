@@ -936,3 +936,43 @@ test('con huerto se cosecha y se cocina', () => {
   expect(farmTotals.drank.sink, 'del fregadero').toBeGreaterThan(0);
   console.log('V1, en las 3 partidas con huerto:', farmTotals);
 });
+
+/** V3: lo del invierno en la partida de un año. */
+const winterTotals = { cold: 0, frozen: 0, refueled: 0, seasons: [] as string[], survived: 0 };
+
+test(`semilla 1: ${2 * DAYS} días (hasta el invierno) con huerto, hogueras y leña — sin romper nada`, () => {
+  const w = createWorld(1, 'balanced', 'normal');
+  for (const h of w.houses) issue(w, { type: 'designateHouse', houseId: h.id, on: true });
+  plantGarden(w, 16);
+  const fire = w.storage.tiles
+    .flatMap((t) => [-2, -1, 1, 2].map((d) => ({ x: t.x + d, y: t.y - 2 })))
+    .find((p) => canPlace(w, 'campfire', p));
+  if (fire) w.furniture.push({ id: w.common.nextId++, kind: 'campfire', pos: fire, fuel: 12 });
+  issue(w, { type: 'addBill', recipe: 'cook' });
+  const r = createRng(31);
+  let ms = 0;
+  for (let day = 1; day <= 2 * DAYS && !w.common.over; day++)
+    for (let i = 0; i < TICKS_PER_DAY; i++) {
+      const d = w.decisions[0];
+      if (d && !w.orders.some((o) => o.type === 'decide'))
+        issue(w, { type: 'decide', decisionId: d.id, option: answer(r, d) });
+      const last = w.common.log.at(-1);
+      const fuel = w.furniture.find((f) => f.kind === 'campfire')?.fuel ?? 0;
+      const t0 = performance.now();
+      stepGame(w);
+      ms += performance.now() - t0;
+      const problems = checkInvariants(w);
+      if (problems.length > 0) expect(problems, `tick ${w.tick}`).toEqual([]);
+      if ((w.furniture.find((f) => f.kind === 'campfire')?.fuel ?? 0) > fuel + 1)
+        winterTotals.refueled++;
+      for (const e of w.common.log.slice(last ? w.common.log.lastIndexOf(last) + 1 : 0)) {
+        if (e.kind === 'season') winterTotals.seasons.push(e.season);
+        if (e.kind === 'cropsFrozen') winterTotals.frozen += e.n;
+      }
+    }
+  expect(ms / (w.tick || 1), 'ms por tick').toBeLessThan(1.5);
+  winterTotals.cold = w.common.dead.filter((d) => d.cause === 'cold').length;
+  winterTotals.survived = w.common.over ? gameTime(w.common.over.tick).day : 2 * DAYS;
+  if (DAYS >= 30 && !w.common.over) expect(winterTotals.seasons).toContain('winter');
+  console.log('V3, un año con huerto y hogueras:', winterTotals);
+}, 1_800_000);

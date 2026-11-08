@@ -165,7 +165,6 @@ function asVersion2(text: string, w: World): string {
 }
 
 test('V2: una partida de la versión 2 se sigue cargando, con la sed y el fregadero de la base', () => {
-  expect(SAVE_VERSION).toBe(3);
   const w = createWorld(7);
   for (let i = 0; i < 600; i++) stepGame(w);
   const old = asVersion2(saveGame(w, meta), w);
@@ -187,4 +186,19 @@ test('V2: una partida de la versión 2 se sigue cargando, con la sed y el fregad
   expect(checkInvariants(lw)).toEqual([]);
   for (let i = 0; i < 600; i++) stepGame(lw);
   expect(checkInvariants(lw)).toEqual([]);
+});
+
+test('V3: una partida de la versión 3 se sigue cargando, con sus hogueras con 12 h de leña', () => {
+  expect(SAVE_VERSION).toBe(4);
+  const w = createWorld(7);
+  w.furniture.push({
+    id: w.common.nextId++,
+    kind: 'campfire',
+    pos: { ...w.storage.tiles[0]!, y: w.storage.tiles[0]!.y - 2 },
+  });
+  const file = JSON.parse(saveGame(w, meta)) as { version: number; world: World };
+  file.version = 3;
+  const loaded = loadGame(JSON.stringify(file));
+  if ('error' in loaded) throw new Error(loaded.error);
+  expect(loaded.world.furniture.find((f) => f.kind === 'campfire')?.fuel).toBe(12);
 });

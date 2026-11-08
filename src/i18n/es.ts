@@ -194,6 +194,12 @@ export const es = {
     cistern: (l: number, max: number) => `Cisterna: ${l} / ${max} litros`,
     sinkOn: 'Fregadero (con agua corriente)',
     sinkOff: 'Fregadero (sin agua)',
+    // C1: la radio, con su carga y, si ya se sabe, el día del helicóptero.
+    radio: (on: boolean, hours: number) =>
+      hours <= 0
+        ? 'Radio sin pilas: Transportar le lleva las del almacén'
+        : `Radio ${on ? 'encendida' : 'apagada'} · carga para ${hours} h`,
+    radioHeli: (day: number) => ` · helicóptero el día ${day}, de 10 a 16 h`,
   },
   /** Las piezas sueltas en una lista de cosas (H5b): "2 latas y 3 prendas". */
   pieceWord: ['prenda', 'prendas'] as [string, string],
@@ -409,6 +415,18 @@ export const es = {
     radioOn: '📻 Encender la radio', // C1
     radioOff: '📻 Apagar la radio',
   },
+  /** C1: el helicóptero en el punto de evacuación (Expediciones y mapa del mundo). */
+  evac: {
+    when: (day: number) => `🚁 El helicóptero: día ${day}, de 10 a 16 h`,
+    waiting: '🚁 ¡El helicóptero espera hasta las 16 h!',
+    gone: 'El helicóptero ya se fue',
+  },
+  /** C1: por qué no se puede poner la radio. */
+  radioBlock: {
+    base: 'solo en la base',
+    built: 'ya hay una',
+    none: 'hace falta una radio en el almacén (las hay en las naves, gasolineras y pueblecitos)',
+  },
   /** Qué hace cada cosa, abajo del menú. */
   buildDesc: {
     bed: 'Una cama: se duerme mejor que en el suelo y cada uno tiene la suya',
@@ -448,7 +466,7 @@ export const es = {
     subtitle: 'Sobrevivir juntos, o no',
     /** U1 §10: de qué va, en una línea. */
     pitch:
-      'Tus supervivientes trabajan solos: tú decides qué saquear, qué construir y quién hace qué.',
+      'Tus supervivientes trabajan solos: tú decides qué saquear, qué construir y quién hace qué. Aguanta todo lo que puedas… o encuentra una radio y consigue que os rescaten.',
     /** U1 §10: lo recomendado para la primera partida. */
     forStarters: 'Para empezar',
     choose: 'Elige narrador',
@@ -609,7 +627,7 @@ export const es = {
     bite: {
       title: (who: string) => `A ${who} le han mordido`,
       text: () =>
-        'Un mordisco infecta siempre y no tiene cura: en dos o tres días se convertirá. Un arañazo solo infecta a veces y, si da fiebre, los antibióticos lo curan a tiempo.',
+        'Un mordisco infecta siempre y no tiene cura: en dos o tres días se convertirá, salvo que se ampute a tiempo si es en un brazo o una pierna. Un arañazo solo infecta a veces y, si da fiebre, los antibióticos lo curan a tiempo.',
     },
     food: {
       title: 'Queda poca comida',
@@ -626,6 +644,17 @@ export const es = {
       text: () =>
         'Tienes unos días (la cuenta atrás está arriba): tapia ventanas, levanta muros, guarda vendas y que nadie esté lejos cuando llegue.',
     },
+    // C1
+    radio: {
+      title: '¡Una radio!',
+      text: () =>
+        'Constrúyela en la base (🔨 Construir → Radio) y dale pilas: encendida, oiréis las emisiones del ejército y quizá dónde os pueden rescatar.',
+    },
+    evac: {
+      title: 'Un helicóptero',
+      text: () =>
+        'Mira el punto de evacuación en 🌍 Mundo y manda allí a quien quiera salvarse, con comida y agua para el camino. Al llegar el helicóptero, que corran a la zona de aterrizaje: hará ruido y vendrán zombis.',
+    },
   },
   /** U1 §8: la Ayuda. */
   help: {
@@ -637,7 +666,7 @@ export const es = {
       tips: 'Consejos',
     },
     intro:
-      'Tienes un grupo de supervivientes en un mundo lleno de zombis. No los manejas uno a uno: trabajan solos, según sus prioridades. Tú decides qué saquear, qué talar y construir, y quién hace qué. La partida dura mientras quede alguien vivo.',
+      'Tienes un grupo de supervivientes en un mundo lleno de zombis. No los manejas uno a uno: trabajan solos, según sus prioridades. Tú decides qué saquear, qué talar y construir, y quién hace qué. La partida dura mientras quede alguien vivo, o hasta que os rescaten.',
     basics: [
       [
         '🥫 Comida',
@@ -661,7 +690,7 @@ export const es = {
       ],
       [
         '🩹 Heridas',
-        'Una herida sangra hasta que se venda; sin vendas, se desangran. Quien tenga Sanar cura a los demás. Un mordisco infecta siempre y no tiene cura; un arañazo, a veces, y los antibióticos lo curan a tiempo.',
+        'Una herida sangra hasta que se venda; sin vendas, se desangran. Quien tenga Sanar cura a los demás. Un mordisco infecta siempre y no tiene cura (en un brazo o una pierna, se puede amputar a tiempo); un arañazo, a veces, y los antibióticos lo curan a tiempo.',
       ],
       [
         '🙂 Ánimo',
@@ -672,6 +701,10 @@ export const es = {
         'Trae sucesos: visitas, robos, fiebres, tormentas, hordas. Algunos te preguntan qué hacer. Los avisos rojos y las preguntas pausan el juego.',
       ],
       ['🧭 Expediciones', 'Cuando cerca no quede nada, manda grupos a otros sitios del 🌍 Mundo.'],
+      [
+        '📻 Radio y rescate',
+        'Trae una radio de una nave, una gasolinera o un pueblecito y constrúyela en la base; con pilas y encendida, escucharéis al ejército. Tras unas horas sabréis dónde y qué día pasa un helicóptero: id hasta allí y pisad la zona de aterrizaje antes de que se vaya. Quien sube, se salva.',
+      ],
     ] as [string, string][],
     controlsMouse: 'Con ratón y teclado',
     controlsTouch: 'Con el dedo',
@@ -740,6 +773,7 @@ export const es = {
       'Los asedios se anuncian con días de margen: aprovéchalos para levantar muros.',
       'Si alguien está muy hundido, mira en su ficha por qué.',
       'Con calma, acelera a x3; si algo se tuerce, pausa y piensa.',
+      'El helicóptero hace mucho ruido: llegad al punto de evacuación antes de que aterrice y esperad cerca de la zona.',
       'Las herramientas sirven para marcar muchas cosas arrastrando; para una sola, basta el clic derecho (mantener pulsado).',
     ],
     guideAgain: '📋 Ver otra vez los primeros pasos',
@@ -1024,6 +1058,11 @@ export const es = {
   /** Pantalla final (H5 §9). */
   end: {
     fell: 'La colonia ha caído',
+    won: '¡Os han rescatado!', // C1
+    wonDays: (days: number) =>
+      `Aguantasteis ${days} ${days === 1 ? 'día' : 'días'} hasta el rescate`,
+    rescued: 'Quién se salvó',
+    rescuedLine: (who: string, day: number) => `${who}: día ${day}, en el helicóptero`,
     survived: (days: number) => `Sobrevivisteis ${days} ${days === 1 ? 'día' : 'días'}`,
     dead: 'Quién murió',
     deadLine: (who: string, day: number, cause: string) => `${who}: día ${day}, ${cause}`,

@@ -76,3 +76,25 @@ test('Otra partida y Volver a la portada', () => {
   (root.querySelector('[data-testid="end-title"]') as HTMLButtonElement).click();
   expect(onTitle).toHaveBeenCalledOnce();
 });
+
+test('C1: con el rescate, «¡Os han rescatado!» y quién se salvó; si cae después, también', () => {
+  const { world, end, screen } = setup();
+  world.common.rescued = [
+    { id: 1, name: 'Ana', day: 21 },
+    { id: 2, name: 'Bea', day: 21 },
+  ];
+  world.common.over = { tick: 20 * TICKS_PER_DAY, won: true };
+  end.update();
+  const text = screen()!.textContent!;
+  expect(screen()!.querySelector('h1')!.textContent).toBe('¡Os han rescatado!');
+  expect(text).toContain('Aguantasteis 21 días hasta el rescate');
+  expect(text).toContain('Quién se salvó');
+  expect(text).toContain('Ana: día 21, en el helicóptero');
+  expect(screen()!.classList.contains('won')).toBe(true);
+  const fell = setup();
+  fell.world.common.rescued = [{ id: 1, name: 'Ana', day: 21 }];
+  fell.world.common.over = { tick: 30 * TICKS_PER_DAY };
+  fell.end.update();
+  expect(fell.screen()!.querySelector('h1')!.textContent).toBe('La colonia ha caído');
+  expect(fell.screen()!.textContent).toContain('Ana: día 21, en el helicóptero');
+});

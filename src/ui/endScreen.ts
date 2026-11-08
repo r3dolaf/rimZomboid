@@ -63,9 +63,17 @@ export function mountEndScreen(
         button('end-restart', t.restart, opts.onRestart),
         button('end-title', t.title, opts.onTitle),
       );
+      // C1: con victoria, el rescate; si cayó después de un helicóptero, también quién se salvó.
+      const won = w.common.over.won === true;
+      const day = gameTime(w.common.over.tick).day;
+      const rescued = w.common.rescued ?? [];
+      if (won) screen.classList.add('won');
       panel.append(
-        line('h1', t.fell),
-        line('p', t.survived(gameTime(w.common.over.tick).day)),
+        line('h1', won ? t.won : t.fell),
+        line('p', won ? t.wonDays(day) : t.survived(day)),
+        ...(rescued.length > 0
+          ? [line('h2', t.rescued), list(rescued.map((r) => t.rescuedLine(r.name, r.day)))]
+          : []),
         line('h2', t.dead),
         list(w.common.dead.map((d) => t.deadLine(d.name, d.day, es.deathCauses[d.cause]))),
         line('h2', t.joined),

@@ -56,6 +56,7 @@ test('Construir por grupos: cada botón con lo que gasta y lo que tienes; abajo,
     'build-campfire',
     'build-tub',
     'build-barrel', // V2
+    'build-radio', // C1
   ]);
   expect(inGroup(1)).toEqual(['build-woodWall', 'build-woodDoor']);
   expect(inGroup(2)).toEqual(['build-repair']);

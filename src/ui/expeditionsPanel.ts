@@ -9,7 +9,7 @@ import { ITEM_KINDS, type ItemKind } from '../sim/items';
 import { issue, type Order } from '../sim/orders';
 import type { MapSide, SiteInfo, Survivor, World } from '../sim/types';
 import { listEditor } from './bagsPane';
-import { listNames, listRows, mapName, siteThe, travelText } from './describe';
+import { evacLine, listNames, listRows, mapName, siteThe, travelText } from './describe';
 import type { Flag } from './flag';
 import type { RoutePlan } from './routePlan';
 import './panels.css';
@@ -49,6 +49,8 @@ function siteState(base: World, info: SiteInfo, people: number): string[] {
   const going = base.common.expedition.travels.some((x) => x.kind === 'go' && x.siteId === info.id);
   if (people > 0) out.push(t.people(people));
   else if (going) out.push(t.onTheWay);
+  const heli = evacLine(base, info); // C1
+  if (heli) out.push(heli);
   if (info.special === 'survivors' && info.specialUntil !== null) {
     const days = Math.max(1, Math.ceil((info.specialUntil - base.tick) / TICKS_PER_DAY));
     out.push(t.askHelp(days));

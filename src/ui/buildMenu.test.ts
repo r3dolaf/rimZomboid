@@ -23,6 +23,7 @@ test('el menú Construir solo se ve con la herramienta y elige qué construir', 
     'Hoguera · 3 🪵',
     'Barreño · 4 🪵', // H5b
     'Barril de lluvia · 6 🪵', // V2
+    'Radio · 2 🪵', // C1
     'Muro · 2 🪵',
     'Puerta · 4 🪵',
     'Reparar · 1–3 🪵',
@@ -45,4 +46,24 @@ test('el menú Construir solo se ve con la herramienta y elige qué construir', 
   expect(root.querySelector('[data-testid="build-bed"]')!.classList.contains('selected')).toBe(
     true,
   );
+});
+
+test('C1: la radio, apagada hasta tener una en el almacén; con una ya puesta, también', () => {
+  const root = document.createElement('div');
+  const tool = createTool();
+  const world = emptyWorld(5, 5);
+  world.storage.items.wood = 7;
+  const menu = mountBuildMenu(root, { tool, world });
+  tool.toggle('build');
+  menu.update();
+  const b = root.querySelector('[data-testid="build-radio"]') as HTMLButtonElement;
+  expect(b.disabled).toBe(true);
+  expect(b.title).toContain('hace falta una radio en el almacén');
+  world.storage.items.radio = 1;
+  menu.update();
+  expect(b.disabled).toBe(false);
+  world.furniture.push({ id: 60, kind: 'radio', pos: { x: 1, y: 1 }, fuel: 0, on: true });
+  menu.update();
+  expect(b.disabled).toBe(true);
+  expect(b.title).toContain('ya hay una');
 });

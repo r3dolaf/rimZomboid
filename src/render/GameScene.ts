@@ -46,6 +46,7 @@ import {
   type Zombie,
 } from '../sim/types';
 import { buildingTitle, furnitureLabel, pileLabel, plotLabel, zombieLabel } from '../ui/describe';
+import { heliZone } from '../sim/evac';
 import { canPlot, plotAt, plotPos } from '../sim/farm';
 import { isLitFire } from '../sim/furniture';
 import { outdoorTemp, seasonOf, type Season } from '../sim/season';
@@ -161,6 +162,12 @@ const CHIPS = [0xc8a070, 0x8a6236, 0xe0c090];
 const DUST = 0xb8b2a6;
 /** Los cuerpos (H4d), más oscuros que en vida. */
 const CORPSE_TINT = 0x8a8a8a;
+/** C1: la zona de aterrizaje (borde y H) y el helicóptero (cuerpo, borde y cabina). */
+const PAD_EDGE = 0xf2d64b;
+const PAD_MARK = 0xeeeeee;
+const HELI_BODY = 0x4f5a2e;
+const HELI_EDGE = 0x1b1a1f;
+const HELI_GLASS = 0x9cc8e8;
 const BLOOD_POOL_ALPHA = 0.75;
 /** Sitios para figuras en el lienzo de las figuras; si se llena, las nuevas van en su textura. */
 const PEOPLE_COLS = 5;
@@ -1622,6 +1629,52 @@ export class GameScene extends Phaser.Scene {
       m.lineStyle(selected ? 2 : 3, selected ? HOUSE_SELECTED : DESIGNATION, 0.9);
       m.strokeRect(h.rect.x * TILE_PX, h.rect.y * TILE_PX, h.rect.w * TILE_PX, h.rect.h * TILE_PX);
     }
+    this.drawEvac(g);
+  }
+
+  /**
+   * C1: en el punto de evacuación, la zona de aterrizaje (el borde amarillo y la H) y, cuando está
+   * posado, el helicóptero con su sombra y las aspas girando.
+   */
+  private drawEvac(g: Phaser.GameObjects.Graphics): void {
+    const w = this.world;
+    const z = w.evacZone;
+    if (!z || w.seen[z.y * w.grid.width + z.x] !== 1) return;
+    const [x0, y0, size] = [z.x * TILE_PX, z.y * TILE_PX, z.w * TILE_PX];
+    g.lineStyle(3, PAD_EDGE, 0.9);
+    g.strokeRect(x0 + 3, y0 + 3, size - 6, size - 6);
+    const [cx, cy] = [x0 + size / 2, y0 + size / 2];
+    const u = size / 12; // la H: dos palos y el travesaño
+    g.fillStyle(PAD_MARK, 0.85);
+    g.fillRect(cx - 2.5 * u, cy - 3 * u, u, 6 * u);
+    g.fillRect(cx + 1.5 * u, cy - 3 * u, u, 6 * u);
+    g.fillRect(cx - 1.5 * u, cy - 0.5 * u, 3 * u, u);
+    if (!heliZone(w)) return;
+    g.fillStyle(0x000000, 0.25);
+    g.fillEllipse(cx + 3, cy + 10, 70, 22);
+    // La cola, el cuerpo, la cabina y los patines.
+    g.fillStyle(HELI_BODY, 1);
+    g.fillRect(cx - 52, cy - 4, 36, 6);
+    g.fillRect(cx - 56, cy - 12, 6, 14);
+    g.fillEllipse(cx, cy, 56, 26);
+    g.lineStyle(1, HELI_EDGE, 1);
+    g.strokeEllipse(cx, cy, 56, 26);
+    g.fillStyle(HELI_GLASS, 1);
+    g.fillEllipse(cx + 16, cy - 3, 18, 12);
+    g.lineStyle(2, HELI_EDGE, 1);
+    g.lineBetween(cx - 18, cy + 16, cx + 20, cy + 16);
+    g.lineBetween(cx - 12, cy + 12, cx - 12, cy + 16);
+    g.lineBetween(cx + 12, cy + 12, cx + 12, cy + 16);
+    // Las aspas, girando, y el rotor de cola.
+    const a = this.frame * 0.45;
+    g.lineStyle(3, HELI_EDGE, 0.75);
+    for (const k of [0, Math.PI / 2]) {
+      const [dx, dy] = [Math.cos(a + k) * 46, Math.sin(a + k) * 46 * 0.5];
+      g.lineBetween(cx - dx, cy - 6 - dy, cx + dx, cy - 6 + dy);
+    }
+    g.lineStyle(2, HELI_EDGE, 0.75);
+    const t = Math.cos(a * 2) * 7;
+    g.lineBetween(cx - 53, cy - 5 - t, cx - 53, cy - 5 + t);
   }
 
   /** El dibujo de una mesa, una hoguera (con su llama) o del agua (H5b): cuánta tiene, o si sale. */

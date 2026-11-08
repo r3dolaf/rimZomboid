@@ -1,12 +1,13 @@
 import { es } from '../i18n/es';
 import { BUILD } from '../sim/balance';
+import { radioBlock } from '../sim/build';
 import type { BuildKind, World } from '../sim/types';
 import type { Tool } from './tool';
 import './panels.css';
 
 /** Por grupos (H5c1 §8): lo que se pone, y Reparar para muchas cosas seguidas. */
 const GROUPS: readonly { title: keyof typeof es.buildGroups; kinds: readonly BuildKind[] }[] = [
-  { title: 'furniture', kinds: ['bed', 'table', 'campfire', 'tub', 'barrel'] },
+  { title: 'furniture', kinds: ['bed', 'table', 'campfire', 'tub', 'barrel', 'radio'] },
   { title: 'walls', kinds: ['woodWall', 'woodDoor'] },
   // Reparar elige el plano según la casilla (spec H4b §4.2). Lo de las ventanas, con el clic
   // derecho (H5c1 §8).
@@ -74,7 +75,14 @@ export function mountBuildMenu(
         // Sin madera bastante, más apagado (se puede poner igual: el plano espera).
         const short = typeof cost === 'number' && cost > wood;
         b.classList.toggle('short', short);
-        const title = short ? `${es.buildDesc[kind]} · ${es.buildShort}` : es.buildDesc[kind];
+        // C1: la radio, solo en la base, con una radio en el almacén y una sola.
+        const blocked = kind === 'radio' ? radioBlock(opts.world) : null;
+        if (b.disabled !== (blocked !== null)) b.disabled = blocked !== null;
+        const title = blocked
+          ? `${es.buildDesc[kind]} · ${es.radioBlock[blocked]}`
+          : short
+            ? `${es.buildDesc[kind]} · ${es.buildShort}`
+            : es.buildDesc[kind];
         if (b.title !== title) b.title = title;
       }
       const text = es.buildDesc[opts.tool.buildKind];

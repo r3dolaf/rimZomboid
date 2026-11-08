@@ -9,7 +9,7 @@ import { issue } from '../sim/orders';
 import { decisionAnswered } from '../sim/decisions';
 import type { DecisionOption } from '../sim/events/resolve';
 import type { Decision, Travel, World } from '../sim/types';
-import { listNames, siteName, travelText } from './describe';
+import { evacLine, listNames, siteName, travelText } from './describe';
 import type { MapView } from './mapView';
 import type { RoutePlan } from './routePlan';
 import './panels.css';
@@ -130,6 +130,7 @@ export function mountWorldCard(
           : []),
         ...(people > 0 ? [es.expeditions.people(people)] : []),
         ...(site?.state === 'lost' ? [es.expeditions.lost] : []),
+        ...(site && evacLine(base, site) !== null ? [evacLine(base, site)!] : []), // C1
       ],
       send: site?.state === 'known' ? site.id : null,
       go: isBase ? 0 : site && people > 0 ? site.id : null,

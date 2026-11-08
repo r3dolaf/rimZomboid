@@ -21,6 +21,8 @@ export const TIPS = [
   'food',
   'mood',
   'siege',
+  'radio', // C1
+  'evac',
 ] as const;
 export type TipId = (typeof TIPS)[number];
 
@@ -136,6 +138,12 @@ export function dueTip(w: World, ctx: TipContext, shown: readonly TipId[]): DueT
     // Anunciado (la cuenta atrás) o ya aquí.
     siege: () =>
       w.siege || w.hordes.some((h) => h.kind === 'siege' && !h.done) ? { id: 'siege' } : null,
+    // C1: la primera radio en el almacén de la base (sin construir aún); el helicóptero anunciado.
+    radio: () =>
+      w.storage.items.radio > 0 && !w.furniture.some((f) => f.kind === 'radio')
+        ? { id: 'radio' }
+        : null,
+    evac: () => (w.common.rescue?.stage === 3 ? { id: 'evac' } : null),
   };
   for (const id of TIPS) {
     if (shown.includes(id)) continue;

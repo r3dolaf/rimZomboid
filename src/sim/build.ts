@@ -60,11 +60,15 @@ export function canPlace(w: World, kind: BuildKind, p: Point): boolean {
  * construida ni otro plano).
  */
 export function radioAllowed(w: World): boolean {
-  return (
-    w.storage.items.radio > 0 &&
-    !w.furniture.some((f) => f.kind === 'radio') &&
-    !w.blueprints.some((b) => b.kind === 'radio')
-  );
+  return radioBlock(w) === null;
+}
+
+/** Por qué no se puede poner la radio (para el menú), o `null` si se puede. */
+export function radioBlock(w: World): 'base' | 'built' | 'none' | null {
+  if (w.mapId !== 0) return 'base';
+  if (w.furniture.some((f) => f.kind === 'radio') || w.blueprints.some((b) => b.kind === 'radio'))
+    return 'built';
+  return w.storage.items.radio > 0 ? null : 'none';
 }
 
 /** Lo que se construye sobre suelo libre (el resto va sobre una ventana, una puerta…). */

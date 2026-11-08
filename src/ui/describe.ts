@@ -74,6 +74,19 @@ export function personName(w: World, id: number): string {
   );
 }
 
+/**
+ * C1: lo del helicóptero en el punto de evacuación: cuándo llega, que ya espera o que ya se fue;
+ * `null` en los demás sitios.
+ */
+export function evacLine(w: World, site: SiteInfo): string | null {
+  if (site.kind !== 'evac') return null;
+  const t = es.evac;
+  const r = w.common.rescue;
+  if (r?.siteId !== site.id || r.from === null || r.until === null) return t.gone;
+  if (w.tick < r.from) return t.when(gameTime(r.from).day);
+  return t.waiting;
+}
+
 /** El nombre corto de un sitio y con artículo: «Granja del norte», «la granja del norte». */
 export function siteName(w: World, site: SiteInfo): { name: string; the: string } {
   const base = (x: SiteInfo) => {
@@ -181,6 +194,11 @@ export function furnitureLabel(w: World, f: Furniture): string | null {
     return f.fuel > 0 ? t.campfire(Math.ceil(f.fuel)) : t.campfireOut; // V3
   if (f.kind === 'cistern') return t.cistern(l, CISTERN_LITERS);
   if (f.kind === 'sink') return mainsOn(w) ? t.sinkOn : t.sinkOff;
+  if (f.kind === 'radio') {
+    const r = w.common.rescue;
+    const heli = r?.stage === 3 && r.from !== null ? t.radioHeli(gameTime(r.from).day) : '';
+    return t.radio(f.on === true, Math.ceil(f.fuel ?? 0)) + heli; // C1
+  }
   return null;
 }
 

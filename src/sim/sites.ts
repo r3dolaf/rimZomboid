@@ -204,6 +204,7 @@ function discover(
   how: SiteHow,
   survivorId?: number,
   special?: SiteSpecial | null,
+  log = true,
 ): boolean {
   if (info.state !== 'hidden') return false;
   const { atlas, expedition: ex } = w.common;
@@ -222,6 +223,7 @@ function discover(
     info.special === 'survivors'
       ? w.tick + nextInt(rng, d0 * TICKS_PER_DAY, d1 * TICKS_PER_DAY)
       : null;
+  if (!log) return true;
   const site = { kind: info.kind, special: info.special, side: info.side, hours: info.hours };
   logEvent(
     w,
@@ -230,6 +232,31 @@ function discover(
       : { kind: 'siteFound', site, how, survivorId },
   );
   return true;
+}
+
+/**
+ * El punto de evacuación (C1 §3): un sitio nuevo en ese hexágono, ya conocido (con su lado y sus
+ * horas de camino) y sin especialidad. Sin entrada propia en el registro: lo dice la radio.
+ */
+export function addEvacSite(w: World, hex: number): SiteInfo {
+  const { atlas, expedition: ex } = w.common;
+  const info: SiteInfo = {
+    id: ex.nextSiteId++,
+    kind: 'evac',
+    special: null,
+    hex,
+    side: sideFrom(atlas, atlas.base, hex),
+    hours: 0,
+    state: 'hidden',
+    visited: false,
+    specialUntil: null,
+    leftAt: null,
+    extraZombies: 0,
+  };
+  ex.sites.push(info);
+  discover(w, info, 'radio', undefined, null, false);
+  atlas.seen[hex] = 1;
+  return info;
 }
 
 /**

@@ -855,6 +855,15 @@ function logSentence(e: LogEntry, w: World, here: World): string {
     case 'colonyFell':
       text = l.colonyFell;
       break;
+    case 'radioNews': // C1
+      text = l.radioNews;
+      break;
+    case 'radioDirection':
+      text = l.radioDirection(es.sites.sides[e.side], e.dist);
+      break;
+    case 'radioEvac':
+      text = l.radioEvac(e.day, e.hours);
+      break;
   }
   return text;
 }
@@ -905,6 +914,12 @@ export function noticeFor(e: LogEntry): NoticeInfo | null {
       return { tone: 'mixed', title: t.waterCut, focusId: null };
     case 'lowWater': // V2: igual
       return { tone: 'mixed', title: t.lowWater, focusId: null };
+    case 'radioNews': // C1: lo de la radio, en verde; el helicóptero, además, pausa
+      return { tone: 'good', title: t.radioNews, focusId: null };
+    case 'radioDirection':
+      return { tone: 'good', title: t.radioDirection, focusId: null };
+    case 'radioEvac':
+      return { tone: 'good', title: t.radioEvac, focusId: null };
     case 'noWater':
       return { tone: 'bad', title: t.noWater, focusId: e.survivorId };
     case 'season': // V3: el invierno avisa (amarillo); las demás, solo en el registro

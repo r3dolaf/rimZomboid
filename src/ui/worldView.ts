@@ -17,6 +17,7 @@ const SITE_ICONS: Record<SiteKind, string> = {
   gas: '⛽',
   warehouse: '🏭',
   village: '🏘️',
+  evac: '🚁', // C1
 };
 const BASE_ICON = '🏕️';
 

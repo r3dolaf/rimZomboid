@@ -25,10 +25,13 @@ export function shows(p: NoticePrefs, kind: string): boolean {
   return isDecision(kind) || p[kind]?.show !== false;
 }
 
-/** ¿Pausa? Lo elegido; si no, como antes: los rojos y los de decisión. */
+/** Los que pausan aunque no sean rojos (C1: el helicóptero anunciado y el que llega). */
+const ALWAYS_PAUSE: ReadonlySet<string> = new Set(['radioEvac', 'heliArrived']);
+
+/** ¿Pausa? Lo elegido; si no, como antes: los rojos, los de decisión y los del helicóptero. */
 export function pauses(p: NoticePrefs, kind: string, tone: Tone): boolean {
   if (!shows(p, kind)) return false;
-  return p[kind]?.pause ?? (isDecision(kind) || tone === 'bad');
+  return p[kind]?.pause ?? (isDecision(kind) || tone === 'bad' || ALWAYS_PAUSE.has(kind));
 }
 
 /** Lo guardado, o nada si no hay, está roto o el navegador no deja leerlo. */

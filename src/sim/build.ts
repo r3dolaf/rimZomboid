@@ -107,8 +107,8 @@ export function tileFits(w: World, kind: BuildKind, p: Point): boolean {
     case 'woodWall':
     case 'woodDoor':
       return WALL_GROUND.has(t);
-    case 'radio': // C1: en el suelo de la base
-      return t === Tile.Floor && contains(w.base.rect, p);
+    case 'radio': // C1: en el suelo de la base (no en un campamento)
+      return w.mapId === 0 && t === Tile.Floor && contains(w.base.rect, p);
     default:
       return BUILDABLE_GROUND.has(t);
   }

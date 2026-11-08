@@ -1,6 +1,7 @@
 // Varios mapas a la vez (spec H5c1 §1): la base guarda los mapas de los sitios y todos avanzan
 // juntos; un sitio sin nadie se queda quieto hasta que vuelva alguien.
 import { farewellsSystem } from './death';
+import { radioSystem } from './radio';
 import { departuresSystem } from './expeditions';
 import { travelSystem } from './travel';
 import { sitesDailySystem, survivorsSystem } from './sites';
@@ -40,5 +41,6 @@ export function stepGame(base: World): void {
   departuresSystem(base); // los que salen de expedición
   survivorsSystem(base); // supervivientes atrapados en los sitios
   sitesDailySystem(base); // H5c1: avisos de sitios
+  radioSystem(base); // C1: escuchar la radio
   farewellsSystem(base); // quien muere o se va de un mapa: lo notan en los demás
 }

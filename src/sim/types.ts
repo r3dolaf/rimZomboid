@@ -761,7 +761,8 @@ export interface Decision {
 }
 
 /** Sitios (H5c1 §2): de qué tipo es y si es especial. */
-export type SiteKind = 'house' | 'farm' | 'gas' | 'warehouse' | 'village';
+/** C1: `evac`, el punto de evacuación que se oye por la radio. */
+export type SiteKind = 'house' | 'farm' | 'gas' | 'warehouse' | 'village' | 'evac';
 export type SiteSpecial = 'survivors' | 'stash' | 'dangerous';
 
 /**
@@ -883,8 +884,11 @@ export interface Common {
   nextWoundId: number;
   /** Los colonos que han muerto: quién, el día y de qué. */
   dead: { id: number; name: string; day: number; cause: DeathCause }[];
-  /** Fin de partida (H5 §9): cuándo no quedó nadie en la colonia. */
-  over: { tick: number } | null;
+  /**
+   * Fin de partida (H5 §9): cuándo no quedó nadie en la colonia; C1: `won`, se acabó al rescatar a
+   * alguien (y elegir ver el final, o no quedar nadie más).
+   */
+  over: { tick: number; won?: boolean } | null;
   /** Para el resumen final. */
   /** `harvested` (V1): hortalizas cosechadas en toda la partida. */
   stats: {
@@ -917,6 +921,27 @@ export interface Common {
   usedNames: string[];
   /** Una ola de frío o de calor (V3 §8): grados de más o de menos hasta ese tick. */
   tempShift?: { value: number; until: number } | null;
+  /** La radio y el helicóptero (C1): lo escuchado y la evacuación anunciada. */
+  rescue?: Rescue;
+  /** C1: los que se han salvado en un helicóptero, el día. */
+  rescued?: { id: number; name: string; day: number }[];
+}
+
+/**
+ * Lo que se ha oído por la radio (C1 §2) y la evacuación anunciada (§3): horas escuchadas desde el
+ * último helicóptero; qué se sabe (0 nada, 1 que evacúan, 2 hacia dónde, 3 dónde y cuándo); el
+ * hexágono y el sitio del punto; cuándo llega el helicóptero y hasta cuándo espera; si ya ha
+ * aterrizado con gente delante (ruido y horda) y quiénes han subido.
+ */
+export interface Rescue {
+  heard: number;
+  stage: 0 | 1 | 2 | 3;
+  hex: number | null;
+  siteId: number | null;
+  from: number | null;
+  until: number | null;
+  landed: boolean;
+  boarded: { id: number; name: string }[];
 }
 
 export interface World {

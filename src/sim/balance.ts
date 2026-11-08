@@ -1182,6 +1182,17 @@ export const SITE_RADIO: Partial<Record<SiteKind, number>> = {
 export const RADIO_CHARGE_MAX = 24;
 export const CHARGE_PER_BATTERY = 6;
 export const RADIO_RECHARGE_BELOW = 6;
+/** Escuchar (C1 §2): horas escuchadas para cada mensaje (que evacúan, hacia dónde, dónde y cuándo). */
+export const RADIO_HEARD = [2, 6, 12] as const;
+/** Cada hora encendida, una llamada que descubre un sitio oculto. */
+export const RADIO_CALL_CHANCE = 0.05;
+/** El punto de evacuación (§3): a cuántos hexágonos de la base, y lo que se despeja al saber hacia dónde. */
+export const EVAC_DIST: [number, number] = [9, 13];
+export const EVAC_HINT_RADIUS = 2;
+/** El helicóptero: el día de hoy más 6, a las 10, y espera 6 horas. */
+export const EVAC_LEAD_DAYS = 6;
+export const EVAC_HOUR = 10;
+export const EVAC_WAIT_HOURS = 6;
 /** Las pilas, por tipo de edificio (también en el pueblo de la base). */
 export const BATTERY_LOOT: Partial<Record<LootKind, LootAmount>> = {
   house: [0, 1],
@@ -1423,6 +1434,7 @@ export const SITE_SIZE = 64;
 export const VILLAGE_SIZE = 96;
 export const ACTIVE_SITES_MAX = 4;
 export const SITE_ZOMBIES: Record<SiteKind | SiteSpecial, number> = {
+  evac: 20, // C1: como un sitio peligroso
   house: 4,
   farm: 6,
   gas: 6,

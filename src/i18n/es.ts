@@ -821,6 +821,7 @@ export const es = {
       gas: 'una gasolinera',
       warehouse: 'una nave',
       village: 'un pueblecito',
+      evac: 'el punto de evacuación', // C1
     } satisfies Record<SiteKind, string>,
     specials: {
       survivors: 'supervivientes que piden ayuda',
@@ -839,6 +840,7 @@ export const es = {
       gas: { name: 'Gasolinera', the: 'la gasolinera' },
       warehouse: { name: 'Nave', the: 'la nave' },
       village: { name: 'Pueblecito', the: 'el pueblecito' },
+      evac: { name: 'Punto de evacuación', the: 'el punto de evacuación' }, // C1
     } satisfies Record<SiteKind, { name: string; the: string }>,
     specials: {
       stash: { name: 'Alijo', the: 'el alijo' },
@@ -852,6 +854,7 @@ export const es = {
       gas: 'latas y algún antibiótico',
       warehouse: 'armas y herramientas',
       village: 'farmacia: antibióticos y vendas',
+      evac: 'el helicóptero del ejército; un puesto con armas', // C1
     } satisfies Record<SiteKind, string>,
     tab: (name: string, n: number) => `${name} · ${n}`,
     worldTab: '🌍 Mundo',
@@ -1059,6 +1062,9 @@ export const es = {
     lowWater: 'Queda poca agua', // V2
     noWater: 'Sed sin agua',
     winter: 'Llega el invierno', // V3
+    radioNews: 'La radio', // C1
+    radioDirection: 'La radio: un punto de evacuación',
+    radioEvac: 'La radio: ¡un helicóptero!',
     skillUp: 'Mejora',
     // H5
     died: 'Muerte',
@@ -1493,6 +1499,13 @@ export const es = {
     sawTurned: (who: string) => `Hemos visto a ${who}: ya es un zombi`,
     killedForNothing: (who: string) => `Matamos a ${who} por nada: solo era una gripe`,
     colonyFell: 'La colonia ha caído',
+    // C1: lo que se oye por la radio.
+    radioNews:
+      'En la radio: «El ejército está evacuando a los supervivientes». Seguid a la escucha',
+    radioDirection: (side: string, dist: number) =>
+      `En la radio: hay un punto de evacuación hacia ${side}, a unos ${dist} hexágonos`,
+    radioEvac: (day: number, hours: number) =>
+      `En la radio: un helicóptero recogerá a los supervivientes en el punto de evacuación el día ${day}, de 10 a 16 h (a ${hours} h de camino)`,
     painkiller: (who: string, other: string) =>
       who === other
         ? `${who} se ha tomado un analgésico`

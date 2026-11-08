@@ -182,7 +182,11 @@ export type LogEvent =
   | { kind: 'returned'; name: string }
   | { kind: 'sawTurned'; name: string }
   | { kind: 'killedForNothing'; name: string }
-  | { kind: 'colonyFell' };
+  | { kind: 'colonyFell' }
+  // C1: lo que se oye por la radio: que evacúan, hacia dónde (y a cuántos hexágonos), dónde y cuándo.
+  | { kind: 'radioNews' }
+  | { kind: 'radioDirection'; side: MapSide; dist: number }
+  | { kind: 'radioEvac'; day: number; hours: number };
 
 /** Cómo se descubre un sitio (H5c1 §3). */
 export type SiteHow = 'explore' | 'seen' | 'roadMap' | 'note' | 'smoke' | 'radio';

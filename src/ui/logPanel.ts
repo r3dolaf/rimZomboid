@@ -124,6 +124,9 @@ export const LOG_CATEGORY: Record<LogEvent['kind'], LogCategory> = {
   banished: 'colony',
   returned: 'colony',
   colonyFell: 'colony',
+  radioNews: 'narrator', // C1
+  radioDirection: 'narrator',
+  radioEvac: 'narrator',
 };
 
 /** Las categorías apagadas la última vez; si no hay o no se puede leer, ninguna. */

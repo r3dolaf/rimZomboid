@@ -979,6 +979,15 @@ export const es = {
     wanderersSighted: 'Una horda errante cruza el mapa',
     rescued: (who: string, other: string) => `${who} ha rescatado a ${other}`,
     waterCut: 'Se ha cortado el agua',
+    /** V1: «Se han estropeado 3 hortalizas y 1 guiso en el almacén». */
+    spoiled: (veg: number, meal: number) => {
+      const parts = [
+        veg > 0 ? `${veg} ${veg === 1 ? 'hortaliza' : 'hortalizas'}` : '',
+        meal > 0 ? `${meal} ${meal === 1 ? 'guiso' : 'guisos'}` : '',
+      ].filter((x) => x !== '');
+      const one = veg + meal === 1;
+      return `Se ${one ? 'ha' : 'han'} estropeado ${list(parts)} en el almacén`;
+    },
     rain: 'Llueve',
     /** «una granja hacia el norte, a 4 horas» (con lo especial delante, si lo es). */
     siteFound: (how: string, what: string, who?: string) =>

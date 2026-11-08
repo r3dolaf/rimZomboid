@@ -48,6 +48,7 @@ export const LOG_CATEGORY: Record<LogEvent['kind'], LogCategory> = {
   bagDropped: 'combat',
   bagRecovered: 'colony',
   waterCut: 'colony',
+  spoiled: 'colony', // V1
   rain: 'colony',
   downed: 'combat',
   gotUp: 'combat',

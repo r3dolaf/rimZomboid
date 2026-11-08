@@ -116,6 +116,9 @@ export const EAT_RESTORE = 60;
 // Huerto y cocina (spec V1 §1): lo que quitan las hortalizas y el guiso (la lata, EAT_RESTORE).
 export const VEG_RESTORE = 35;
 export const MEAL_RESTORE = 80;
+/** V1 §1: lo que se estropea cada día, a las SPOIL_HOUR (la parte entera seguro, la fracción a veces). */
+export const ROT_PER_DAY = { veg: 0.1, meal: 0.3 } as const;
+export const SPOIL_HOUR = 6;
 export const EAT_TICKS = 30; // 6 minutos de juego
 // De noche casi todos se acuestan (< 95) y nadie se levanta hasta las 06:00: así los ritmos se
 // sincronizan con la noche aunque alguien eche una siesta de día (< 10).

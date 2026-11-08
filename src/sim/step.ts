@@ -14,6 +14,7 @@ import { moodSystem } from './systems/mood';
 import { movementSystem } from './systems/movement';
 import { needsSystem } from './systems/needs';
 import { socialSystem } from './systems/social';
+import { spoilSystem } from './spoil';
 import { strangerSystem } from './systems/strangers';
 import type { World } from './types';
 import { visionSystem } from './vision';
@@ -31,6 +32,7 @@ export function step(w: World): void {
   furnitureSystem(w);
   clothesSystem(w); // H5b: la ropa puesta se ensucia
   waterSystem(w); // H5b: el corte del agua y la lluvia
+  spoilSystem(w); // V1: lo fresco se estropea
   moodSystem(w);
   socialSystem(w);
   narratorSystem(w);

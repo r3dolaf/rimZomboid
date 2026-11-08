@@ -70,6 +70,8 @@ export type LogEvent =
   // Ropa (H5b)
   | { kind: 'clothesTorn'; survivorId: number; garment: GarmentKind; part: BodyPart }
   | { kind: 'waterCut' }
+  // V1: lo que se ha estropeado hoy en el almacén.
+  | { kind: 'spoiled'; veg: number; meal: number }
   | { kind: 'rain' }
   | { kind: 'found'; survivorId: number; houseId: number; items: Inventory }
   | { kind: 'emptyContainer'; survivorId: number; houseId: number }

@@ -12,6 +12,12 @@ export interface Pt {
 export const HOLD_MS = 450;
 /** Moverse hasta esto (en pantalla) sigue siendo estar quieto: el dedo tiembla más que el ratón. */
 export const TOUCH_SLOP_PX = 10;
+/**
+ * Ya mantenido, lo que puede moverse sin dejar de ser mantener pulsado: un dedo de verdad se va
+ * 10–20 px mientras espera el menú (con 10, era elegir a varios: no salía el menú y el mapa no se
+ * movía). Más que esto, sí es mantener y arrastrar.
+ */
+export const HOLD_SLOP_PX = 28;
 /** El radio para coger a alguien con el dedo, en pantalla, como mínimo. */
 export const FINGER_PX = 22;
 
@@ -89,7 +95,7 @@ export function createGestures(emit: (g: Gesture) => void): Gestures {
       fingers.set(id, at);
       if (state.kind === 'press' && state.id === id) {
         checkHold(now);
-        if (dist(at, state.from) <= TOUCH_SLOP_PX) return;
+        if (dist(at, state.from) <= (state.held ? HOLD_SLOP_PX : TOUCH_SLOP_PX)) return;
         const { from, held } = state;
         state = { kind: 'drag', id, from, at, held };
         emit({ type: 'dragStart', from, at, held });

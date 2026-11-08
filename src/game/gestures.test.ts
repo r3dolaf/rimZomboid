@@ -3,6 +3,7 @@ import {
   createGestures,
   fingerRadius,
   HOLD_MS,
+  HOLD_SLOP_PX,
   TOUCH_SLOP_PX,
   zoomAround,
   type Gesture,
@@ -69,6 +70,26 @@ test('moverse menos que el temblor no es arrastrar, aunque se haga varias veces'
   for (let i = 0; i < 5; i++) g.move(1, { x: TOUCH_SLOP_PX, y: 0 }, 10 + i);
   g.up(1, { x: TOUCH_SLOP_PX, y: 0 }, 100);
   expect(types()).toEqual(['tap']);
+});
+
+test('mantenido, el dedo que tiembla un poco (como uno de verdad) sigue siendo mantener pulsado', () => {
+  // Un dedo real se mueve 10–20 px mientras se mantiene: antes eso era arrastrar (elegir a varios),
+  // no salía el menú y el mapa no se movía («se para»).
+  const { g, types } = setup();
+  g.down(1, { x: 0, y: 0 }, 0);
+  g.tick(HOLD_MS);
+  for (let k = 1; k <= 6; k++) g.move(1, { x: (HOLD_SLOP_PX * k) / 6, y: 0 }, HOLD_MS + k * 50);
+  g.up(1, { x: HOLD_SLOP_PX, y: 0 }, HOLD_MS + 400);
+  expect(types()).toEqual(['hold', 'longPress']);
+  expect(HOLD_SLOP_PX).toBeGreaterThan(TOUCH_SLOP_PX);
+});
+
+test('antes de mantener, moverse más que el temblor normal sigue siendo arrastrar (la cámara)', () => {
+  const { g, types } = setup();
+  g.down(1, { x: 0, y: 0 }, 0);
+  g.move(1, { x: TOUCH_SLOP_PX + 1, y: 0 }, HOLD_MS - 100);
+  g.up(1, { x: TOUCH_SLOP_PX + 1, y: 0 }, HOLD_MS + 100);
+  expect(types()).toEqual(['dragStart', 'drag', 'dragEnd']);
 });
 
 test('mantener y arrastrar: el arrastre va con `held`', () => {

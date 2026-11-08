@@ -72,6 +72,11 @@ async function start(page: Page) {
   page.on('console', (m) => {
     if (m.type() === 'error') errores.push(m.text());
   });
+  // U1: sin la tarjeta de los primeros pasos ni consejos (aquí se prueban los gestos sobre el mapa,
+  // y la tarjeta tapa una parte; ella se prueba en help.spec.ts).
+  await page.addInitScript(() =>
+    localStorage.setItem('rimzomboid.guide', JSON.stringify({ hidden: true, tipsOff: true })),
+  );
   await page.goto('/?seed=5&debug=1');
   await expect(page.locator('canvas')).toBeVisible();
   await page.locator('[data-speed="0"]').tap();

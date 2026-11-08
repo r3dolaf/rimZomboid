@@ -431,8 +431,8 @@ export const es = {
   hudMenu: { button: '☰', hint: 'Paneles', debug: 'Depuración' },
   /** U1 §2: la tecla de cada cosa, en su ayuda: «Almacén (I)». */
   withKey: (hint: string, key: string) => `${hint} (${key})`,
-  /** U1 §2: el letrero de la pausa, que al pulsarlo sigue. */
-  paused: { text: '⏸ En pausa', hint: 'El juego está en pausa: pulsa para seguir (Espacio)' },
+  /** U1 §2: el letrero de la pausa. */
+  paused: { text: '⏸ En pausa', hint: 'El juego está en pausa: x1 (o Espacio) para seguir' },
   /** U1 §4: con una herramienta, qué hacer (con el dedo, «toca»; con ratón, «haz clic»). */
   toolHint: {
     loot: (touch: boolean) =>
@@ -514,7 +514,7 @@ export const es = {
     pause: {
       title: 'El juego se ha pausado',
       text: () =>
-        'Los avisos rojos y las preguntas pausan el juego para que no se te pase nada. Cuando lo hayas visto, pulsa «⏸ En pausa» o x1 para seguir.',
+        'Los avisos rojos y las preguntas pausan el juego para que no se te pase nada (arriba sale «⏸ En pausa»). Cuando lo hayas visto, pulsa x1 para seguir.',
     },
     night: {
       title: 'Llega la noche',

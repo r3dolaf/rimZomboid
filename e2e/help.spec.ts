@@ -99,10 +99,10 @@ test.describe('en el ordenador', () => {
     await expect(page.getByTestId('help-panel')).toBeVisible();
     await page.keyboard.press('Escape');
 
-    // «En pausa» al pausar; pulsarlo sigue.
+    // «En pausa» al pausar; al seguir, se va.
     await page.keyboard.press('Space');
     await expect(page.getByTestId('hud-paused')).toBeVisible();
-    await page.getByTestId('hud-paused').click();
+    await page.keyboard.press('Space');
     await expect(page.getByTestId('hud-paused')).toBeHidden();
 
     // Con una herramienta: su letrero (y no la tarjeta de pasos); «Hecho» la quita.

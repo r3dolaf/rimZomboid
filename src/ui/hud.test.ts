@@ -249,21 +249,19 @@ test('U1 §2: cada herramienta y cada panel dice su tecla en la ayuda; en el ☰
   expect(PANELS.map(kbd)).toEqual(['I', 'J', 'F', 'E', 'P']);
 });
 
-test('U1 §2: «⏸ En pausa» se ve en pausa (también la de los avisos) y pulsarlo sigue', () => {
+test('U1 §2: «⏸ En pausa» se ve en pausa (también la de los avisos); al seguir, se va', () => {
   const root = document.createElement('div');
   const time = createTimeController();
   const hud = mountHud(root, { seed: 1, time });
-  const sign = root.querySelector('[data-testid="hud-paused"]') as HTMLButtonElement;
+  const sign = root.querySelector('[data-testid="hud-paused"]') as HTMLElement;
   expect(sign.hidden).toBe(true);
   time.setSpeed(0); // como un aviso rojo
   hud.update({ day: 1, hour: 8, minute: 0 }, emptyInventory());
   expect(sign.hidden).toBe(false);
   expect(sign.textContent).toBe('⏸ En pausa');
+  expect(sign.getAttribute('role')).toBe('status');
   time.setSpeed(2);
-  time.setSpeed(0);
   hud.update({ day: 1, hour: 8, minute: 0 }, emptyInventory());
-  sign.click();
-  expect(time.speed).toBe(2); // sigue como iba
   expect(sign.hidden).toBe(true);
 });
 

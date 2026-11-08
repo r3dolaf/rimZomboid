@@ -96,19 +96,15 @@ export function mountHud(
     speeds.append(b);
     return b;
   });
-  // U1 §2: en pausa se dice (los avisos rojos pausan solos); pulsarlo sigue.
-  const paused = document.createElement('button');
-  paused.type = 'button';
+  // U1 §2: en pausa se dice (los avisos rojos pausan solos). Es un letrero, como la hora: no tapa
+  // el mapa al dedo (para seguir, x1 está al lado).
+  const paused = document.createElement('span');
   paused.className = 'hud-paused';
   paused.dataset.testid = 'hud-paused';
+  paused.setAttribute('role', 'status');
   paused.textContent = es.paused.text;
   paused.title = es.paused.hint;
   paused.hidden = true;
-  paused.addEventListener('click', () => {
-    opts.time.togglePause();
-    refreshSpeed();
-    paused.blur();
-  });
   speeds.append(paused);
   // Con todos durmiendo, el tiempo va solo más rápido (pulsar una velocidad lo quita esta noche).
   const sleepSpeed = document.createElement('span');

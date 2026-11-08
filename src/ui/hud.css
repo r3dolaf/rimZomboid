@@ -125,20 +125,17 @@ body.tool-build canvas {
   font-weight: bold;
 }
 
-/* U1 §2: «⏸ En pausa», naranja, junto a las velocidades; pulsarlo sigue. (Con `.hud-speeds`,
-   para ganar al estilo de los botones de velocidad.) */
+/* U1 §2: «⏸ En pausa», un letrero naranja junto a las velocidades (no se pulsa: deja pasar el dedo
+   al mapa, como lo demás de la barra que no es un botón). */
 .hud-speeds .hud-paused {
-  pointer-events: auto;
   align-self: center;
   padding: 3px 8px;
   border: 1px solid #e08a2c;
   border-radius: 4px;
   background: #4a2e12;
   color: #ffd6a8;
-  font: inherit;
   font-weight: 600;
   white-space: nowrap;
-  cursor: pointer;
   animation: hud-paused-pulse 1.6s ease-in-out infinite;
 }
 @keyframes hud-paused-pulse {

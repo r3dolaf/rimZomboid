@@ -31,7 +31,8 @@ Para repetir una partida exacta, añade `?seed=NÚMERO` a la dirección.
 
 Controles (también en el juego, en **❓ Ayuda**, con `H` o `?`):
 
-- `Espacio` pausa · `1` `2` `3` velocidad. En pausa, arriba sale **⏸ En pausa** (pulsarlo sigue).
+- `Espacio` pausa · `1` `2` `3` velocidad. En pausa (también cuando la pone un aviso rojo), arriba
+  sale **⏸ En pausa**.
 - `WASD` o flechas mueven la cámara · arrastrar con el botón derecho · rueda para el zoom.
 - Clic izquierdo en un superviviente (o en su tarjeta) abre su ficha; en una casa, la ficha de la casa.
 - Clic derecho en un sitio: lo que se puede hacer allí (saquear una casa, un mueble o un cuerpo,

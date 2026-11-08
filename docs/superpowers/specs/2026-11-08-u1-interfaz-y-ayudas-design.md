@@ -45,8 +45,8 @@ Hoy:
   con los 44 px de M3.
 - **❓ Ayuda,** siempre a la vista, en la punta derecha (antes del ☰ cuando lo hay): abre la Ayuda
   (§8).
-- **En pausa:** junto a las velocidades, «⏸ En pausa» en un letrero naranja; pulsarlo sigue
-  (como Espacio).
+- **En pausa:** junto a las velocidades, «⏸ En pausa» en un letrero naranja. Es un letrero, no un
+  botón (como la hora: deja pasar el dedo al mapa); para seguir, x1 está al lado.
 - **Teclas:** cada botón dice la suya en la ayuda emergente; en el ☰, a la derecha (solo con
   ratón). Nuevas: I Almacén, E Expediciones, P Partida, H o ? Ayuda.
 

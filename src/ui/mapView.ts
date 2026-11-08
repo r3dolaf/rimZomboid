@@ -3,7 +3,7 @@
 import { es } from '../i18n/es';
 import { mapById } from '../sim/game';
 import type { World } from '../sim/types';
-import { mapName } from './describe';
+import { mapName, seasonText } from './describe';
 import './panels.css';
 
 /** La pestaña «🌍 Mundo» (H5c2 §6): no es un mapa; detrás sigue la base. */
@@ -95,6 +95,11 @@ export function mountMapTabs(root: HTMLElement, opts: { view: MapView }): { upda
   bar.setAttribute('aria-label', es.maps.tabsLabel);
   root.append(bar);
   const buttons = new Map<number, HTMLButtonElement>();
+  // V3: la estación y la temperatura, al final de la fila.
+  const weather = document.createElement('span');
+  weather.className = 'map-weather';
+  weather.dataset.testid = 'hud-season';
+  weather.title = es.seasonHint;
 
   return {
     update() {
@@ -125,8 +130,10 @@ export function mountMapTabs(root: HTMLElement, opts: { view: MapView }): { upda
         b.classList.toggle('active', t.mapId === view.mapId);
       }
       // En su orden (la del mundo, al final, aunque aparezca después la de un sitio).
-      const order = tabs.map((t) => buttons.get(t.mapId)!);
+      const order = [...tabs.map((t) => buttons.get(t.mapId)!), weather];
       if (order.some((b, i) => bar.children[i] !== b)) bar.append(...order);
+      const text = seasonText(view.base);
+      if (weather.textContent !== text) weather.textContent = text;
       const hide = tabs.length <= 1;
       if (bar.hidden !== hide) bar.hidden = hide;
       document.body.classList.toggle('with-map-tabs', !hide); // lo de arriba baja un poco

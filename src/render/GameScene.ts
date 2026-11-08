@@ -48,6 +48,7 @@ import {
 import { buildingTitle, furnitureLabel, pileLabel, plotLabel, zombieLabel } from '../ui/describe';
 import { canPlot, plotAt, plotPos } from '../sim/farm';
 import { isLitFire } from '../sim/furniture';
+import { outdoorTemp, seasonOf, type Season } from '../sim/season';
 import { pileAt } from '../sim/piles';
 import { isRaining, mainsOn } from '../sim/water';
 import { visibleTiles } from '../sim/vision';
@@ -98,7 +99,7 @@ import { makeTileArt, paintTile, type TileArt } from './tileArt';
 import { makeTreeArt, nearTree, paintTrees, TREE_REACH, type TreeArt } from './trees';
 import { skyAlpha } from './daylight';
 import { darknessWith, LIGHT_IN_FOG, LIGHT_RES, lightField, nightShade, type Light } from './light';
-import { makeRainCanvas, RAIN_PX } from './weather';
+import { makeRainCanvas, makeSnowCanvas, RAIN_PX } from './weather';
 import { garments } from '../sim/bags';
 import {
   facingOf,
@@ -180,6 +181,8 @@ const WARMTH = 0.6;
 /** Lluvia: cuánto cae y cuánto se ladea (píxeles por milisegundo). */
 const RAIN_FALL = 0.12;
 const RAIN_DRIFT = 0.04;
+/** V3: la nieve cae a un tercio de la velocidad de la lluvia. */
+const SNOW_SLOW = 0.3;
 /** Relámpagos de la tormenta: cada cuánto (al azar entre los dos) y cuánto dura el destello. */
 const FLASH_EVERY_MS: [number, number] = [6000, 15000];
 const FLASH_MS = 350;
@@ -319,6 +322,8 @@ export class GameScene extends Phaser.Scene {
   private map!: Phaser.Textures.CanvasTexture;
   /** Los dibujos de los suelos, los muros y los árboles (A1): se hacen una vez. */
   private tileArt!: TileArt;
+  /** La estación de la hierba pintada (V3). */
+  private tileSeason: Season = 'summer';
   private treeArt!: TreeArt;
   /** Los dibujos de los muebles (A2), en fila en un lienzo: dónde empieza cada uno. */
   private propAtlas!: ReturnType<typeof makePropAtlas>;
@@ -456,6 +461,7 @@ export class GameScene extends Phaser.Scene {
     this.marks = this.add.graphics();
     // La lluvia y los relámpagos, encima de la noche; solo cubren lo que se ve.
     this.textures.addCanvas('rain', makeRainCanvas());
+    this.textures.addCanvas('snow', makeSnowCanvas()); // V3
     this.rain = this.add.tileSprite(0, 0, RAIN_PX, RAIN_PX, 'rain').setOrigin(0, 0);
     this.rain.setVisible(false);
     this.flash = this.add
@@ -599,6 +605,14 @@ export class GameScene extends Phaser.Scene {
    */
   private refreshMap(): void {
     const { grid, curtains } = this.world;
+    // V3: al cambiar de estación, la hierba con sus tonos: se repinta todo el suelo.
+    const season = seasonOf(this.world.tick);
+    if (season !== this.tileSeason) {
+      this.tileSeason = season;
+      this.tileArt = makeTileArt(season);
+      this.mapTiles.fill(-1);
+      this.mapVersion = -1;
+    }
     const sig = curtains.reduce((a, i) => a + i + 1, 0) * 31 + curtains.length;
     if (grid.version === this.mapVersion && sig === this.mapCurtains) return;
     this.mapVersion = grid.version;
@@ -1878,7 +1892,12 @@ export class GameScene extends Phaser.Scene {
     const raining = storm || isRaining(w);
     this.rain.setVisible(raining);
     if (raining) {
-      this.rainMs += dtMs;
+      // V3: por debajo de 0, nieve (blanca y más lenta).
+      const snow = outdoorTemp(w) < 0;
+      const key = snow ? 'snow' : 'rain';
+      if (this.rain.texture.key !== key) this.rain.setTexture(key);
+      const slow = snow ? SNOW_SLOW : 1;
+      this.rainMs += dtMs * slow;
       this.rain.setPosition(v.x, v.y).setSize(Math.ceil(v.width) + 1, Math.ceil(v.height) + 1);
       this.rain.setTilePosition(v.x - this.rainMs * RAIN_DRIFT, v.y - this.rainMs * RAIN_FALL);
     }

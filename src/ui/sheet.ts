@@ -426,7 +426,9 @@ function renderClothes(v: ReturnType<typeof clothesView>): DocumentFragment {
     return e;
   };
   const c = es.clothesUi;
-  f.append(el('h3', c.zonesTitle));
+  const warm = el('p', v.warmth); // V3
+  warm.dataset.testid = 'clothes-warmth';
+  f.append(warm, el('h3', c.zonesTitle));
   for (const z of v.zones) {
     const row = el('div', undefined, 'zone');
     row.dataset.testid = `clothes-${z.part}`;

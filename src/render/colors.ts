@@ -264,3 +264,11 @@ export const ATLAS_STOP = 0xf28c28;
 
 /** H6c: el camino del colono elegido en el modo depuración. */
 export const DEBUG_PATH = 0x66ff99;
+
+/** V3: los tonos de la hierba en cada estación (el verano, los de siempre; en invierno, nieve). */
+export const GRASS_BY_SEASON = {
+  summer: MAP_ART.grass,
+  autumn: [0x6b6236, 0x7a6d3a, 0x5a5230, 0x8a7a42],
+  winter: [0xd5dbe0, 0xe6eaee, 0xc3cad1, 0xf1f3f5],
+  spring: [0x4f6a38, 0x5a7840, 0x46602f, 0x6a8a4a],
+} as const;

@@ -1,5 +1,6 @@
 import { Tile, type Grid } from '../sim/types';
-import { css, FLOOR_COLORS, MAP_ART as A, type FloorStyle } from './colors';
+import type { Season } from '../sim/season';
+import { css, FLOOR_COLORS, GRASS_BY_SEASON, MAP_ART as A, type FloorStyle } from './colors';
 import { hash2, isWallLike, laneAt, roadSides, wallSides, type Sides } from './look';
 
 const T = 16;
@@ -170,10 +171,15 @@ const GROUNDS: Record<Ground, (px: Px, rnd: () => number) => void> = {
   },
 };
 
-export function makeTileArt(): TileArt {
+export function makeTileArt(season: Season = 'summer'): TileArt {
   const art = {} as TileArt;
   (Object.keys(GROUNDS) as Ground[]).forEach((g, k) => {
-    art[g] = Array.from({ length: VARIANTS }, (_, v) => tile(GROUNDS[g], 1000 * (k + 1) + v));
+    // V3: la hierba, con los tonos de la estación (en verano, los de siempre).
+    const draw: (px: Px, rnd: () => number) => void =
+      g === 'grass'
+        ? (px, rnd) => noise(px, rnd, GRASS_BY_SEASON[season], [0.55, 0.8, 0.95])
+        : GROUNDS[g];
+    art[g] = Array.from({ length: VARIANTS }, (_, v) => tile(draw, 1000 * (k + 1) + v));
   });
   return art;
 }

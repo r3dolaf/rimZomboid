@@ -31,6 +31,8 @@ import type {
 } from '../sim/types';
 
 const pad = (n: number) => String(n).padStart(2, '0');
+/** V3: grados con el signo menos de verdad: «−4 °C». */
+const deg = (n: number) => `${n < 0 ? `−${-n}` : n} °C`;
 /** "Ana", "Ana y Luis" o "Ana, Luis y Sara". */
 const list = (names: string[]) =>
   names.length <= 1 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} y ${names.at(-1)}`;
@@ -43,6 +45,12 @@ export const es = {
   seed: (s: number) => `Semilla: ${s}`,
   // H6c: con icono, para que la barra de arriba quepa (el nombre, al pasar el ratón).
   food: (n: number) => `🥫 ${n}`,
+  /** V3: la estación y la temperatura de fuera, junto a las pestañas de mapa. */
+  seasonLabel: (season: Season, temp: number) =>
+    `${{ summer: '☀️', autumn: '🍂', winter: '❄️', spring: '🌱' }[season]} ${
+      { summer: 'Verano', autumn: 'Otoño', winter: 'Invierno', spring: 'Primavera' }[season]
+    } · ${deg(temp)}`,
+  seasonHint: 'La temperatura de fuera; bajo techo, más templada, y junto a una hoguera, más',
   /** V2: el agua guardada en la base (con agua corriente, «+»: el grifo aún da). */
   water: (liters: number, mains: boolean) => `💧 ${liters}${mains ? '+' : ''}`,
   hudWaterTitle: (liters: number, bottles: number, mains: boolean) =>
@@ -116,6 +124,9 @@ export const es = {
   },
   /** La ropa en pantalla (H5b §8). */
   clothesUi: {
+    /** V3: «Abriga 11 · sensación 14 °C». */
+    warmth: (warmth: number, feels: number | null) =>
+      `Abriga ${warmth}${feels === null ? '' : ` · sensación ${deg(feels)}`}`,
     /** Concordancia con la prenda: "rota", "rotos"… según su artículo. */
     torn: (end: string, where: string) => `rot${end} por ${where}`,
     /** H6c: «Tirar: Camiseta (2)». */
@@ -696,6 +707,8 @@ export const es = {
       painkiller: { icon: '💊', label: 'Con analgésico' },
       leg: { icon: '🦿', label: 'Pierna inutilizada' },
       arm: { icon: '💪', label: 'Brazo inutilizado' },
+      freezing: { icon: '🥶', label: 'Helado' }, // V3
+      hot: { icon: '🥵', label: 'Pasa calor' },
     },
     zombie: (who: string) => `${who} (zombi)`,
   },

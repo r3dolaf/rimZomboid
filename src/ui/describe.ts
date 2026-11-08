@@ -7,6 +7,8 @@ import {
   CISTERN_LITERS,
   CLEAN_BANDAGE_HEAL,
   DIRTY_HOURS,
+  FREEZING_BELOW,
+  HOT_ABOVE,
   GROW_HOURS,
   LONELY_BELOW,
   MOOD_CRISIS,
@@ -18,6 +20,7 @@ import {
 import { BODY_PARTS, painOf, partHp } from '../sim/body';
 import { layersOn, zoneBlock } from '../sim/clothes';
 import { mainsOn } from '../sim/water';
+import { outdoorTemp, seasonOf, warmthOf } from '../sim/season';
 import { allMaps, mapById } from '../sim/game';
 import { routeHours } from '../sim/atlas/route';
 import { gameTime } from '../sim/clock';
@@ -146,6 +149,8 @@ export function healthIcons(s: Survivor, tick: number): { icon: string; label: s
   if (s.painkillerUntil > tick) out.push(i.painkiller);
   if (partHp(s, 'leftLeg') <= 0 || partHp(s, 'rightLeg') <= 0) out.push(i.leg);
   if (partHp(s, 'leftArm') <= 0 || partHp(s, 'rightArm') <= 0) out.push(i.arm);
+  if (s.feels !== undefined && s.feels < FREEZING_BELOW) out.push(i.freezing); // V3
+  if (s.feels !== undefined && s.feels > HOT_ABOVE) out.push(i.hot);
   return out;
 }
 
@@ -158,6 +163,11 @@ function woundText(wd: Wound, tick: number): string {
   if (wd.bleeding) return name;
   const perDay = (wd.size * (clean ? CLEAN_BANDAGE_HEAL : 1)) / WOUNDS[wd.kind].healDays;
   return `${name} (${t.heals(Math.max(1, Math.ceil(wd.damage / perDay - 1e-9)))})`;
+}
+
+/** «❄️ Invierno · −3 °C» (V3 §7): la estación y la temperatura de fuera. */
+export function seasonText(w: World): string {
+  return es.seasonLabel(seasonOf(w.tick), Math.round(outdoorTemp(w)));
 }
 
 /** Lo que dice un mueble con agua al pasar el ratón (H5b), o `null`. */
@@ -214,6 +224,8 @@ export function clothesView(s: Survivor): {
   zones: { part: BodyPart; name: string; layers: string[]; protection: string }[];
   likes: string;
   hates: string;
+  /** V3: lo que abriga y su sensación térmica. */
+  warmth: string;
 } {
   const pct = (z: BodyPart, kind: 'scratch' | 'bite') =>
     Math.round(100 * zoneBlock(s.worn, z, kind));
@@ -226,6 +238,10 @@ export function clothesView(s: Survivor): {
     })),
     likes: es.clothesUi.likes(es.garments[s.likes].name),
     hates: es.clothesUi.hates(es.garments[s.hates].name),
+    warmth: es.clothesUi.warmth(
+      Math.round(warmthOf(s.worn)),
+      s.feels === undefined ? null : Math.round(s.feels),
+    ),
   };
 }
 

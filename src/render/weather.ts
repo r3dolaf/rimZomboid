@@ -29,3 +29,20 @@ export function makeRainCanvas(): HTMLCanvasElement {
   ctx.putImageData(img, 0, 0);
   return canvas;
 }
+
+/** V3: los copos de nieve: puntos blancos de 1 o 2 píxeles (caen más despacio). */
+export function makeSnowCanvas(): HTMLCanvasElement {
+  const canvas = document.createElement('canvas');
+  canvas.width = RAIN_PX;
+  canvas.height = RAIN_PX;
+  const ctx = canvas.getContext('2d')!;
+  let s = 54321;
+  const rnd = () => (s = (Math.imul(s, 1103515245) + 12345) >>> 0) / 2 ** 32;
+  for (let k = 0; k < RAIN_DROPS; k++) {
+    const [x, y] = [Math.floor(rnd() * RAIN_PX), Math.floor(rnd() * RAIN_PX)];
+    const size = rnd() < 0.4 ? 2 : 1;
+    ctx.fillStyle = `rgba(245, 248, 252, ${0.55 + rnd() * 0.4})`;
+    ctx.fillRect(x, y, size, size);
+  }
+  return canvas;
+}

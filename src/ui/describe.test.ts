@@ -109,3 +109,21 @@ test('V1: el huerto al pasar el ratón', async () => {
     'Huerto: maduro, para cosechar',
   );
 });
+
+test('V3: la estación y la temperatura, el abrigo en la ficha y 🥶 a quien está helado', async () => {
+  const { seasonText, clothesView, healthIcons } = await import('./describe');
+  const { emptyWorld } = await import('../sim/testing/fixtures');
+  const { dayStart } = await import('../sim/clock');
+  const { es } = await import('../i18n/es');
+  expect(es.seasonLabel('winter', -4)).toBe('❄️ Invierno · −4 °C');
+  expect(es.seasonLabel('summer', 22)).toBe('☀️ Verano · 22 °C');
+  const w = emptyWorld(3, 3);
+  w.tick = dayStart(20);
+  expect(seasonText(w)).toMatch(/^🍂 Otoño · −?\d+ °C$/);
+  const s = w.survivors[0]!;
+  s.feels = -3;
+  expect(clothesView(s).warmth).toMatch(/^Abriga \d+ · sensación −3 °C$/);
+  expect(healthIcons(s, 0).map((i) => i.icon)).toContain('🥶');
+  s.feels = undefined;
+  expect(clothesView(s).warmth).toMatch(/^Abriga \d+$/);
+});

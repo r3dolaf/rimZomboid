@@ -915,6 +915,18 @@
   border-color: #c9a227;
   color: #111;
 }
+.map-weather {
+  /* V3: la estación y la temperatura, como una pestaña más pero sin botón */
+  padding: 3px 10px;
+  border: 1px solid #3a3d42;
+  border-radius: 4px;
+  background: rgba(15, 17, 20, 0.85);
+  color: #d8d2c4;
+  font:
+    13px/1.2 system-ui,
+    sans-serif;
+  white-space: nowrap;
+}
 body.with-map-tabs .build-menu,
 body.with-map-tabs .hud-siege {
   top: 74px;

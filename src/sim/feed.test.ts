@@ -68,3 +68,22 @@ test('ni a quien está fuera de la base ni a quien no se puede llegar', () => {
   encloseTile(shut.w, { x: 12, y: 12 });
   expect(feedJob(shut.ana, shut.w)).toBeNull();
 });
+
+test('V2: a un derribado con sed le llevan una botella del almacén (y bebe)', () => {
+  const { w, bea } = world();
+  bea.needs.hunger = 100;
+  bea.needs.thirst = 20;
+  w.storage.items.waterBottle = 1;
+  for (let i = 0; i < 600 && bea.needs.thirst < 40; i++) step(w);
+  expect(bea.needs.thirst).toBeGreaterThan(60);
+  expect(w.storage.items.waterBottle).toBe(0);
+  expect(w.storage.items.food).toBe(3);
+  expect(checkInvariants(w)).toEqual([]);
+});
+
+test('V2: con sed pero sin botellas, no le llevan nada (si no tiene hambre)', () => {
+  const { w, ana, bea } = world();
+  bea.needs.hunger = 100;
+  bea.needs.thirst = 20;
+  expect(feedJob(ana, w)).toBeNull();
+});

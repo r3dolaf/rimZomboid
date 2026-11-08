@@ -4,6 +4,8 @@
 import { has, personal, spend, stashOne, unloadable } from '../bags';
 import {
   BANDAGE_CLEAN_HOURS,
+  DRINK_BELOW,
+  DRINK_RESTORE,
   BANDAGE_RANGE,
   BANDAGE_TICKS,
   EAT_BELOW,
@@ -311,8 +313,15 @@ export function zombiesNear(w: World, d: Survivor): boolean {
  * H6c: ¿hay que llevarle de comer? Derribado, con hambre, en la base y sin zombis a la vista cerca
  * (como para rescatarle: fuera, primero le rescatan).
  */
+const needsCare = (w: World, p: Survivor) =>
+  p.action.type === 'downed' && inBase(w, p) && !zombiesNear(w, p);
+/** V2: o de beber, si tiene sed (con una botella). */
+const thirsty = (p: Survivor) => p.needs.thirst < DRINK_BELOW;
 const needsFood = (w: World, p: Survivor) =>
-  p.action.type === 'downed' && p.needs.hunger < EAT_BELOW && inBase(w, p) && !zombiesNear(w, p);
+  needsCare(w, p) && (p.needs.hunger < EAT_BELOW || thirsty(p));
+
+/** Lo que le lleva: agua si tiene sed y hay botella (donde mire), si no, comida. */
+const givesWater = (p: Survivor, bottles: number) => thirsty(p) && bottles > 0;
 
 /** ¿Están en la misma zona (se puede llegar de uno a otro)? */
 function sameRegion(w: World, a: Survivor, b: Survivor): boolean {
@@ -344,8 +353,12 @@ export function feedJob(s: Survivor, w: World): Action | null {
       !w.survivors.some((x) => x !== s && foodTargetId(x) === o.id),
   );
   if (!p) return null;
-  if (packFood(s)) return goGiveFood(p);
-  if (!hasFood(w.storage.items) || !reachesStorage(w, s)) return null;
+  // V2: con sed, una botella (la suya o del almacén); con hambre, comida.
+  const water = givesWater(p, has(s, 'waterBottle') + w.storage.items.waterBottle);
+  if (water ? has(s, 'waterBottle') > 0 : p.needs.hunger < EAT_BELOW && packFood(s))
+    return goGiveFood(p);
+  const stocked = water ? w.storage.items.waterBottle > 0 : hasFood(w.storage.items);
+  if (!stocked || (!water && p.needs.hunger >= EAT_BELOW) || !reachesStorage(w, s)) return null;
   return {
     type: 'moveTo',
     target: pick(w.rng, w.storage.tiles),
@@ -368,9 +381,10 @@ export function startFeedActivity(
   const idle: Action = { type: 'idle', ticksLeft: 0 };
   const p = w.survivors.find((x) => x.id === activity.patientId);
   if (activity.type === 'fetchFood') {
-    // V1: la comida que antes se comería (guiso, hortalizas, latas).
-    const kind = bestFood(w.storage.items);
-    if (!packFood(s)) {
+    // V2: con sed, una botella; si no, la comida que antes se comería (V1: guiso, hortalizas, latas).
+    const water = p !== undefined && givesWater(p, w.storage.items.waterBottle);
+    const kind = water ? 'waterBottle' : bestFood(w.storage.items);
+    if (water ? has(s, 'waterBottle') === 0 : !packFood(s)) {
       if (!kind || room(s, kind) === 0) return idle;
       w.storage.items[kind]--;
       s.carrying[kind]++;
@@ -381,9 +395,14 @@ export function startFeedActivity(
     s.path = path;
     return goGiveFood(p);
   }
-  if (!p || !needsFood(w, p) || !packFood(s) || !near(s, p)) return idle;
-  const ate = eatFromPack(s)!;
-  p.needs.hunger = Math.min(100, p.needs.hunger + ate.restore);
+  if (!p || !needsFood(w, p) || !near(s, p)) return idle;
+  if (givesWater(p, has(s, 'waterBottle'))) {
+    spend(s, 'waterBottle');
+    p.needs.thirst = Math.min(100, p.needs.thirst + DRINK_RESTORE);
+  } else if (p.needs.hunger < EAT_BELOW && packFood(s)) {
+    const ate = eatFromPack(s)!;
+    p.needs.hunger = Math.min(100, p.needs.hunger + ate.restore);
+  } else return idle;
   logEvent(w, { kind: 'fed', survivorId: s.id, otherId: p.id });
   return idle;
 }

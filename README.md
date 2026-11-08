@@ -39,6 +39,12 @@ Controles:
 - `H` o el botón **Huerto** marcan el huerto: clic en una casilla de hierba junto a la base, o
   arrastrar para un rectángulo. Lo siembran, riegan y cosechan quienes tienen **Cultivar**; las
   hortalizas se cocinan en la hoguera (Fabricar → Cocinar) y se estropean con los días.
+- **Agua** (💧 arriba): se bebe del fregadero mientras hay agua corriente (se corta entre los días 7
+  y 14); después, de barriles de lluvia (Construir), barreños, cisternas y botellas. Para las
+  expediciones, botellas (o un río por el camino).
+- **Estaciones**: el año dura 60 días y empieza en verano. En invierno no crece nada y hiela: hace
+  falta ropa de abrigo y hogueras con leña (Transportar se la lleva). La estación y la temperatura
+  están junto a las pestañas de mapa.
 - `M` silencia o vuelve a dar sonido. Los volúmenes (General, Música y Efectos) están en el panel
   **Partida**.
 

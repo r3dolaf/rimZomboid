@@ -265,6 +265,7 @@ export function createWorld(
     blueprints: [],
     furniture: fixtures,
     chopMarks: [],
+    plots: [], // V1
     zombies: [],
     zombieRng: createRng((seed ^ ZOMBIE_RNG_SALT) >>> 0),
     zombieLevel,

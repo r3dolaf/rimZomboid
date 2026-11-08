@@ -130,6 +130,7 @@ export function siteMap(base: World, info: SiteInfo): World {
     blueprints: [],
     furniture: [],
     chopMarks: [],
+    plots: [], // V1
     zombies: [],
     zombieRng: createRng((seed ^ ZOMBIE_RNG_SALT) >>> 0),
     zombieLevel: base.zombieLevel,

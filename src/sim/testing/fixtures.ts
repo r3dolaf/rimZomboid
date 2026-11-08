@@ -156,6 +156,7 @@ export function emptyWorld(width: number, height: number): World {
     blueprints: [],
     furniture: [],
     chopMarks: [],
+    plots: [], // V1
     zombies: [],
     zombieRng: createRng(2),
     zombieLevel: 'normal',

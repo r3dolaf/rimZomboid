@@ -569,6 +569,23 @@ export type BuildKind =
   // El barreño (H5b §6).
   | 'tub';
 
+/**
+ * Lo sembrado en una parcela (spec V1 §3), en horas: las que ha crecido con humedad, las que lleva
+ * madura y las seguidas sin humedad.
+ */
+export interface Crop {
+  grown: number;
+  ripe: number;
+  dry: number;
+}
+
+/** Una parcela del huerto (V1 §3): su casilla (índice y·ancho + x), lo sembrado y sus horas de humedad. */
+export interface Plot {
+  tile: number;
+  crop: Crop | null;
+  moisture: number;
+}
+
 /** Algo por construir: madera (y cortinas, H4d) entregadas y ticks trabajados. */
 export interface Blueprint {
   id: number;
@@ -859,6 +876,8 @@ export interface World {
   furniture: Furniture[];
   /** Árboles marcados para talar, por índice y·ancho + x. */
   chopMarks: number[];
+  /** El huerto (V1): sus parcelas (solo en la base). */
+  plots: Plot[];
   // Zombis (H4b)
   zombies: Zombie[];
   /** Su propio azar: añadir zombis no cambia lo que hacen los colonos con la misma semilla. */

@@ -5,6 +5,7 @@ import { applyExpeditionOrder } from './expeditions';
 import { isEmpty, type ItemKind } from './items';
 import { resolveDecision } from './events/resolve';
 import { cancelBlueprint, markTree, placeBlueprint } from './build';
+import { markPlot } from './farm';
 import { BILL_DEFAULT_TARGET, RECIPES } from './balance';
 import { applyDraftOrder } from './draft';
 import { setMedical } from './jobs/medical';
@@ -34,6 +35,8 @@ export type Order =
   | { type: 'decide'; decisionId: number; option: 0 | 1 | 2 | 3 }
   // Talar y construir (H4a)
   | { type: 'markTree'; x: number; y: number; on: boolean }
+  // El huerto (V1)
+  | { type: 'markPlot'; x: number; y: number; on: boolean }
   | { type: 'placeBlueprint'; kind: BuildKind; x: number; y: number }
   | { type: 'cancelBlueprint'; id: number }
   // Zombis (H4b)
@@ -201,6 +204,9 @@ export function ordersSystem(w: World): void {
       }
       case 'markTree':
         markTree(w, o.x, o.y, o.on);
+        break;
+      case 'markPlot':
+        markPlot(w, o.x, o.y, o.on);
         break;
       case 'placeBlueprint':
         placeBlueprint(w, o.kind, o.x, o.y);

@@ -11,6 +11,10 @@ import {
   TUB_LITERS,
   ZOMBIE_HEALTH,
   BAGS,
+  GROW_HOURS,
+  RAIN_MOISTURE_HOURS,
+  RIPE_ROT_HOURS,
+  WITHER_DRY_HOURS,
 } from './balance';
 import { hexDistance } from './atlas/hex';
 import { BAG_SLOTS, bagsIn, isBag, wornBags } from './bags';
@@ -133,6 +137,8 @@ function checkMap(w: World, everyone: readonly Survivor[], allBeds: readonly Bed
   const problems: string[] = [];
   const everyoneIds = new Set(everyone.map((s) => s.id));
   if (!Number.isInteger(w.tick) || w.tick < 0) problems.push(`tick no válido: ${w.tick}`);
+
+  checkPlots(w, problems); // V1
 
   const ids = new Set<number>();
   for (const s of w.survivors) {
@@ -407,6 +413,26 @@ function checkMap(w: World, everyone: readonly Survivor[], allBeds: readonly Bed
 }
 
 /** La madera de un mapa: almacén, muebles, montones, lo que llevan, planos y bolsas (H5b2). */
+/** El huerto (V1 §3): en la base, sobre hierba, sin repetir casilla y con las horas en su rango. */
+function checkPlots(w: World, problems: string[]): void {
+  if (w.mapId !== 0 && w.plots.length > 0) problems.push('huerto fuera de la base');
+  const tiles = new Set<number>();
+  const inRange = (v: number, max: number) => Number.isFinite(v) && v >= 0 && v <= max;
+  for (const p of w.plots) {
+    const at = `parcela ${p.tile % w.grid.width},${Math.floor(p.tile / w.grid.width)}`;
+    if (tiles.has(p.tile)) problems.push(`${at} repetida`);
+    tiles.add(p.tile);
+    if (w.grid.tiles[p.tile] !== Tile.Grass) problems.push(`${at} fuera de la hierba`);
+    if (!inRange(p.moisture, RAIN_MOISTURE_HOURS)) problems.push(`${at}: humedad ${p.moisture}`);
+    const c = p.crop;
+    if (!c) continue;
+    if (!inRange(c.grown, GROW_HOURS) || !inRange(c.ripe, RIPE_ROT_HOURS))
+      problems.push(`${at}: crecido ${c.grown} h, madura ${c.ripe} h`);
+    if (!inRange(c.dry, WITHER_DRY_HOURS) || (c.ripe > 0 && c.grown < GROW_HOURS))
+      problems.push(`${at}: seca ${c.dry} h, madura ${c.ripe} h sin haber crecido`);
+  }
+}
+
 function woodIn(w: World): number {
   return (
     w.storage.items.wood +

@@ -26,9 +26,11 @@ export function wallPlanAt(w: World, x: number, y: number): boolean {
  * ¿Hay algo en esa casilla que impida construir? (mueble, cama, contenedor, almacén, montón, plano)
  * Un cuerpo de zombi no (H4d): suelen caer en los boquetes, y al terminar el muro se aparta.
  */
-function occupied(w: World, x: number, y: number): boolean {
+export function occupied(w: World, x: number, y: number): boolean {
   const at = (p: Point) => p.x === x && p.y === y;
+  const i = y * w.grid.width + x;
   return (
+    w.plots.some((p) => p.tile === i) || // V1: el huerto
     w.furniture.some((f) => at(f.pos)) ||
     w.beds.some((b) => at(b.pos)) ||
     w.containers.some((c) => c.kind !== 'corpse' && at(c.pos)) ||

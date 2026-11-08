@@ -698,6 +698,7 @@ export type LootItem =
   | 'bucket'
   | 'roadMap' // H5c1
   | 'note'
+  | 'seeds' // V1 (se reparten aparte: SEEDS_LOOT)
   | Weapon;
 
 /** El botín de cada tipo de edificio (spec H4f §4). */
@@ -1010,6 +1011,17 @@ export const PAD_BONUS = { cloth: 0.1, denim: 0.15, leather: 0.25 } as const sat
 export const PROTECTION_MAX = 0.95;
 /** Azar propio de la ropa (lo del principio, el botín de ropa, el agua): semilla ^ esto. */
 export const CLOTHES_SALT = 0x0c107e5;
+/** V1 §2: las semillas del botín, con su propio azar (semilla ^ esto): el resto sale igual. */
+export const SEEDS_SALT = 0x5eed5;
+export const SEEDS_LOOT: Partial<Record<LootKind, LootAmount>> = {
+  farm: [4, 8],
+  hardware: [1, 3],
+  supermarket: [0, 2],
+  house: { chance: 0.1 },
+};
+/** En los sitios del mapa del mundo, la granja da más (como su comida, H6a). */
+export const SITE_SEEDS_LOOT: Partial<Record<LootKind, LootAmount>> = { farm: [6, 12] };
+export const START_SEEDS = 6;
 /** La ropa del principio: camiseta, vaqueros o chándal y, a veces, algo más (H5b §2). */
 export const START_EXTRA_CHANCE = 0.5;
 export const START_EXTRAS = ['hoodie', 'shirt', 'cap'] as const satisfies readonly GarmentKind[];

@@ -14,8 +14,10 @@ import {
   LOCKED_DOOR_SALT,
   NEED_START_MAX,
   NEED_START_MIN,
+  SEEDS_SALT,
   START_ANTIBIOTICS,
   START_FOOD,
+  START_SEEDS,
   START_OPINION_MAX,
   START_OPINION_MIN,
   START_WEAPON,
@@ -31,7 +33,14 @@ import { dressStarter } from './clothes';
 import { defaultOutfits } from './outfits';
 import { placeFixtures, rollWaterCut } from './water';
 import { emptyInventory } from './items';
-import { fillBags, fillFindings, fillGarments, fillHatchets, placeContainers } from './loot';
+import {
+  fillBags,
+  fillFindings,
+  fillGarments,
+  fillHatchets,
+  fillSeeds,
+  placeContainers,
+} from './loot';
 import { revealFromSurvivors } from './vision';
 import { generateMap } from './map/generate';
 import { getTile, setTile } from './map/grid';
@@ -163,7 +172,12 @@ export function createWorld(
   }));
   const storage: Storage = {
     tiles: layout.storage,
-    items: { ...emptyInventory(), food: START_FOOD, antibiotics: START_ANTIBIOTICS },
+    items: {
+      ...emptyInventory(),
+      food: START_FOOD,
+      antibiotics: START_ANTIBIOTICS,
+      seeds: START_SEEDS, // V1
+    },
   };
 
   // Después de los supervivientes, para no cambiar partidas anteriores con la misma semilla.
@@ -177,6 +191,7 @@ export function createWorld(
   fillBags(pieces, houses, containers, clothesRng);
   fillHatchets(houses, containers, clothesRng);
   fillFindings(houses, containers, clothesRng); // H5c1: mapas de carreteras y notas
+  fillSeeds(houses, containers, createRng((seed ^ SEEDS_SALT) >>> 0)); // V1, con su azar
 
   // Relaciones (H3b), también después para no cambiar partidas anteriores.
   for (const s of survivors) {

@@ -1,7 +1,14 @@
 // H4f §4: el botín depende del tipo de edificio, y cada cosa va a su mueble.
 import { garments } from './bags';
 import { expect, test } from 'vitest';
-import { BUILDINGS, LOOT, LOOT_GARMENTS, THREAD_PER_SPOOL, type LootItem } from './balance';
+import {
+  BUILDINGS,
+  LOOT,
+  LOOT_GARMENTS,
+  START_SEEDS,
+  THREAD_PER_SPOOL,
+  type LootItem,
+} from './balance';
 import { checkInvariants } from './invariants';
 import { emptyInventory } from './items';
 import { fillBuilding } from './loot';
@@ -97,6 +104,7 @@ test('cada cosa va a su mueble (comida a la nevera, vendas al botiquín, tela al
     hatchet: ['crate'], // H5b2
     roadMap: ['counter'], // H5c1
     note: ['wardrobe'],
+    seeds: ['crate'], // V1
   };
   for (const kind of Object.keys(LOOT) as LootKind[]) {
     const cs = furniture(KINDS);
@@ -241,4 +249,16 @@ test('retales de vaquero y tiras de cuero en la tienda de ropa, en los armarios'
   }
   expect(denim).toBeGreaterThan(0);
   expect(leather).toBeGreaterThan(0);
+});
+
+test('V1: semillas en granjas, ferreterías, supermercados y algunas casas; 6 en el almacén', () => {
+  const w = createWorld(7);
+  const seedsIn = (kind: string) =>
+    w.containers
+      .filter((c) => w.houses.find((h) => h.id === c.houseId)?.kind === kind)
+      .reduce((n, c) => n + c.items.seeds, 0);
+  const total = w.containers.reduce((n, c) => n + c.items.seeds, 0);
+  expect(total).toBeGreaterThan(0);
+  expect(seedsIn('police') + seedsIn('pharmacy') + seedsIn('clothes')).toBe(0);
+  expect(w.storage.items.seeds).toBe(START_SEEDS);
 });

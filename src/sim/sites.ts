@@ -3,6 +3,7 @@
 import {
   BUILDINGS,
   CLOTHES_SALT,
+  SEEDS_SALT,
   INITIAL_REVEAL,
   NOTE_SURVIVORS,
   RADIO_SURVIVORS,
@@ -32,6 +33,7 @@ import {
   fillBags,
   fillBuilding,
   fillFindings,
+  fillSeeds,
   fillGarments,
   fillHatchets,
   placeContainers,
@@ -94,6 +96,7 @@ export function siteMap(base: World, info: SiteInfo): World {
   fillBags(base.common, g.houses, containers, clothesRng);
   fillHatchets(g.houses, containers, clothesRng);
   fillFindings(g.houses, containers, clothesRng);
+  fillSeeds(g.houses, containers, createRng((seed ^ SEEDS_SALT) >>> 0), true); // V1
   for (const c of containers) c.designated = true; // al llegar, todo marcado para saquear
   base.common.woodLog.start += containers.reduce((n, c) => n + c.items.wood, 0);
   // Y las armas del botín (para que cuadren las cuentas de todo el juego).

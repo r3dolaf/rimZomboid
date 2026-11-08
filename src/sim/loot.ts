@@ -3,6 +3,8 @@ import {
   LOOT,
   LOOT_BAGS,
   LOOT_GARMENTS,
+  SEEDS_LOOT,
+  SITE_SEEDS_LOOT,
   THREAD_PER_SPOOL,
   type LootAmount,
   type LootItem,
@@ -65,6 +67,7 @@ const HOME: Record<LootItem, readonly ContainerKind[]> = {
   hatchet: ['crate'],
   roadMap: ['counter'], // H5c1
   note: ['wardrobe'],
+  seeds: ['crate'], // V1
 };
 
 /** Los muebles de la ropa (H5b §2); también las estanterías y los mostradores. */
@@ -234,5 +237,26 @@ export function fillFindings(houses: Building[], containers: Container[], rng: R
       const pool = placesFor(cs, item);
       for (let k = 0; k < n; k++) pool[nextInt(rng, 0, pool.length - 1)]!.items[item]++;
     }
+  }
+}
+
+/**
+ * Las semillas (V1 §2), con su propio azar: no cambian el resto del botín. En un sitio del mapa del
+ * mundo (`site`), lo de su especialidad en vez de lo del pueblo.
+ */
+export function fillSeeds(
+  houses: Building[],
+  containers: Container[],
+  rng: RngState,
+  site = false,
+): void {
+  for (const h of houses) {
+    if (h.kind === 'base') continue;
+    const cs = containers.filter((c) => c.houseId === h.id);
+    const amount = (site ? SITE_SEEDS_LOOT[h.kind] : undefined) ?? SEEDS_LOOT[h.kind];
+    if (cs.length === 0 || amount === undefined) continue;
+    const n = roll(rng, amount);
+    const pool = placesFor(cs, 'seeds');
+    for (let k = 0; k < n; k++) pool[nextInt(rng, 0, pool.length - 1)]!.items.seeds++;
   }
 }

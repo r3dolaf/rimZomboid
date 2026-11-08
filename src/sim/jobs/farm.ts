@@ -201,6 +201,7 @@ export function tendStep(w: World, s: Survivor, a: Tending): boolean {
     const veg = harvestVeg(s.skills.farm.level, nextFloat(w.rng));
     const seeds = 1 + (nextFloat(w.rng) < HARVEST_EXTRA_SEED ? 1 : 0);
     p.crop = null;
+    w.common.stats.harvested += veg; // para el resumen final
     dropPile(w, plotPos(w, p), { ...emptyInventory(), veg, seeds });
   }
   return true;

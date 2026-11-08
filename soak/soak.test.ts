@@ -20,6 +20,7 @@ import { hasCargo } from '../src/sim/jobs/medical';
 import { issue } from '../src/sim/orders';
 import { createRng, nextInt } from '../src/sim/rng';
 import { canPlace } from '../src/sim/build';
+import { canPlot, markPlot } from '../src/sim/farm';
 import { contains } from '../src/sim/geom';
 import { WEAPONS } from '../src/sim/jobs/weapons';
 import {
@@ -851,4 +852,68 @@ test('con zombis se pelea, alguien cae, algo se rompe, se fabrica y se registran
   // H5b2: se encuentran bolsas y se las ponen.
   expect(zombieTotals.bagsFound, 'bolsas encontradas').toBeGreaterThan(0);
   console.log('H4e, en las 3 partidas con zombis:', zombieTotals);
+});
+
+/** V1: lo del huerto en las partidas largas. */
+const farmTotals = { harvested: 0, cooked: 0, lost: 0, spoiled: 0, survived: [] as number[] };
+
+/** Un huerto de `n` parcelas junto a la base (las casillas vistas más cercanas a su centro). */
+function plantGarden(w: World, n: number): void {
+  const r = w.base.rect;
+  const [cx, cy] = [r.x + r.w / 2, r.y + r.h / 2];
+  const spots: { x: number; y: number; d: number }[] = [];
+  for (let y = 0; y < w.grid.height; y++)
+    for (let x = 0; x < w.grid.width; x++)
+      if (canPlot(w, { x, y })) spots.push({ x, y, d: (x - cx) ** 2 + (y - cy) ** 2 });
+  spots.sort((a, b) => a.d - b.d);
+  for (const p of spots.slice(0, n)) markPlot(w, p.x, p.y, true);
+}
+
+test.each([1, 2, 3])(
+  `semilla %i: ${DAYS} días con huerto desde el principio, saqueando con zombis — se siembra, se riega, se cosecha y se cocina, sin romper nada`,
+  (seed) => {
+    const w = createWorld(seed, 'balanced', 'normal');
+    for (const h of w.houses) issue(w, { type: 'designateHouse', houseId: h.id, on: true });
+    plantGarden(w, 16);
+    expect(w.plots.length).toBeGreaterThan(8);
+    // Una hoguera en la base (como si ya estuviera construida) y guisos hasta tener 4.
+    const fire = w.storage.tiles
+      .flatMap((t) => [-2, -1, 1, 2].map((d) => ({ x: t.x + d, y: t.y - 2 })))
+      .find((p) => canPlace(w, 'campfire', p));
+    if (fire) w.furniture.push({ id: w.common.nextId++, kind: 'campfire', pos: fire });
+    issue(w, { type: 'addBill', recipe: 'cook' });
+    const r = createRng(29);
+    let ms = 0;
+    for (let day = 1; day <= DAYS && !w.common.over; day++)
+      for (let i = 0; i < TICKS_PER_DAY; i++) {
+        const d = w.decisions[0];
+        if (d && !w.orders.some((o) => o.type === 'decide'))
+          issue(w, { type: 'decide', decisionId: d.id, option: answer(r, d) });
+        const bill = w.bills.find((b) => b.recipe === 'cook');
+        if (bill && bill.mode !== 'until')
+          issue(w, { type: 'setBill', billId: bill.id, mode: 'until', target: 4 });
+        const last = w.common.log.at(-1);
+        const t0 = performance.now();
+        stepGame(w);
+        ms += performance.now() - t0;
+        const problems = checkInvariants(w);
+        if (problems.length > 0) expect(problems, `tick ${w.tick}`).toEqual([]);
+        for (const e of w.common.log.slice(last ? w.common.log.lastIndexOf(last) + 1 : 0)) {
+          if (e.kind === 'crafted' && e.recipe === 'cook') farmTotals.cooked++;
+          if (e.kind === 'cropsLost') farmTotals.lost += e.dried + e.rotted;
+          if (e.kind === 'spoiled') farmTotals.spoiled += e.veg + e.meal;
+        }
+      }
+    expect(ms / (w.tick || 1), 'ms por tick').toBeLessThan(1.5);
+    farmTotals.harvested += w.common.stats.harvested;
+    farmTotals.survived.push(w.common.over ? gameTime(w.common.over.tick).day : DAYS);
+  },
+  900_000,
+);
+
+test('con huerto se cosecha y se cocina', () => {
+  if (DAYS < 15) return;
+  expect(farmTotals.harvested, 'hortalizas cosechadas').toBeGreaterThan(0);
+  expect(farmTotals.cooked, 'guisos').toBeGreaterThan(0);
+  console.log('V1, en las 3 partidas con huerto:', farmTotals);
 });

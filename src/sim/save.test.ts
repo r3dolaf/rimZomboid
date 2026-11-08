@@ -107,6 +107,7 @@ function asVersion1(text: string): string {
     for (const k of ['work', 'priorities', 'skills'])
       if (typeof o[k] === 'object' && o[k] !== null) delete (o[k] as Record<string, unknown>).farm;
     if ('chopMarks' in o) delete o.plots;
+    if ('siegesRepelled' in o) delete o.harvested;
     Object.values(o).forEach(strip);
   };
   strip(file.world);
@@ -123,6 +124,7 @@ test('V1: una partida de la versión 1 se sigue cargando, con lo nuevo a 0 y Cul
   if ('error' in loaded) throw new Error(loaded.error);
   const lw = loaded.world;
   expect(lw.plots).toEqual([]);
+  expect(lw.common.stats.harvested).toBe(0);
   expect(lw.storage.items.seeds).toBe(0);
   expect(lw.storage.items.meal).toBe(0);
   for (const s of lw.survivors) {

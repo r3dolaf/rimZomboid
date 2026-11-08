@@ -132,7 +132,7 @@ export function emptyWorld(width: number, height: number): World {
       nextWoundId: 1,
       dead: [],
       over: null,
-      stats: { kills: 0, siegesRepelled: 0, looted: emptyInventory(), joined: [] },
+      stats: { kills: 0, siegesRepelled: 0, looted: emptyInventory(), joined: [], harvested: 0 },
       nextPieceId: 3,
       pieceLog: { made: 2, gone: 0 },
       outfits: defaultOutfits(),

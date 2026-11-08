@@ -842,7 +842,14 @@ export interface Common {
   /** Fin de partida (H5 §9): cuándo no quedó nadie en la colonia. */
   over: { tick: number } | null;
   /** Para el resumen final. */
-  stats: { kills: number; siegesRepelled: number; looted: Inventory; joined: string[] };
+  /** `harvested` (V1): hortalizas cosechadas en toda la partida. */
+  stats: {
+    kills: number;
+    siegesRepelled: number;
+    looted: Inventory;
+    joined: string[];
+    harvested: number;
+  };
   // Ropa (H5b)
   nextPieceId: number;
   /** Cuentas de las piezas: las que se han hecho y las que han desaparecido. */

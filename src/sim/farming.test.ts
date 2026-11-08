@@ -74,6 +74,7 @@ test('cosecha lo maduro: deja en la parcela un montón de hortalizas y semillas,
   run(w, 3000, () => w.storage.items.veg > 0);
   expect(w.plots[0]!.crop).toBeNull();
   expect(w.storage.items.veg).toBeGreaterThanOrEqual(4); // con Cultivar 5
+  expect(w.common.stats.harvested).toBe(w.storage.items.veg); // para el resumen final
   expect(w.storage.items.seeds).toBeGreaterThanOrEqual(1);
   expect(checkInvariants(w)).toEqual([]);
 });

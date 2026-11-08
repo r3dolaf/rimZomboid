@@ -239,7 +239,7 @@ export function createWorld(
       nextWoundId: 1,
       dead: [],
       over: null,
-      stats: { kills: 0, siegesRepelled: 0, looted: emptyInventory(), joined: [] },
+      stats: { kills: 0, siegesRepelled: 0, looted: emptyInventory(), joined: [], harvested: 0 },
       nextPieceId: pieces.nextPieceId,
       pieceLog: pieces.pieceLog,
       outfits: defaultOutfits(),

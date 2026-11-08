@@ -299,6 +299,7 @@ test('para el resumen: zombis matados, asedios resistidos, lo saqueado y quién 
     siegesRepelled: 0,
     looted: emptyInventory(),
     joined: [],
+    harvested: 0, // V1
   });
   const fresh = createWorld(3);
   expect(fresh.common.stats).toEqual(w.common.stats);

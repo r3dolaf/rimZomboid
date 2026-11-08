@@ -515,7 +515,7 @@ function crop(stage: 1 | 2 | 3, ripe: boolean): string[] {
     [8, 11],
     [12, 11],
   ];
-  const r = [0, 0.8, 1.6, 2.4][stage]!;
+  const r = [0, 0.7, 1.7, 2.7][stage]!;
   for (const [cx, cy] of centers) {
     for (let y = cy - 3; y <= cy + 1; y++)
       for (let x = cx - 3; x <= cx + 3; x++) {

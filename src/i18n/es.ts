@@ -702,6 +702,7 @@ export const es = {
     kills: (n: number) => `Zombis matados: ${n}`,
     sieges: (n: number) => `Asedios resistidos: ${n}`,
     looted: (what: string) => `Lo más saqueado: ${what}`,
+    harvested: (n: number) => `Cosechado: ${n} ${n === 1 ? 'hortaliza' : 'hortalizas'}`, // V1
     restart: 'Otra partida',
     title: 'Volver a la portada',
   },

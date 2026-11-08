@@ -73,6 +73,7 @@ export function mountEndScreen(
         line('p', t.kills(w.common.stats.kills)),
         line('p', t.sieges(w.common.stats.siegesRepelled)),
         line('p', t.looted(topLooted(w))),
+        ...(w.common.stats.harvested > 0 ? [line('p', t.harvested(w.common.stats.harvested))] : []),
         row,
       );
       screen.append(panel);

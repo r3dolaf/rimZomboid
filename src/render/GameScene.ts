@@ -45,7 +45,7 @@ import {
   type Zombie,
 } from '../sim/types';
 import { buildingTitle, furnitureLabel, pileLabel, plotLabel, zombieLabel } from '../ui/describe';
-import { plotAt, plotPos } from '../sim/farm';
+import { canPlot, plotAt, plotPos } from '../sim/farm';
 import { pileAt } from '../sim/piles';
 import { isRaining, mainsOn } from '../sim/water';
 import { visibleTiles } from '../sim/vision';
@@ -1939,6 +1939,7 @@ export class GameScene extends Phaser.Scene {
       tileToScreen,
       forceEvent,
       canPlace: (kind: BuildKind, x: number, y: number) => canPlace(this.world, kind, { x, y }),
+      canPlot: (x: number, y: number) => canPlot(this.world, { x, y }), // V1
       centerOnTile: (x: number, y: number) => this.centerOnTile({ x, y }),
     };
   }

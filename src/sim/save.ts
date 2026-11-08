@@ -117,6 +117,7 @@ function toV2(world: World): void {
   walk(world, (o) => {
     if (Array.isArray(o.pieces) && typeof o.food === 'number')
       for (const k of ITEM_KINDS) if (typeof o[k] !== 'number') o[k] = 0;
+    if (typeof o.kills === 'number' && typeof o.siegesRepelled === 'number') o.harvested ??= 0;
     const { work, priorities, skills } = o as Partial<Record<string, Json>>;
     if (isObject(work) && isObject(priorities) && isObject(skills)) {
       work.farm ??= true;

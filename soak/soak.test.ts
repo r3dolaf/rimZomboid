@@ -38,7 +38,6 @@ import { addSurvivor, moveTo, withoutZombies } from '../src/sim/testing/fixtures
 import { discoverSite, siteMap } from '../src/sim/sites';
 import { createWorld, tileOf } from '../src/sim/world';
 import { targetContainerId } from '../src/sim/work';
-import { siegeActive, siegeSize } from '../src/sim/zombies/hordes';
 
 const DAYS = Number(process.env.SOAK_DAYS || 30);
 
@@ -558,17 +557,11 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
     const startLevels = new Map(w.survivors.map((s) => [s.id, skillSum(s)]));
     const wasDressing = new Map<number, boolean>();
     let ms = 0;
-    let siegeSeen = false;
     for (let day = 1; day <= DAYS; day++) {
       const present = new Set(w.survivors.map((s) => s.id));
       const moved = new Set<number>();
       const down = new Map<number, number>();
       markCorpses(w);
-      // Los asedios del narrador son poco frecuentes (en una sonda de 12 partidas de 25 días, 3
-      // antes de C1 y 7 después): si para el día 12 no ha venido ninguno, se anuncia uno, para
-      // que la partida larga los pruebe siempre junto con lo demás.
-      if (day === 12 && !siegeSeen && !w.common.over && w.siege === null && !siegeActive(w))
-        w.siege = { at: w.tick + TICKS_PER_DAY, side: 2, size: siegeSize(w) };
       for (let i = 0; i < TICKS_PER_DAY; i++) {
         const d = w.decisions[0];
         if (d && !w.orders.some((o) => o.type === 'decide'))
@@ -588,7 +581,6 @@ describe.each(ZOMBIE_GAMES)('zombis: narrador %s, %s', (style, level) => {
           if (e.kind === 'crafted') zombieTotals.crafted++;
           if (e.kind === 'corpseSearched') zombieTotals.corpses++;
           if (e.kind === 'siegeArrived') zombieTotals.sieges++;
-          if (e.kind === 'siegeAnnounced' || e.kind === 'siegeArrived') siegeSeen = true;
           if (e.kind === 'wanderersSighted') zombieTotals.wanderers++;
           if (e.kind === 'rescued' || e.kind === 'bandaged') zombieTotals.healed++;
           if (e.kind === 'strangersFled') zombieTotals.strangersFled++;

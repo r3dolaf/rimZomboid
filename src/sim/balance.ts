@@ -683,6 +683,21 @@ export const ZOMBIE_EDGE_START_DAY = 2;
 /** Asedio: desde qué día, cada cuántos días como mucho, con cuánto aviso y cuánto se empeña. */
 export const SIEGE_FIRST_DAY = 6;
 export const SIEGE_COOLDOWN_DAYS = 6;
+/**
+ * N1: el asedio tiene su propio ritmo (no entra en el sorteo): el primer anuncio, en ese margen de
+ * días; después, cada tantos días (desde el anuncio). Con su propio azar el primero.
+ */
+export const SIEGE_FIRST: Record<NarratorStyle, [number, number]> = {
+  calm: [10, 12],
+  balanced: [7, 9],
+  chaotic: [6, 8],
+};
+export const SIEGE_EVERY: Record<NarratorStyle, [number, number]> = {
+  calm: [10, 14],
+  balanced: [7, 10],
+  chaotic: [4, 9],
+};
+export const SIEGE_SALT = 0x51e9e;
 export const SIEGE_WARNING_HOURS = [48, 72] as const;
 export const SIEGE_HOURS = 24;
 /** Sin ningún colono en pie este tiempo, la horda del asedio se cansa y se dispersa. */

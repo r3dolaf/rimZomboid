@@ -1,4 +1,5 @@
 // Suceso Asedio (spec H4e §2.2): se anuncia con 2–3 días de aviso; la llegada la lleva hordeSystem.
+// N1: no lo sortea el narrador; lo anuncia su reloj (`siegeClock`, en narrator.ts).
 import {
   SIEGE_COOLDOWN_DAYS,
   SIEGE_FIRST_DAY,
@@ -17,6 +18,7 @@ export const siegeEvent: GameEvent = {
   tone: 'bad',
   severity: 3,
   cooldownDays: SIEGE_COOLDOWN_DAYS,
+  scheduled: true, // N1: con su propio reloj (narrator.ts)
   canHappen: (w) => w.tick >= dayStart(SIEGE_FIRST_DAY) && w.siege === null && !siegeActive(w),
   happen(w) {
     const [lo, hi] = SIEGE_WARNING_HOURS;

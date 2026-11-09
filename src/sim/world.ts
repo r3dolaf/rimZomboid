@@ -53,6 +53,7 @@ import { createRng, nextFloat, nextInt, type RngState } from './rng';
 import { firstEdgeArrival, placeStartZombies } from './zombies/spawn';
 import { rollSkills, skillRng } from './skills';
 import { rollTraits } from './traits';
+import { firstSiegeAt } from './narrator';
 import {
   Tile,
   type Atlas,
@@ -269,6 +270,7 @@ export function createWorld(
       phaseEndsAt: calmEndsAt,
       nextEventAt: EVENTS_START,
       lastAt: {},
+      nextSiegeAt: firstSiegeAt(seed, style), // N1
     },
     decisions: [],
     piles: [],

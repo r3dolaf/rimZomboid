@@ -741,6 +741,8 @@ export interface Narrator {
   nextEventAt: number;
   /** Tick en que salió cada suceso por última vez. */
   lastAt: Partial<Record<EventId, number>>;
+  /** N1: cuándo toca anunciar el siguiente asedio (sin él, las partidas de antes: se pone al seguir). */
+  nextSiegeAt?: number;
 }
 
 /** Algo que el jugador tiene que decidir; si no contesta antes de `expiresAt`, se aplica la opción por defecto. */

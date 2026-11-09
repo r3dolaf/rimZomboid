@@ -9,6 +9,9 @@ import {
   GENTLE_BELOW,
   HARSH_ABOVE,
   RESPITE_BELOW,
+  SIEGE_EVERY,
+  SIEGE_FIRST,
+  SIEGE_SALT,
   TENSION_BREAK_BELOW,
   TENSION_DAYS_MAX,
   TENSION_DAYS_MIN,
@@ -18,13 +21,15 @@ import {
   WELLBEING_FOOD_DAYS,
   WELLBEING_WEIGHTS,
 } from './balance';
+import { dayStart } from './clock';
 import { foodDays } from './colony';
 import { CATALOG } from './events/catalog';
+import { siegeEvent } from './events/siege';
 import { expireDecisions } from './events/resolve';
 import type { GameEvent } from './events/types';
-import { nextFloat, nextInt, weightedPick } from './rng';
+import { createRng, nextFloat, nextInt, weightedPick } from './rng';
 import { opinionOf } from './social';
-import type { Tone, World } from './types';
+import type { NarratorStyle, Tone, World } from './types';
 
 /** Bienestar de la colonia, de 0 a 100: ánimo, opinión media y días de comida. */
 export function wellbeing(w: World): number {
@@ -58,6 +63,7 @@ export function narratorSystem(w: World, catalog: readonly GameEvent[] = CATALOG
       n.phase === 'tension' && w.tick % TICKS_PER_HOUR === 0 && wellbeing(w) < TENSION_BREAK_BELOW;
     if (w.tick >= n.phaseEndsAt || breaks) switchPhase(w);
   }
+  siegeClock(w);
   if (w.tick < n.nextEventAt) return;
 
   const ev = chooseEvent(w, catalog);
@@ -71,6 +77,35 @@ export function narratorSystem(w: World, catalog: readonly GameEvent[] = CATALOG
     n.style === 'chaotic' && nextFloat(w.rng) < CHAOTIC_DOUBLE_CHANCE
       ? w.tick + TICKS_PER_HOUR
       : w.tick + gap(w);
+}
+
+/**
+ * N1: el reloj del asedio. A su hora se anuncia (si no hay otro anunciado o en marcha, y el
+ * Tranquilo, con la colonia bien) y se pone el siguiente; si no, se mira al día siguiente. Una
+ * partida sin reloj (de antes de N1) lo pone ahora, como si empezara.
+ */
+function siegeClock(w: World): void {
+  const n = w.narrator;
+  if (n.nextSiegeAt === undefined) {
+    const [lo, hi] = SIEGE_FIRST[n.style];
+    n.nextSiegeAt = w.tick + nextInt(w.rng, (lo - 1) * TICKS_PER_DAY, hi * TICKS_PER_DAY);
+  }
+  if (w.tick < n.nextSiegeAt) return;
+  const spared = n.style === 'calm' && wellbeing(w) < CALM_NO_BAD_BELOW;
+  if (spared || !siegeEvent.canHappen(w)) {
+    n.nextSiegeAt = w.tick + TICKS_PER_DAY;
+    return;
+  }
+  siegeEvent.happen(w);
+  n.lastAt.siege = w.tick;
+  const [lo, hi] = SIEGE_EVERY[n.style];
+  n.nextSiegeAt = w.tick + nextInt(w.rng, lo * TICKS_PER_DAY, hi * TICKS_PER_DAY);
+}
+
+/** El primer anuncio del asedio de una partida nueva (N1), con su propio azar. */
+export function firstSiegeAt(seed: number, style: NarratorStyle): number {
+  const [lo, hi] = SIEGE_FIRST[style];
+  return nextInt(createRng((seed ^ SIEGE_SALT) >>> 0), dayStart(lo), dayStart(hi + 1) - 1);
 }
 
 function switchPhase(w: World): void {
@@ -124,6 +159,7 @@ const FALLBACK: Record<Tone, readonly Tone[]> = {
 export function chooseEvent(w: World, catalog: readonly GameEvent[]): GameEvent | null {
   const wb = wellbeing(w);
   const ready = catalog.filter((e) => {
+    if (e.scheduled) return false; // N1: el asedio, con su reloj
     const last = w.narrator.lastAt[e.id];
     return (
       (last === undefined || w.tick - last >= e.cooldownDays * TICKS_PER_DAY) && e.canHappen(w)

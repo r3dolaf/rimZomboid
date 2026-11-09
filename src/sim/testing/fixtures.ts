@@ -282,6 +282,7 @@ export function withoutZombies(w: World): World {
   w.zombies = [];
   w.nextZombieAt = Number.MAX_SAFE_INTEGER;
   w.narrator.lastAt.siege = Number.MAX_SAFE_INTEGER;
+  w.narrator.nextSiegeAt = Number.MAX_SAFE_INTEGER; // N1: el asedio tiene su propio reloj
   w.narrator.lastAt.wanderers = Number.MAX_SAFE_INTEGER;
   return w;
 }

@@ -86,3 +86,10 @@ test('una partida sin reloj (de antes) lo pone al seguir, en el margen del prime
   expect(d).toBeGreaterThanOrEqual((lo - 1) * TICKS_PER_DAY);
   expect(d).toBeLessThanOrEqual(hi * TICKS_PER_DAY);
 });
+
+test('sin zombis (para las pruebas), tampoco asedios: su reloj, parado', async () => {
+  const { withoutZombies } = await import('./testing/fixtures');
+  const w = withoutZombies(createWorld(2, 'chaotic'));
+  runNarrator(w, dayStart(40));
+  expect(w.common.log.some((e) => e.kind === 'siegeAnnounced')).toBe(false);
+});

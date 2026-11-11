@@ -1,11 +1,16 @@
 // U1 §9: los primeros pasos y los consejos, sin pantalla: qué paso toca y qué consejo salta, mirando
 // el mundo y lo que ha hecho el jugador en la interfaz. La tarjeta que los enseña está en coach.ts.
+import { COLD_BELOW, START_HOUR, TICKS_PER_DAY, TICKS_PER_HOUR } from '../sim/balance';
 import { markedTrees } from '../sim/build';
 import { darkness } from '../sim/clock';
+import { inCrisis } from '../sim/consoling';
+import { foodUnits } from '../sim/food';
 import { allColonists } from '../sim/game';
 import { getTile } from '../sim/map/grid';
 import { effectiveDesignated } from '../sim/orders';
+import { seasonOf } from '../sim/season';
 import { Tile, type Survivor, type World } from '../sim/types';
+import { mainsOn } from '../sim/water';
 
 /** Los pasos, en el orden en que se enseñan (se dan por hechos en cualquier orden). */
 export const GUIDE_STEPS = ['people', 'loot', 'wood', 'windows', 'time', 'work', 'table'] as const;
@@ -20,7 +25,13 @@ export const TIPS = [
   'bite',
   'food',
   'mood',
+  'crisis', // U2
   'siege',
+  'water', // U2
+  'cold',
+  'farm',
+  'veg',
+  'autumn',
   'radio', // C1
   'evac',
 ] as const;
@@ -130,14 +141,33 @@ export function dueTip(w: World, ctx: TipContext, shown: readonly TipId[]): DueT
       const who = first((s) => s.wounds.some((wd) => wd.kind === 'bite'));
       return who ? { id: 'bite', who } : null;
     },
-    food: () => (people.length > 0 && w.storage.items.food < people.length ? { id: 'food' } : null),
+    // U2: toda la comida (latas, hortalizas y guisos), por lo que quita de hambre.
+    food: () =>
+      people.length > 0 && foodUnits(w.storage.items) < people.length ? { id: 'food' } : null,
     mood: () => {
       const who = first((s) => s.needs.mood < LOW_MOOD);
       return who ? { id: 'mood', who } : null;
     },
+    crisis: () => {
+      const who = first(inCrisis);
+      return who ? { id: 'crisis', who } : null;
+    },
     // Anunciado (la cuenta atrás) o ya aquí.
     siege: () =>
       w.siege || w.hordes.some((h) => h.kind === 'siege' && !h.done) ? { id: 'siege' } : null,
+    // U2: el corte del agua; alguien con frío; el huerto desde el día 2 (no antes: los primeros
+    // pasos), con semillas y sin huerto; las primeras hortalizas; el otoño (llega el invierno).
+    water: () => (mainsOn(w) ? null : { id: 'water' }),
+    cold: () => {
+      const who = first((s) => s.feels !== undefined && s.feels < COLD_BELOW);
+      return who ? { id: 'cold', who } : null;
+    },
+    farm: () =>
+      w.tick >= FARM_TIP_AT && w.storage.items.seeds > 0 && w.plots.length === 0
+        ? { id: 'farm' }
+        : null,
+    veg: () => (w.storage.items.veg > 0 ? { id: 'veg' } : null),
+    autumn: () => (seasonOf(w.tick) === 'autumn' ? { id: 'autumn' } : null),
     // C1: la primera radio en el almacén de la base (sin construir aún); el helicóptero anunciado.
     radio: () =>
       w.storage.items.radio > 0 && !w.furniture.some((f) => f.kind === 'radio')
@@ -152,6 +182,9 @@ export function dueTip(w: World, ctx: TipContext, shown: readonly TipId[]): DueT
   }
   return null;
 }
+
+/** U2: el consejo del huerto, desde el día 2 a las 00:00 (la partida empieza a las 08:00). */
+const FARM_TIP_AT = TICKS_PER_DAY - START_HOUR * TICKS_PER_HOUR;
 
 /** Por debajo, el consejo del ánimo (la crisis llega a 10). */
 export const LOW_MOOD = 20;

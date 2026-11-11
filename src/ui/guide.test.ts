@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { TICKS_PER_HOUR } from '../sim/balance';
+import { COLD_BELOW, SEASON_DAYS, TICKS_PER_DAY, TICKS_PER_HOUR } from '../sim/balance';
 import { setTile } from '../sim/map/grid';
 import { emptyInventory } from '../sim/items';
 import { Tile } from '../sim/types';
@@ -98,4 +98,53 @@ test('consejos: la noche y el asedio anunciado', () => {
   expect(dueTip(w, calm, [])).toEqual({ id: 'night' });
   w.siege = { at: w.tick + 48 * TICKS_PER_HOUR, side: 0, size: 10 };
   expect(dueTip(w, calm, ['night'])).toEqual({ id: 'siege' });
+});
+
+// U2: los consejos de lo nuevo (el huerto, las hortalizas, el agua, el frío, el otoño, la crisis).
+const MANY = ['pause', 'night', 'zombies', 'bleeding', 'bite', 'food', 'mood', 'siege'] as const;
+
+test('U2: «poca comida» cuenta las hortalizas y los guisos, no solo las latas', () => {
+  const w = createWorld(5);
+  w.storage.items = emptyInventory();
+  w.storage.items.meal = 10;
+  expect(dueTip(w, calm, [])).toBeNull();
+  w.storage.items.meal = 0;
+  expect(dueTip(w, calm, [])).toEqual({ id: 'food' });
+});
+
+test('U2: el huerto, desde el día 2 con semillas y sin huerto; las primeras hortalizas', () => {
+  const w = createWorld(5);
+  w.storage.items.food = 20;
+  w.storage.items.seeds = 6;
+  w.tick = 2 * TICKS_PER_HOUR; // día 1, a las 10
+  expect(dueTip(w, calm, [...MANY])).toBeNull();
+  w.tick = 20 * TICKS_PER_HOUR; // día 2, a las 4
+  expect(dueTip(w, calm, [...MANY])).toEqual({ id: 'farm' });
+  w.plots.push({ tile: 1, crop: null, moisture: 0 });
+  expect(dueTip(w, calm, [...MANY])).toBeNull();
+  w.storage.items.veg = 3;
+  expect(dueTip(w, calm, [...MANY])).toEqual({ id: 'veg' });
+});
+
+test('U2: el corte del agua, el frío, el otoño y la crisis', () => {
+  const w = createWorld(5);
+  w.storage.items.food = 20;
+  w.storage.items.seeds = 0;
+  w.tick = 2 * TICKS_PER_HOUR;
+  w.waterCutAt = w.tick + 1;
+  expect(dueTip(w, calm, [...MANY])).toBeNull();
+  w.waterCutAt = w.tick;
+  expect(dueTip(w, calm, [...MANY])).toEqual({ id: 'water' });
+  const seen = [...MANY, 'water'] as const;
+  const s = w.survivors[0]!;
+  s.feels = COLD_BELOW + 1;
+  expect(dueTip(w, calm, [...seen])).toBeNull();
+  s.feels = COLD_BELOW - 1;
+  expect(dueTip(w, calm, [...seen])).toEqual({ id: 'cold', who: s.name });
+  s.feels = undefined;
+  s.action = { type: 'crisis', ticksLeft: 100, kind: 'flee' };
+  expect(dueTip(w, calm, [...seen])).toEqual({ id: 'crisis', who: s.name });
+  s.action = { type: 'idle', ticksLeft: 0 };
+  w.tick = SEASON_DAYS * TICKS_PER_DAY; // ya en otoño (el día 16)
+  expect(dueTip(w, calm, [...seen])).toEqual({ id: 'autumn' });
 });

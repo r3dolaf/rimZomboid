@@ -698,17 +698,49 @@ export const es = {
     food: {
       title: 'Queda poca comida',
       text: () =>
-        'Hay menos de una lata por persona. Marca más casas para saquear; los supermercados tienen mucha.',
+        'No llega para un día más. Marca más casas para saquear (los supermercados tienen mucha) y, para no depender del saqueo, planta un huerto (🌱).',
     },
     mood: {
       title: (who: string) => `El ánimo de ${who} está muy bajo`,
       text: () =>
         'Si llega al fondo tendrá una crisis. En su ficha se ve por qué: hambre, sueño, soledad, la ropa…',
     },
+    // U2
+    crisis: {
+      title: (who: string) => `${who} está en crisis`,
+      text: () =>
+        'Con el ánimo por los suelos, se encierra, se da un atracón con la comida del almacén, la toma a golpes con la base o huye lejos. Se le pasa en una o dos horas; quien tenga Social y le aprecie irá a consolarle. Para la próxima, mira en su ficha qué le hunde.',
+    },
     siege: {
       title: 'Viene una horda',
       text: () =>
         'Tienes unos días (la cuenta atrás está arriba): tapia ventanas, levanta muros, guarda vendas y que nadie esté lejos cuando llegue.',
+    },
+    // U2
+    water: {
+      title: 'Se ha cortado el agua',
+      text: (touch: boolean) =>
+        `El fregadero ya no da agua. Ahora se bebe de las botellas del almacén y de barreños, barriles y cisternas (💧 arriba). Haz barriles de lluvia con 🔨 Construir${touch ? '' : ' (B)'}: se llenan cuando llueve.`,
+    },
+    cold: {
+      title: (who: string) => `${who} tiene frío`,
+      text: () =>
+        'Se está mejor bajo techo y junto a una hoguera encendida (que gasta leña: Transportar se la lleva). Con ropa de abrigo en el almacén (jerséis, chaquetas, abrigos) se vestirán solos según el frío. Helados, pierden sangre y pueden morir de frío.',
+    },
+    farm: {
+      title: 'Planta un huerto',
+      text: (touch: boolean) =>
+        `Las latas se acaban. Con 🌱 Huerto${touch ? '' : ' (G)'}, marca casillas de hierba cerca de la base: quien tenga Cultivar siembra con las semillas del almacén, riega y cosecha. Crece en unos 7 días con la tierra húmeda; si se seca 3 días, se pierde.`,
+    },
+    veg: {
+      title: 'Las primeras hortalizas',
+      text: () =>
+        'Se estropean con los días (con frío, menos). Con una hoguera, 🧵 Fabricar → Cocinar: 2 hortalizas hacen un guiso, que llena más y anima, pero se estropea antes. Las latas no se estropean: guárdalas para el invierno.',
+    },
+    autumn: {
+      title: 'Llega el otoño',
+      text: () =>
+        'En unos días, el invierno: con frío el huerto no crece y la helada mata lo sembrado. Guarda latas, junta madera para la hoguera y busca ropa de abrigo.',
     },
     // C1
     radio: {
@@ -736,7 +768,19 @@ export const es = {
     basics: [
       [
         '🥫 Comida',
-        'Cada uno come más o menos una lata al día del almacén. Sin comida se debilitan y pierden sangre. Se consigue saqueando casas y tiendas.',
+        'Cada uno come más o menos una lata al día del almacén (o lo que llene lo mismo: hortalizas, guisos). Sin comida se debilitan y pierden sangre. Se consigue saqueando casas y tiendas, y cultivando.',
+      ],
+      [
+        '💧 Agua',
+        'Beben varias veces al día: del fregadero de la base mientras hay agua corriente (se corta entre los días 7 y 14) y luego de botellas, barreños, barriles de lluvia y cisternas. Con sed se les nota en el ánimo; sin agua, mueren. De viaje, llevan botellas.',
+      ],
+      [
+        '🌱 Huerto y cocina',
+        'Con 🌱 Huerto se marcan casillas de hierba: quien tenga Cultivar siembra, riega y cosecha (unos 7 días con la tierra húmeda). Las hortalizas, y los guisos que se cocinan con ellas en la hoguera, se estropean; las latas, no.',
+      ],
+      [
+        '❄️ Estaciones y frío',
+        'El año tiene 60 días: verano, otoño, invierno y primavera (arriba, la estación y la temperatura). Con frío abriga la ropa y se está mejor bajo techo y junto a la hoguera, que gasta leña; helados, pierden sangre. En invierno el huerto se para y la helada lo mata.',
       ],
       [
         '💤 Sueño',
@@ -760,7 +804,7 @@ export const es = {
       ],
       [
         '🙂 Ánimo',
-        'Comer, dormir, la compañía, la ropa y lo que pasa suben o bajan el ánimo. Muy bajo, tienen crisis.',
+        'Comer, dormir, la compañía, la ropa y lo que pasa suben o bajan el ánimo. Muy bajo, tienen crisis: se encierran, se dan un atracón, la toman con la base o huyen; quien les aprecie los consuela. Muy alto, a veces se inspiran y un día trabajan más rápido.',
       ],
       [
         '📢 Narrador',
@@ -843,6 +887,8 @@ export const es = {
       'Los asedios se anuncian con días de margen: aprovéchalos para levantar muros.',
       'Si alguien está muy hundido, mira en su ficha por qué.',
       'Con calma, acelera a x3; si algo se tuerce, pausa y piensa.',
+      'Haz barriles de lluvia antes de que se corte el agua corriente (días 7–14).',
+      'Antes del invierno, guarda latas: el huerto se hiela y lo fresco se estropea.',
       'El helicóptero hace mucho ruido: llegad al punto de evacuación antes de que aterrice y esperad cerca de la zona.',
       'Las herramientas sirven para marcar muchas cosas arrastrando; para una sola, basta el clic derecho (mantener pulsado).',
     ],

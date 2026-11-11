@@ -640,17 +640,47 @@ export const en: Texts = {
     food: {
       title: 'Food is running low',
       text: () =>
-        'There is less than one can per person. Mark more houses to loot; supermarkets have plenty.',
+        'There is not enough for another day. Mark more houses to loot (supermarkets have plenty) and, to stop depending on looting, plant a garden (🌱).',
     },
     mood: {
       title: (who: string) => `${who}'s mood is very low`,
       text: () =>
         'If it hits bottom they will have a breakdown. Their sheet shows why: hunger, sleep, loneliness, clothes…',
     },
+    crisis: {
+      title: (who: string) => `${who} is having a breakdown`,
+      text: () =>
+        'With their mood at rock bottom, they shut themselves away, binge on the food in storage, lash out at the base or run far away. It passes in an hour or two; someone with Social who likes them will go and console them. Next time, check their sheet for what is dragging them down.',
+    },
     siege: {
       title: 'A horde is coming',
       text: () =>
         'You have a few days (the countdown is at the top): board up windows, put up walls, keep bandages and keep everyone close when it arrives.',
+    },
+    water: {
+      title: 'The water has been cut off',
+      text: (touch: boolean) =>
+        `The sink no longer gives water. Now they drink from the bottles in storage and from tubs, barrels and cisterns (💧 at the top). Make rain barrels with 🔨 Build${touch ? '' : ' (B)'}: they fill up when it rains.`,
+    },
+    cold: {
+      title: (who: string) => `${who} is cold`,
+      text: () =>
+        'It is better indoors and next to a lit campfire (it burns wood: Haul brings it). With warm clothes in storage (sweaters, jackets, coats) they will dress for the cold on their own. Freezing, they lose blood and can die of cold.',
+    },
+    farm: {
+      title: 'Plant a garden',
+      text: (touch: boolean) =>
+        `Cans run out. With 🌱 Garden${touch ? '' : ' (G)'}, mark grass tiles near the base: whoever has Farm sows with the seeds in storage, waters and harvests. It grows in about 7 days with damp soil; if it stays dry for 3 days, it is lost.`,
+    },
+    veg: {
+      title: 'The first vegetables',
+      text: () =>
+        'They go off over the days (less in the cold). With a campfire, 🧵 Craft → Cook: 2 vegetables make a stew, which fills more and cheers up, but goes off sooner. Cans never go off: keep them for the winter.',
+    },
+    autumn: {
+      title: 'Autumn is here',
+      text: () =>
+        'Winter is a few days away: in the cold the garden does not grow and frost kills what is sown. Keep cans, gather wood for the campfire and look for warm clothes.',
     },
     radio: {
       title: 'A radio!',
@@ -676,7 +706,19 @@ export const en: Texts = {
     basics: [
       [
         '🥫 Food',
-        'Each one eats about one can a day from storage. Without food they weaken and lose blood. You get it by looting houses and shops.',
+        'Each one eats about one can a day from storage (or what fills the same: vegetables, stews). Without food they weaken and lose blood. You get it by looting houses and shops, and by farming.',
+      ],
+      [
+        '💧 Water',
+        'They drink several times a day: from the base sink while there is running water (it is cut off between days 7 and 14) and then from bottles, tubs, rain barrels and cisterns. Thirst shows in their mood; without water, they die. On the road, they carry bottles.',
+      ],
+      [
+        '🌱 Garden and cooking',
+        'With 🌱 Garden you mark grass tiles: whoever has Farm sows, waters and harvests (about 7 days with damp soil). Vegetables, and the stews cooked with them at the campfire, go off; cans do not.',
+      ],
+      [
+        '❄️ Seasons and cold',
+        'The year has 60 days: summer, autumn, winter and spring (the season and temperature are at the top). In the cold, clothes keep them warm and it is better indoors and next to the campfire, which burns wood; freezing, they lose blood. In winter the garden stops and frost kills it.',
       ],
       [
         '💤 Sleep',
@@ -700,7 +742,7 @@ export const en: Texts = {
       ],
       [
         '🙂 Mood',
-        'Eating, sleeping, company, clothes and what happens raise or lower their mood. Very low, they have breakdowns; very high, sometimes inspiration.',
+        'Eating, sleeping, company, clothes and what happens raise or lower their mood. Very low, they have breakdowns: they shut themselves away, binge, lash out at the base or run away; whoever likes them consoles them. Very high, they are sometimes inspired and work faster for a day.',
       ],
       [
         '📢 Storyteller',
@@ -780,6 +822,8 @@ export const en: Texts = {
       'Sieges are announced days ahead: use them to put up walls.',
       'If someone is very low, check their sheet to see why.',
       'When things are calm, speed up to x3; if something goes wrong, pause and think.',
+      'Make rain barrels before the running water is cut off (days 7–14).',
+      'Before winter, keep cans: the garden freezes and fresh food goes off.',
       'The helicopter is very loud: reach the evacuation point before it lands and wait near the zone.',
       'Tools are for marking many things by dragging; for a single one, a right click (press and hold) is enough.',
     ],

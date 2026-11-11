@@ -1,7 +1,8 @@
 // El panel «Partida» (spec H6b §2): guardar ahora, cargar la guardada (confirmando), exportar a un
 // archivo e importar uno; y el sonido (S1 §3).
 import type { SoundPrefs, SoundPrefsStore } from '../audio/prefs';
-import { es } from '../i18n/es';
+import { t as es, type Lang } from '../i18n';
+import { langSwitch } from './langSwitch';
 import type { GameSetup, NarratorStyle } from '../sim/types';
 import { setupLine } from './describe';
 import type { Flag } from './flag';
@@ -26,6 +27,8 @@ export function mountGamePanel(
     onImport: (text: string) => void;
     /** S1: los ajustes del sonido (volúmenes y Silenciar). */
     sound?: SoundPrefsStore;
+    /** I1: elegir otro idioma (guarda la partida y recarga). */
+    onLanguage?: (l: Lang) => void;
   },
 ): { update(): void; say(text: string): void } {
   const t = es.game;
@@ -88,6 +91,7 @@ export function mountGamePanel(
   setup.dataset.testid = 'game-setup';
   setup.textContent = setupLine(opts.setup ?? DEFAULT_SETUP);
   panel.append(head, seed, narrator, setup, row, status);
+  if (opts.onLanguage) panel.append(langSwitch(opts.onLanguage)); // I1
   const sound = opts.sound ? soundSection(opts.sound) : null;
   if (sound) panel.append(sound.el);
   root.append(panel);

@@ -1,4 +1,4 @@
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import { RECIPES, TICKS_PER_HOUR } from '../sim/balance';
 import type { ItemKind } from '../sim/items';
 import { craftBlocker } from '../sim/jobs/craft';

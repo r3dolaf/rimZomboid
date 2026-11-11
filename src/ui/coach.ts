@@ -2,7 +2,7 @@
 // toca está en guide.ts; aquí, lo que ha hecho el jugador en la interfaz, lo guardado en el
 // navegador y la tarjeta.
 import type { TimeController } from '../game/timeController';
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import type { World } from '../sim/types';
 import type { Flag } from './flag';
 import {

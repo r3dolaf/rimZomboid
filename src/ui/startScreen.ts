@@ -1,5 +1,6 @@
 import { seedFromText } from '../game/seed';
-import { es } from '../i18n/es';
+import { t as es, type Lang } from '../i18n';
+import { langSwitch } from './langSwitch';
 import type { SaveMeta } from '../sim/save';
 import { DEFAULT_SETUP } from '../sim/setup';
 import type { GameSetup, NarratorStyle, ScenarioId, SetupLevel, ZombieLevel } from '../sim/types';
@@ -26,6 +27,8 @@ export function mountStartScreen(
     onImport?: (text: string) => void;
     /** U1 §10: «❓ Cómo se juega», que abre la Ayuda. */
     onHelp?: () => void;
+    /** I1: elegir otro idioma (lo guarda y recarga). */
+    onLanguage?: (l: Lang) => void;
   },
 ): { remove(): void; say(text: string): void } {
   const screen = document.createElement('div');
@@ -245,6 +248,8 @@ export function mountStartScreen(
   const message = document.createElement('p');
   message.className = 'start-message';
   message.dataset.testid = 'start-message';
+  // I1: el idioma, arriba.
+  if (opts.onLanguage) panel.append(langSwitch(opts.onLanguage));
   panel.append(
     title,
     subtitle,

@@ -1,5 +1,5 @@
 import { SLEEP_SPEED, type Speed, type TimeController } from '../game/timeController';
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import type { GameTime } from '../sim/clock';
 import type { Inventory } from '../sim/items';
 import type { NarratorStyle } from '../sim/types';

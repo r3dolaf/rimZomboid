@@ -1,4 +1,4 @@
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import { isEmpty } from '../sim/items';
 import { houseMarked } from '../sim/orders';
 import { Tile, type World } from '../sim/types';

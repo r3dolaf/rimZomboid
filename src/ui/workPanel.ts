@@ -1,4 +1,4 @@
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import { issue } from '../sim/orders';
 import { SKILLS } from '../sim/skills';
 import { effectiveOutfits } from '../sim/outfits';

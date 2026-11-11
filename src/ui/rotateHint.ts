@@ -1,6 +1,6 @@
 // M3 §5: en un móvil en vertical, «Se juega mejor en horizontal: gira el móvil», con «Seguir así»
 // (que no vuelve a salir en esta visita). En una tableta en vertical, no (cabe bien).
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import './panels.css';
 
 /** Un móvil en vertical: estrecho, más alto que ancho y con el dedo. */

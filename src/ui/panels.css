@@ -1818,3 +1818,27 @@ body.with-map-tabs .work-panel {
   opacity: 0;
   pointer-events: none;
 }
+
+/* I1: el cambio de idioma (portada y panel Partida). */
+.lang-switch {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+  margin: 0 0 8px;
+  font-size: 13px;
+}
+.lang-switch button {
+  padding: 2px 10px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #2a2d31;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.lang-switch button.selected {
+  background: #c9a227;
+  border-color: #c9a227;
+  color: #111;
+}

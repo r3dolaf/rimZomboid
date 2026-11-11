@@ -1,4 +1,4 @@
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import type { Survivor } from '../sim/types';
 
 /** El icono que lleva sobre la cabeza ahora, o `null`. */

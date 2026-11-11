@@ -1,4 +1,4 @@
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import { BUILD } from '../sim/balance';
 import { radioBlock } from '../sim/build';
 import type { BuildKind, World } from '../sim/types';

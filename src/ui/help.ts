@@ -2,7 +2,7 @@
 // pantalla y consejos; abajo, volver a ver los primeros pasos y si salen los consejos. En la partida
 // la pausa mientras está abierta; también se abre desde la portada.
 import type { TimeController } from '../game/timeController';
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import type { Flag } from './flag';
 import { screenIs } from './screen';
 import { TOUCH_SCREEN } from './toolHint';

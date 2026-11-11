@@ -1,4 +1,4 @@
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import type { LogEvent } from '../sim/log';
 import type { World } from '../sim/types';
 import { formatLogEntry } from './describe';

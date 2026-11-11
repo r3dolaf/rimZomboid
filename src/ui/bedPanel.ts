@@ -1,4 +1,4 @@
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import { issue } from '../sim/orders';
 import type { World } from '../sim/types';
 import { personName } from './describe';

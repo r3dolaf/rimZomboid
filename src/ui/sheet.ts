@@ -1,4 +1,4 @@
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import { weightOf } from '../sim/items';
 import { moodModifiers, moodTarget } from '../sim/mood';
 import { draftToggle, effectiveDrafted } from '../game/command';
@@ -334,7 +334,7 @@ export function mountSheet(
       }
       const carryText = es.carrying(
         formatItems(s.carrying),
-        weightOf(s.carrying).toFixed(1).replace('.', ','),
+        es.decimal(weightOf(s.carrying)),
         kg(capacityKg(s)),
       );
       if (carrying.textContent !== carryText) carrying.textContent = carryText;
@@ -410,9 +410,7 @@ export function mountSheet(
 
 /** Kilos con una cifra decimal, salvo si son justos: "8", "7,2". */
 const kg = (n: number) =>
-  Number.isInteger(Math.round(n * 10) / 10)
-    ? String(Math.round(n))
-    : n.toFixed(1).replace('.', ',');
+  Number.isInteger(Math.round(n * 10) / 10) ? String(Math.round(n)) : es.decimal(n);
 
 const SHEET_TABS = ['general', 'skills', 'health', 'clothes'] as const;
 type SheetTab = (typeof SHEET_TABS)[number];

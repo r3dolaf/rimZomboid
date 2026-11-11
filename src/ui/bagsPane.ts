@@ -1,6 +1,6 @@
 // La pestaña Bolsas de la ficha (H5b2 §7): bolsas puestas, fijarlas, sus listas, lo de las manos y
 // «Llevar siempre». Cambia el mundo solo con órdenes; muestra lo pedido aunque esté en pausa.
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import { effectiveKeep, effectiveList, effectivePinned, findBag } from '../sim/bags';
 import { ITEM_KINDS, type ItemKind } from '../sim/items';
 import { issue } from '../sim/orders';

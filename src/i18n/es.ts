@@ -1,4 +1,5 @@
-// Textos visibles del juego en español. Todo texto de la interfaz sale de aquí.
+// Textos visibles del juego en español. Todo texto de la interfaz sale de aquí (o de su pareja en
+// inglés, `en.ts`, con la misma forma: I1).
 import { BIRTHDAY_CANS } from '../sim/balance';
 import type { Season } from '../sim/season';
 import type { MoodModifierId } from '../sim/mood';
@@ -915,7 +916,10 @@ export const es = {
     cap: { name: 'Gorra', the: 'la gorra' },
     beanie: { name: 'Gorro de lana', the: 'el gorro de lana' },
     helmet: { name: 'Casco de moto', the: 'el casco de moto' },
-  } satisfies Record<GarmentKind, { name: string; the: string; many?: boolean }>,
+  } satisfies Record<GarmentKind, { name: string; the: string; many?: boolean }> as Record<
+    GarmentKind,
+    { name: string; the: string; many?: boolean }
+  >,
   // Expediciones (H5c1): los sitios y los lados.
   sites: {
     kinds: {
@@ -931,7 +935,7 @@ export const es = {
       stash: 'un alijo',
       dangerous: 'un sitio peligroso',
     } satisfies Record<SiteSpecial, string>,
-    sides: ['el norte', 'el sur', 'el oeste', 'el este'] as const,
+    sides: ['el norte', 'el sur', 'el oeste', 'el este'] as [string, string, string, string],
   },
   // Los mapas en pantalla (H5c1 §7): pestañas, dónde está cada uno.
   maps: {
@@ -949,7 +953,7 @@ export const es = {
       stash: { name: 'Alijo', the: 'el alijo' },
       dangerous: { name: 'Sitio peligroso', the: 'el sitio peligroso' },
     } satisfies Partial<Record<SiteSpecial, { name: string; the: string }>>,
-    sides: ['del norte', 'del sur', 'del oeste', 'del este'] as const,
+    sides: ['del norte', 'del sur', 'del oeste', 'del este'] as [string, string, string, string],
     // H6a: lo que suele haber en cada tipo de sitio.
     specialty: {
       house: 'un poco de todo',
@@ -1897,6 +1901,25 @@ export const es = {
     goPry: 'Va a forzar una puerta',
     pry: 'Forzando una puerta',
   },
+  /** I1: el idioma (cada uno con su nombre en su idioma). */
+  language: {
+    label: 'Idioma',
+    names: { es: 'Español', en: 'English' },
+    hint: 'El idioma del juego (al cambiarlo se recarga la página; la partida se guarda antes)',
+  },
+  /** I1: con artículo determinado, para el menú del clic derecho («Saquear la nevera»). */
+  containersThe: {
+    fridge: 'la nevera',
+    wardrobe: 'el armario',
+    shelf: 'la estantería',
+    corpse: 'el cuerpo',
+    counter: 'el mostrador',
+    locker: 'la taquilla',
+    crate: 'la caja',
+    medicine: 'el botiquín',
+  },
+  /** I1: un decimal, con coma («2,5»). */
+  decimal: (n: number) => n.toFixed(1).replace('.', ','),
   containers: {
     fridge: 'una nevera',
     wardrobe: 'un armario',

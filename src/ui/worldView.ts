@@ -1,7 +1,7 @@
 // Lo que dibuja la escena del mundo (spec H5c2 §6), sin Phaser: dónde cae cada hexágono en pantalla,
 // qué hexágono hay bajo un punto, los sitios (con su icono, su gente y si se perdieron) y los grupos
 // que viajan, entre el hexágono en que están y el siguiente.
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import { hexCenter, hexIndex, type HexSize } from '../sim/atlas/hex';
 import { plannedHours } from '../sim/atlas/route';
 import type { SiteKind, World } from '../sim/types';

@@ -1,6 +1,6 @@
 // Qué mapa se ve (spec H5c1 §7): la base o un sitio con gente, con una pestaña por mapa. Cada mapa
 // recuerda dónde estaba la cámara.
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import { mapById } from '../sim/game';
 import type { World } from '../sim/types';
 import { mapName, seasonText } from './describe';

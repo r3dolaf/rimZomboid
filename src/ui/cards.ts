@@ -1,4 +1,4 @@
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import type { Needs, Survivor, World } from '../sim/types';
 import { effectiveDrafted } from '../game/command';
 import { HOLD_MS, TOUCH_SLOP_PX } from '../game/gestures';

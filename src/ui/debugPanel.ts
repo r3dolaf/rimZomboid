@@ -2,7 +2,7 @@
 // elegido por dentro (también la infección que aún no se ve) y las trampas (órdenes `debug`, o pasar
 // el tiempo de golpe).
 import { MOODS, SFX_IDS, type Mood, type SfxId } from '../audio/catalog';
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import { TICKS_PER_HOUR } from '../sim/balance';
 import { issue } from '../sim/orders';
 import type { World } from '../sim/types';

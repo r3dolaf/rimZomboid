@@ -1,4 +1,4 @@
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import type { Decision } from '../sim/types';
 import type { Flag } from './flag';
 import { CAN_BE_RED, NOTICE_GROUPS, pauses, shows, type PrefsStore } from './noticePrefs';

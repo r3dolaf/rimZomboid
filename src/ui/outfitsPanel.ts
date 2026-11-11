@@ -1,6 +1,6 @@
 import { BAG_KINDS } from '../sim/bags';
 import { bagName } from './describe';
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import { GARMENTS } from '../sim/balance';
 import { GARMENT_KINDS } from '../sim/clothes';
 import { issue } from '../sim/orders';

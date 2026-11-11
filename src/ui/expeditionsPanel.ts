@@ -1,4 +1,4 @@
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import { ACTIVE_SITES_MAX, EXPLORE_DIST, EXPLORE_MAX, TICKS_PER_DAY } from '../sim/balance';
 import { sideFrom } from '../sim/atlas/hex';
 import { findRoute, routeHours } from '../sim/atlas/route';

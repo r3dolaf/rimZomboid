@@ -1,4 +1,4 @@
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import { bagsIn, effectiveList, garments } from '../sim/bags';
 import { attachListHandlers, listEditor } from './bagsPane';
 import { ITEM_KINDS } from '../sim/items';

@@ -1,5 +1,5 @@
 import type { TimeController } from '../game/timeController';
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import { BIRTHDAY_CANS, TICKS_PER_DAY } from '../sim/balance';
 import { decisionAnswered } from '../sim/decisions';
 import { antibioticsAt } from '../sim/illness';

@@ -21,7 +21,7 @@ import { zombiesInSight } from './sim/danger';
 import type { GameSetup, NarratorStyle, World, ZombieLevel } from './sim/types';
 import { baseWater } from './sim/drink';
 import { loadGame, saveGame, type SaveMeta } from './sim/save';
-import { es } from './i18n/es';
+import { lang, saveLang, t as es, type Lang } from './i18n';
 import { mountGamePanel } from './ui/gamePanel';
 import { mountDebugPanel } from './ui/debugPanel';
 import { TICKS_PER_HOUR } from './sim/balance';
@@ -68,6 +68,15 @@ import { mountCoach } from './ui/coach';
 import { mountWorkPanel } from './ui/workPanel';
 
 const ui = document.getElementById('hud')!;
+document.documentElement.lang = lang; // I1
+
+/** I1: guarda el idioma y recarga `url` sin `?lang=` (para que valga lo guardado). */
+function switchLanguage(l: Lang, url = location.href): void {
+  saveLang(l);
+  const next = new URL(url, location.href);
+  next.searchParams.delete('lang');
+  location.assign(next.toString());
+}
 mountRotateHint(ui); // M3: en un móvil en vertical, «gira el móvil» (también en la portada)
 
 const store = createSaveStore(); // H6b: la partida guardada en el navegador
@@ -115,6 +124,7 @@ if (!(params.has('load') && startSaved(store.read()))) {
     };
     const screen = mountStartScreen(ui, {
       onHelp: () => titleHelp.set(true),
+      onLanguage: (l) => switchLanguage(l),
       seed: randomSeed(),
       randomSeed,
       onStart(seed, style, zombies, setup) {
@@ -241,6 +251,11 @@ function start(
       return ok;
     },
     onLoad: () => location.assign(loadHere()),
+    // I1: otro idioma: se guarda la partida y se sigue en el nuevo.
+    onLanguage: (l) => {
+      save();
+      switchLanguage(l, loadHere());
+    },
     onExport: () => downloadFile(exportName(meta()), saveGame(world, meta())),
     onImport(text) {
       const got = loadGame(text);

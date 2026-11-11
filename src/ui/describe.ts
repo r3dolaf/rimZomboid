@@ -1,5 +1,5 @@
 // Traducciones del estado de la simulación a textos e indicadores para la interfaz.
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import {
   BAGS,
   BARREL_LITERS,
@@ -1082,9 +1082,7 @@ export function noticeFor(e: LogEntry): NoticeInfo | null {
 
 /** Kilos con una cifra decimal, salvo si son justos: "8", "7,2". */
 export const kgText = (n: number): string =>
-  Number.isInteger(Math.round(n * 10) / 10)
-    ? String(Math.round(n))
-    : n.toFixed(1).replace('.', ',');
+  Number.isInteger(Math.round(n * 10) / 10) ? String(Math.round(n)) : es.decimal(n);
 
 /** El nombre de una bolsa con mayúscula: "Mochila escolar". */
 export const bagName = (kind: BagKind): string =>

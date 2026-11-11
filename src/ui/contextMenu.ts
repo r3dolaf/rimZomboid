@@ -2,7 +2,7 @@
 // lo que se puede hacer allí, con lo que gasta y lo que tienes. U1 §7: además, saquear un mueble,
 // un cuerpo o una casa, ver la casa, talar un árbol y fabricar en la mesa (así casi no hace falta
 // cambiar de herramienta). Solo cuando el clic derecho no es una orden de modo combate.
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import { toggleContainer, toggleHouse } from '../game/designate';
 import { containerAt, houseAt, tableAt } from '../game/pick';
 import { liveBlueprints, pendingPlacements, toggleTree } from '../game/tools';
@@ -70,7 +70,7 @@ export function contextOptions(w: World, p: Point, acts: ContextActions = {}): C
   const c = containerAt(w, p.x, p.y);
   if (c && markable(c)) {
     const on = effectiveDesignated(w, c);
-    const what = theOf(es.containers[c.kind]);
+    const what = es.containersThe[c.kind]; // I1: con su artículo, en cada idioma
     const text =
       c.kind === 'corpse' ? (on ? t.unsearch : t.search) : on ? t.unloot(what) : t.loot(what);
     out.push({ kind: 'loot', label: text, choose: () => toggleContainer(w, c.id) });
@@ -120,11 +120,6 @@ function houseOptions(w: World, p: Point, seen: boolean, acts: ContextActions): 
     out.push({ kind: 'viewHouse', label: t.viewHouse(the), choose: () => open(h.id) });
   }
   return out;
-}
-
-/** «una nevera» → «la nevera», «un armario» → «el armario». */
-function theOf(a: string): string {
-  return a.replace(/^una /, 'la ').replace(/^un /, 'el ');
 }
 
 function label(w: World, kind: BuildKind, p: Point, wood: number, curtains: number): string {

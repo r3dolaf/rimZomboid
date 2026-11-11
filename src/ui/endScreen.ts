@@ -1,5 +1,5 @@
 import type { TimeController } from '../game/timeController';
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import { gameTime } from '../sim/clock';
 import { emptyInventory, ITEM_KINDS } from '../sim/items';
 import type { World } from '../sim/types';

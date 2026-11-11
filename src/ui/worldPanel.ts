@@ -1,7 +1,7 @@
 // La ficha del mapa del mundo (spec H5c2 §6): al pulsar un hexágono, qué hay, a cuánto de la base y
 // sus botones (mandar un grupo, ir a su mapa, explorar); al pulsar un grupo, a dónde va, cambiar de
 // destino (eligiéndolo en el mapa, con la ruta y sus paradas) y volver a la base.
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import { hexDistance } from '../sim/atlas/hex';
 import { findRoute, routeHours } from '../sim/atlas/route';
 import { canRedirect } from '../sim/expeditions';

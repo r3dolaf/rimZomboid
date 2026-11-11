@@ -1,6 +1,6 @@
 // U1 §4: con una herramienta activa, abajo, qué hacer con ella y un botón «Hecho» que la quita
 // (con el dedo no hay Esc, y volver a tocar su icono no era evidente).
-import { es } from '../i18n/es';
+import { t as es } from '../i18n';
 import { screenIs } from './screen';
 import type { Tool, ToolMode } from './tool';
 import './panels.css';

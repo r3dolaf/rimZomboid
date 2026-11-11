@@ -16,6 +16,7 @@ import {
   ZOMBIE_HIT_CHANCE,
   ZOMBIE_REACH,
   HIT_WEIGHTS,
+  BITE_WEIGHTS,
   MAUL_BELOW,
   MAUL_BITE_CHANCE,
   SCRATCH_CHANCE,
@@ -239,7 +240,6 @@ export function zombieAttack(w: World, z: Zombie, s: Survivor): void {
   makeNoise(w, s.pos, NOISE.fightHit);
   const rng = w.zombieRng;
   if (nextFloat(rng) >= ZOMBIE_HIT_CHANCE) return;
-  const part = weightedPick(rng, { ...HIT_WEIGHTS }) as BodyPart;
   const reach2 = ZOMBIE_REACH * ZOMBIE_REACH;
   const around = w.zombies.filter(
     (o) => (o.pos.x - s.pos.x) ** 2 + (o.pos.y - s.pos.y) ** 2 <= reach2,
@@ -251,6 +251,8 @@ export function zombieAttack(w: World, z: Zombie, s: Survivor): void {
       : nextFloat(rng) < SCRATCH_CHANCE
         ? 'scratch'
         : 'cut';
+  // Dónde: el mordisco, casi siempre en un brazo o una pierna (revisión de la infección).
+  const part = weightedPick(rng, { ...(kind === 'bite' ? BITE_WEIGHTS : HIT_WEIGHTS) }) as BodyPart;
   // La ropa puede pararlo (H5b §3).
   if (blockHit(w, s, part, kind)) return;
   addWound(w, s, part, kind);

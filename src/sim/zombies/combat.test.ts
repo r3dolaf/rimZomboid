@@ -1,6 +1,6 @@
 // H4b §6: golpes de los colonos, matar zombis y las armas en la mano.
 import { expect, test } from 'vitest';
-import { HEAD_HIT_CHANCE, WEAPON_STATS, ZOMBIE_HEALTH } from '../balance';
+import { BITE_WEIGHTS, HEAD_HIT_CHANCE, WEAPON_STATS, ZOMBIE_HEALTH } from '../balance';
 import { hitChance } from '../skills';
 import { colonistHit, combatSystem } from '../combat';
 import { checkInvariants } from '../invariants';
@@ -214,4 +214,34 @@ test('H5b: los golpes de zombi que acierta la ropa no hieren', () => {
     s.worn.push(newGarment(w, 'helmet'), newGarment(w, 'workPants'));
   });
   expect(armored).toBeLessThan(naked * 0.6);
+});
+
+test('revisión de la infección: el mordisco va casi siempre a un brazo o una pierna (los agarran)', () => {
+  const w = world();
+  const s = w.survivors[0]!;
+  // Rodeado (para que haya mordiscos) y sin ropa.
+  for (const p of [
+    { x: 1, y: 0 },
+    { x: 0, y: 1 },
+  ])
+    w.zombies.push(newZombie(w, p));
+  const parts: Record<string, number> = {};
+  let bites = 0;
+  for (let i = 0; i < 20000 && bites < 300; i++) {
+    s.worn = [];
+    s.wounds = [];
+    s.health = 100;
+    s.action = { type: 'idle', ticksLeft: 0 };
+    zombieAttack(w, w.zombies[0]!, s);
+    const b = s.wounds.find((x) => x.kind === 'bite');
+    if (b) {
+      bites++;
+      parts[b.part] = (parts[b.part] ?? 0) + 1;
+    }
+  }
+  expect(bites).toBeGreaterThan(100);
+  const limbs =
+    (parts.leftArm ?? 0) + (parts.rightArm ?? 0) + (parts.leftLeg ?? 0) + (parts.rightLeg ?? 0);
+  expect(limbs / bites).toBeGreaterThan(0.72);
+  expect(BITE_WEIGHTS.head + BITE_WEIGHTS.torso).toBe(20);
 });

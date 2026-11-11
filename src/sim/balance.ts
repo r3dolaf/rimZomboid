@@ -1025,6 +1025,19 @@ export const HIT_WEIGHTS = {
   rightLeg: 10,
 } as const satisfies Record<BodyPart, number>;
 /**
+ * Revisión de la infección: el mordisco, casi siempre en un brazo o una pierna (los agarran): ahí se
+ * puede amputar a tiempo (B1). Antes iba como cualquier golpe y más de la mitad caían en la cabeza o
+ * el torso, una muerte segura sin nada que hacer.
+ */
+export const BITE_WEIGHTS = {
+  head: 5,
+  torso: 15,
+  leftArm: 25,
+  rightArm: 25,
+  leftLeg: 15,
+  rightLeg: 15,
+} as const satisfies Record<BodyPart, number>;
+/**
  * Cada tipo de herida: vida que quita, sangre por hora, horas hasta que deja de sangrar sola (o
  * `null`: hasta vendarla), días para curarse y probabilidad de infectar.
  */

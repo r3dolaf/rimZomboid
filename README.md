@@ -56,6 +56,9 @@ Asentarse (huerto, agua y estaciones):
 - **Amputar**: un mordisco en un brazo o una pierna pregunta si se amputa (hay 8 horas, y hace falta
   algo para cortar y 2 vendas). Si se hace a tiempo, la infección no le mata, pero pierde el brazo o
   la pierna para siempre.
+- **Comienzos y ajustes**: en la portada se elige cómo empieza (en el pueblo, solo, con familia
+  numerosa o con lo puesto) y, plegados, los ajustes a medida: infección, botín, asedios, hambre y
+  sed y frío. Van en la dirección, así que un enlace compartido es la misma partida.
 - **Radio y rescate**: tras encontrar una radio en una nave, una gasolinera o un pueblecito del mapa
   del mundo, se construye en la base (Construir → Radio) y se le dan pilas. Encendida, se oye al
   ejército: primero que evacúa, luego hacia dónde y, por último, dónde y qué día pasará un

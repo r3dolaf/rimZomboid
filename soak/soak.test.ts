@@ -37,6 +37,7 @@ import { regionOf } from '../src/sim/path/astar';
 import { addSurvivor, moveTo, withoutZombies } from '../src/sim/testing/fixtures';
 import { discoverSite, siteMap } from '../src/sim/sites';
 import { createWorld, tileOf } from '../src/sim/world';
+import { DEFAULT_SETUP } from '../src/sim/setup';
 import { targetContainerId } from '../src/sim/work';
 
 const DAYS = Number(process.env.SOAK_DAYS || 30);
@@ -1074,4 +1075,40 @@ test('con la radio se oye el helicóptero, se llega al punto y alguien se salva'
   expect(rescueTotals.arrived, 'llegadas al punto').toBeGreaterThan(0);
   expect(rescueTotals.landed, 'aterrizajes').toBeGreaterThan(0);
   expect(rescueTotals.rescued, 'a salvo').toBeGreaterThan(0);
+});
+
+/** C2: hasta qué día se aguanta con cada comienzo y con todo difícil. */
+const setupTotals: Record<string, number> = {};
+
+test.each([
+  ['solo', { scenario: 'solo' }],
+  ['familia numerosa', { scenario: 'family' }],
+  ['con lo puesto', { scenario: 'bare' }],
+  ['todo difícil', { infection: 'high', loot: 'low', sieges: 'high', needs: 'high', cold: 'high' }],
+] as const)(
+  'C2: %s, saqueando con zombis y contestando con sensatez — sin romper nada ni bloquearse',
+  (label, partial) => {
+    const setup = { ...DEFAULT_SETUP, ...partial };
+    const w = createWorld(4, 'balanced', 'normal', setup);
+    for (const h of w.houses) issue(w, { type: 'designateHouse', houseId: h.id, on: true });
+    const r = createRng(23);
+    for (let day = 1; day <= DAYS && !w.common.over; day++)
+      for (let i = 0; i < TICKS_PER_DAY && !w.common.over; i++) {
+        const d = w.decisions[0];
+        if (d && !w.orders.some((o) => o.type === 'decide'))
+          issue(w, { type: 'decide', decisionId: d.id, option: answer(r, d) });
+        stepGame(w);
+        const problems = checkInvariants(w);
+        if (problems.length > 0) expect(problems, `tick ${w.tick}`).toEqual([]);
+      }
+    setupTotals[label] = w.common.over ? gameTime(w.common.over.tick).day : DAYS;
+    expect(w.common.setup).toEqual(setup);
+  },
+  600_000,
+);
+
+test('C2: con cada comienzo se juega (al menos un día entero)', () => {
+  console.log('C2, hasta qué día:', setupTotals);
+  for (const [label, day] of Object.entries(setupTotals))
+    expect(day, label).toBeGreaterThanOrEqual(2);
 });

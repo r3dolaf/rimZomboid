@@ -8,7 +8,8 @@ export default defineConfig({
     reuseExistingServer: false,
     timeout: 120_000,
   },
-  use: { baseURL: 'http://localhost:4173' },
+  // I1: las pruebas están escritas en español: el navegador, en español (la del inglés lo pide).
+  use: { baseURL: 'http://localhost:4173', locale: 'es-ES' },
   projects: [
     {
       name: 'chromium',

@@ -23,7 +23,8 @@ import {
   START_OPINION_MAX,
   START_OPINION_MIN,
   START_WEAPON,
-  SURVIVOR_COUNT,
+  SCENARIOS,
+  SETUP_MULT,
   TICKS_PER_DAY,
 } from './balance';
 import { generateAtlas } from './atlas/generate';
@@ -54,12 +55,14 @@ import { firstEdgeArrival, placeStartZombies } from './zombies/spawn';
 import { rollSkills, skillRng } from './skills';
 import { rollTraits } from './traits';
 import { firstSiegeAt } from './narrator';
+import { DEFAULT_SETUP, scaleLoot } from './setup';
 import {
   Tile,
   type Atlas,
   type Expedition,
   type SiteInfo,
   type Bed,
+  type GameSetup,
   type NarratorStyle,
   type Point,
   type Stance,
@@ -98,7 +101,10 @@ export function createWorld(
   seed: number,
   style: NarratorStyle = 'balanced',
   zombieLevel: ZombieLevel = 'normal',
+  setup: GameSetup = DEFAULT_SETUP, // C2: el comienzo y los ajustes
 ): World {
+  const scenario = SCENARIOS[setup.scenario];
+  const people = scenario.people;
   const rng = createRng(seed);
   const { grid, base, houses, town, furniture } = generateMap(rng);
 
@@ -107,8 +113,8 @@ export function createWorld(
     for (let x = base.rect.x; x < base.rect.x + base.rect.w; x++)
       if (getTile(grid, x, y) === Tile.Floor) floor.push({ x, y });
 
-  const spots = takeDistinct(rng, floor, SURVIVOR_COUNT);
-  const names = takeDistinct(rng, NAMES, SURVIVOR_COUNT);
+  const spots = takeDistinct(rng, floor, people);
+  const names = takeDistinct(rng, NAMES, people);
   const survivors: Survivor[] = spots.map((t, i) => ({
     id: i + 1,
     name: names[i]!,
@@ -127,10 +133,11 @@ export function createWorld(
     skills: rollSkills(skillRng(seed, i + 1), []), // se sortea abajo con los rasgos
     memories: [],
     bedId: i + 1,
-    carrying: { ...emptyInventory(), bandage: BANDAGES_CARRIED }, // H5: salen con sus vendas
+    // H5: salen con sus vendas (C2: con lo puesto, sin nada)
+    carrying: { ...emptyInventory(), bandage: scenario.bare ? 0 : BANDAGES_CARRIED },
     work: defaultWork([]), // se ajusta abajo con los rasgos
     priorities: defaultPriorities(),
-    equipped: START_WEAPON,
+    equipped: scenario.bare ? null : START_WEAPON,
     weaponLocked: false,
     health: 100,
     stance: 'decide', // se ajusta abajo con los rasgos
@@ -178,14 +185,18 @@ export function createWorld(
   }));
   const storage: Storage = {
     tiles: layout.storage,
-    items: {
-      ...emptyInventory(),
-      food: START_FOOD,
-      antibiotics: START_ANTIBIOTICS,
-      seeds: START_SEEDS, // V1
-      waterBottle: START_WATER_BOTTLES, // V2
-    },
+    // C2: con lo puesto, vacío.
+    items: scenario.bare
+      ? emptyInventory()
+      : {
+          ...emptyInventory(),
+          food: START_FOOD,
+          antibiotics: START_ANTIBIOTICS,
+          seeds: START_SEEDS, // V1
+          waterBottle: START_WATER_BOTTLES, // V2
+        },
   };
+  scaleLoot(storage.items, SETUP_MULT.loot[setup.loot]); // C2: el ajuste Botín
 
   // Después de los supervivientes, para no cambiar partidas anteriores con la misma semilla.
   const containers = placeContainers(houses, furniture, rng);
@@ -203,6 +214,7 @@ export function createWorld(
   fillFindings(houses, containers, clothesRng); // H5c1: mapas de carreteras y notas
   fillSeeds(houses, containers, createRng((seed ^ SEEDS_SALT) >>> 0)); // V1, con su azar
   fillBatteries(houses, containers, createRng((seed ^ RADIO_SALT) >>> 0)); // C1, con su azar
+  for (const c of containers) scaleLoot(c.items, SETUP_MULT.loot[setup.loot]); // C2, sin azar
 
   // Relaciones (H3b), también después para no cambiar partidas anteriores.
   for (const s of survivors) {
@@ -259,6 +271,7 @@ export function createWorld(
       atlas,
       departed: [],
       usedNames: survivors.map((s) => s.name), // H6c
+      setup: { ...setup }, // C2
     },
     mapId: 0,
     siteMaps: [],
@@ -270,7 +283,7 @@ export function createWorld(
       phaseEndsAt: calmEndsAt,
       nextEventAt: EVENTS_START,
       lastAt: {},
-      nextSiegeAt: firstSiegeAt(seed, style), // N1
+      nextSiegeAt: firstSiegeAt(seed, style, setup), // N1 (C2: con el ajuste Asedios)
     },
     decisions: [],
     piles: [],

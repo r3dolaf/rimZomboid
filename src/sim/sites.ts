@@ -26,6 +26,7 @@ import {
   SITE_LOOT,
 } from './balance';
 import { placeFixtures } from './water';
+import { lootMult, scaleLoot } from './setup';
 import { placeBlueprint } from './build';
 import { emptyInventory, ITEM_KINDS } from './items';
 import { piecesGone } from './clothes';
@@ -106,6 +107,7 @@ export function siteMap(base: World, info: SiteInfo): World {
   const radioRng = createRng((seed ^ RADIO_SALT) >>> 0);
   fillBatteries(g.houses, containers, radioRng);
   fillRadio(info.kind, containers, radioRng);
+  for (const c of containers) scaleLoot(c.items, lootMult(base)); // C2: el ajuste Botín
   // V2: sus fregaderos (sin agua corriente) y cisternas (llenas), con su propio azar.
   const fixtures = placeFixtures(
     g.grid,

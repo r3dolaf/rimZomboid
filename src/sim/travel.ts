@@ -40,6 +40,7 @@ import { neighbors, sideFrom } from './atlas/hex';
 import { findRoute, hexHours } from './atlas/route';
 import { addWound, BODY_PARTS } from './body';
 import { takeAntibiotics } from './illness';
+import { needsMult } from './setup';
 import { nextFloat, pick } from './rng';
 import type { DeathCause, MapSide, Point, Survivor, Travel, World } from './types';
 
@@ -126,7 +127,8 @@ export function byWater(base: World, t: Travel): boolean {
 /** Un tick de viaje de alguien: hambre, sed, sueño, comer, beber y vendarse con lo suyo, sangre, morir. */
 function travelerTick(base: World, t: Travel, s: Survivor, night: boolean): void {
   const n = s.needs;
-  n.hunger = clamp(n.hunger - HUNGER_PER_TICK);
+  const more = needsMult(base); // C2: el ajuste Hambre y sed
+  n.hunger = clamp(n.hunger - HUNGER_PER_TICK * more);
   if (night) {
     s.action = { type: 'sleep', inBed: false };
     n.sleep = clamp(n.sleep + SLEEP_GAIN_PER_TICK * FLOOR_SLEEP_FACTOR);
@@ -148,7 +150,7 @@ function travelerTick(base: World, t: Travel, s: Survivor, night: boolean): void
   // V3: al aire libre, con lo que abrigue su ropa (y con calor, más sed).
   s.feels = outdoorTemp(base) + warmthOf(s.worn);
   const hot = s.feels > HOT_ABOVE ? HOT_THIRST : 1;
-  n.thirst = clamp(n.thirst - THIRST_PER_TICK * (s.fever ? FEVER_THIRST : 1) * hot);
+  n.thirst = clamp(n.thirst - THIRST_PER_TICK * (s.fever ? FEVER_THIRST : 1) * hot * more);
   if (n.thirst < DRINK_BELOW) {
     if (byWater(base, t)) n.thirst = clamp(n.thirst + DRINK_RESTORE);
     else {

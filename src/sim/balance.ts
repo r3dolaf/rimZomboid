@@ -698,6 +698,31 @@ export const SIEGE_EVERY: Record<NarratorStyle, [number, number]> = {
   chaotic: [4, 9],
 };
 export const SIEGE_SALT = 0x51e9e;
+
+// C2: los comienzos (cuánta gente y si el almacén y lo que llevan empiezan vacíos) y los ajustes.
+export const SCENARIOS = {
+  town: { people: 3, bare: false },
+  solo: { people: 1, bare: false },
+  family: { people: 5, bare: false },
+  bare: { people: 3, bare: true },
+} as const;
+/** Multiplicadores de cada ajuste: menos, normal y más. */
+export const SETUP_MULT = {
+  infection: { low: 0.5, normal: 1, high: 1.5 },
+  loot: { low: 0.6, normal: 1, high: 1.5 },
+  sieges: { low: 1.5, normal: 1, high: 0.7 },
+  needs: { low: 0.8, normal: 1, high: 1.25 },
+} as const;
+/** El frío: grados de más (suave) o de menos (duro) fuera, todo el año. */
+export const SETUP_COLD = { low: 4, normal: 0, high: -4 } as const;
+/** Lo que el ajuste Botín multiplica (lo demás, igual). */
+export const LOOT_SCALED = [
+  'food',
+  'bandage',
+  'painkillers',
+  'antibiotics',
+  'waterBottle',
+] as const;
 export const SIEGE_WARNING_HOURS = [48, 72] as const;
 export const SIEGE_HOURS = 24;
 /** Sin ningún colono en pie este tiempo, la horda del asedio se cansa y se dispersa. */

@@ -12,6 +12,7 @@ import {
   SIEGE_EVERY,
   SIEGE_FIRST,
   SIEGE_SALT,
+  SETUP_MULT,
   TENSION_BREAK_BELOW,
   TENSION_DAYS_MAX,
   TENSION_DAYS_MIN,
@@ -29,7 +30,8 @@ import { expireDecisions } from './events/resolve';
 import type { GameEvent } from './events/types';
 import { createRng, nextFloat, nextInt, weightedPick } from './rng';
 import { opinionOf } from './social';
-import type { NarratorStyle, Tone, World } from './types';
+import { DEFAULT_SETUP, setupOf } from './setup';
+import type { GameSetup, NarratorStyle, Tone, World } from './types';
 
 /** Bienestar de la colonia, de 0 a 100: ánimo, opinión media y días de comida. */
 export function wellbeing(w: World): number {
@@ -86,9 +88,11 @@ export function narratorSystem(w: World, catalog: readonly GameEvent[] = CATALOG
  */
 function siegeClock(w: World): void {
   const n = w.narrator;
+  const mult = SETUP_MULT.sieges[setupOf(w).sieges]; // C2: el ajuste Asedios
   if (n.nextSiegeAt === undefined) {
     const [lo, hi] = SIEGE_FIRST[n.style];
-    n.nextSiegeAt = w.tick + nextInt(w.rng, (lo - 1) * TICKS_PER_DAY, hi * TICKS_PER_DAY);
+    const wait = nextInt(w.rng, (lo - 1) * TICKS_PER_DAY, hi * TICKS_PER_DAY);
+    n.nextSiegeAt = w.tick + Math.round(wait * mult);
   }
   if (w.tick < n.nextSiegeAt) return;
   const spared = n.style === 'calm' && wellbeing(w) < CALM_NO_BAD_BELOW;
@@ -99,13 +103,22 @@ function siegeClock(w: World): void {
   siegeEvent.happen(w);
   n.lastAt.siege = w.tick;
   const [lo, hi] = SIEGE_EVERY[n.style];
-  n.nextSiegeAt = w.tick + nextInt(w.rng, lo * TICKS_PER_DAY, hi * TICKS_PER_DAY);
+  const wait = nextInt(w.rng, lo * TICKS_PER_DAY, hi * TICKS_PER_DAY);
+  n.nextSiegeAt = w.tick + Math.round(wait * mult);
 }
 
-/** El primer anuncio del asedio de una partida nueva (N1), con su propio azar. */
-export function firstSiegeAt(seed: number, style: NarratorStyle): number {
+/**
+ * El primer anuncio del asedio de una partida nueva (N1), con su propio azar; C2: más tarde o más
+ * pronto según el ajuste Asedios.
+ */
+export function firstSiegeAt(
+  seed: number,
+  style: NarratorStyle,
+  setup: GameSetup = DEFAULT_SETUP,
+): number {
   const [lo, hi] = SIEGE_FIRST[style];
-  return nextInt(createRng((seed ^ SIEGE_SALT) >>> 0), dayStart(lo), dayStart(hi + 1) - 1);
+  const at = nextInt(createRng((seed ^ SIEGE_SALT) >>> 0), dayStart(lo), dayStart(hi + 1) - 1);
+  return Math.round(at * SETUP_MULT.sieges[setup.sieges]);
 }
 
 function switchPhase(w: World): void {

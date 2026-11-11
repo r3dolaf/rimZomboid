@@ -13,20 +13,22 @@ import {
   THIRST_PER_TICK,
 } from '../balance';
 import { feverHunger } from '../illness';
+import { needsMult } from '../setup';
 import type { World } from '../types';
 
 const clamp = (v: number) => Math.min(100, Math.max(0, v));
 
 /** Hambre, sed (V2), sueño y necesidad social avanzan; los recuerdos caducados se olvidan. */
 export function needsSystem(w: World): void {
+  const more = needsMult(w); // C2: el ajuste Hambre y sed
   for (const s of w.survivors) {
     const n = s.needs;
     const hungerMult = (s.traits.includes('glutton') ? GLUTTON_HUNGER_MULT : 1) * feverHunger(s);
-    n.hunger = clamp(n.hunger - HUNGER_PER_TICK * hungerMult);
+    n.hunger = clamp(n.hunger - HUNGER_PER_TICK * hungerMult * more);
     n.social = clamp(n.social - SOCIAL_PER_TICK);
     // V2: la sed (con fiebre, más; V3: con calor, también).
     const hot = s.feels !== undefined && s.feels > HOT_ABOVE ? HOT_THIRST : 1;
-    n.thirst = clamp(n.thirst - THIRST_PER_TICK * (s.fever ? FEVER_THIRST : 1) * hot);
+    n.thirst = clamp(n.thirst - THIRST_PER_TICK * (s.fever ? FEVER_THIRST : 1) * hot * more);
 
     if (s.action.type === 'sleep') {
       const factor =

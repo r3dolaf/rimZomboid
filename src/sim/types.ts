@@ -926,6 +926,22 @@ export interface Common {
   rescue?: Rescue;
   /** C1: los que se han salvado en un helicóptero, el día. */
   rescued?: { id: number; name: string; day: number }[];
+  /** C2: el comienzo y los ajustes a medida (sin él, las de antes: el pueblo, todo normal). */
+  setup?: GameSetup;
+}
+
+/** C2: cómo empieza la partida. */
+export type ScenarioId = 'town' | 'solo' | 'family' | 'bare';
+/** C2: cada ajuste a medida, menos, normal o más. */
+export type SetupLevel = 'low' | 'normal' | 'high';
+/** C2: el comienzo y los ajustes (infección, botín, asedios, hambre y sed, frío). */
+export interface GameSetup {
+  scenario: ScenarioId;
+  infection: SetupLevel;
+  loot: SetupLevel;
+  sieges: SetupLevel;
+  needs: SetupLevel;
+  cold: SetupLevel;
 }
 
 /**

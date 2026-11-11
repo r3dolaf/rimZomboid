@@ -29,6 +29,7 @@ import { baseFloor } from './base';
 import { isLitFire } from './furniture';
 import { standBeside } from './jobs/stand';
 import { pick } from './rng';
+import { coldShift } from './setup';
 import type { Action, Garment, Point, Survivor, World } from './types';
 import { tileOf } from './world';
 import { isRaining } from './water';
@@ -61,9 +62,10 @@ function noise(seed: number, day: number): number {
   return ((h >>> 0) / 0xffffffff) * 2 - 1;
 }
 
-/** La ola de frío o de calor en curso (grados), o 0. */
+/** La ola de frío o de calor en curso (grados), o 0; y el ajuste Frío (C2). */
 const shift = (w: World, tick: number) =>
-  w.common.tempShift && tick < w.common.tempShift.until ? w.common.tempShift.value : 0;
+  (w.common.tempShift && tick < w.common.tempShift.until ? w.common.tempShift.value : 0) +
+  coldShift(w); // C2: el ajuste Frío
 
 /** La media del día (sin la hora ni la lluvia): para vestirse, el huerto y lo que se estropea. */
 export function dayMean(w: World, tick = w.tick): number {

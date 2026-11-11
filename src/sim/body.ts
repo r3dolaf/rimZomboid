@@ -15,6 +15,7 @@ import {
   WOUNDS,
 } from './balance';
 import { offerAmputation } from './amputation';
+import { infectChance } from './setup';
 import { logEvent } from './log';
 import { nextFloat, nextInt } from './rng';
 import type { BodyPart, Survivor, World, Wound, WoundKind } from './types';
@@ -105,7 +106,7 @@ export function knockDown(w: World, s: Survivor): void {
  * zombis); muere de ella a las 48–72 h.
  */
 function infect(w: World, s: Survivor, kind: WoundKind, part: BodyPart): void {
-  const chance = WOUNDS[kind].infect;
+  const chance = infectChance(w, kind); // C2: con el ajuste Infección
   // H6a: un mordisco sobre una infección de arañazo la vuelve de mordisco (ya no la curan).
   if (s.infection && kind === 'bite') s.infection.bite = true;
   if (s.infection || chance === 0 || (chance < 1 && nextFloat(w.zombieRng) >= chance)) return;

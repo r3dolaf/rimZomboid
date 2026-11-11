@@ -4,7 +4,6 @@ import { startPackBag, takeSupplies } from '../jobs/supplies';
 import { carriesSomething } from '../bags';
 import {
   CARRY_SPEED,
-  CRISIS_TICKS,
   DRINK_TICKS,
   EAT_TICKS,
   IDLE_TICKS_MAX,
@@ -37,7 +36,6 @@ import { startFuelActivity } from '../jobs/fuel';
 import { stillDrinkable } from '../drink';
 import { startDress } from '../jobs/dress';
 import { startWaterActivity } from '../jobs/water';
-import { logEvent } from '../log';
 import { startCrisis } from '../crisis';
 import { makeNoise } from '../noise';
 import { loadFactor, practice, workSpeed } from '../skills';

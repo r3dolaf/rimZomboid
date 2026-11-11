@@ -34,6 +34,7 @@ import type {
   BodyPart,
   Building,
   Furniture,
+  GameSetup,
   Garment,
   MemoryId,
   Pile,
@@ -72,6 +73,15 @@ export function personName(w: World, id: number): string {
     w.common.rescued?.find((r) => r.id === id)?.name ?? // C1
     '?'
   );
+}
+
+/** C2: «Comienzo: Solo · Infección alta · Frío suave» (lo que no es lo normal; todo normal, el pueblo). */
+export function setupLine(setup: GameSetup): string {
+  const keys = ['infection', 'loot', 'sieges', 'needs', 'cold'] as const;
+  const changed = keys
+    .filter((k) => setup[k] !== 'normal')
+    .map((k) => `${es.setup.names[k]}: ${es.setup.levels[k][setup[k]].toLowerCase()}`);
+  return [es.setupLabel(es.scenarios[setup.scenario].name), ...changed].join(' · ');
 }
 
 /**

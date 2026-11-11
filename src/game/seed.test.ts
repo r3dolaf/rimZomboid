@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest';
-import { loadUrl, parseNarrator, parseSeed, randomSeed, startUrl } from './seed';
+import { DEFAULT_SETUP } from '../sim/setup';
+import { loadUrl, parseNarrator, parseSeed, parseSetup, randomSeed, startUrl } from './seed';
 
 const fb = () => 999;
 
@@ -46,4 +47,25 @@ test('H6b: empezar una partida nueva quita «load» de la dirección; seguir la 
   expect(loadUrl('?semilla=1&seed=5&narrador=calma&zombis=pocos&debug=1')).toBe(
     '?semilla=1&debug=1&load=1',
   );
+});
+
+test('C2: el comienzo y los ajustes en la dirección: solo los que no son normales, y se leen', () => {
+  const setup = {
+    scenario: 'solo',
+    infection: 'high',
+    loot: 'low',
+    sieges: 'normal',
+    needs: 'high',
+    cold: 'low',
+  } as const;
+  const url = startUrl('?debug=1', 3, 'balanced', 'normal', setup);
+  expect(url).toBe(
+    '?debug=1&seed=3&narrador=equilibrado&zombis=normal&comienzo=solo&infeccion=alta&botin=escaso&hambre=mas&frio=suave',
+  );
+  expect(parseSetup(url)).toEqual(setup);
+  expect(parseSetup('?seed=3')).toEqual(DEFAULT_SETUP);
+  expect(parseSetup('?comienzo=otro&frio=duro')).toEqual({ ...DEFAULT_SETUP, cold: 'high' });
+  // Otra partida con todo normal quita lo de antes; seguir la guardada, también.
+  expect(startUrl(url, 4, 'calm')).toBe('?debug=1&seed=4&narrador=tranquilo&zombis=normal');
+  expect(loadUrl(url)).toBe('?debug=1&load=1');
 });

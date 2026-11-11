@@ -3,6 +3,8 @@ import { expect, test } from 'vitest';
 import { createSoundPrefs, loadSound } from '../audio/prefs';
 import { createFlag } from './flag';
 import { mountGamePanel } from './gamePanel';
+import { setupLine } from './describe';
+import { DEFAULT_SETUP } from '../sim/setup';
 
 function memory() {
   const data: Record<string, string> = {};
@@ -59,4 +61,22 @@ test('S1: silenciar con M (fuera del panel) se ve en la casilla', () => {
   sound.toggleMute();
   panel.update();
   expect(get('sound-muted').checked).toBe(true);
+});
+
+test('C2: el comienzo y los ajustes cambiados, junto a la semilla y el narrador', () => {
+  const root = document.createElement('div');
+  const open = createFlag();
+  mountGamePanel(root, {
+    open,
+    seed: 1,
+    setup: { ...DEFAULT_SETUP, scenario: 'bare', loot: 'low', cold: 'high' },
+    hasSave: () => false,
+    onSave: () => true,
+    onLoad: () => {},
+    onExport: () => {},
+    onImport: () => {},
+  });
+  const line = root.querySelector('[data-testid="game-setup"]')!.textContent;
+  expect(line).toBe('Comienzo: Con lo puesto · Botín: escaso · Frío: duro');
+  expect(setupLine(DEFAULT_SETUP)).toBe('Comienzo: El pueblo');
 });

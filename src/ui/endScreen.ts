@@ -3,7 +3,8 @@ import { es } from '../i18n/es';
 import { gameTime } from '../sim/clock';
 import { emptyInventory, ITEM_KINDS } from '../sim/items';
 import type { World } from '../sim/types';
-import { formatItems } from './describe';
+import { formatItems, setupLine } from './describe';
+import { setupOf } from '../sim/setup';
 import './start.css';
 
 /** Lo más saqueado: las 3 cosas de las que más se ha traído. */
@@ -71,6 +72,7 @@ export function mountEndScreen(
       panel.append(
         line('h1', won ? t.won : t.fell),
         line('p', won ? t.wonDays(day) : t.survived(day)),
+        line('p', setupLine(setupOf(w))), // C2: el comienzo y los ajustes cambiados
         ...(rescued.length > 0
           ? [line('h2', t.rescued), list(rescued.map((r) => t.rescuedLine(r.name, r.day)))]
           : []),

@@ -1,12 +1,16 @@
 import { seedFromText } from '../game/seed';
 import { es } from '../i18n/es';
 import type { SaveMeta } from '../sim/save';
-import type { NarratorStyle, ZombieLevel } from '../sim/types';
+import { DEFAULT_SETUP } from '../sim/setup';
+import type { GameSetup, NarratorStyle, ScenarioId, SetupLevel, ZombieLevel } from '../sim/types';
 import { importInput } from './saveStore';
 import './start.css';
 
 const STYLES: readonly NarratorStyle[] = ['calm', 'balanced', 'chaotic'];
 const LEVELS: readonly ZombieLevel[] = ['few', 'normal', 'many'];
+const SCENARIOS: readonly ScenarioId[] = ['town', 'solo', 'family', 'bare'];
+const SETUP_LEVELS: readonly SetupLevel[] = ['low', 'normal', 'high'];
+const SETTINGS = ['infection', 'loot', 'sieges', 'needs', 'cold'] as const;
 
 /** Portada (spec H3c §5.1 y H4b §8): elegir narrador, zombis y semilla, y Empezar. */
 export function mountStartScreen(
@@ -14,7 +18,7 @@ export function mountStartScreen(
   opts: {
     seed: number;
     randomSeed: () => number;
-    onStart(seed: number, style: NarratorStyle, zombies: ZombieLevel): void;
+    onStart(seed: number, style: NarratorStyle, zombies: ZombieLevel, setup: GameSetup): void;
     /** H6b: la partida guardada, si hay, para «Continuar». */
     saved?: SaveMeta | null;
     onContinue?: () => void;
@@ -56,6 +60,40 @@ export function mountStartScreen(
     tag.textContent = es.start.forStarters;
     return tag;
   };
+  // C2: el comienzo, con el objetivo debajo.
+  const setup: GameSetup = { ...DEFAULT_SETUP };
+  const chooseStart = document.createElement('h2');
+  chooseStart.textContent = es.start.scenario;
+  const scenarioCards = document.createElement('div');
+  scenarioCards.className = 'start-narrators start-scenarios';
+  const scenarioButtons = SCENARIOS.map((id) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'start-narrator';
+    b.dataset.testid = `scenario-${id}`;
+    const name = document.createElement('strong');
+    name.textContent = es.scenarios[id].name;
+    const desc = document.createElement('span');
+    desc.textContent = es.scenarios[id].desc;
+    b.append(name, desc);
+    if (id === 'town') b.append(starter());
+    b.addEventListener('click', () => {
+      setup.scenario = id;
+      refreshScenarios();
+    });
+    scenarioCards.append(b);
+    return b;
+  });
+  const refreshScenarios = () =>
+    scenarioButtons.forEach((b, i) =>
+      b.classList.toggle('selected', SCENARIOS[i] === setup.scenario),
+    );
+  refreshScenarios();
+  const objective = document.createElement('p');
+  objective.className = 'start-objective';
+  objective.dataset.testid = 'start-objective';
+  objective.textContent = es.start.objective;
+
   const choose = document.createElement('h2');
   choose.textContent = es.start.choose;
 
@@ -108,6 +146,42 @@ export function mountStartScreen(
     levelButtons.forEach((b, i) => b.classList.toggle('selected', LEVELS[i] === zombies));
   refreshLevels();
 
+  // C2: los ajustes a medida, plegados (el resumen dice cuántos no son normales).
+  const custom = document.createElement('details');
+  custom.className = 'start-custom';
+  custom.dataset.testid = 'start-custom';
+  const summary = document.createElement('summary');
+  custom.append(summary);
+  const settingButtons = SETTINGS.map((key) => {
+    const row = document.createElement('div');
+    row.className = 'start-zombies start-setting';
+    const label = document.createElement('span');
+    label.textContent = es.setup.names[key];
+    label.title = es.setup.hints[key];
+    row.append(label);
+    const bs = SETUP_LEVELS.map((level) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.dataset.testid = `setup-${key}-${level}`;
+      b.textContent = es.setup.levels[key][level];
+      b.title = es.setup.hints[key];
+      b.addEventListener('click', () => {
+        setup[key] = level;
+        refreshSettings();
+      });
+      row.append(b);
+      return b;
+    });
+    custom.append(row);
+    return { key, bs };
+  });
+  const refreshSettings = () => {
+    for (const { key, bs } of settingButtons)
+      bs.forEach((b, i) => b.classList.toggle('selected', SETUP_LEVELS[i] === setup[key]));
+    summary.textContent = es.start.custom(SETTINGS.filter((k) => setup[k] !== 'normal').length);
+  };
+  refreshSettings();
+
   const seedRow = document.createElement('label');
   seedRow.className = 'start-seed';
   seedRow.append(document.createTextNode(es.start.seed));
@@ -137,7 +211,7 @@ export function mountStartScreen(
       input.classList.add('invalid');
       return;
     }
-    opts.onStart(n, style, zombies);
+    opts.onStart(n, style, zombies, { ...setup });
   });
 
   // H6b: seguir la partida guardada (arriba), o importar una (abajo).
@@ -169,9 +243,13 @@ export function mountStartScreen(
     subtitle,
     pitch,
     ...top,
+    chooseStart,
+    scenarioCards,
+    objective,
     choose,
     cards,
     zombiesRow,
+    custom,
     seedRow,
     go,
     ...bottom,

@@ -91,6 +91,7 @@ test('C1: con el rescate, «¡Os han rescatado!» y quién se salvó; si cae des
   expect(text).toContain('Quién se salvó');
   expect(text).toContain('Ana: día 21, en el helicóptero');
   expect(screen()!.classList.contains('won')).toBe(true);
+  expect(text).toContain('Comienzo: El pueblo'); // C2
   const fell = setup();
   fell.world.common.rescued = [{ id: 1, name: 'Ana', day: 21 }];
   fell.world.common.over = { tick: 30 * TICKS_PER_DAY };

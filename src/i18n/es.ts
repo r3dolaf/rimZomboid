@@ -28,7 +28,13 @@ import type {
   WoundKind,
   TendKind,
   ZombieLevel,
+  ScenarioId,
+  SetupLevel,
+  GameSetup,
 } from '../sim/types';
+
+/** C2: los ajustes a medida (sin el comienzo). */
+type SetupKey = Exclude<keyof GameSetup, 'scenario'>;
 
 const pad = (n: number) => String(n).padStart(2, '0');
 /** V3: grados con el signo menos de verdad: «−4 °C». */
@@ -454,6 +460,7 @@ export const es = {
     'Clic en el mapa para colocar; arrastrar para una fila de muros; clic en un plano para cancelarlo',
   storm: '🌧 Tormenta',
   narratorLabel: (name: string) => `Narrador: ${name}`,
+  setupLabel: (name: string) => `Comienzo: ${name}`, // C2
   narrators: {
     calm: {
       name: 'Tranquilo',
@@ -469,11 +476,65 @@ export const es = {
       'Tus supervivientes trabajan solos: tú decides qué saquear, qué construir y quién hace qué. Aguanta todo lo que puedas… o encuentra una radio y consigue que os rescaten.',
     /** U1 §10: lo recomendado para la primera partida. */
     forStarters: 'Para empezar',
+    // C2: el comienzo, el objetivo y los ajustes a medida.
+    scenario: 'Elige comienzo',
+    objective: 'Objetivo: aguantad todo lo que podáis… o encontrad una radio y que os rescaten.',
+    custom: (changed: number) =>
+      changed === 0
+        ? 'Ajustes a medida · todo normal'
+        : `Ajustes a medida · ${changed} ${changed === 1 ? 'cambiado' : 'cambiados'}`,
     choose: 'Elige narrador',
     zombies: 'Zombis',
     seed: 'Semilla',
     reroll: 'Otra',
     go: 'Empezar',
+  },
+  /** C2: los comienzos. */
+  scenarios: {
+    town: {
+      name: 'El pueblo',
+      desc: 'Tres supervivientes en una casa del pueblo, con algo de comida y agua.',
+    },
+    solo: {
+      name: 'Solo',
+      desc: 'Una sola persona. Nadie que te vende si caes: busca a otros o aguanta.',
+    },
+    family: {
+      name: 'Familia numerosa',
+      desc: 'Cinco en la misma casa: más manos y más bocas. La comida se acaba enseguida.',
+    },
+    bare: {
+      name: 'Con lo puesto',
+      desc: 'Tres, sin comida, sin agua y sin armas. A saquear desde la primera hora.',
+    },
+  } satisfies Record<ScenarioId, { name: string; desc: string }>,
+  /** C2: los ajustes a medida: su nombre, qué cambian y lo que dice cada valor. */
+  setup: {
+    names: {
+      infection: 'Infección',
+      loot: 'Botín',
+      sieges: 'Asedios',
+      needs: 'Hambre y sed',
+      cold: 'Frío',
+    },
+    hints: {
+      infection: 'Lo que infectan los arañazos (un mordisco, siempre)',
+      loot: 'La comida, las vendas, las medicinas y el agua de los muebles y del almacén',
+      sieges: 'Cada cuánto llega un asedio',
+      needs: 'Lo que bajan el hambre y la sed',
+      cold: 'La temperatura de fuera, todo el año',
+    },
+    levels: {
+      infection: { low: 'Baja', normal: 'Normal', high: 'Alta' },
+      loot: { low: 'Escaso', normal: 'Normal', high: 'Abundante' },
+      sieges: { low: 'Pocos', normal: 'Normal', high: 'Muchos' },
+      needs: { low: 'Menos', normal: 'Normal', high: 'Más' },
+      cold: { low: 'Suave', normal: 'Normal', high: 'Duro' },
+    },
+  } satisfies {
+    names: Record<SetupKey, string>;
+    hints: Record<SetupKey, string>;
+    levels: Record<SetupKey, Record<SetupLevel, string>>;
   },
   zombieLevels: { few: 'Pocos', normal: 'Normal', many: 'Muchos' } satisfies Record<
     ZombieLevel,
@@ -701,6 +762,10 @@ export const es = {
         'Trae sucesos: visitas, robos, fiebres, tormentas, hordas. Algunos te preguntan qué hacer. Los avisos rojos y las preguntas pausan el juego.',
       ],
       ['🧭 Expediciones', 'Cuando cerca no quede nada, manda grupos a otros sitios del 🌍 Mundo.'],
+      [
+        '🎲 Comienzos y ajustes',
+        'En la portada se elige cómo empieza (en el pueblo, solo, con familia numerosa o con lo puesto) y, en «Ajustes a medida», la infección, el botín, los asedios, el hambre y la sed y el frío.',
+      ],
       [
         '📻 Radio y rescate',
         'Trae una radio de una nave, una gasolinera o un pueblecito y constrúyela en la base; con pilas y encendida, escucharéis al ejército. Tras unas horas sabréis dónde y qué día pasa un helicóptero: id hasta allí y pisad la zona de aterrizaje antes de que se vaya. Quien sube, se salva.',

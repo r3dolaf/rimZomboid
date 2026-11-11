@@ -2,7 +2,15 @@ import Phaser from 'phaser';
 import { createSound } from './audio/engine';
 import { createSoundPrefs } from './audio/prefs';
 import { draftToggle } from './game/command';
-import { loadUrl, parseNarrator, parseSeed, parseZombies, randomSeed, startUrl } from './game/seed';
+import {
+  loadUrl,
+  parseNarrator,
+  parseSeed,
+  parseSetup,
+  parseZombies,
+  randomSeed,
+  startUrl,
+} from './game/seed';
 import { createTimeController } from './game/timeController';
 import { BACKGROUND } from './render/colors';
 import { GameScene, type GameSceneData } from './render/GameScene';
@@ -10,7 +18,7 @@ import { makePortraits } from './render/people';
 import { WorldScene, type WorldSceneData } from './render/WorldScene';
 import { darkness, gameTime } from './sim/clock';
 import { zombiesInSight } from './sim/danger';
-import type { NarratorStyle, World, ZombieLevel } from './sim/types';
+import type { GameSetup, NarratorStyle, World, ZombieLevel } from './sim/types';
 import { baseWater } from './sim/drink';
 import { loadGame, saveGame, type SaveMeta } from './sim/save';
 import { es } from './i18n/es';
@@ -21,6 +29,7 @@ import { createSaveStore, downloadFile, exportName, savedMeta } from './ui/saveS
 import { createAutosave } from './ui/autosave';
 import { issue } from './sim/orders';
 import { createWorld } from './sim/world';
+import { setupOf } from './sim/setup';
 import { allColonists, stepGame } from './sim/game';
 import { mountBuildMenu } from './ui/buildMenu';
 import { mountCards } from './ui/cards';
@@ -78,7 +87,7 @@ const loadHere = () => `${location.pathname}${loadUrl(location.search)}`;
 function startSaved(text: string | null): boolean {
   const got = text === null ? null : loadGame(text);
   if (!got || 'error' in got) return false;
-  start(got.meta.seed, got.meta.narrator, got.meta.zombies, got.world);
+  start(got.meta.seed, got.meta.narrator, got.meta.zombies, setupOf(got.world), got.world);
   return true;
 }
 
@@ -91,6 +100,7 @@ if (!(params.has('load') && startSaved(store.read()))) {
       parseSeed(location.search, randomSeed),
       parseNarrator(location.search) ?? 'balanced',
       parseZombies(location.search) ?? 'normal',
+      parseSetup(location.search), // C2
     );
   } else {
     const saved = store.read();
@@ -107,10 +117,10 @@ if (!(params.has('load') && startSaved(store.read()))) {
       onHelp: () => titleHelp.set(true),
       seed: randomSeed(),
       randomSeed,
-      onStart(seed, style, zombies) {
-        history.replaceState(null, '', startUrl(location.search, seed, style, zombies));
+      onStart(seed, style, zombies, setup) {
+        history.replaceState(null, '', startUrl(location.search, seed, style, zombies, setup));
         leave();
-        start(seed, style, zombies);
+        start(seed, style, zombies, setup);
       },
       saved: savedMeta(saved),
       onContinue() {
@@ -130,9 +140,15 @@ if (!(params.has('load') && startSaved(store.read()))) {
   }
 }
 
-function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?: World): void {
+function start(
+  seed: number,
+  style: NarratorStyle,
+  zombies: ZombieLevel,
+  setup: GameSetup,
+  loaded?: World,
+): void {
   // La base, que guarda los sitios (H5c1); o la de una partida guardada (H6b).
-  const world = loaded ?? createWorld(seed, style, zombies);
+  const world = loaded ?? createWorld(seed, style, zombies, setup);
   const view = createMapView(world); // el mapa que se ve
   const time = createTimeController();
   const selection = createSelection();
@@ -217,6 +233,7 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
     open: gameOpen,
     seed,
     narrator: style,
+    setup: setupOf(world), // C2
     hasSave: () => store.read() !== null,
     onSave: () => {
       const ok = save();
@@ -331,7 +348,9 @@ function start(seed: number, style: NarratorStyle, zombies: ZombieLevel, loaded?
   const endScreen = mountEndScreen(ui, {
     world,
     time,
-    onRestart: () => location.assign(startUrl(location.search, randomSeed(), style, zombies)),
+    // C2: con el mismo comienzo y los mismos ajustes.
+    onRestart: () =>
+      location.assign(startUrl(location.search, randomSeed(), style, zombies, setupOf(world))),
     onTitle: () => location.assign(location.pathname),
   });
   // U1 §8: la Ayuda, por encima de todo (salvo el final).

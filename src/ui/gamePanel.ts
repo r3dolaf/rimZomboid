@@ -2,9 +2,11 @@
 // archivo e importar uno; y el sonido (S1 §3).
 import type { SoundPrefs, SoundPrefsStore } from '../audio/prefs';
 import { es } from '../i18n/es';
-import type { NarratorStyle } from '../sim/types';
+import type { GameSetup, NarratorStyle } from '../sim/types';
+import { setupLine } from './describe';
 import type { Flag } from './flag';
 import { importInput } from './saveStore';
+import { DEFAULT_SETUP } from '../sim/setup';
 import './panels.css';
 
 export function mountGamePanel(
@@ -14,6 +16,8 @@ export function mountGamePanel(
     /** H6c: la semilla y el narrador de la partida (antes, en la barra de arriba). */
     seed: number;
     narrator?: NarratorStyle;
+    /** C2: el comienzo y los ajustes. */
+    setup?: GameSetup;
     hasSave: () => boolean;
     /** Guarda; `false` si no se ha podido. */
     onSave: () => boolean;
@@ -79,7 +83,11 @@ export function mountGamePanel(
   narrator.className = 'muted';
   narrator.dataset.testid = 'game-narrator';
   narrator.textContent = es.narratorLabel(es.narrators[opts.narrator ?? 'balanced'].name);
-  panel.append(head, seed, narrator, row, status);
+  const setup = document.createElement('p');
+  setup.className = 'muted';
+  setup.dataset.testid = 'game-setup';
+  setup.textContent = setupLine(opts.setup ?? DEFAULT_SETUP);
+  panel.append(head, seed, narrator, setup, row, status);
   const sound = opts.sound ? soundSection(opts.sound) : null;
   if (sound) panel.append(sound.el);
   root.append(panel);

@@ -149,6 +149,26 @@
   border-color: #c9a227;
   color: #111;
 }
+/* C2: el objetivo bajo el comienzo y los ajustes a medida, plegados. */
+.start-objective {
+  margin: 10px 0 18px;
+  color: #f2c641;
+  font-size: 14px;
+}
+.start-custom {
+  margin: 14px 0 0;
+  text-align: left;
+}
+.start-custom summary {
+  cursor: pointer;
+  opacity: 0.85;
+}
+.start-setting {
+  flex-wrap: wrap;
+}
+.start-setting > span {
+  min-width: 110px;
+}
 /* Pantalla final (H5 §9): encima del juego, que queda en pausa detrás. */
 .start.end {
   z-index: 50;

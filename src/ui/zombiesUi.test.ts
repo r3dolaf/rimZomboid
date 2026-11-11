@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 // H4b §8: portada, HUD, tarjetas, ficha, panel de Trabajos, menú Construir y registro.
+import { DEFAULT_SETUP } from '../sim/setup';
 import { expect, test, vi } from 'vitest';
 import { buildAt } from '../game/tools';
 import { parseZombies, startUrl } from '../game/seed';
@@ -45,7 +46,7 @@ test('portada: opción Zombis (normal marcado) que llega a Empezar', () => {
   q(root, 'zombies-many').click();
   expect(q(root, 'zombies-many').classList.contains('selected')).toBe(true);
   q(root, 'start-go').click();
-  expect(onStart).toHaveBeenCalledWith(42, 'balanced', 'many');
+  expect(onStart).toHaveBeenCalledWith(42, 'balanced', 'many', DEFAULT_SETUP);
 });
 
 test('HUD: "Zombis a la vista: N"', () => {

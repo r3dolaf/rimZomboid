@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { expect, test, vi } from 'vitest';
+import { DEFAULT_SETUP } from '../sim/setup';
 import { mountStartScreen } from './startScreen';
 
 function setup() {
@@ -31,7 +32,7 @@ test('elegir Caótico, sortear otra semilla y Empezar', () => {
   q('start-reroll').click();
   expect((q('start-seed') as HTMLInputElement).value).toBe('100');
   q('start-go').click();
-  expect(onStart).toHaveBeenCalledWith(100, 'chaotic', 'normal');
+  expect(onStart).toHaveBeenCalledWith(100, 'chaotic', 'normal', DEFAULT_SETUP);
 });
 
 test('con una semilla no válida no empieza', () => {
@@ -63,4 +64,35 @@ test('U1 §10: de qué va en una línea, «Para empezar» en Tranquilo y Pocos, 
   const other = document.createElement('div');
   mountStartScreen(other, { seed: 1, randomSeed: () => 2, onStart: vi.fn() });
   expect(other.querySelector('[data-testid="start-help"]')).toBeNull();
+});
+
+test('C2: el comienzo (el pueblo, marcado), el objetivo y los ajustes plegados llegan a la partida', () => {
+  const { root, onStart, q } = setup();
+  const scenarios = [...root.querySelectorAll('[data-testid^="scenario-"]')];
+  expect(scenarios.map((c) => c.querySelector('strong')!.textContent)).toEqual([
+    'El pueblo',
+    'Solo',
+    'Familia numerosa',
+    'Con lo puesto',
+  ]);
+  expect(q('scenario-town').classList.contains('selected')).toBe(true);
+  expect(q('scenario-town').textContent).toContain('Para empezar');
+  expect(q('start-objective').textContent).toContain('encontrad una radio');
+  const custom = q('start-custom') as HTMLDetailsElement;
+  expect(custom.open).toBe(false);
+  expect(custom.querySelector('summary')!.textContent).toBe('Ajustes a medida · todo normal');
+  expect(q('setup-infection-normal').classList.contains('selected')).toBe(true);
+  q('scenario-solo').click();
+  q('setup-infection-high').click();
+  q('setup-cold-low').click();
+  expect(custom.querySelector('summary')!.textContent).toBe('Ajustes a medida · 2 cambiados');
+  expect(q('setup-infection-high').classList.contains('selected')).toBe(true);
+  expect(q('setup-infection-normal').classList.contains('selected')).toBe(false);
+  q('start-go').click();
+  expect(onStart).toHaveBeenCalledWith(42, 'balanced', 'normal', {
+    ...DEFAULT_SETUP,
+    scenario: 'solo',
+    infection: 'high',
+    cold: 'low',
+  });
 });

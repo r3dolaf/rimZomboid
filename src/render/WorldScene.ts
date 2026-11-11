@@ -567,19 +567,28 @@ export class WorldScene extends Phaser.Scene {
 
   /** Para los tests de navegador: de hexágono a píxel de pantalla. */
   private exposeDebug(): void {
-    const hexToScreen = (i: number) => {
+    /**
+     * De un punto del mundo a la pantalla, con el desplazamiento de ahora: `worldView` no se pone al
+     * día hasta pintar el fotograma siguiente, y justo después de `centerOnHex` daba el de antes (el
+     * clic caía en otro hexágono, a veces).
+     */
+    const toScreen = (x: number, y: number) => {
       const cam = this.cameras.main;
+      const sx = cam.useBounds ? cam.clampX(cam.scrollX) : cam.scrollX;
+      const sy = cam.useBounds ? cam.clampY(cam.scrollY) : cam.scrollY;
+      const hw = cam.width / 2;
+      const hh = cam.height / 2;
+      return { x: (x - sx - hw) * cam.zoom + hw, y: (y - sy - hh) * cam.zoom + hh };
+    };
+    const hexToScreen = (i: number) => {
       const c = hexPixel(this.base.common.atlas, i);
-      return { x: (c.x - cam.worldView.x) * cam.zoom, y: (c.y - cam.worldView.y) * cam.zoom };
+      return toScreen(c.x, c.y);
     };
     const g = window as unknown as { rimzomboid?: Record<string, unknown> };
     /** Dónde se ve un grupo que viaja, en pantalla (o `null`). */
     const groupToScreen = (travelId: number) => {
-      const cam = this.cameras.main;
       const grp = worldGroups(this.base).find((x) => x.travelId === travelId);
-      return grp
-        ? { x: (grp.x - cam.worldView.x) * cam.zoom, y: (grp.y - cam.worldView.y) * cam.zoom }
-        : null;
+      return grp ? toScreen(grp.x, grp.y) : null;
     };
     g.rimzomboid = {
       ...g.rimzomboid,

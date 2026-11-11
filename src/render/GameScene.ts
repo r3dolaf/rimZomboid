@@ -1991,11 +1991,17 @@ export class GameScene extends Phaser.Scene {
 
   /** Para los tests de navegador: el mundo y cómo pasar de casilla a píxel de pantalla. */
   private exposeDebug(): void {
+    // Con el desplazamiento de ahora: `worldView` no se pone al día hasta pintar el fotograma
+    // siguiente, y justo después de centrar la cámara daba el de antes (el clic caía en otro sitio).
     const tileToScreen = (x: number, y: number) => {
       const cam = this.cameras.main;
+      const sx = cam.useBounds ? cam.clampX(cam.scrollX) : cam.scrollX;
+      const sy = cam.useBounds ? cam.clampY(cam.scrollY) : cam.scrollY;
+      const hw = cam.width / 2;
+      const hh = cam.height / 2;
       return {
-        x: ((x + 0.5) * TILE_PX - cam.worldView.x) * cam.zoom,
-        y: ((y + 0.5) * TILE_PX - cam.worldView.y) * cam.zoom,
+        x: ((x + 0.5) * TILE_PX - sx - hw) * cam.zoom + hw,
+        y: ((y + 0.5) * TILE_PX - sy - hh) * cam.zoom + hh,
       };
     };
     /** Saca ya un suceso del narrador si se puede dar (sin mirar su espera). */

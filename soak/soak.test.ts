@@ -49,6 +49,13 @@ const lying = (s: Survivor) => s.action.type === 'rest' || s.action.type === 'do
 const answer = (r: ReturnType<typeof createRng>, d: Decision) =>
   nextInt(r, 0, d.kind === 'fever' ? 3 : 1) as 0 | 1 | 2 | 3;
 
+/**
+ * Con sensatez (para las partidas que prueban otra cosa: el huerto, el rescate): con fiebre,
+ * antibióticos si hay y si no que descanse (ni echarle ni acabar con él); lo demás, al azar.
+ */
+const sensible = (w: World, r: ReturnType<typeof createRng>, d: Decision) =>
+  d.kind === 'fever' ? (w.storage.items.antibiotics > 0 ? 3 : 0) : answer(r, d);
+
 test('SOAK_DAYS es un número de días válido', () => {
   expect(Number.isInteger(DAYS) && DAYS > 0).toBe(true);
 });
@@ -901,7 +908,7 @@ test.each([1, 2, 3])(
       for (let i = 0; i < TICKS_PER_DAY; i++) {
         const d = w.decisions[0];
         if (d && !w.orders.some((o) => o.type === 'decide'))
-          issue(w, { type: 'decide', decisionId: d.id, option: answer(r, d) });
+          issue(w, { type: 'decide', decisionId: d.id, option: sensible(w, r, d) });
         const bill = w.bills.find((b) => b.recipe === 'cook');
         if (bill && bill.mode !== 'until')
           issue(w, { type: 'setBill', billId: bill.id, mode: 'until', target: 4 });
@@ -1020,7 +1027,7 @@ test.each([1, 2, 3])(
           issue(w, {
             type: 'decide',
             decisionId: d.id,
-            option: d.kind === 'rescued' ? 0 : answer(r, d),
+            option: d.kind === 'rescued' ? 0 : sensible(w, r, d),
           });
         const resc = w.common.rescue;
         // Con el helicóptero anunciado, sale todo el que puede a tiempo de llegar un poco antes.
@@ -1028,7 +1035,8 @@ test.each([1, 2, 3])(
           const info = w.common.expedition.sites.find((x) => x.id === resc.siteId)!;
           const lead = (Math.ceil(info.hours / 14) + 1) * TICKS_PER_DAY;
           const able = w.survivors.filter((s) => canGo(s, w));
-          if (w.tick >= resc.from - lead && able.length > 0) {
+          // (Antes de que llegue: después ya no tiene sentido.)
+          if (w.tick >= resc.from - lead && w.tick < resc.from && able.length > 0) {
             const n = able.length;
             issue(w, {
               type: 'sendExpedition',

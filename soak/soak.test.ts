@@ -1153,3 +1153,53 @@ test('B2: salen las cuatro crisis', () => {
   for (const k of ['sulk', 'binge', 'rage', 'flee'])
     expect(crisisTotals[k] ?? 0, k).toBeGreaterThan(0);
 });
+
+/** D1: lo que pasa con armas de fuego. */
+const gunTotals = { shots: 0, kills: 0, ammoUsed: 0, games: 0 };
+
+test.each([1, 2])(
+  'D1: semilla %i, 15 días con muchos zombis y todos con pistola y balas — se dispara y no se rompe nada',
+  (seed) => {
+    const w = createWorld(seed, 'chaotic', 'many');
+    for (const h of w.houses) issue(w, { type: 'designateHouse', houseId: h.id, on: true });
+    const store = w.storage.items;
+    store.pistol += w.survivors.length;
+    store.ammo += 300;
+    store.shotgun += 1;
+    store.shells += 40;
+    for (const s of w.survivors) s.keep = { ...s.keep, pistol: 1, ammo: 20 };
+    w.survivors[0]!.keep = { ...w.survivors[0]!.keep, shotgun: 1, shells: 10 };
+    const r = createRng(9);
+    const lastShot = new Map<number, number>();
+    for (let i = 0; i < 15 * TICKS_PER_DAY && !w.common.over; i++) {
+      const d = w.decisions[0];
+      if (d && !w.orders.some((o) => o.type === 'decide'))
+        issue(w, { type: 'decide', decisionId: d.id, option: sensible(w, r, d) });
+      const last = w.common.log.at(-1);
+      stepGame(w);
+      const problems = checkInvariants(w);
+      if (problems.length > 0) expect(problems, `tick ${w.tick}`).toEqual([]);
+      for (const s of w.survivors) {
+        const t = s.shot?.tick;
+        if (t !== undefined && t !== lastShot.get(s.id)) {
+          gunTotals.shots++;
+          lastShot.set(s.id, t);
+        }
+      }
+      for (const e of w.common.log.slice(last ? w.common.log.lastIndexOf(last) + 1 : 0))
+        if (e.kind === 'zombieKilled') gunTotals.kills++;
+    }
+    const carried = w.survivors.reduce((n, s) => n + s.carrying.ammo, 0);
+    gunTotals.ammoUsed += 300 - store.ammo - carried;
+    gunTotals.games++;
+  },
+  600_000,
+);
+
+test('D1: con armas de fuego se dispara, se gastan balas y se matan zombis', () => {
+  console.log('D1, armas de fuego:', gunTotals);
+  expect(gunTotals.games).toBe(2);
+  expect(gunTotals.shots).toBeGreaterThan(0);
+  expect(gunTotals.ammoUsed).toBeGreaterThan(0);
+  expect(gunTotals.kills).toBeGreaterThan(0);
+});

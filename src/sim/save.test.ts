@@ -203,7 +203,6 @@ test('V3: una partida de la versión 3 se sigue cargando, con sus hogueras con 1
 });
 
 test('C1: una partida de la versión 4 se sigue cargando, con radio y pilas a 0 en todo lo que guarda cosas', () => {
-  expect(SAVE_VERSION).toBe(5);
   const w = createWorld(7);
   const file = JSON.parse(saveGame(w, meta)) as { version: number; world: World };
   file.version = 4;
@@ -227,5 +226,33 @@ test('C1: una partida de la versión 4 se sigue cargando, con radio y pilas a 0 
   expect(lw.storage.items.battery).toBe(0);
   expect(lw.containers.every((c) => c.items.battery >= 0 && c.items.radio === 0)).toBe(true);
   expect(lw.survivors.every((s) => s.carrying.battery === 0)).toBe(true);
+  expect(checkInvariants(lw)).toEqual([]);
+});
+
+test('D1: una partida de la versión 5 se sigue cargando, con armas y munición a 0 en todo lo que guarda cosas', () => {
+  expect(SAVE_VERSION).toBe(6);
+  const w = createWorld(7);
+  const file = JSON.parse(saveGame(w, meta)) as { version: number; world: World };
+  file.version = 5;
+  const KINDS = ['pistol', 'shotgun', 'ammo', 'shells'];
+  const strip = (x: unknown): void => {
+    if (typeof x !== 'object' || x === null) return;
+    if (Array.isArray(x)) return x.forEach(strip);
+    const o = x as Record<string, unknown>;
+    if (Array.isArray(o.pieces) && typeof o.food === 'number') for (const k of KINDS) delete o[k];
+    Object.values(o).forEach(strip);
+  };
+  strip(file.world);
+  expect(file.world.storage.items.ammo).toBeUndefined();
+  const loaded = loadGame(JSON.stringify(file));
+  if ('error' in loaded) throw new Error(loaded.error);
+  const lw = loaded.world;
+  for (const k of ['pistol', 'shotgun', 'ammo', 'shells'] as const) {
+    expect(lw.storage.items[k]).toBe(0);
+    expect(lw.containers.every((c) => c.items[k] === 0)).toBe(true);
+    expect(lw.survivors.every((s) => s.carrying[k] === 0)).toBe(true);
+  }
+  expect(checkInvariants(lw)).toEqual([]);
+  for (let i = 0; i < 300; i++) stepGame(lw);
   expect(checkInvariants(lw)).toEqual([]);
 });

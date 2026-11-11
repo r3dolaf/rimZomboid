@@ -67,6 +67,10 @@ Asentarse (huerto, agua y estaciones):
   helicóptero. Hay que llegar al punto de evacuación y pisar la zona de aterrizaje antes de que se
   vaya (el ruido atrae a los zombis). Quien sube se salva; se puede ver el final o seguir con los que
   se quedan.
+- **Armas de fuego**: pistola (con balas) y escopeta (con cartuchos), en comisarías, granjas y
+  ferreterías. Se llevan encima: en la ficha, Equipo → Llevar siempre. Disparan de lejos en modo
+  combate o cuando están en apuros (varios zombis, heridos o en un asedio); con un zombi solo, a
+  golpes. Cada disparo se oye desde muy lejos.
 - **Estaciones**: el año dura 60 días y empieza en verano. En invierno no crece nada y hiela: hace
   falta ropa de abrigo y hogueras con leña (Transportar se la lleva). La estación y la temperatura
   están junto a las pestañas de mapa.

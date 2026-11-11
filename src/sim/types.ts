@@ -464,6 +464,8 @@ export interface Survivor {
   missing?: BodyPart[];
   /** B2: inspirado hasta ese tick (trabaja más rápido); sin el campo, no. */
   inspiredUntil?: number;
+  /** D1: su último disparo (cuándo, con qué y adónde), para dibujarlo y que suene. */
+  shot?: { tick: number; gun: Gun; x: number; y: number };
 }
 
 /** Un atuendo (H5b §4): las prendas que se puede poner y si acepta ropa de muertos. */
@@ -506,6 +508,8 @@ export interface Stranger {
 
 /** Armas que se llevan en la mano, de mejor a peor (spec H4b §6.2). */
 export type Weapon = 'machete' | 'crowbar' | 'hatchet' | 'axe' | 'bat' | 'knife';
+/** D1: las armas de fuego (se llevan encima; la munición, aparte). */
+export type Gun = 'pistol' | 'shotgun';
 
 /** Pelear, Huir o Decidir (spec H4b §7). */
 export type Stance = 'fight' | 'flee' | 'decide';

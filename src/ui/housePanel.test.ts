@@ -46,6 +46,10 @@ test('muestra la casa seleccionada con sus contenedores y se cierra con la ✕',
     meal: 0,
     radio: 0,
     battery: 0,
+    pistol: 0,
+    shotgun: 0,
+    ammo: 0,
+    shells: 0,
     pieces: [],
   };
   cs[1]!.designated = true;

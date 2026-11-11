@@ -369,6 +369,24 @@ export const SFX_RECIPES: Record<string, Recipe> = {
       tone(o, out, 'sine', f * ratio, at, 0.002, amp, d);
     return 4.5;
   },
+  /** D1: un disparo de pistola: un chasquido seco, un golpe grave y el eco. */
+  gunshot(o, at, pan, gain) {
+    const out = outlet(o, pan, gain, 0.45);
+    burst(o, out, 'highpass', vary(1400), 0.7, at, 0.0005, 1, 0.06);
+    burst(o, out, 'bandpass', vary(700), 0.8, at, 0.001, 0.8, 0.12);
+    tone(o, out, 'sine', vary(140), at, 0.001, 0.9, 0.12, 45, 0.1);
+    burst(o, out, 'lowpass', 900, 0.7, at + 0.02, 0.01, 0.25, 0.45);
+    return 0.7;
+  },
+  /** D1: la escopeta: más grave, más fuerte y con más eco. */
+  shotgunBlast(o, at, pan, gain) {
+    const out = outlet(o, pan, gain, 0.55);
+    burst(o, out, 'highpass', vary(900), 0.7, at, 0.0005, 1, 0.09);
+    burst(o, out, 'lowpass', vary(1200), 0.7, at, 0.001, 1, 0.25);
+    tone(o, out, 'sine', vary(95), at, 0.001, 1, 0.22, 35, 0.18);
+    burst(o, out, 'lowpass', 600, 0.7, at + 0.03, 0.02, 0.35, 0.8);
+    return 1.1;
+  },
 };
 
 // ── Instrumentos de la música (spec S1 §2.2) ────────────────────────────────────────────────────

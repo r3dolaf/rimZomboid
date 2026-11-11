@@ -6,6 +6,7 @@ import {
   SEEDS_LOOT,
   SITE_SEEDS_LOOT,
   BATTERY_LOOT,
+  GUN_LOOT,
   SITE_RADIO,
   THREAD_PER_SPOOL,
   type LootAmount,
@@ -73,6 +74,10 @@ const HOME: Record<LootItem, readonly ContainerKind[]> = {
   seeds: ['crate'], // V1
   radio: ['crate'], // C1
   battery: ['crate'],
+  pistol: ['locker'], // D1
+  shotgun: ['locker'],
+  ammo: ['locker'],
+  shells: ['locker'],
 };
 
 /** Los muebles de la ropa (H5b §2); también las estanterías y los mostradores. */
@@ -275,6 +280,20 @@ export function fillBatteries(houses: Building[], containers: Container[], rng: 
     if (cs.length === 0 || n === 0) continue;
     const pool = placesFor(cs, 'battery');
     for (let k = 0; k < n; k++) pool[nextInt(rng, 0, pool.length - 1)]!.items.battery++;
+  }
+}
+
+/** D1: las armas de fuego y su munición, con su propio azar, por tipo de edificio. */
+export function fillGuns(houses: Building[], containers: Container[], rng: RngState): void {
+  for (const h of houses) {
+    const loot = h.kind === 'base' ? undefined : GUN_LOOT[h.kind];
+    const cs = containers.filter((c) => c.houseId === h.id);
+    if (!loot || cs.length === 0) continue;
+    for (const item of ['pistol', 'shotgun', 'ammo', 'shells'] as const) {
+      const n = roll(rng, loot[item]);
+      const pool = placesFor(cs, item);
+      for (let k = 0; k < n; k++) pool[nextInt(rng, 0, pool.length - 1)]!.items[item]++;
+    }
   }
 }
 

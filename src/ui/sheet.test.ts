@@ -114,6 +114,10 @@ test('muestra lo que lleva encima y su peso', () => {
     meal: 0,
     radio: 0,
     battery: 0,
+    pistol: 0,
+    shotgun: 0,
+    ammo: 0,
+    shells: 0,
     pieces: [],
   };
   s.skills.haul.level = 5;

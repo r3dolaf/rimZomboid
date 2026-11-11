@@ -35,7 +35,12 @@ export type ItemKind =
   | 'meal'
   // C1: la radio (para construirla en la base) y las pilas que le dan carga
   | 'radio'
-  | 'battery';
+  | 'battery'
+  // D1: armas de fuego (se llevan encima, no en la mano) y su munición
+  | 'pistol'
+  | 'shotgun'
+  | 'ammo'
+  | 'shells';
 
 /** Orden en el que se cogen las cosas al registrar un contenedor. */
 export const ITEM_KINDS: readonly ItemKind[] = [
@@ -66,6 +71,10 @@ export const ITEM_KINDS: readonly ItemKind[] = [
   'meal',
   'radio', // C1
   'battery',
+  'pistol', // D1
+  'shotgun',
+  'ammo',
+  'shells',
 ];
 
 /**
@@ -104,6 +113,10 @@ export function emptyInventory(): Inventory {
     meal: 0,
     radio: 0, // C1
     battery: 0,
+    pistol: 0, // D1
+    shotgun: 0,
+    ammo: 0,
+    shells: 0,
     pieces: [],
   };
 }

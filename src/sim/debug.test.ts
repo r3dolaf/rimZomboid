@@ -25,6 +25,8 @@ test('dar: 10 latas, 10 vendas y 10 antibióticos al almacén', () => {
   expect(w.storage.items.food).toBe(before.food + 10);
   expect(w.storage.items.bandage).toBe(before.bandage + 10);
   expect(w.storage.items.antibiotics).toBe(before.antibiotics + 10);
+  expect(w.storage.items.pistol).toBe(before.pistol + 1); // D1
+  expect(w.storage.items.ammo).toBe(before.ammo + 30);
 });
 
 test('matar los zombis cerca de los colonos (dejan su cuerpo); los lejanos siguen', () => {

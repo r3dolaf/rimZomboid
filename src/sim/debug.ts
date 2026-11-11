@@ -1,6 +1,12 @@
 // Las trampas del modo depuración (spec H6c §1): órdenes como las demás, para que el juego siga
 // cuadrando (los zombis muertos dejan su cuerpo; las cosas que se dan van al almacén).
-import { DEBUG_GIVE, DEBUG_KILL_RADIUS, EVAC_WAIT_HOURS, TICKS_PER_HOUR } from './balance';
+import {
+  DEBUG_AMMO,
+  DEBUG_GIVE,
+  DEBUG_KILL_RADIUS,
+  EVAC_WAIT_HOURS,
+  TICKS_PER_HOUR,
+} from './balance';
 import { leaveCorpse } from './corpses';
 import { detach } from './death';
 import { hearAll } from './radio';
@@ -22,6 +28,8 @@ export function applyDebugOrder(w: World, o: DebugOrder): void {
       return;
     case 'give':
       for (const k of ['food', 'bandage', 'antibiotics'] as const) w.storage.items[k] += DEBUG_GIVE;
+      w.storage.items.pistol += 1; // D1
+      w.storage.items.ammo += DEBUG_AMMO;
       return;
     case 'killNear': {
       const r2 = DEBUG_KILL_RADIUS * DEBUG_KILL_RADIUS;

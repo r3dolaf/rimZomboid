@@ -48,6 +48,10 @@ test('objetos nuevos: tela, cortinas, hilo (por usos), aguja, palanca y machete,
     'meal',
     'radio', // C1
     'battery',
+    'pistol', // D1
+    'shotgun',
+    'ammo',
+    'shells',
   ]);
   expect(ITEM_WEIGHT_KG).toMatchObject({
     cloth: 0.2,

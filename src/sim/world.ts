@@ -16,6 +16,7 @@ import {
   NEED_START_MIN,
   SEEDS_SALT,
   RADIO_SALT,
+  GUN_SALT,
   START_ANTIBIOTICS,
   START_FOOD,
   START_SEEDS,
@@ -43,6 +44,7 @@ import {
   fillHatchets,
   fillSeeds,
   fillBatteries,
+  fillGuns,
   placeContainers,
 } from './loot';
 import { revealFromSurvivors } from './vision';
@@ -214,6 +216,7 @@ export function createWorld(
   fillFindings(houses, containers, clothesRng); // H5c1: mapas de carreteras y notas
   fillSeeds(houses, containers, createRng((seed ^ SEEDS_SALT) >>> 0)); // V1, con su azar
   fillBatteries(houses, containers, createRng((seed ^ RADIO_SALT) >>> 0)); // C1, con su azar
+  fillGuns(houses, containers, createRng((seed ^ GUN_SALT) >>> 0)); // D1, con su azar
   for (const c of containers) scaleLoot(c.items, SETUP_MULT.loot[setup.loot]); // C2, sin azar
 
   // Relaciones (H3b), también después para no cambiar partidas anteriores.

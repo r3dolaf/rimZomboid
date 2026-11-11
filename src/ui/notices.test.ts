@@ -165,6 +165,10 @@ test('desconocidos: nombres, rasgos y lo que llevan; Aceptar da la orden', () =>
     meal: 0,
     radio: 0,
     battery: 0,
+    pistol: 0,
+    shotgun: 0,
+    ammo: 0,
+    shells: 0,
     pieces: [],
   };
   notices.update();

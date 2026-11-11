@@ -148,3 +148,13 @@ test('U2: el corte del agua, el frío, el otoño y la crisis', () => {
   w.tick = SEASON_DAYS * TICKS_PER_DAY; // ya en otoño (el día 16)
   expect(dueTip(w, calm, [...seen])).toEqual({ id: 'autumn' });
 });
+
+test('D1: el consejo del arma de fuego, con la primera en el almacén', () => {
+  const w = createWorld(5);
+  w.storage.items.food = 20;
+  w.storage.items.seeds = 0;
+  w.tick = 2 * TICKS_PER_HOUR;
+  expect(dueTip(w, calm, [...MANY])).toBeNull();
+  w.storage.items.shotgun = 1;
+  expect(dueTip(w, calm, [...MANY])).toEqual({ id: 'gun' });
+});

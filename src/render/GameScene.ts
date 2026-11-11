@@ -150,6 +150,11 @@ const WALKING_MS = 200;
 /** Quien recibe un golpe se tiñe de rojo un momento. */
 const HIT_TINT = 0xff6060;
 const HIT_MS = 140;
+/** D1: el disparo: la línea hasta el zombi y el fogonazo, lo que duran y su color. */
+const SHOT_MS = 120;
+const MUZZLE_MS = 60;
+const SHOT_COLOR = 0xfff0b0;
+const MUZZLE_COLOR = 0xffd060;
 /** Quien sangra deja una gota cada tanto andado (casillas). */
 const DRIP_EVERY = 0.6;
 /** Manchas de sangre a la vez, como mucho (las más viejas se van). */
@@ -358,6 +363,9 @@ export class GameScene extends Phaser.Scene {
   private lastHealth = new Map<string, number>();
   private hitUntil = new Map<string, number>();
   private lunges = new Map<string, { dx: number; dy: number; start: number }>();
+  /** D1: el último disparo visto de cada uno y los que se están dibujando. */
+  private lastShots = new Map<string, number>();
+  private shots: { x1: number; y1: number; x2: number; y2: number; start: number }[] = [];
   /** Manchas de sangre (A5), en su capa sobre el suelo; las imágenes se reutilizan. */
   private decals: Decal[] = [];
   private decalLayer!: Phaser.GameObjects.Layer;
@@ -703,6 +711,7 @@ export class GameScene extends Phaser.Scene {
     const tracks = new Map<string, Track>();
     const lastWounds = new Map<string, number>();
     const lastHealth = new Map<string, number>();
+    const lastShots = new Map<string, number>();
     for (const s of w.survivors) {
       const [x, y] = [s.pos.x * TILE_PX, s.pos.y * TILE_PX];
       const id = `s${s.id}`;
@@ -720,6 +729,17 @@ export class GameScene extends Phaser.Scene {
           this.lunge(`z${attacker.id}`, attacker.pos, s.pos);
       }
       lastWounds.set(key, s.wounds.length);
+      // D1: un disparo nuevo: la línea hasta donde estaba el zombi y el fogonazo.
+      const shot = this.lastShots.get(key);
+      if (s.shot && shot !== undefined && s.shot.tick !== shot)
+        this.shots.push({
+          x1: x,
+          y1: y - HEAD_PX / 2,
+          x2: s.shot.x * TILE_PX,
+          y2: s.shot.y * TILE_PX - HEAD_PX / 2,
+          start: now,
+        });
+      lastShots.set(key, s.shot?.tick ?? -1);
       this.drip(s, tracks.get(id)!);
       this.work(s);
       if (this.selection.ids.includes(s.id)) {
@@ -760,8 +780,9 @@ export class GameScene extends Phaser.Scene {
       const [x, y] = [z.pos.x * TILE_PX, z.pos.y * TILE_PX];
       if (before !== undefined && z.health < before) {
         this.hit(id, x, y);
+        // Se lanza quien le golpea al lado (quien dispara de lejos, no: D1).
         for (const s of w.survivors)
-          if (s.action.type === 'melee' && s.action.zombieId === z.id)
+          if (s.action.type === 'melee' && s.action.zombieId === z.id && dist2(s.pos, z.pos) < 2.5)
             this.lunge(`s${s.id}`, s.pos, z.pos);
       }
       const look = personLook(z.name ? seedOf(z.name) : hash2(z.id, 5), z.worn, true);
@@ -792,6 +813,7 @@ export class GameScene extends Phaser.Scene {
     this.tracks = tracks;
     this.lastWounds = lastWounds;
     this.lastHealth = lastHealth;
+    this.lastShots = lastShots;
     this.placePeople(figures);
   }
 
@@ -1032,6 +1054,17 @@ export class GameScene extends Phaser.Scene {
     for (const p of this.particles) {
       g.fillStyle(p.color, Math.min(1, p.life / 250) * (p.floats ? 0.6 : 1));
       g.fillRect(Math.round(p.x), Math.round(p.y - p.z), p.size, p.size);
+    }
+    // D1: los disparos: la línea se apaga y el fogonazo dura menos.
+    this.shots = this.shots.filter((s) => now - s.start < SHOT_MS);
+    for (const s of this.shots) {
+      const t = (now - s.start) / SHOT_MS;
+      g.lineStyle(1, SHOT_COLOR, 0.9 * (1 - t));
+      g.lineBetween(s.x1, s.y1, s.x2, s.y2);
+      if (now - s.start < MUZZLE_MS) {
+        g.fillStyle(MUZZLE_COLOR, 1 - (now - s.start) / MUZZLE_MS);
+        g.fillCircle(s.x1 + Math.sign(s.x2 - s.x1) * 3, s.y1, 2.5);
+      }
     }
     // Manchas de este mapa, cada vez más secas.
     const w = this.world;

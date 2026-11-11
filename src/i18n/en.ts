@@ -677,6 +677,11 @@ export const en: Texts = {
       text: () =>
         'They go off over the days (less in the cold). With a campfire, 🧵 Craft → Cook: 2 vegetables make a stew, which fills more and cheers up, but goes off sooner. Cans never go off: keep them for the winter.',
     },
+    gun: {
+      title: 'A firearm',
+      text: () =>
+        'For someone to carry it: on their sheet, Gear → Always carry, add the pistol (or the shotgun) and its ammo. They shoot from afar when in trouble (several zombies, hurt or in a siege) or in draft mode; against a lone zombie, they fight hand to hand. Every shot is heard from very far away and draws more zombies.',
+    },
     autumn: {
       title: 'Autumn is here',
       text: () =>
@@ -739,6 +744,10 @@ export const en: Texts = {
       [
         '🩹 Wounds',
         'A wound bleeds until it is bandaged; without bandages, they bleed out. Whoever has Heal treats the others. A bite always infects and has no cure (on an arm or a leg, it can be amputated in time); a scratch, sometimes, and antibiotics cure it in time.',
+      ],
+      [
+        '🔫 Firearms',
+        'The pistol (with bullets) and the shotgun (with shells) are carried: on the sheet, Gear → Always carry. They shoot from afar when in trouble (several zombies, hurt or in a siege) or in draft mode; against a lone zombie, they fight hand to hand. Every shot is heard from very far away. Found at police stations, farms and hardware stores.',
       ],
       [
         '🙂 Mood',
@@ -824,6 +833,7 @@ export const en: Texts = {
       'When things are calm, speed up to x3; if something goes wrong, pause and think.',
       'Make rain barrels before the running water is cut off (days 7–14).',
       'Before winter, keep cans: the garden freezes and fresh food goes off.',
+      'Bullets are scarce and every shot draws zombies: save them for sieges.',
       'The helicopter is very loud: reach the evacuation point before it lands and wait near the zone.',
       'Tools are for marking many things by dragging; for a single one, a right click (press and hold) is enough.',
     ],
@@ -1205,7 +1215,7 @@ export const en: Texts = {
       `infected (${bite ? 'bite' : 'scratch'}), dies in ${hours} h`,
     healthy: 'no infection',
     reveal: 'Reveal everything',
-    give: 'Give 10 cans, bandages and antibiotics',
+    give: 'Give 10 cans, bandages and antibiotics, and a pistol with 30 bullets',
     kill: 'Kill nearby zombies',
     heal: 'Heal the selected one',
     radio: '📻 Hear the radio',
@@ -1350,6 +1360,10 @@ export const en: Texts = {
     meal: ['stew', 'stews'],
     radio: ['radio', 'radios'],
     battery: ['battery', 'batteries'],
+    pistol: ['pistol', 'pistols'],
+    shotgun: ['shotgun', 'shotguns'],
+    ammo: ['bullet', 'bullets'],
+    shells: ['shell', 'shells'],
   } satisfies Record<ItemKind, [string, string]>,
   log: {
     found: (who: string, what: string, where: string) => `${who} found ${what} in ${where}`,

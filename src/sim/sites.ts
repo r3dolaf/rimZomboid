@@ -5,6 +5,7 @@ import {
   CLOTHES_SALT,
   SEEDS_SALT,
   RADIO_SALT,
+  GUN_SALT,
   SITE_FIXTURES_SALT,
   INITIAL_REVEAL,
   NOTE_SURVIVORS,
@@ -36,6 +37,7 @@ import { findRoute, routeHours } from './atlas/route';
 import {
   fillBags,
   fillBatteries,
+  fillGuns,
   fillRadio,
   fillBuilding,
   fillFindings,
@@ -107,6 +109,7 @@ export function siteMap(base: World, info: SiteInfo): World {
   const radioRng = createRng((seed ^ RADIO_SALT) >>> 0);
   fillBatteries(g.houses, containers, radioRng);
   fillRadio(info.kind, containers, radioRng);
+  fillGuns(g.houses, containers, createRng((seed ^ GUN_SALT) >>> 0)); // D1, con su azar
   for (const c of containers) scaleLoot(c.items, lootMult(base)); // C2: el ajuste Botín
   // V2: sus fregaderos (sin agua corriente) y cisternas (llenas), con su propio azar.
   const fixtures = placeFixtures(

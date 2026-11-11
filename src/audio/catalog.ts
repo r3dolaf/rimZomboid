@@ -24,7 +24,9 @@ export type SfxId =
   | 'noticeGood'
   | 'noticeMixed'
   | 'noticeBad'
-  | 'death';
+  | 'death'
+  | 'gunshot' // D1
+  | 'shotgunBlast';
 export const SFX_IDS: readonly SfxId[] = [
   'hurt',
   'hitZombie',
@@ -42,6 +44,8 @@ export const SFX_IDS: readonly SfxId[] = [
   'noticeMixed',
   'noticeBad',
   'death',
+  'gunshot', // D1
+  'shotgunBlast',
 ];
 
 /**

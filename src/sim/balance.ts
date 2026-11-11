@@ -9,6 +9,7 @@ import {
   type BodyPart,
   type BuildKind,
   type GarmentKind,
+  type Gun,
   type Layer,
   type Material,
   type LootKind,
@@ -308,6 +309,10 @@ export const ITEM_WEIGHT_KG = {
   meal: 0.6,
   radio: 1.5, // C1
   battery: 0.1,
+  pistol: 1, // D1
+  shotgun: 3.5,
+  ammo: 0.02,
+  shells: 0.04,
 } as const;
 export const START_WEAPON = 'knife' as const; // H4b: sin arma, caían enseguida
 
@@ -740,6 +745,8 @@ export const LOOT_SCALED = [
   'painkillers',
   'antibiotics',
   'waterBottle',
+  'ammo', // D1
+  'shells',
 ] as const;
 export const SIEGE_WARNING_HOURS = [48, 72] as const;
 export const SIEGE_HOURS = 24;
@@ -905,6 +912,10 @@ export type LootItem =
   | 'seeds' // V1 (se reparten aparte: SEEDS_LOOT)
   | 'radio' // C1 (aparte: SITE_RADIO y BATTERY_LOOT)
   | 'battery'
+  | 'pistol' // D1 (aparte: GUN_LOOT)
+  | 'shotgun'
+  | 'ammo'
+  | 'shells'
   | Weapon;
 
 /** El botín de cada tipo de edificio (spec H4f §4). */
@@ -991,6 +1002,7 @@ export const LOOT: Record<LootKind, Partial<Record<LootItem, LootAmount>>> = {
 
 // H6c §1: las trampas del modo depuración.
 export const DEBUG_GIVE = 10;
+export const DEBUG_AMMO = 30; // D1: «Dar» también da una pistola y estas balas
 export const DEBUG_KILL_RADIUS = 20;
 
 /**
@@ -1637,3 +1649,62 @@ export const EXPLORE_RADIUS = 3;
 export const ROADMAP_RADIUS = 5;
 /** Explorar hacia un lado desde el panel (H5c2): a cuántos hexágonos de la base. */
 export const EXPLORE_DIST = 6;
+
+// D1: armas de fuego (spec D1 §1–§3).
+/**
+ * Cada arma: su munición, su alcance (casillas, en línea recta), lo que tarda entre disparos, el
+ * daño (un zombi tiene ZOMBIE_HEALTH), lo que se oye (casillas) y lo que pierde al acertar por
+ * casilla de distancia. La escopeta da también a otros (`spread`) a `splashRange` del suyo.
+ */
+export const GUNS: Record<
+  Gun,
+  {
+    ammo: 'ammo' | 'shells';
+    range: number;
+    ticks: number;
+    damage: number;
+    noise: number;
+    falloff: number;
+    spread: number;
+    splashDamage: number;
+  }
+> = {
+  pistol: {
+    ammo: 'ammo',
+    range: 8,
+    ticks: 20,
+    damage: 60,
+    noise: 30,
+    falloff: 0.04,
+    spread: 0,
+    splashDamage: 0,
+  },
+  shotgun: {
+    ammo: 'shells',
+    range: 5,
+    ticks: 40,
+    damage: 60,
+    noise: 35,
+    falloff: 0.02,
+    spread: 2,
+    splashDamage: 40,
+  },
+};
+/** La escopeta da a los que están a esto (casillas) del zombi al que dispara. */
+export const SHOTGUN_SPLASH = 1.5;
+/** Como poco, esto de acertar (de lejos o con los brazos mal). */
+export const GUN_MIN_HIT = 0.2;
+/** Sin modo combate, se dispara «en apuros» (§2): viendo tantos zombis o más… */
+export const GUN_TROUBLE_THREATS = 2;
+/** …con la salud o la sangre por debajo de lo de Decidir (DECIDE_MIN_HEALTH y DECIDE_MIN_BLOOD), o
+ * en un asedio. Con un arma cargada, con Decidir se pelea con tantos zombis más. */
+export const GUN_EXTRA_THREATS = 2;
+export const GUN_SALT = 0x6a7;
+/** Dónde se encuentran (con su propio azar), en el pueblo y en los sitios. */
+export const GUN_LOOT: Partial<
+  Record<LootKind, Partial<Record<'pistol' | 'shotgun' | 'ammo' | 'shells', LootAmount>>>
+> = {
+  police: { pistol: [1, 2], ammo: [12, 30], shotgun: { chance: 0.5 }, shells: [0, 8] },
+  farm: { shotgun: { chance: 0.5 }, shells: [2, 8] },
+  hardware: { shells: [0, 6] },
+};

@@ -36,6 +36,8 @@ interface Memo {
   wounds: Map<number, number>;
   health: Map<number, number>;
   damage: Map<string, number>;
+  /** D1: el tick del último disparo de cada uno (−1 si no ha disparado). */
+  shots: Map<number, number>;
 }
 
 function remember(w: World, version: number, tiles: Int8Array): Memo {
@@ -46,6 +48,7 @@ function remember(w: World, version: number, tiles: Int8Array): Memo {
     wounds: new Map(w.survivors.map((s) => [s.id, s.wounds.length])),
     health: new Map(w.zombies.map((z) => [z.id, z.health])),
     damage: new Map(Object.entries(w.damage)),
+    shots: new Map(w.survivors.map((s) => [s.id, s.shot?.tick ?? -1])),
   };
 }
 
@@ -75,6 +78,10 @@ export function createWatcher() {
       for (const s of w.survivors) {
         const before = memo.wounds.get(s.id);
         if (before !== undefined && s.wounds.length > before) cues.push({ id: 'hurt', at: s.pos });
+        // D1: un disparo nuevo (quien acaba de llegar al mapa no cuenta).
+        const shot = memo.shots.get(s.id);
+        if (s.shot && shot !== undefined && s.shot.tick !== shot)
+          cues.push({ id: s.shot.gun === 'shotgun' ? 'shotgunBlast' : 'gunshot', at: s.pos });
       }
       for (const z of w.zombies) {
         const before = memo.health.get(z.id);

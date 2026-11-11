@@ -196,3 +196,16 @@ test('tras reset (la pestaña del mundo), el siguiente fotograma no suena', () =
   s.wounds.push(wound(2));
   expect(watcher.watch(w, 32, true).map((c) => c.id)).toEqual(['hurt']);
 });
+
+test('D1: un disparo nuevo suena donde está quien dispara (la escopeta, distinto); uno viejo, no', () => {
+  const w = world();
+  const s = addSurvivor(w, { x: 5, y: 5 });
+  s.shot = { tick: 0, gun: 'pistol', x: 9, y: 5 };
+  const watcher = createWatcher();
+  expect(watcher.watch(w, 0, true)).toEqual([]);
+  expect(watcher.watch(w, 16, true)).toEqual([]);
+  s.shot = { tick: 5, gun: 'pistol', x: 9, y: 5 };
+  expect(watcher.watch(w, 32, true)).toEqual([{ id: 'gunshot', at: { x: 5.5, y: 5.5 } }]);
+  s.shot = { tick: 45, gun: 'shotgun', x: 9, y: 5 };
+  expect(watcher.watch(w, 48, true)).toEqual([{ id: 'shotgunBlast', at: { x: 5.5, y: 5.5 } }]);
+});

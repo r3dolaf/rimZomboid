@@ -1,5 +1,5 @@
 // La capa de Peligro del cerebro (spec H4b §7): pelear o huir según la postura.
-import { dropHandBag } from './bags';
+import { dropHandBag, loadedGuns } from './bags';
 import {
   ALLY_RANGE,
   DANGER_RANGE,
@@ -7,6 +7,7 @@ import {
   DECIDE_MIN_BLOOD,
   DECIDE_MIN_HEALTH,
   FLED_LOG_TICKS,
+  GUN_EXTRA_THREATS,
   FLEE_HEALTH,
   SHELTER_WAIT_TICKS,
   SURVIVOR_REACH,
@@ -68,7 +69,10 @@ export function willFight(w: World, s: Survivor, threats: Zombie[], stance = s.s
   ).length;
   const trait = (s.traits.includes('brave') ? 1 : 0) - (s.traits.includes('coward') ? 1 : 0);
   const count = threats.length - allies;
-  if (s.equipped) return s.health >= DECIDE_MIN_HEALTH && count <= DECIDE_MAX_THREATS + trait;
+  // D1: con un arma de fuego cargada, con más.
+  const guns = loadedGuns(s).length > 0 ? GUN_EXTRA_THREATS : 0;
+  if (s.equipped || guns > 0)
+    return s.health >= DECIDE_MIN_HEALTH && count <= DECIDE_MAX_THREATS + trait + guns;
   return s.health >= UNARMED_MIN_HEALTH && count <= UNARMED_MAX_THREATS + trait;
 }
 

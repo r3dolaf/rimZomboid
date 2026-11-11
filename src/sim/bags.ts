@@ -1,5 +1,5 @@
 // Mochilas y bolsas (spec H5b2): catálogo, huecos y lo que cabe.
-import { BAGS, ITEM_WEIGHT_KG, KEEP_DEFAULT } from './balance';
+import { BAGS, GUNS, ITEM_WEIGHT_KG, KEEP_DEFAULT } from './balance';
 import {
   addInto,
   emptyInventory,
@@ -15,7 +15,7 @@ import { logEvent } from './log';
 import { dropPile } from './piles';
 import { capacityKg } from './skills';
 import { counterOf, type PieceCounter } from './clothes';
-import type { Bag, BagKind, BagSlot, Garment, Piece, Survivor, World } from './types';
+import type { Bag, BagKind, BagSlot, Garment, Gun, Piece, Survivor, World } from './types';
 
 export { isBag };
 
@@ -71,6 +71,11 @@ export function has(s: Survivor, k: ItemKind): number {
   let n = s.carrying[k];
   for (const b of wornBags(s)) n += b.items[k];
   return n;
+}
+
+/** D1: las armas de fuego que lleva con munición para ellas (la escopeta primero). */
+export function loadedGuns(s: Survivor): Gun[] {
+  return (['shotgun', 'pistol'] as const).filter((g) => has(s, g) > 0 && has(s, GUNS[g].ammo) > 0);
 }
 
 /** Lo suyo (para «Llevar siempre», §3): lo de las manos y lo no reservado de sus bolsas. */

@@ -1,6 +1,7 @@
 // Los colonos pelean con los zombis (spec H4b §6.1): golpes según el arma y matar.
-import { carriesSomething, dropHandBag } from './bags';
+import { carriesSomething, dropHandBag, loadedGuns } from './bags';
 import {
+  GUNS,
   HEAD_HIT_CHANCE,
   NOISE,
   RUN_NOISE_TICKS,
@@ -11,8 +12,7 @@ import {
   WEAPON_HANDS,
   WEAPON_STATS,
 } from './balance';
-import { leaveCorpse } from './corpses';
-import { logEvent } from './log';
+import { chooseGun, fire, shootsNow } from './guns';
 import { makeNoise } from './noise';
 import { findPath } from './path/astar';
 import { nextFloat } from './rng';
@@ -20,6 +20,7 @@ import { hitChance, practice } from './skills';
 import { walkStep } from './systems/movement';
 import type { Survivor, World, Zombie } from './types';
 import { tileOf } from './world';
+import { hurtZombie } from './zombies/hurt';
 
 /**
  * Lo que acierta y el daño de su golpe: según Pelear (y los brazos) y el arma; con una bolsa en la
@@ -44,13 +45,7 @@ export function colonistHit(w: World, s: Survivor, z: Zombie): void {
   const hit = weaponHit(s);
   if (nextFloat(w.rng) >= hit.chance) return;
   const head = nextFloat(w.rng) < HEAD_HIT_CHANCE;
-  z.health -= hit.damage * (head ? 2 : 1);
-  if (z.health > 0) return;
-  w.zombies = w.zombies.filter((x) => x !== z);
-  leaveCorpse(w, z); // H4d
-  if (!colonist) return;
-  w.common.stats.kills++;
-  logEvent(w, { kind: 'zombieKilled', survivorId: s.id });
+  hurtZombie(w, s, z, hit.damage * (head ? 2 : 1));
 }
 
 /** Quien pelea con un zombi: si lo tiene al lado, le golpea; si no, va corriendo hacia él. */
@@ -69,6 +64,16 @@ export function combatSystem(w: World): void {
     // Con el hacha de talar (de dos manos) suelta la bolsa de la mano (H5b2 §4).
     if (s.bags.hand && s.equipped === 'axe') dropHandBag(w, s);
     if (a.cooldown > 0) a.cooldown--;
+    // D1: con un arma de fuego cargada y el zombi a tiro, dispara sin acercarse (si toca).
+    const gun = loadedGuns(s).length > 0 && shootsNow(w, s) ? chooseGun(w, s, z) : null;
+    if (gun) {
+      s.path = [];
+      if (a.cooldown > 0) continue;
+      a.cooldown = GUNS[gun].ticks;
+      fire(w, s, z, gun);
+      if (!w.zombies.includes(z)) s.action = { type: 'idle', ticksLeft: 0 };
+      continue;
+    }
     const d2 = (z.pos.x - s.pos.x) ** 2 + (z.pos.y - s.pos.y) ** 2;
     if (d2 <= SURVIVOR_REACH * SURVIVOR_REACH) {
       s.path = [];

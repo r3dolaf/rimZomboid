@@ -737,6 +737,12 @@ export const es = {
       text: () =>
         'Se estropean con los días (con frío, menos). Con una hoguera, 🧵 Fabricar → Cocinar: 2 hortalizas hacen un guiso, que llena más y anima, pero se estropea antes. Las latas no se estropean: guárdalas para el invierno.',
     },
+    // D1
+    gun: {
+      title: 'Un arma de fuego',
+      text: () =>
+        'Para que alguien la lleve: en su ficha, Equipo → Llevar siempre, añade la pistola (o la escopeta) y su munición. Dispara de lejos cuando está en apuros (varios zombis, herido o en un asedio) o en modo combate; con un zombi solo, a golpes. Cada disparo se oye desde muy lejos y atrae a más zombis.',
+    },
     autumn: {
       title: 'Llega el otoño',
       text: () =>
@@ -801,6 +807,10 @@ export const es = {
       [
         '🩹 Heridas',
         'Una herida sangra hasta que se venda; sin vendas, se desangran. Quien tenga Sanar cura a los demás. Un mordisco infecta siempre y no tiene cura (en un brazo o una pierna, se puede amputar a tiempo); un arañazo, a veces, y los antibióticos lo curan a tiempo.',
+      ],
+      [
+        '🔫 Armas de fuego',
+        'La pistola (con balas) y la escopeta (con cartuchos) se llevan encima: en la ficha, Equipo → Llevar siempre. Disparan de lejos cuando están en apuros (varios zombis, heridos o en un asedio) o en modo combate; con un zombi solo, a golpes. Cada disparo se oye desde muy lejos. Se encuentran en comisarías, granjas y ferreterías.',
       ],
       [
         '🙂 Ánimo',
@@ -889,6 +899,7 @@ export const es = {
       'Con calma, acelera a x3; si algo se tuerce, pausa y piensa.',
       'Haz barriles de lluvia antes de que se corte el agua corriente (días 7–14).',
       'Antes del invierno, guarda latas: el huerto se hiela y lo fresco se estropea.',
+      'Las balas escasean y cada disparo atrae zombis: guárdalas para los asedios.',
       'El helicóptero hace mucho ruido: llegad al punto de evacuación antes de que aterrice y esperad cerca de la zona.',
       'Las herramientas sirven para marcar muchas cosas arrastrando; para una sola, basta el clic derecho (mantener pulsado).',
     ],
@@ -1291,7 +1302,7 @@ export const es = {
       `infectado (${bite ? 'mordisco' : 'arañazo'}), muere en ${hours} h`,
     healthy: 'sin infección',
     reveal: 'Ver todo',
-    give: 'Dar 10 latas, vendas y antibióticos',
+    give: 'Dar 10 latas, vendas y antibióticos, y una pistola con 30 balas',
     kill: 'Matar zombis cerca',
     heal: 'Curar al elegido',
     radio: '📻 Oír la radio', // C1
@@ -1465,6 +1476,10 @@ export const es = {
     meal: ['guiso', 'guisos'],
     radio: ['radio', 'radios'], // C1
     battery: ['pila', 'pilas'],
+    pistol: ['pistola', 'pistolas'], // D1
+    shotgun: ['escopeta', 'escopetas'],
+    ammo: ['bala', 'balas'],
+    shells: ['cartucho', 'cartuchos'],
   } satisfies Record<ItemKind, [string, string]>,
   log: {
     found: (who: string, what: string, where: string) => `${who} ha encontrado ${what} en ${where}`,

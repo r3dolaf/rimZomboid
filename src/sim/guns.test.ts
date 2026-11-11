@@ -97,7 +97,7 @@ test('fuera de su alcance o sin línea recta, no dispara', () => {
   expect(chooseGun(w, s, z)).toBeNull();
 });
 
-test('sin modo combate, solo en apuros: con un zombi y bien, no; con dos, herido, sin sangre o en un asedio, sí', () => {
+test('sin modo combate, solo en apuros: con un zombi (o dos) y bien, no; con tres, herido, sin sangre o en un asedio, sí', () => {
   const { w, s } = setup();
   s.carrying.pistol = 1;
   s.carrying.ammo = 10;
@@ -118,6 +118,9 @@ test('sin modo combate, solo en apuros: con un zombi y bien, no; con dos, herido
   expect(shootsNow(w, s)).toBe(false);
   zombie(w, 5, 9);
   expect(threatsOf(w, s)).toHaveLength(2);
+  expect(shootsNow(w, s)).toBe(false);
+  zombie(w, 8, 8);
+  expect(threatsOf(w, s)).toHaveLength(3);
   expect(shootsNow(w, s)).toBe(true);
 });
 

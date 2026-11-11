@@ -1695,7 +1695,7 @@ export const SHOTGUN_SPLASH = 1.5;
 /** Como poco, esto de acertar (de lejos o con los brazos mal). */
 export const GUN_MIN_HIT = 0.2;
 /** Sin modo combate, se dispara «en apuros» (§2): viendo tantos zombis o más… */
-export const GUN_TROUBLE_THREATS = 2;
+export const GUN_TROUBLE_THREATS = 3; // sonda: con 2 se gastaba toda la munición los primeros días
 /** …con la salud o la sangre por debajo de lo de Decidir (DECIDE_MIN_HEALTH y DECIDE_MIN_BLOOD), o
  * en un asedio. Con un arma cargada, con Decidir se pelea con tantos zombis más. */
 export const GUN_EXTRA_THREATS = 2;

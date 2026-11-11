@@ -29,7 +29,7 @@ reutiliza lo que ya hay: el ruido, la postura, el modo combate y «Llevar siempr
 - Quien pelea con un zombi, lleva un arma de fuego **con munición para ella** y lo tiene **a tiro**
   (a su alcance y en línea recta) **dispara** en vez de acercarse. Si lleva las dos, la escopeta
   cuando hay otro zombi a 1,5 casillas del suyo; si no, la pistola.
-- **Cuándo:** en **modo combate**, siempre. Si no, solo **en apuros**: ve 2 zombis o más, tiene la
+- **Cuándo:** en **modo combate**, siempre. Si no, solo **en apuros**: ve 3 zombis o más, tiene la
   salud por debajo de 50 o la sangre por debajo de 60, o hay un asedio en marcha. Con un zombi solo y
   bien, a golpes (sin ruido).
 - **Acertar:** como un golpe (según Pelear y los brazos), menos un 4 % por casilla de distancia con
@@ -39,6 +39,12 @@ reutiliza lo que ya hay: el ruido, la postura, el modo combate y «Llevar siempr
 - **Pelear o huir:** con un arma de fuego cargada se pelea con más zombis a la vista (con Decidir,
   hasta 3 en vez de 1, más o menos según Valiente o Cobarde), con la salud en 50 o más.
 - Los desconocidos y los viajes por el camino, como hasta ahora.
+- **Sonda** (8 semillas, 30 días, Equilibrado y normal, contestando con sensatez, saqueando todo):
+  sin llevarlas, 22,0 días de media; con «Llevar siempre» desde el principio pero sacándolas del
+  pueblo, 21,1 (casi nunca llegan: la comisaría suele estar lejos y cerrada); con 3 pistolas y 60
+  balas en el almacén desde el principio, 22,2 con «en apuros» desde 2 zombis (se gastaba toda la
+  munición en los primeros días: 4 partidas llegaban al 30 y 4 caían hacia el 11–16) y 25,1 desde 3
+  (3 llegan al 30). Se queda en 3.
 
 ## 3. Dónde se encuentran (con su propio azar: no cambia el resto del botín)
 

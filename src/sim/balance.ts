@@ -227,6 +227,24 @@ export const EAT_TICKS = 30; // 6 minutos de juego
 export const SLEEP_AT_NIGHT_BELOW = 95;
 export const SLEEP_ANYTIME_BELOW = 10;
 export const CRISIS_TICKS = 2 * TICKS_PER_HOUR;
+// B2: las crisis: cuánto duran (horas), sus pesos y lo que cambian los rasgos.
+export const CRISIS_HOURS = { sulk: 2, binge: 1, rage: 1, flee: 2 } as const;
+export const CRISIS_WEIGHTS = { sulk: 4, binge: 2, rage: 2, flee: 2 } as const;
+export const CRISIS_TRAITS = {
+  binge: { glutton: 3 },
+  rage: { unpleasant: 2 },
+  flee: { coward: 3 },
+};
+/** Atracón: raciones que se come de golpe; rabia: daño de cada golpe y cada cuánto; huida: lejos. */
+export const BINGE_FOOD = 3;
+export const RAGE_DAMAGE = 6;
+export const RAGE_HIT_TICKS = 30;
+export const FLEE_DIST: [number, number] = [15, 25];
+/** La inspiración: a las 9, con el ánimo en 80 o más, un 15 %; un día, un 50 % más rápido. */
+export const INSPIRE_MOOD = 80;
+export const INSPIRE_CHANCE = 0.15;
+export const INSPIRE_HOUR = 9;
+export const INSPIRED_SPEED = 1.5;
 export const CRISIS_BREAK_HUNGER = 10;
 // La sed (spec V2 §1): baja 70 al día (con fiebre, ×1,5); se bebe por debajo de 40, 1 litro sube
 // 50; con sed por debajo de 25 y deshidratado a 0 (entonces pierde sangre).

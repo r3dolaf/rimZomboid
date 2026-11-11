@@ -215,6 +215,8 @@ test('escenario: a las 23:00 del día 1 los tres duermen en su cama', () => {
 test('escenario: con el almacén vacío, a los 2 días todos están desnutridos', () => {
   const w = createWorld(7);
   w.storage.items.food = 0;
+  // Sin narrador: sus sucesos buenos (provisiones en la puerta) traerían comida.
+  w.narrator.nextEventAt = Number.MAX_SAFE_INTEGER;
   runUntil(w, () => false, 2 * TICKS_PER_DAY);
   for (const s of w.survivors)
     expect(moodModifiers(s, w.tick).map((m) => m.id)).toContain('starving');

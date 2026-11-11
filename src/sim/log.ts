@@ -2,6 +2,7 @@ import { LOG_MAX } from './balance';
 import type { Season } from './season';
 import type { Inventory, ItemKind } from './items';
 import type {
+  CrisisKind,
   SiteInfo,
   BagKind,
   BodyPart,
@@ -85,7 +86,9 @@ export type LogEvent =
   | { kind: 'emptyContainer'; survivorId: number; houseId: number }
   | { kind: 'houseEmptied'; houseId: number }
   | { kind: 'refused'; survivorId: number }
-  | { kind: 'crisis'; survivorId: number }
+  // B2: qué crisis (sin ella, las de antes: encerrarse) y, en el atracón, cuánto se comió.
+  | { kind: 'crisis'; survivorId: number; crisis?: CrisisKind; food?: number }
+  | { kind: 'inspired'; survivorId: number }
   | { kind: 'vented'; survivorId: number }
   | { kind: 'collapsed'; survivorId: number }
   | { kind: 'outOfFood' }

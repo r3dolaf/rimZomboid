@@ -242,6 +242,9 @@ export interface Memory {
   value?: number;
 }
 
+/** B2: las crisis de ánimo: encerrarse, atracón, rabia y huida. */
+export type CrisisKind = 'sulk' | 'binge' | 'rage' | 'flee';
+
 /** Icono sobre la cabeza: charla, discusión o insulto, pelea, consuelo, compartir y pareja. */
 export type BubbleKind = 'chat' | 'argue' | 'fight' | 'console' | 'share' | 'love';
 
@@ -249,7 +252,8 @@ export type BubbleKind = 'chat' | 'argue' | 'fight' | 'console' | 'share' | 'lov
 export type Activity =
   | { type: 'eat' }
   | { type: 'sleep' }
-  | { type: 'crisis' }
+  /** B2: `kind`, qué crisis (sin él, encerrarse); `tile`, lo que golpea la rabia (y·ancho + x). */
+  | { type: 'crisis'; kind?: CrisisKind; tile?: number }
   | { type: 'search'; containerId: number }
   | { type: 'unload' }
   | { type: 'console'; otherId: number }
@@ -323,7 +327,7 @@ export type Action =
   /** `fromPack`: se come una lata de las que lleva encima, sin ir al almacén. */
   | { type: 'eat'; ticksLeft: number; fromPack?: boolean }
   | { type: 'sleep'; inBed: boolean }
-  | { type: 'crisis'; ticksLeft: number }
+  | { type: 'crisis'; ticksLeft: number; kind?: CrisisKind; tile?: number }
   | { type: 'search'; containerId: number; ticksLeft: number }
   | { type: 'unload'; ticksLeft: number }
   | { type: 'fight'; otherId: number; ticksLeft: number }
@@ -458,6 +462,8 @@ export interface Survivor {
   noWaterAt?: number;
   /** Los brazos o piernas que ha perdido (B1: amputados), para siempre. */
   missing?: BodyPart[];
+  /** B2: inspirado hasta ese tick (trabaja más rápido); sin el campo, no. */
+  inspiredUntil?: number;
 }
 
 /** Un atuendo (H5b §4): las prendas que se puede poner y si acepta ropa de muertos. */

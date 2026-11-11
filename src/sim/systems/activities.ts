@@ -1,3 +1,4 @@
+import { crisisTick } from '../crisis';
 import { readFindings } from '../sites';
 import { takeInto, unloadAt } from '../bags';
 import { CHOP_NOISE_TICKS, NOISE, PRY_NOISE_TICKS } from '../balance';
@@ -118,6 +119,7 @@ export function activitiesSystem(w: World): void {
       if (--a.ticksLeft > 0) continue;
       s.action = { type: 'idle', ticksLeft: 0 };
     } else if (a.type === 'crisis') {
+      crisisTick(w, s, a); // B2: la rabia golpea
       if (--a.ticksLeft > 0) continue;
       addMemory(s, 'vented', w.tick);
       logEvent(w, { kind: 'vented', survivorId: s.id });

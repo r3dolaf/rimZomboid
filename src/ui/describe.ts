@@ -326,7 +326,7 @@ export function activityText(s: Survivor, w?: World): string {
     case 'sleep':
       return a.inBed ? t.sleepInBed : t.sleepOnFloor;
     case 'crisis':
-      return t.crisis;
+      return t.crisisKind[a.kind ?? 'sulk']; // B2
     case 'search': {
       const c = container(a.containerId);
       if (c?.name) return t.search(es.bodyOf(c.name)); // H5: "Registrando el cuerpo de Ana"
@@ -446,6 +446,7 @@ export function statusIcon(s: Survivor): { icon: string; label: string } | null 
   if (a.type === 'eat') return es.status.eating;
   if (s.needs.mood < MOOD_EDGE) return es.status.edge;
   if (s.fever) return es.status.sick;
+  if (s.inspiredUntil !== undefined) return es.status.inspired; // B2
   return null;
 }
 
@@ -566,8 +567,16 @@ function logSentence(e: LogEntry, w: World, here: World): string {
     case 'refused':
       text = l.refused(name(e.survivorId));
       break;
-    case 'crisis':
-      text = l.crisis(name(e.survivorId));
+    case 'crisis': {
+      // B2: cada crisis (las de antes, sin tipo: «entra en crisis»).
+      const who = name(e.survivorId);
+      if (e.crisis === undefined) text = l.crisis(who);
+      else if (e.crisis === 'binge') text = l.crisisKind.binge(who, e.food ?? 0);
+      else text = l.crisisKind[e.crisis](who);
+      break;
+    }
+    case 'inspired':
+      text = l.inspired(name(e.survivorId));
       break;
     case 'vented':
       text = l.vented(name(e.survivorId));
@@ -958,6 +967,14 @@ export function noticeFor(e: LogEntry): NoticeInfo | null {
       return { tone: 'mixed', title: t.waterCut, focusId: null };
     case 'lowWater': // V2: igual
       return { tone: 'mixed', title: t.lowWater, focusId: null };
+    case 'crisis': // B2: el atracón, la rabia y la huida, en amarillo (encerrarse, solo en el registro)
+      if (e.crisis === 'binge')
+        return { tone: 'mixed', title: t.crisisBinge, focusId: e.survivorId };
+      if (e.crisis === 'rage') return { tone: 'mixed', title: t.crisisRage, focusId: e.survivorId };
+      if (e.crisis === 'flee') return { tone: 'mixed', title: t.crisisFlee, focusId: e.survivorId };
+      return null;
+    case 'inspired':
+      return { tone: 'good', title: t.inspired, focusId: e.survivorId };
     case 'radioNews': // C1: lo de la radio, en verde; el helicóptero, además, pausa
       return { tone: 'good', title: t.radioNews, focusId: null };
     case 'radioDirection':

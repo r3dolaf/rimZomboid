@@ -1170,6 +1170,10 @@ export const es = {
     lowWater: 'Queda poca agua', // V2
     noWater: 'Sed sin agua',
     winter: 'Llega el invierno', // V3
+    crisisBinge: 'Un atracón', // B2
+    crisisRage: 'Un ataque de rabia',
+    crisisFlee: 'Ha huido de la base',
+    inspired: 'Inspiración',
     radioNews: 'La radio', // C1
     radioDirection: 'La radio: un punto de evacuación',
     radioEvac: 'La radio: ¡un helicóptero!',
@@ -1416,6 +1420,15 @@ export const es = {
     houseEmptied: (where: string) => `Se ha vaciado ${where}`,
     refused: (who: string) => `${who} se niega a trabajar`,
     crisis: (who: string) => `${who} entra en crisis`,
+    // B2: cada crisis y la inspiración.
+    crisisKind: {
+      sulk: (who: string) => `${who} entra en crisis y se encierra`,
+      binge: (who: string, n: number) =>
+        `${who} entra en crisis y se da un atracón: se come ${n} ${n === 1 ? 'ración' : 'raciones'} del almacén`,
+      rage: (who: string) => `${who} entra en crisis: un ataque de rabia, a golpes con la base`,
+      flee: (who: string) => `${who} entra en crisis y huye de la base`,
+    },
+    inspired: (who: string) => `A ${who} le llega la inspiración: hoy trabaja más rápido`,
     vented: (who: string) => `${who} se ha desahogado`,
     collapsed: (who: string) => `${who} se ha desplomado de sueño`,
     outOfFood: 'El almacén se ha quedado sin comida',
@@ -1835,7 +1848,13 @@ export const es = {
     goSleep: 'Va a dormir',
     sleepInBed: 'Durmiendo en su cama',
     sleepOnFloor: 'Durmiendo en el suelo',
-    crisis: 'En crisis: encerrado en la base',
+    crisis: 'En crisis: se ha encerrado en la base',
+    crisisKind: {
+      sulk: 'En crisis: se ha encerrado en la base',
+      binge: 'En crisis: un atracón en el almacén',
+      rage: 'En crisis: un ataque de rabia',
+      flee: 'En crisis: ha huido de la base',
+    }, // B2
     goLoot: (where: string) => `Va a saquear ${where}`,
     goCorpse: 'Va a registrar un cuerpo',
     goBody: (who: string) => `Va a registrar el cuerpo de ${who}`,
@@ -1987,5 +2006,6 @@ export const es = {
     meleeZombie: { icon: '⚔️', label: 'Peleando con zombis' },
     fleeing: { icon: '🏃', label: 'Huyendo' },
     drafted: { icon: '⚔️', label: 'En modo combate' },
+    inspired: { icon: '✨', label: 'Inspiración: trabaja más rápido' }, // B2
   },
 };

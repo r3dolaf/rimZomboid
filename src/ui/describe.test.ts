@@ -2,7 +2,15 @@ import { expect, test } from 'vitest';
 import { emptyWorld } from '../sim/testing/fixtures';
 import type { Action } from '../sim/types';
 import { createWorld } from '../sim/world';
-import { activityText, barLevel, buildingThe, formatModifier, statusIcon } from './describe';
+import {
+  activityText,
+  barLevel,
+  buildingThe,
+  formatModifier,
+  logText,
+  noticeFor,
+  statusIcon,
+} from './describe';
 
 const s = () => emptyWorld(3, 3).survivors[0]!;
 
@@ -16,9 +24,9 @@ test.each<[Action, string]>([
   [{ type: 'sleep', inBed: false }, 'Durmiendo en el suelo'],
   [
     { type: 'moveTo', target: { x: 1, y: 1 }, then: { type: 'crisis' } },
-    'En crisis: encerrado en la base',
+    'En crisis: se ha encerrado en la base',
   ],
-  [{ type: 'crisis', ticksLeft: 9 }, 'En crisis: encerrado en la base'],
+  [{ type: 'crisis', ticksLeft: 9 }, 'En crisis: se ha encerrado en la base'],
 ])('activityText(%o) = %s', (action, text) => {
   const x = s();
   x.action = action;
@@ -126,4 +134,29 @@ test('V3: la estación y la temperatura, el abrigo en la ficha y 🥶 a quien es
   expect(healthIcons(s, 0).map((i) => i.icon)).toContain('🥶');
   s.feels = undefined;
   expect(clothesView(s).warmth).toMatch(/^Abriga \d+$/);
+});
+
+test('B2: cada crisis en el registro (el atracón, la rabia y la huida, avisos amarillos) y la inspiración', () => {
+  const w = createWorld(3);
+  const s = w.survivors[0]!;
+  const e = (crisis?: 'sulk' | 'binge' | 'rage' | 'flee', food?: number) =>
+    ({
+      tick: 0,
+      kind: 'crisis',
+      survivorId: s.id,
+      ...(crisis ? { crisis } : {}),
+      ...(food !== undefined ? { food } : {}),
+    }) as const;
+  expect(logText(e(), w)).toBe(`${s.name} entra en crisis`);
+  expect(logText(e('sulk'), w)).toBe(`${s.name} entra en crisis y se encierra`);
+  expect(logText(e('binge', 3), w)).toContain('se come 3 raciones');
+  expect(logText(e('rage'), w)).toContain('rabia');
+  expect(logText(e('flee'), w)).toContain('huye de la base');
+  expect(noticeFor(e('sulk'))).toBeNull();
+  for (const k of ['binge', 'rage', 'flee'] as const) expect(noticeFor(e(k))?.tone).toBe('mixed');
+  const insp = { tick: 0, kind: 'inspired', survivorId: s.id } as const;
+  expect(logText(insp, w)).toContain('le llega la inspiración');
+  expect(noticeFor(insp)?.tone).toBe('good');
+  s.inspiredUntil = 100;
+  expect(statusIcon(s)?.icon).toBe('✨');
 });

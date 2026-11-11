@@ -23,6 +23,7 @@ import { logEvent } from './log';
 import { nextFloat, pick } from './rng';
 import { equipFromPack } from './jobs/weapons';
 import { boardDecision } from './jobs/board';
+import { crisisAction } from './crisis';
 import { findWork, isWorking, stillWorthIt } from './work';
 import { mercyDecision } from './death';
 import { inBase, restDecision, selfCare } from './jobs/medical';
@@ -91,8 +92,7 @@ const AiBrain: Brain = {
     // A quien van a acabar con su sufrimiento (H5 §7.4): come y duerme, y si no, espera donde está.
     if (w.mercy.includes(s.id))
       return a.type === 'idle' || a.type === 'rest' ? null : { type: 'idle', ticksLeft: 0 };
-    if (crisisDue(s, w))
-      return { type: 'moveTo', target: pick(w.rng, baseFloor(w)), then: { type: 'crisis' } };
+    if (crisisDue(s, w)) return crisisAction(s, w); // B2: la que le toque
     if (a.type === 'moveTo' && a.then?.type === 'console')
       return stillConsoling(s, w, a.then.otherId) ? null : { type: 'idle', ticksLeft: 0 };
 

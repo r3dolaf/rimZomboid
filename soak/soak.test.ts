@@ -1112,3 +1112,36 @@ test('C2: con cada comienzo se juega (al menos un día entero)', () => {
   for (const [label, day] of Object.entries(setupTotals))
     expect(day, label).toBeGreaterThanOrEqual(2);
 });
+
+/** B2: las crisis que salen con el ánimo por los suelos. */
+const crisisTotals: Record<string, number> = {};
+
+test.each([1, 2])(
+  'B2: semilla %i, 12 días con el ánimo por los suelos — salen las crisis y no se rompe nada',
+  (seed) => {
+    const w = createWorld(seed, 'balanced', 'few');
+    for (const h of w.houses) issue(w, { type: 'designateHouse', houseId: h.id, on: true });
+    const r = createRng(5);
+    for (let i = 0; i < 12 * TICKS_PER_DAY && !w.common.over; i++) {
+      if (i % TICKS_PER_HOUR === 0)
+        for (const s of w.survivors) s.needs.mood = Math.min(s.needs.mood, 5);
+      const d = w.decisions[0];
+      if (d && !w.orders.some((o) => o.type === 'decide'))
+        issue(w, { type: 'decide', decisionId: d.id, option: answer(r, d) });
+      const last = w.common.log.at(-1);
+      stepGame(w);
+      const problems = checkInvariants(w);
+      if (problems.length > 0) expect(problems, `tick ${w.tick}`).toEqual([]);
+      for (const e of w.common.log.slice(last ? w.common.log.lastIndexOf(last) + 1 : 0))
+        if (e.kind === 'crisis')
+          crisisTotals[e.crisis ?? 'sulk'] = (crisisTotals[e.crisis ?? 'sulk'] ?? 0) + 1;
+    }
+  },
+  600_000,
+);
+
+test('B2: salen las cuatro crisis', () => {
+  console.log('B2, crisis:', crisisTotals);
+  for (const k of ['sulk', 'binge', 'rage', 'flee'])
+    expect(crisisTotals[k] ?? 0, k).toBeGreaterThan(0);
+});

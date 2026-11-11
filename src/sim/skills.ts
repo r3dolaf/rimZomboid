@@ -1,6 +1,7 @@
 // Habilidades (spec H4c): cómo empiezan, lo que cuesta subir y lo que cambian.
 import {
   BAGS,
+  INSPIRED_SPEED,
   BUILD_FAIL_BASE,
   CARRY_BASE_KG,
   CARRY_PER_LEVEL_KG,
@@ -121,7 +122,8 @@ export function skillSpeed(level: number): number {
 
 /** Rapidez de un trabajo: la de su habilidad por los brazos (H5 §2.4; sin brazos, casi nada). */
 export function workSpeed(s: Survivor, skill: SkillId): number {
-  return Math.max(MIN_WORK_SPEED, skillSpeed(s.skills[skill].level) * armFactor(s));
+  const inspired = s.inspiredUntil !== undefined ? INSPIRED_SPEED : 1; // B2
+  return Math.max(MIN_WORK_SPEED, skillSpeed(s.skills[skill].level) * armFactor(s) * inspired);
 }
 
 /**

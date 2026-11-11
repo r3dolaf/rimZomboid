@@ -1,3 +1,4 @@
+import { inspirationSystem } from './crisis';
 import { clothesSystem } from './clothes';
 import { corpsesSystem } from './corpses';
 import { combatSystem } from './combat';
@@ -41,6 +42,7 @@ export function step(w: World): void {
   seasonSystem(w); // V3: empieza una estación
   feelsSystem(w); // V3: el frío y el calor
   moodSystem(w);
+  inspirationSystem(w); // B2
   socialSystem(w);
   narratorSystem(w);
   decisionsSystem(w);

@@ -38,6 +38,7 @@ import { stillDrinkable } from '../drink';
 import { startDress } from '../jobs/dress';
 import { startWaterActivity } from '../jobs/water';
 import { logEvent } from '../log';
+import { startCrisis } from '../crisis';
 import { makeNoise } from '../noise';
 import { loadFactor, practice, workSpeed } from '../skills';
 import { isWalkable } from '../map/grid';
@@ -124,9 +125,8 @@ function startActivity(s: Survivor, activity: Activity, w: World): Action {
       return stillDrinkable(w, activity.sourceId)
         ? { type: 'drink', ticksLeft: DRINK_TICKS, sourceId: activity.sourceId }
         : { type: 'idle', ticksLeft: 0 };
-    case 'crisis':
-      logEvent(w, { kind: 'crisis', survivorId: s.id });
-      return { type: 'crisis', ticksLeft: CRISIS_TICKS };
+    case 'crisis': // B2: según cuál
+      return startCrisis(s, w, activity);
     case 'search':
       // Con más habilidad, antes (spec H4c §3.4).
       return {

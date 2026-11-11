@@ -132,6 +132,7 @@ export const LOG_CATEGORY: Record<LogEvent['kind'], LogCategory> = {
   heliLeft: 'colony',
   heliGone: 'colony',
   rescueEnd: 'colony',
+  inspired: 'social', // B2: como la crisis
 };
 
 /** Las categorías apagadas la última vez; si no hay o no se puede leer, ninguna. */

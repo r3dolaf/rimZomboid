@@ -149,6 +149,23 @@
   border-color: #c9a227;
   color: #111;
 }
+/* C2: los comienzos, de dos en dos; en pantalla pequeña, las tarjetas más apretadas. */
+.start-scenarios {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+@media (max-width: 799px), (max-height: 500px) {
+  .start-narrator {
+    padding: 8px 10px;
+    gap: 3px;
+  }
+  .start-narrator strong {
+    font-size: 14px;
+  }
+  .start-narrator span {
+    font-size: 12px;
+  }
+}
 /* C2: el objetivo bajo el comienzo y los ajustes a medida, plegados. */
 .start-objective {
   margin: 10px 0 18px;

@@ -77,6 +77,9 @@ test('C2: el comienzo (el pueblo, marcado), el objetivo y los ajustes plegados l
   ]);
   expect(q('scenario-town').classList.contains('selected')).toBe(true);
   expect(q('scenario-town').textContent).toContain('Para empezar');
+  expect(q('scenario-solo').textContent).toContain('Muy difícil');
+  expect(q('scenario-family').textContent).toContain('Más fácil');
+  expect(q('scenario-bare').textContent).toContain('Difícil');
   expect(q('start-objective').textContent).toContain('encontrad una radio');
   const custom = q('start-custom') as HTMLDetailsElement;
   expect(custom.open).toBe(false);

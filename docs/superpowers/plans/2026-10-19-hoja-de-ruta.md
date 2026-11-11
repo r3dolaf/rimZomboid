@@ -160,6 +160,8 @@ Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al p
 
 **Hechos en N1 (Asedios con ritmo):** en la misma sonda (12 partidas de 25 días, Tranquilo y Equilibrado, 6 semillas, saqueando sin defender), los asedios anunciados pasan de 7 a 18: el Tranquilo, 2 en cada partida (antes 0–1); el Equilibrado, 1–2 en las que duran más de una semana. Lo que se aguanta casi no cambia (el Equilibrado, 12,5 días de media frente a 13,2; el Tranquilo llega al final en todas). La partida larga con zombis ya no fuerza un asedio.
 
+**Hechos en C2 (Comienzos y ajustes a medida):** sonda de 8 semillas y 30 días (Equilibrado y normal, contestando con sensatez, saqueando todo, con mesa y vendas): el pueblo aguanta hasta el día 24,2 de media (3 de 8 llegan al 30, como en H6d); familia numerosa, 27,0 (5 de 8: más manos pesan más que más bocas); con lo puesto, 18,4 (1 de 8); solo, 15,1 (ninguna); todo fácil, 30,0 (7 de 8); todo difícil, 14,8 (ninguna). En la portada, cada comienzo lleva lo difícil que es según esto («Más fácil», «Difícil», «Muy difícil»). Lo que más mata sigue siendo la infección en todos.
+
 **Para H6 (pulido), de H5:**
 
 - Equilibrio (6 semillas, Equilibrado/normal, saqueando todo desde el principio, con mesa y "vendas hasta 10", marcando los cuerpos, sin defender): con las cifras de la spec la colonia caía en 2–3 días; tras el ajuste (spec §13), cae los días 10–20 (la mitad, hacia el 13). Las primeras muertes llegan los días 4–7, sobre todo por infección (de arañazos más que de mordiscos) y luego desangrados cuando se acaban las vendas. Se pelea mucho: 80–260 zombis matados y 90–185 heridas por partida. El usuario pidió "1–2 semanas" saqueando todo sin defenderse.

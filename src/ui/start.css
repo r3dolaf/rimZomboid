@@ -166,6 +166,11 @@
     font-size: 12px;
   }
 }
+/* C2: lo difícil de cada comienzo, con el color de «Para empezar» pero en ámbar. */
+.start-difficulty {
+  background: #4a3a1c;
+  color: #f2d48a;
+}
 /* C2: el objetivo bajo el comienzo y los ajustes a medida, plegados. */
 .start-objective {
   margin: 10px 0 18px;

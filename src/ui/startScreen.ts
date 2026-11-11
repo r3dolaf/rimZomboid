@@ -77,6 +77,13 @@ export function mountStartScreen(
     desc.textContent = es.scenarios[id].desc;
     b.append(name, desc);
     if (id === 'town') b.append(starter());
+    const tag = es.scenarioTags[id];
+    if (tag) {
+      const em = document.createElement('em');
+      em.className = 'start-starter start-difficulty';
+      em.textContent = tag;
+      b.append(em);
+    }
     b.addEventListener('click', () => {
       setup.scenario = id;
       refreshScenarios();

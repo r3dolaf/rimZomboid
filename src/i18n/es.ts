@@ -501,13 +501,17 @@ export const es = {
     },
     family: {
       name: 'Familia numerosa',
-      desc: 'Cinco en la misma casa: más manos y más bocas. La comida se acaba enseguida.',
+      desc: 'Cinco en la misma casa: más manos para todo y más bocas que alimentar.',
     },
     bare: {
       name: 'Con lo puesto',
       desc: 'Tres, sin comida, sin agua y sin armas. A saquear desde la primera hora.',
     },
   } satisfies Record<ScenarioId, { name: string; desc: string }>,
+  /** C2: lo difícil que es cada comienzo (medido con la sonda; el pueblo lleva «Para empezar»). */
+  scenarioTags: { solo: 'Muy difícil', family: 'Más fácil', bare: 'Difícil' } as Partial<
+    Record<ScenarioId, string>
+  >,
   /** C2: los ajustes a medida: su nombre, qué cambian y lo que dice cada valor. */
   setup: {
     names: {

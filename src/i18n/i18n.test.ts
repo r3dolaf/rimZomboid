@@ -109,6 +109,8 @@ test('frases con gramática: el artículo del mueble y los decimales, en cada id
   expect(en.decimal(2.5)).toBe('2.5');
   expect(en.log.wounded('Ana', 'leftArm', 'bite')).toBe('A zombie bit Ana on the left arm');
   expect(en.maps.going('the farm', 3)).toBe('Travelling to the farm · 3 h left');
+  expect(en.sites.where('a farm', 'the north', 4)).toBe('a farm to the north, 4 hours away');
+  expect(es.sites.where('una granja', 'el norte', 4)).toBe('una granja hacia el norte, a 4 horas');
 });
 
 test('el cambio de idioma: el de ahora marcado; elegir otro avisa (y el mismo, no)', () => {

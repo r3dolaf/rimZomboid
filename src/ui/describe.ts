@@ -1156,7 +1156,7 @@ export function pileLabel(p: Pile): string | null {
 /** Un sitio en una frase: «una granja hacia el norte, a 4 horas» (o lo especial, si lo es). */
 export function siteText(site: Pick<SiteInfo, 'kind' | 'special' | 'side' | 'hours'>): string {
   const what = site.special ? es.sites.specials[site.special] : es.sites.kinds[site.kind];
-  return `${what} hacia ${es.sites.sides[site.side]}, a ${site.hours} horas`;
+  return es.sites.where(what, es.sites.sides[site.side], site.hours);
 }
 
 /** «Ana», «Ana y Bea», «Ana, Bea y Carlos». */

@@ -914,6 +914,8 @@ export const en: Texts = {
       dangerous: 'a dangerous place',
     } satisfies Record<SiteSpecial, string>,
     sides: ['the north', 'the south', 'the west', 'the east'] as [string, string, string, string],
+    where: (what: string, side: string, hours: number) =>
+      `${what} to ${side}, ${hours} ${hours === 1 ? 'hour' : 'hours'} away`,
   },
   maps: {
     base: 'Base',

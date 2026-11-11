@@ -982,6 +982,8 @@ export const es = {
       dangerous: 'un sitio peligroso',
     } satisfies Record<SiteSpecial, string>,
     sides: ['el norte', 'el sur', 'el oeste', 'el este'] as [string, string, string, string],
+    /** «una granja hacia el norte, a 4 horas». */
+    where: (what: string, side: string, hours: number) => `${what} hacia ${side}, a ${hours} horas`,
   },
   // Los mapas en pantalla (H5c1 §7): pestañas, dónde está cada uno.
   maps: {

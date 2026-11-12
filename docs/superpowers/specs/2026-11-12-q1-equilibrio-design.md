@@ -44,7 +44,9 @@ explicar por qué no.
 el 25 %); se empieza con 4 antibióticos (antes 2) y la farmacia del pueblo tiene 1–2 (antes, uno el 30 %
 de las veces); el Equilibrado, con 35 zombis al empezar, 65 como mucho y uno cada 3 horas (antes 40,
 80 y cada 2); no se siembra con el día por debajo de 8 grados de media (fallo: la helada se comía todas
-las semillas); y lo maduro se cosecha aunque se vaya cargado del saqueo (fallo: se pudría).
+las semillas); y lo maduro se cosecha aunque se vaya cargado del saqueo (fallo: se pudría). Al mover
+el azar, la partida larga con expediciones destapó otro fallo antiguo: los zombis de un sitio se ponían
+en casillas que pisa una persona y alguno salía en una puerta; ahora, solo donde puede estar un zombi.
 
 | Narrador    | Cae (mediana) | Al invierno | Al día 60 | Objetivo                     |
 | ----------- | ------------- | ----------- | --------- | ---------------------------- |

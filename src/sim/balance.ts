@@ -690,9 +690,9 @@ export const TRAIT_SKILL_MODS = {
 // Zombis (H4b)
 /** Zombis al empezar, máximo y cada cuántas horas llega uno por los bordes, según el narrador. */
 // Caótico era 35/70/1 h y Muchos ×1,5: sin defensas, en Caótico/muchos caían el 80 % del tiempo.
-export const ZOMBIE_START = { calm: 25, balanced: 40, chaotic: 50 } as const; // H4f (antes 15/25/30)
-export const ZOMBIE_MAX = { calm: 50, balanced: 80, chaotic: 100 } as const; // H4f (antes 30/50/60)
-export const ZOMBIE_EVERY_HOURS = { calm: 4, balanced: 2, chaotic: 1.5 } as const;
+export const ZOMBIE_START = { calm: 25, balanced: 35, chaotic: 50 } as const; // Q1 (antes 25/40/50; H4f, 15/25/30)
+export const ZOMBIE_MAX = { calm: 50, balanced: 65, chaotic: 100 } as const; // Q1 (antes 50/80/100; H4f, 30/50/60)
+export const ZOMBIE_EVERY_HOURS = { calm: 4, balanced: 3, chaotic: 1.5 } as const; // Q1 (Equilibrado, antes 2)
 /** Opción Zombis de la portada: multiplica lo anterior (y el ritmo de llegada). */
 export const ZOMBIE_LEVEL_MULT = { few: 0.5, normal: 1, many: 1.25 } as const;
 export const ZOMBIE_SAFE_RADIUS = 12; // al empezar, ninguno más cerca de la base (H4f; antes 20)

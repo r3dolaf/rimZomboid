@@ -51,9 +51,9 @@ test('al empezar: Salud 100, postura según los rasgos y sin arma fijada', () =>
 });
 
 test('cuántos zombis hay al empezar y cuántos como mucho, según el narrador y la opción', () => {
-  // H4f: con el mapa de 150×150, más (antes 15/25/30 y 30/50/60).
-  const start = { calm: 25, balanced: 40, chaotic: 50 };
-  const max = { calm: 50, balanced: 80, chaotic: 100 };
+  // H4f: con el mapa de 150×150, más (antes 15/25/30 y 30/50/60); Q1: Equilibrado, a medio camino.
+  const start = { calm: 25, balanced: 35, chaotic: 50 };
+  const max = { calm: 50, balanced: 65, chaotic: 100 };
   const mult = { few: 0.5, normal: 1, many: 1.25 };
   for (const style of ['calm', 'balanced', 'chaotic'] as NarratorStyle[])
     for (const level of ['few', 'normal', 'many'] as ZombieLevel[]) {

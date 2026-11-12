@@ -61,7 +61,7 @@ function stats(w: World): string {
 export function shareText(w: World, url: string): string {
   const h = headline(w);
   return [
-    `rimZomboid — ${h.title}`,
+    `${es.title} — ${h.title}`,
     h.days,
     setupLine(setupOf(w)),
     stats(w),
@@ -139,6 +139,6 @@ export function chronicleImage(w: World, url: string): HTMLCanvasElement | null 
   }
   g.fillStyle = '#a9a69c';
   g.font = font(16);
-  g.fillText(`rimZomboid · ${url}`, PAD, height - PAD / 2);
+  g.fillText(`${es.title} · ${url}`, PAD, height - PAD / 2);
   return canvas;
 }

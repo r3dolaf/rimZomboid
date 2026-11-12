@@ -95,7 +95,7 @@ export function mountEndScreen(
               if (!blob) return;
               const a = document.createElement('a');
               a.href = URL.createObjectURL(blob);
-              a.download = `rimzomboid-${gameTime(w.common.over?.tick ?? w.tick).day}.png`;
+              a.download = `villamuerta-${gameTime(w.common.over?.tick ?? w.tick).day}.png`;
               a.click();
               setTimeout(() => URL.revokeObjectURL(a.href), 1000);
             }, 'image/png');

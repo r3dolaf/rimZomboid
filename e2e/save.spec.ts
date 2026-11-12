@@ -45,7 +45,7 @@ test('guardar, volver a la portada y «Continuar»: la misma partida', async ({ 
     buffer: Buffer.from('hola'),
   });
   await expect(page.getByTestId('game-status')).toHaveText(
-    'Ese archivo no es una partida de rimZomboid',
+    'Ese archivo no es una partida de Villamuerta',
   );
   expect(errores).toEqual([]);
 });

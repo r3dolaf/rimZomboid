@@ -48,7 +48,7 @@ const n_ = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : man
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export const en: Texts = {
-  title: 'rimZomboid',
+  title: 'Villamuerta',
   dayTime: (day: number, hour: number, minute: number) => `Day ${day}, ${pad(hour)}:${pad(minute)}`,
   seed: (s: number) => `Seed: ${s}`,
   food: (n: number) => `🥫 ${n}`,
@@ -1304,7 +1304,7 @@ export const en: Texts = {
     loadConfirm: 'Yes, load',
     export: 'Export to a file',
     import: '📂 Import a file…',
-    broken: "That file isn't a rimZomboid game",
+    broken: "That file isn't a Villamuerta game",
     version: "That game is from another version of the game and can't be loaded",
     continue: (day: number) => `Continue (day ${day})`,
     importStart: '📂 Import game…',

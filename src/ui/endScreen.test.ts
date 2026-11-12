@@ -127,7 +127,7 @@ test('C3: la crónica (con su día), los logros de esta partida y copiar el text
   (el.querySelector('[data-testid="end-copy"]') as HTMLButtonElement).click();
   await vi.waitFor(() => expect(writeText).toHaveBeenCalled());
   const text = writeText.mock.calls[0]![0] as string;
-  expect(text.split('\n')[0]).toBe('rimZomboid — La colonia ha caído');
+  expect(text.split('\n')[0]).toBe('Villamuerta — La colonia ha caído');
   expect(text).toContain('Día 6 · Bea ha muerto por una infección');
   expect(text).toContain('Juega esta misma partida: ');
   await vi.waitFor(() =>

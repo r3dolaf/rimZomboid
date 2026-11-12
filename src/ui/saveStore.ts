@@ -2,6 +2,7 @@
 // archivo y leer uno. Si el navegador no deja guardar (modo privado, lleno), se dice y no se rompe.
 import { loadGame, type SaveMeta } from '../sim/save';
 
+// Las claves del navegador siguen con el nombre de antes (rimzomboid): así no se pierde lo guardado.
 const KEY = 'rimzomboid.partida';
 
 type Store = Pick<Storage, 'getItem' | 'setItem'>;
@@ -49,8 +50,8 @@ export function savedMeta(text: string | null): SaveMeta | null {
   return 'error' in got ? null : got.meta;
 }
 
-/** El nombre del archivo exportado: «rimzomboid-dia-4.json». */
-export const exportName = (meta: SaveMeta) => `rimzomboid-dia-${meta.day}.json`;
+/** El nombre del archivo exportado: «villamuerta-dia-4.json». */
+export const exportName = (meta: SaveMeta) => `villamuerta-dia-${meta.day}.json`;
 
 /** Descarga el texto como archivo. */
 export function downloadFile(name: string, text: string): void {

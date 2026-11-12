@@ -48,7 +48,7 @@ const list = (names: string[]) =>
 const toThe = (the: string) => (the.startsWith('el ') ? `al ${the.slice(3)}` : `a ${the}`);
 
 export const es = {
-  title: 'rimZomboid',
+  title: 'Villamuerta',
   dayTime: (day: number, hour: number, minute: number) => `Día ${day}, ${pad(hour)}:${pad(minute)}`,
   seed: (s: number) => `Semilla: ${s}`,
   // H6c: con icono, para que la barra de arriba quepa (el nombre, al pasar el ratón).
@@ -1394,7 +1394,7 @@ export const es = {
     loadConfirm: 'Sí, cargar',
     export: 'Exportar a un archivo',
     import: '📂 Importar un archivo…',
-    broken: 'Ese archivo no es una partida de rimZomboid',
+    broken: 'Ese archivo no es una partida de Villamuerta',
     version: 'Esa partida es de otra versión del juego y no se puede cargar',
     continue: (day: number) => `Continuar (día ${day})`,
     importStart: '📂 Importar partida…',

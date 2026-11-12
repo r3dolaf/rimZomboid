@@ -42,7 +42,7 @@ test('la partida en el navegador: se guarda y se lee; si no se puede, lo dice si
   expect(createSaveStore(memory(true)).write(text)).toBe(false);
   expect(createSaveStore(null).write(text)).toBe(false);
   expect(createSaveStore(null).read()).toBeNull();
-  expect(exportName(meta)).toBe('rimzomboid-dia-4.json');
+  expect(exportName(meta)).toBe('villamuerta-dia-4.json');
 });
 
 test('el panel «Partida»: guardar, cargar (confirmando), exportar e importar', async () => {

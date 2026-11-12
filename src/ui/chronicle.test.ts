@@ -42,7 +42,7 @@ test('el texto: el final, los días, el comienzo, las cifras, la crónica y el e
   logEvent(w, { kind: 'rescueEnd' });
   const text = shareText(w, 'https://example.org/?seed=4');
   const lines = text.split('\n');
-  expect(lines[0]).toBe('rimZomboid — ¡Os han rescatado!');
+  expect(lines[0]).toBe('Villamuerta — ¡Os han rescatado!');
   expect(lines[1]).toBe('Aguantasteis 10 días hasta el rescate');
   expect(lines[3]).toBe('12 zombis · 1 asedio · 0 hortalizas');
   expect(lines.at(-1)).toBe('Juega esta misma partida: https://example.org/?seed=4');

@@ -1,6 +1,10 @@
-# rimZomboid
+# Villamuerta
 
-Juego de gestión de una colonia de supervivientes en un apocalipsis zombi, a medio camino entre RimWorld y Project Zomboid. Se juega en el navegador.
+Juego de gestión de una colonia de supervivientes en un pueblo durante un apocalipsis zombi: saquear,
+defenderse, cultivar, pasar el invierno y, si hay suerte, que os rescaten. Se juega en el navegador.
+
+Antes se llamaba «rimZomboid» (un nombre de trabajo con dos marcas ajenas). El repositorio, la
+dirección de GitHub Pages y las claves de lo guardado en el navegador conservan el nombre antiguo.
 
 ## Arrancar
 

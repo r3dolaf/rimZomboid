@@ -53,6 +53,6 @@ test('un logro (aviso y en Partida) y la crónica en la pantalla final: copiar y
   await expect(page.getByTestId('end-share-status')).not.toHaveText('');
   const download = page.waitForEvent('download');
   await page.getByTestId('end-image').click();
-  expect((await download).suggestedFilename()).toBe('rimzomboid-1.png');
+  expect((await download).suggestedFilename()).toBe('villamuerta-1.png');
   expect(errores).toEqual([]);
 });

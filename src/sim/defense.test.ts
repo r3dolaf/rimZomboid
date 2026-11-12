@@ -106,6 +106,8 @@ test('invariantes: planos con madera de más, montones raros, marcas que no son 
       shotgun: 0,
       ammo: 0,
       shells: 0,
+      generator: 0,
+      gasCan: 0,
       pieces: [],
     },
   });

@@ -124,6 +124,8 @@ test('dónde se puede construir cada cosa', () => {
       shotgun: 0,
       ammo: 0,
       shells: 0,
+      generator: 0,
+      gasCan: 0,
       pieces: [],
     },
   });

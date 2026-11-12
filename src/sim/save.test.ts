@@ -230,7 +230,6 @@ test('C1: una partida de la versión 4 se sigue cargando, con radio y pilas a 0 
 });
 
 test('D1: una partida de la versión 5 se sigue cargando, con armas y munición a 0 en todo lo que guarda cosas', () => {
-  expect(SAVE_VERSION).toBe(6);
   const w = createWorld(7);
   const file = JSON.parse(saveGame(w, meta)) as { version: number; world: World };
   file.version = 5;
@@ -254,5 +253,30 @@ test('D1: una partida de la versión 5 se sigue cargando, con armas y munición 
   }
   expect(checkInvariants(lw)).toEqual([]);
   for (let i = 0; i < 300; i++) stepGame(lw);
+  expect(checkInvariants(lw)).toEqual([]);
+});
+
+test('E1: una partida de la versión 6 se sigue cargando, con generadores y bidones a 0', () => {
+  expect(SAVE_VERSION).toBe(7);
+  const w = createWorld(7);
+  const file = JSON.parse(saveGame(w, meta)) as { version: number; world: World };
+  file.version = 6;
+  const strip = (x: unknown): void => {
+    if (typeof x !== 'object' || x === null) return;
+    if (Array.isArray(x)) return x.forEach(strip);
+    const o = x as Record<string, unknown>;
+    if (Array.isArray(o.pieces) && typeof o.food === 'number') {
+      delete o.generator;
+      delete o.gasCan;
+    }
+    Object.values(o).forEach(strip);
+  };
+  strip(file.world);
+  const loaded = loadGame(JSON.stringify(file));
+  if ('error' in loaded) throw new Error(loaded.error);
+  const lw = loaded.world;
+  expect(lw.storage.items.generator).toBe(0);
+  expect(lw.storage.items.gasCan).toBe(0);
+  expect(lw.survivors.every((s) => s.carrying.gasCan === 0)).toBe(true);
   expect(checkInvariants(lw)).toEqual([]);
 });

@@ -13,7 +13,7 @@ import { findPath, regionOf } from '../path/astar';
 import { pick } from '../rng';
 import { capacityKg } from '../skills';
 import type { Action, Activity, Furniture, Point, Survivor, World } from '../types';
-import { mainsOn } from '../water';
+import { tapOn } from '../water';
 import { tileOf } from '../world';
 import { atOrBeside, standOnOrBeside } from './stand';
 
@@ -42,7 +42,7 @@ const dist2 = (s: Survivor, p: Point) => (p.x + 0.5 - s.pos.x) ** 2 + (p.y + 0.5
 
 /** ¿Da agua ahora? El fregadero, con agua corriente; la cisterna, con un cubo al menos. */
 const flows = (w: World, f: Furniture) =>
-  (f.kind === 'sink' && mainsOn(w)) || (f.kind === 'cistern' && (f.water ?? 0) >= BUCKET_LITERS);
+  (f.kind === 'sink' && tapOn(w)) || (f.kind === 'cistern' && (f.water ?? 0) >= BUCKET_LITERS);
 
 /** La fuente más cercana a la que llega. */
 function nearestSource(s: Survivor, w: World): Furniture | null {

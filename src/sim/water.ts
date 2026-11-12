@@ -17,6 +17,7 @@ import {
   WATER_CUT_DAY_MIN,
 } from './balance';
 import { logEvent } from './log';
+import { powered } from './power';
 import { outdoorTemp } from './season';
 import { baseLayout } from './base';
 import { wallSpots } from './map/recipes';
@@ -26,6 +27,9 @@ import { indoors } from './zombies/spawn';
 
 /** ¿Sigue habiendo agua corriente? */
 export const mainsOn = (w: World): boolean => w.tick < w.waterCutAt;
+
+/** ¿Da agua el fregadero? Con agua corriente o, cortada, con el generador en marcha (E1 §3). */
+export const tapOn = (w: World): boolean => mainsOn(w) || powered(w);
 
 /** Cuándo se corta el agua: un día entre el 7 y el 14, a una hora al azar. */
 export function rollWaterCut(rng: RngState): number {

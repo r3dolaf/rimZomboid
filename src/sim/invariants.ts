@@ -4,6 +4,7 @@ import {
   BUILDINGS,
   CAMPFIRE_FUEL_MAX,
   RADIO_CHARGE_MAX,
+  GEN_FUEL_MAX,
   DEPOT_LITERS,
   CURTAINS_COST,
   OPINION_LIMIT,
@@ -420,7 +421,12 @@ function checkMap(w: World, everyone: readonly Survivor[], allBeds: readonly Bed
       problems.push(`pedido ${b.id}: ${b.recipe}, ${b.mode}, N ${b.target}, hechos ${b.done}`);
   // Leña (V3 §4) y carga de la radio (C1 §1): entre 0 y lo que cabe.
   for (const f of w.furniture) {
-    const max = f.kind === 'radio' ? RADIO_CHARGE_MAX : CAMPFIRE_FUEL_MAX;
+    const max =
+      f.kind === 'radio'
+        ? RADIO_CHARGE_MAX
+        : f.kind === 'generator'
+          ? GEN_FUEL_MAX
+          : CAMPFIRE_FUEL_MAX;
     if (f.fuel !== undefined && (!Number.isFinite(f.fuel) || f.fuel < 0 || f.fuel > max))
       problems.push(`${f.kind} #${f.id}: ${f.fuel} horas, fuera de 0–${max}`);
   }
@@ -430,6 +436,16 @@ function checkMap(w: World, everyone: readonly Survivor[], allBeds: readonly Bed
   for (const r of radios)
     if (r.fuel === undefined || typeof r.on !== 'boolean')
       problems.push(`radio #${r.id}: sin carga o sin encendida/apagada`);
+  // E1: un generador por mapa como mucho, con su gasolina y sus horas para la nevera (0–24).
+  const gens = w.furniture.filter((f) => f.kind === 'generator');
+  if (gens.length > 1) problems.push(`${gens.length} generadores en el mapa ${w.mapId}`);
+  for (const g of gens)
+    if (
+      g.fuel === undefined ||
+      typeof g.on !== 'boolean' ||
+      !(g.powered === undefined || (g.powered >= 0 && g.powered <= 24))
+    )
+      problems.push(`generador #${g.id}: sin gasolina, encendido/apagado u horas ${g.powered}`);
   // Agua (H5b §6): entre 0 y lo que cabe.
   for (const f of w.furniture) {
     const max = DEPOT_LITERS[f.kind] ?? null;

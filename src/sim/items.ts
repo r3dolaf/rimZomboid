@@ -40,7 +40,10 @@ export type ItemKind =
   | 'pistol'
   | 'shotgun'
   | 'ammo'
-  | 'shells';
+  | 'shells'
+  // E1: el generador (para construirlo en la base) y la gasolina
+  | 'generator'
+  | 'gasCan';
 
 /** Orden en el que se cogen las cosas al registrar un contenedor. */
 export const ITEM_KINDS: readonly ItemKind[] = [
@@ -75,6 +78,8 @@ export const ITEM_KINDS: readonly ItemKind[] = [
   'shotgun',
   'ammo',
   'shells',
+  'generator', // E1
+  'gasCan',
 ];
 
 /**
@@ -117,6 +122,8 @@ export function emptyInventory(): Inventory {
     shotgun: 0,
     ammo: 0,
     shells: 0,
+    generator: 0, // E1
+    gasCan: 0,
     pieces: [],
   };
 }

@@ -499,6 +499,39 @@ function radio(on: boolean, waves: 0 | 1 | 2): string[] {
   outline(px, top);
   return rowsOf(px, top);
 }
+/**
+ * El generador (E1): portátil, con su marco rojo, el depósito amarillo encima y el motor gris; en
+ * marcha, el piloto verde y humo que sale del escape (`puff`, 1 o 2: sube).
+ */
+function generator(on: boolean, puff: 0 | 1 | 2): string[] {
+  const body = [
+    '....kkkkkkkk....',
+    '....kuuuuuuk....',
+    '..kkkkkkkkkkkk..',
+    '..kXkuuuuuukXk..',
+    '..kXkUUUUUUkXk..',
+    '..kXkkkkkkkkXk..',
+    '..kXhGGGGGGhXk..',
+    `..kXhGgggG${on ? 'z' : 'J'}hXk..`,
+    '..kXhGGGGGGhXk..',
+    '..kXhhhhhhhhXk..',
+    '..kXXXXXXXXXXk..',
+    '..kkkkkkkkkkkk..',
+    '..kk........kk..',
+  ];
+  // El humo, encima (sale de la casilla hacia arriba).
+  const smoke =
+    puff === 0
+      ? ['................', '................', '................']
+      : puff === 1
+        ? ['................', '..S.............', '.SsS............']
+        : ['..s.............', '.sSs............', '..S.............'];
+  return [...smoke, ...body];
+}
+PROP_SPRITES.generatorOff = generator(false, 0);
+PROP_SPRITES.generator0 = generator(true, 1);
+PROP_SPRITES.generator1 = generator(true, 2);
+
 PROP_SPRITES.radioOff = radio(false, 0);
 PROP_SPRITES.radio0 = radio(true, 1);
 PROP_SPRITES.radio1 = radio(true, 2);
@@ -647,6 +680,10 @@ export const campfireFrame = (frame: number) =>
 /** Las ondas de la radio encendida cambian cada `RADIO_FRAMES` fotogramas (C1). */
 const RADIO_FRAMES = 12;
 export const radioFrame = (frame: number) => `radio${Math.floor(frame / RADIO_FRAMES) % 2}`;
+/** E1: el humo del generador en marcha sube cada `GENERATOR_FRAMES` fotogramas. */
+const GENERATOR_FRAMES = 10;
+export const generatorFrame = (frame: number) =>
+  `generator${Math.floor(frame / GENERATOR_FRAMES) % 2}`;
 
 /** Lo que se ve de un montón: hasta 3 tablas y, si hay, una bolsa o una caja con lo demás. */
 export function pileFrames(items: Inventory): string[] {

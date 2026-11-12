@@ -7,6 +7,7 @@ import {
   SITE_SEEDS_LOOT,
   BATTERY_LOOT,
   GUN_LOOT,
+  POWER_LOOT,
   SITE_RADIO,
   THREAD_PER_SPOOL,
   type LootAmount,
@@ -78,6 +79,8 @@ const HOME: Record<LootItem, readonly ContainerKind[]> = {
   shotgun: ['locker'],
   ammo: ['locker'],
   shells: ['locker'],
+  generator: ['crate'], // E1
+  gasCan: ['crate'],
 };
 
 /** Los muebles de la ropa (H5b §2); también las estanterías y los mostradores. */
@@ -290,6 +293,20 @@ export function fillGuns(houses: Building[], containers: Container[], rng: RngSt
     const cs = containers.filter((c) => c.houseId === h.id);
     if (!loot || cs.length === 0) continue;
     for (const item of ['pistol', 'shotgun', 'ammo', 'shells'] as const) {
+      const n = roll(rng, loot[item]);
+      const pool = placesFor(cs, item);
+      for (let k = 0; k < n; k++) pool[nextInt(rng, 0, pool.length - 1)]!.items[item]++;
+    }
+  }
+}
+
+/** E1: generadores y bidones de gasolina, con su propio azar, por tipo de edificio. */
+export function fillPower(houses: Building[], containers: Container[], rng: RngState): void {
+  for (const h of houses) {
+    const loot = h.kind === 'base' ? undefined : POWER_LOOT[h.kind];
+    const cs = containers.filter((c) => c.houseId === h.id);
+    if (!loot || cs.length === 0) continue;
+    for (const item of ['generator', 'gasCan'] as const) {
       const n = roll(rng, loot[item]);
       const pool = placesFor(cs, item);
       for (let k = 0; k < n; k++) pool[nextInt(rng, 0, pool.length - 1)]!.items[item]++;

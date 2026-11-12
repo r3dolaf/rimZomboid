@@ -19,7 +19,7 @@ import { dropPile } from '../piles';
 import { nextFloat, pick } from '../rng';
 import { capacityKg, practice, workSpeed } from '../skills';
 import type { Action, Activity, Furniture, Plot, Survivor, TendKind, World } from '../types';
-import { mainsOn } from '../water';
+import { tapOn } from '../water';
 import { tileOf } from '../world';
 import { standOnOrBeside } from './stand';
 
@@ -75,7 +75,7 @@ const goTend = (w: World, p: Plot, what: TendKind): Action => ({
 
 /** ¿Da agua para regar? El fregadero con agua corriente; la cisterna y el barreño, si tienen. */
 const gives = (w: World, f: Furniture) =>
-  (f.kind === 'sink' && mainsOn(w)) ||
+  (f.kind === 'sink' && tapOn(w)) ||
   ((f.kind === 'cistern' || f.kind === 'tub') && (f.water ?? 0) >= 1);
 
 /** La fuente de agua más cercana a la que llega, y dónde ponerse. */

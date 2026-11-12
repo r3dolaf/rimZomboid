@@ -628,7 +628,9 @@ export type BuildKind =
   // El barril de lluvia (V2 §3).
   | 'barrel'
   // La radio (C1 §1).
-  | 'radio';
+  | 'radio'
+  // El generador (E1 §2).
+  | 'generator';
 
 /**
  * Lo sembrado en una parcela (spec V1 §3), en horas: las que ha crecido con humedad, las que lleva
@@ -664,7 +666,7 @@ export interface Blueprint {
  */
 export interface Furniture {
   id: number;
-  kind: 'table' | 'campfire' | 'tub' | 'sink' | 'cistern' | 'barrel' | 'radio';
+  kind: 'table' | 'campfire' | 'tub' | 'sink' | 'cistern' | 'barrel' | 'radio' | 'generator';
   pos: Point;
   water?: number;
   /**
@@ -672,8 +674,10 @@ export interface Furniture {
    * de la radio (C1 §1).
    */
   fuel?: number;
-  /** La radio (C1 §1): encendida. */
+  /** La radio (C1 §1) o el generador (E1 §2): encendido. */
   on?: boolean;
+  /** E1 §3: las horas en marcha del generador desde que se estropeó lo fresco (la nevera). */
+  powered?: number;
 }
 
 /** Almacén de la base. */

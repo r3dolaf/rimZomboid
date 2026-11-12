@@ -15,6 +15,7 @@ import { hexDistance, sideFrom } from './atlas/hex';
 import { findRoute } from './atlas/route';
 import { dayStart, gameTime } from './clock';
 import { logEvent } from './log';
+import { powered } from './power';
 import { nextFloat, nextInt } from './rng';
 import { addEvacSite, discoverSite, reveal } from './sites';
 import type { Furniture, Rescue, World } from './types';
@@ -117,8 +118,10 @@ export function hearAll(base: World): void {
 export function radioSystem(base: World): void {
   if (base.mapId !== 0 || base.tick % TICKS_PER_HOUR !== 0 || base.common.over) return;
   const radio = radioOf(base);
-  if (!radio?.on || (radio.fuel ?? 0) <= 0) return;
-  radio.fuel = Math.max(0, radio.fuel! - 1);
+  // E1: con el generador en marcha, ni gasta pilas ni le hacen falta.
+  const power = powered(base);
+  if (!radio?.on || ((radio.fuel ?? 0) <= 0 && !power)) return;
+  if (!power) radio.fuel = Math.max(0, radio.fuel! - 1);
   const r = rescueOf(base);
   if (r.stage < 3) {
     r.heard++;

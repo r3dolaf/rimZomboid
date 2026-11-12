@@ -20,6 +20,7 @@ import {
 import { BODY_PARTS, painOf, partHp } from '../sim/body';
 import { layersOn, zoneBlock } from '../sim/clothes';
 import { mainsOn } from '../sim/water';
+import { powered } from '../sim/power';
 import { outdoorTemp, seasonOf, warmthOf } from '../sim/season';
 import { allMaps, mapById } from '../sim/game';
 import { routeHours } from '../sim/atlas/route';
@@ -203,7 +204,8 @@ export function furnitureLabel(w: World, f: Furniture): string | null {
   if (f.kind === 'campfire' && f.fuel !== undefined)
     return f.fuel > 0 ? t.campfire(Math.ceil(f.fuel)) : t.campfireOut; // V3
   if (f.kind === 'cistern') return t.cistern(l, CISTERN_LITERS);
-  if (f.kind === 'sink') return mainsOn(w) ? t.sinkOn : t.sinkOff;
+  if (f.kind === 'sink') return mainsOn(w) ? t.sinkOn : powered(w) ? t.sinkGenerator : t.sinkOff;
+  if (f.kind === 'generator') return t.generator(f.on === true, Math.ceil(f.fuel ?? 0)); // E1
   if (f.kind === 'radio') {
     const r = w.common.rescue;
     const heli = r?.stage === 3 && r.from !== null ? t.radioHeli(gameTime(r.from).day) : '';

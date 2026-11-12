@@ -14,7 +14,7 @@ import type { NarratorStyle, World, ZombieLevel } from './types';
  * Cambia con cada cambio de forma de la partida. Las de versiones anteriores se ponen al día al
  * cargarlas (`migrate`); las de una versión desconocida no se cargan.
  */
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 
 /** Lo que se enseña de una partida guardada. */
 export interface SaveMeta {
@@ -78,6 +78,7 @@ export function loadGame(
     if (file.version < 4) toV4(world);
     if (file.version < 5) toV5(world);
     if (file.version < 6) toV6(world);
+    if (file.version < 7) toV7(world);
     const c = world.common;
     if (!c?.expedition || !c.atlas || !world.grid || !Array.isArray(world.siteMaps))
       return { error: 'broken' };
@@ -189,5 +190,10 @@ function toV5(world: World): void {
 
 /** De la versión 5 a la 6 (D1, armas de fuego): armas y munición a 0 en todo lo que guarda cosas. */
 function toV6(world: World): void {
+  walk(world, fillStacks);
+}
+
+/** De la versión 6 a la 7 (E1, el generador): generadores y bidones a 0 en todo lo que guarda cosas. */
+function toV7(world: World): void {
   walk(world, fillStacks);
 }

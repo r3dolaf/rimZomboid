@@ -50,6 +50,8 @@ test('muestra la casa seleccionada con sus contenedores y se cierra con la ✕',
     shotgun: 0,
     ammo: 0,
     shells: 0,
+    generator: 0,
+    gasCan: 0,
     pieces: [],
   };
   cs[1]!.designated = true;

@@ -67,6 +67,10 @@ Asentarse (huerto, agua y estaciones):
   helicóptero. Hay que llegar al punto de evacuación y pisar la zona de aterrizaje antes de que se
   vaya (el ruido atrae a los zombis). Quien sube se salva; se puede ver el final o seguir con los que
   se quedan.
+- **Generador**: se encuentra en ferreterías, naves y granjas y se monta en la base (Construir →
+  Generador); Transportar le lleva gasolina. En marcha, el fregadero da agua aunque se haya cortado,
+  lo fresco aguanta más, la base se ilumina de noche y la radio no gasta pilas; pero hace ruido y
+  gasta un bidón cada 6 horas. Se enciende y se apaga con el clic derecho.
 - **Armas de fuego**: pistola (con balas) y escopeta (con cartuchos), en comisarías, granjas y
   ferreterías. Se llevan encima: en la ficha, Equipo → Llevar siempre. Disparan de lejos en modo
   combate o cuando están en apuros (varios zombis, heridos o en un asedio); con un zombi solo, a

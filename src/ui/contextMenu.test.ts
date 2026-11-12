@@ -209,3 +209,11 @@ test('C1: en la radio, encenderla o apagarla (y lo pedido en pausa ya cuenta)', 
   expect(labels(w, 4, 4)).toEqual(['📻 Encender la radio']);
   expect(labels(w, 5, 4)).toEqual([]);
 });
+
+test('E1: en el generador, encenderlo o apagarlo (y lo pedido en pausa ya cuenta)', () => {
+  const w = world();
+  w.furniture.push({ id: 71, kind: 'generator', pos: { x: 4, y: 4 }, fuel: 6, on: true });
+  expect(labels(w, 4, 4)).toEqual(['⚡ Apagar el generador']);
+  contextOptions(w, { x: 4, y: 4 })[0]!.choose();
+  expect(labels(w, 4, 4)).toEqual(['⚡ Encender el generador']);
+});

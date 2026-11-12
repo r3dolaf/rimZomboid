@@ -7,7 +7,7 @@ import {
   NOISE,
   UNBOARD_WOOD,
 } from '../balance';
-import { isRepairPlan, WALL_KINDS } from '../build';
+import { isFoundBuild, isRepairPlan, WALL_KINDS } from '../build';
 import { emptyInventory } from '../items';
 import { logEvent } from '../log';
 import { makeNoise } from '../noise';
@@ -32,13 +32,19 @@ import { atOrBeside, standBeside, standOnOrBeside } from './stand';
 export const FAR = 1e9;
 
 /** Muebles: se construyen de pie encima del plano. El resto, desde al lado. */
-const ON_TILE: ReadonlySet<BuildKind> = new Set(['bed', 'table', 'campfire', 'radio']);
+const ON_TILE: ReadonlySet<BuildKind> = new Set([
+  'bed',
+  'table',
+  'campfire',
+  'radio',
+  'generator', // E1
+]);
 
 /** Con toda su madera (y cortinas); la radio (C1), además, con una radio en el almacén. */
 const ready = (b: Blueprint, w: World) =>
   b.wood >= BUILD[b.kind].wood &&
   (b.curtains ?? 0) >= (CURTAINS_COST[b.kind] ?? 0) &&
-  (b.kind !== 'radio' || w.storage.items.radio > 0);
+  (!isFoundBuild(b.kind) || w.storage.items[b.kind] > 0);
 
 /** Plano en el que trabaja o al que va a trabajar, o `null`. */
 export function buildTarget(s: Survivor): number | null {
@@ -149,6 +155,17 @@ export function finishBuild(w: World, b: Blueprint, builder: Survivor): void {
     case 'radio': // C1: se gasta la radio del almacén; encendida y sin carga
       w.storage.items.radio--;
       w.furniture.push({ id: w.common.nextId++, kind: 'radio', pos: { x, y }, fuel: 0, on: true });
+      break;
+    case 'generator': // E1: lo mismo con el generador: encendido y sin gasolina
+      w.storage.items.generator--;
+      w.furniture.push({
+        id: w.common.nextId++,
+        kind: 'generator',
+        pos: { x, y },
+        fuel: 0,
+        on: true,
+        powered: 0,
+      });
       break;
     case 'tub': // H5b: vacío
     case 'barrel': // V2: también

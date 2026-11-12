@@ -18,7 +18,7 @@ import { standOnOrBeside } from './jobs/stand';
 import { regionOf } from './path/astar';
 import { pick } from './rng';
 import type { Action, Furniture, Point, Survivor, World } from './types';
-import { mainsOn } from './water';
+import { tapOn } from './water';
 import { tileOf } from './world';
 
 /** Los muebles que guardan agua (y la dan de beber). */
@@ -26,7 +26,7 @@ export const DEPOTS: ReadonlySet<Furniture['kind']> = new Set(['tub', 'barrel', 
 
 /** ¿Se puede beber ahí ahora? El fregadero, con agua corriente; un depósito, con un litro al menos. */
 export const drinkable = (w: World, f: Furniture): boolean =>
-  (f.kind === 'sink' && mainsOn(w)) || (DEPOTS.has(f.kind) && (f.water ?? 0) >= 1);
+  (f.kind === 'sink' && tapOn(w)) || (DEPOTS.has(f.kind) && (f.water ?? 0) >= 1);
 
 /** El sitio donde beber más a mano (los depósitos, como si estuvieran un poco más lejos). */
 function nearestWater(s: Survivor, w: World): { f: Furniture; stand: Point; d: number } | null {
@@ -103,7 +103,7 @@ export function baseWater(w: World): { liters: number; bottles: number; mains: b
   let liters = 0;
   for (const f of w.furniture)
     if (f.kind === 'tub' || f.kind === 'barrel') liters += Math.floor(f.water ?? 0);
-  return { liters, bottles: w.storage.items.waterBottle, mains: mainsOn(w) };
+  return { liters, bottles: w.storage.items.waterBottle, mains: tapOn(w) }; // E1: también con el generador
 }
 
 /**

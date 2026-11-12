@@ -41,6 +41,8 @@ test('formatItems: plurales y lista legible', () => {
       shotgun: 0,
       ammo: 0,
       shells: 0,
+      generator: 0,
+      gasCan: 0,
       pieces: [],
     }),
   ).toBe('4 latas, 1 venda y 2 bates');
@@ -77,6 +79,8 @@ test('formatItems: plurales y lista legible', () => {
       shotgun: 0,
       ammo: 0,
       shells: 0,
+      generator: 0,
+      gasCan: 0,
       pieces: [],
     }),
   ).toBe('1 lata y 1 cuchillo');
@@ -113,6 +117,8 @@ test('formatItems: plurales y lista legible', () => {
       shotgun: 0,
       ammo: 0,
       shells: 0,
+      generator: 0,
+      gasCan: 0,
       pieces: [],
     }),
   ).toBe('nada');
@@ -158,6 +164,8 @@ test('cada suceso se convierte en una frase con día y hora', () => {
       shotgun: 0,
       ammo: 0,
       shells: 0,
+      generator: 0,
+      gasCan: 0,
       pieces: [],
     },
   });

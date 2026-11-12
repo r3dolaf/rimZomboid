@@ -202,6 +202,12 @@ export const es = {
     cistern: (l: number, max: number) => `Cisterna: ${l} / ${max} litros`,
     sinkOn: 'Fregadero (con agua corriente)',
     sinkOff: 'Fregadero (sin agua)',
+    sinkGenerator: 'Fregadero (con agua: generador)', // E1
+    // E1: el generador, en marcha, apagado o sin gasolina.
+    generator: (on: boolean, hours: number) =>
+      hours <= 0
+        ? 'Generador sin gasolina: Transportar le lleva bidones del almacén'
+        : `Generador ${on ? 'en marcha' : 'apagado'} · gasolina para ${hours} h`,
     // C1: la radio, con su carga y, si ya se sabe, el día del helicóptero.
     radio: (on: boolean, hours: number) =>
       hours <= 0
@@ -393,6 +399,7 @@ export const es = {
     tub: 'Barreño', // H5b
     barrel: 'Barril de lluvia', // V2
     radio: 'Radio', // C1
+    generator: 'Generador', // E1
   } satisfies Record<BuildKind, string>,
   /** «Cama — 6 tablas (tienes 12)» (H5c1 §8). */
   buildOption: (name: string, wood: number | string, have: number) =>
@@ -422,6 +429,8 @@ export const es = {
     craft: '🧵 Fabricar…',
     radioOn: '📻 Encender la radio', // C1
     radioOff: '📻 Apagar la radio',
+    generatorOn: '⚡ Encender el generador', // E1
+    generatorOff: '⚡ Apagar el generador',
   },
   /** C1: el helicóptero en el punto de evacuación (Expediciones y mapa del mundo). */
   evac: {
@@ -434,6 +443,12 @@ export const es = {
     base: 'solo en la base',
     built: 'ya hay una',
     none: 'hace falta una radio en el almacén (las hay en las naves, gasolineras y pueblecitos)',
+  },
+  /** E1: por qué no se puede poner el generador. */
+  generatorBlock: {
+    base: 'solo en la base',
+    built: 'ya hay uno',
+    none: 'hace falta un generador en el almacén (los hay en ferreterías, naves y granjas)',
   },
   /** Qué hace cada cosa, abajo del menú. */
   buildDesc: {
@@ -456,6 +471,8 @@ export const es = {
     smashWindow: 'Romper una ventana para entrar (hace ruido)',
     radio:
       'La radio: con pilas y encendida, oiréis las emisiones del ejército (y quizá un rescate); hace falta una radio en el almacén',
+    generator:
+      'El generador: con gasolina y en marcha, el fregadero da agua, lo fresco aguanta, la base se ilumina y la radio no gasta pilas; hace ruido. Hace falta un generador en el almacén',
   } satisfies Record<BuildKind, string>,
   repairWood: '1–3',
   buildMenuHint:
@@ -738,6 +755,12 @@ export const es = {
       text: () =>
         'Se estropean con los días (con frío, menos). Con una hoguera, 🧵 Fabricar → Cocinar: 2 hortalizas hacen un guiso, que llena más y anima, pero se estropea antes. Las latas no se estropean: guárdalas para el invierno.',
     },
+    // E1
+    generator: {
+      title: 'Un generador',
+      text: () =>
+        'Móntalo en la base (🔨 Construir → Generador) y dale gasolina (bidones de las gasolineras). En marcha, el fregadero vuelve a dar agua, lo fresco aguanta, la base se ilumina de noche y la radio no gasta pilas; pero hace ruido y gasta un bidón cada 6 horas: enciéndelo cuando haga falta (clic derecho en él).',
+    },
     // D1
     gun: {
       title: 'Un arma de fuego',
@@ -808,6 +831,10 @@ export const es = {
       [
         '🩹 Heridas',
         'Una herida sangra hasta que se venda; sin vendas, se desangran. Quien tenga Sanar cura a los demás. Un mordisco infecta siempre y no tiene cura (en un brazo o una pierna, se puede amputar a tiempo); un arañazo, a veces, y los antibióticos lo curan a tiempo.',
+      ],
+      [
+        '⚡ Generador',
+        'Se encuentra en ferreterías, naves y granjas y se monta en la base. Con gasolina y en marcha, el fregadero da agua aunque se haya cortado, lo fresco del almacén aguanta más, la base se ilumina de noche y la radio no gasta pilas. Hace ruido (atrae zombis) y gasta un bidón cada 6 horas: se enciende y apaga con clic derecho.',
       ],
       [
         '🔫 Armas de fuego',
@@ -1524,6 +1551,8 @@ export const es = {
     shotgun: ['escopeta', 'escopetas'],
     ammo: ['bala', 'balas'],
     shells: ['cartucho', 'cartuchos'],
+    generator: ['generador', 'generadores'], // E1
+    gasCan: ['bidón de gasolina', 'bidones de gasolina'],
   } satisfies Record<ItemKind, [string, string]>,
   log: {
     found: (who: string, what: string, where: string) => `${who} ha encontrado ${what} en ${where}`,
@@ -2054,6 +2083,7 @@ export const es = {
     tub: 'Barreño construido',
     barrel: 'Barril de lluvia construido',
     radio: 'Radio construida',
+    generator: 'Generador montado', // E1
   } satisfies Record<BuildKind, string>,
   /** Lo que intentaba quien falla al construir: "ha fallado al levantar el muro". */
   buildFail: {
@@ -2073,6 +2103,7 @@ export const es = {
     tub: 'construir el barreño',
     barrel: 'construir el barril de lluvia',
     radio: 'montar la radio',
+    generator: 'montar el generador',
   } satisfies Record<BuildKind, string>,
   /** Lo que hace quien trabaja en cada plano. */
   building: {
@@ -2092,6 +2123,7 @@ export const es = {
     tub: 'Construyendo un barreño',
     barrel: 'Construyendo un barril de lluvia',
     radio: 'Montando la radio',
+    generator: 'Montando el generador',
   } satisfies Record<BuildKind, string>,
   /** Cada plano, para las frases ("Llevando madera a una cama"). */
   builds: {
@@ -2111,6 +2143,7 @@ export const es = {
     tub: 'un barreño',
     barrel: 'un barril de lluvia',
     radio: 'la radio',
+    generator: 'el generador',
   } satisfies Record<BuildKind, string>,
 
   /** Iconos sobre la cabeza en el mapa. */

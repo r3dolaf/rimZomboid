@@ -4,6 +4,7 @@ import { corpsesSystem } from './corpses';
 import { combatSystem } from './combat';
 import { deathSystem } from './death';
 import { furnitureSystem } from './furniture';
+import { generatorSystem } from './generator';
 import { healthSystem } from './health';
 import { illnessSystem } from './illness';
 import { carrySystem } from './jobs/heal';
@@ -34,6 +35,7 @@ export function step(w: World): void {
   healthSystem(w);
   deathSystem(w); // H5
   furnitureSystem(w);
+  generatorSystem(w); // E1: el generador en marcha
   clothesSystem(w); // H5b: la ropa puesta se ensucia
   waterSystem(w); // H5b: el corte del agua y la lluvia
   spoilSystem(w); // V1: lo fresco se estropea

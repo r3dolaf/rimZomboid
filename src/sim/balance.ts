@@ -313,6 +313,8 @@ export const ITEM_WEIGHT_KG = {
   shotgun: 3.5,
   ammo: 0.02,
   shells: 0.04,
+  generator: 5, // E1: portátil
+  gasCan: 2,
 } as const;
 export const START_WEAPON = 'knife' as const; // H4b: sin arma, caían enseguida
 
@@ -641,6 +643,7 @@ export const BUILD = {
   tub: { wood: 4, ticks: TICKS_PER_HOUR },
   barrel: { wood: 6, ticks: TICKS_PER_HOUR }, // V2
   radio: { wood: 2, ticks: TICKS_PER_HOUR }, // C1
+  generator: { wood: 2, ticks: TICKS_PER_HOUR }, // E1
 } as const;
 /** Cortinas que necesita cada plano (H4d). */
 export const CURTAINS_COST: Partial<Record<BuildKind, number>> = { hangCurtains: 1 };
@@ -749,6 +752,7 @@ export const LOOT_SCALED = [
   'waterBottle',
   'ammo', // D1
   'shells',
+  'gasCan', // E1
 ] as const;
 export const SIEGE_WARNING_HOURS = [48, 72] as const;
 export const SIEGE_HOURS = 24;
@@ -914,6 +918,8 @@ export type LootItem =
   | 'seeds' // V1 (se reparten aparte: SEEDS_LOOT)
   | 'radio' // C1 (aparte: SITE_RADIO y BATTERY_LOOT)
   | 'battery'
+  | 'generator' // E1 (aparte: POWER_LOOT)
+  | 'gasCan'
   | 'pistol' // D1 (aparte: GUN_LOOT)
   | 'shotgun'
   | 'ammo'
@@ -1709,4 +1715,26 @@ export const GUN_LOOT: Partial<
   police: { pistol: [1, 2], ammo: [12, 30], shotgun: { chance: 0.5 }, shells: [0, 8] },
   farm: { shotgun: { chance: 0.5 }, shells: [2, 8] },
   hardware: { shells: [0, 6] },
+};
+
+// E1: el generador (spec E1 §1–§3).
+/** Gasolina: hasta tantas horas; Transportar le lleva por debajo de tantas; cada bidón, tantas. */
+export const GEN_FUEL_MAX = 24;
+export const GEN_REFUEL_BELOW = 8;
+export const GEN_FUEL_PER_CAN = 6;
+/** En marcha, cada tantos ticks se oye a tantas casillas. */
+export const GEN_NOISE_TICKS = 50;
+export const GEN_NOISE = 15;
+/** La nevera: con 24 horas en marcha, lo fresco del almacén se estropea a esta parte. */
+export const GEN_FRIDGE = 0.25;
+export const POWER_SALT = 0xe1ec7;
+/** Dónde se encuentran (con su propio azar), en el pueblo y en los sitios. */
+export const POWER_LOOT: Partial<
+  Record<LootKind, Partial<Record<'generator' | 'gasCan', LootAmount>>>
+> = {
+  hardware: { generator: { chance: 0.5 }, gasCan: [0, 1] },
+  warehouse: { generator: { chance: 0.4 }, gasCan: [1, 3] },
+  farm: { generator: { chance: 0.2 }, gasCan: [0, 2] },
+  gas: { gasCan: [2, 5] },
+  house: { gasCan: { chance: 0.05 } },
 };

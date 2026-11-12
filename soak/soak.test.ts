@@ -1203,3 +1203,55 @@ test('D1: con armas de fuego se dispara, se gastan balas y se matan zombis', () 
   expect(gunTotals.ammoUsed).toBeGreaterThan(0);
   expect(gunTotals.kills).toBeGreaterThan(0);
 });
+
+/** E1: lo que pasa con el generador. */
+const genTotals = { refueled: 0, drankAfterCut: 0, games: 0 };
+
+test.each([1, 2])(
+  'E1: semilla %i, 20 días con un generador y gasolina — se llena, se bebe del fregadero tras el corte y no se rompe nada',
+  (seed) => {
+    const w = createWorld(seed, 'balanced', 'normal');
+    for (const h of w.houses) issue(w, { type: 'designateHouse', houseId: h.id, on: true });
+    // Montado junto al almacén, con gasolina en el almacén.
+    const at = w.storage.tiles[0]!;
+    let placed = false;
+    for (let r = 1; r < 8 && !placed; r++)
+      for (let dy = -r; dy <= r && !placed; dy++)
+        for (let dx = -r; dx <= r && !placed; dx++) {
+          const p = { x: at.x + dx, y: at.y + dy };
+          w.storage.items.generator = 1;
+          if (!canPlace(w, 'generator', p)) continue;
+          w.storage.items.generator = 0;
+          w.furniture.push({ id: w.common.nextId++, kind: 'generator', pos: p, fuel: 0, on: true });
+          placed = true;
+        }
+    expect(placed).toBe(true);
+    w.storage.items.gasCan += 60;
+    const r = createRng(13);
+    let lastFuel = 0;
+    for (let i = 0; i < 20 * TICKS_PER_DAY && !w.common.over; i++) {
+      const d = w.decisions[0];
+      if (d && !w.orders.some((o) => o.type === 'decide'))
+        issue(w, { type: 'decide', decisionId: d.id, option: sensible(w, r, d) });
+      const before = new Map(w.survivors.map((s) => [s.id, s.needs.thirst]));
+      stepGame(w);
+      const problems = checkInvariants(w);
+      if (problems.length > 0) expect(problems, `tick ${w.tick}`).toEqual([]);
+      const g = w.furniture.find((f) => f.kind === 'generator')!;
+      if ((g.fuel ?? 0) > lastFuel) genTotals.refueled++;
+      lastFuel = g.fuel ?? 0;
+      if (w.tick > w.waterCutAt)
+        for (const s of w.survivors)
+          if (s.needs.thirst > (before.get(s.id) ?? 100) + 5) genTotals.drankAfterCut++;
+    }
+    genTotals.games++;
+  },
+  600_000,
+);
+
+test('E1: con el generador se llena de gasolina y se bebe tras el corte del agua', () => {
+  console.log('E1, generador:', genTotals);
+  expect(genTotals.games).toBe(2);
+  expect(genTotals.refueled).toBeGreaterThan(0);
+  expect(genTotals.drankAfterCut).toBeGreaterThan(0);
+});

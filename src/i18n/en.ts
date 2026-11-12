@@ -185,6 +185,11 @@ export const en: Texts = {
     cistern: (l: number, max: number) => `Cistern: ${l} / ${max} litres`,
     sinkOn: 'Sink (running water)',
     sinkOff: 'Sink (no water)',
+    sinkGenerator: 'Sink (water: generator)',
+    generator: (on: boolean, hours: number) =>
+      hours <= 0
+        ? 'Generator out of fuel: Haul brings it cans from storage'
+        : `Generator ${on ? 'running' : 'off'} · fuel for ${hours} h`,
     radio: (on: boolean, hours: number) =>
       hours <= 0
         ? 'Radio without batteries: Haul brings them from storage'
@@ -362,6 +367,7 @@ export const en: Texts = {
     tub: 'Tub',
     barrel: 'Rain barrel',
     radio: 'Radio',
+    generator: 'Generator',
   } satisfies Record<BuildKind, string>,
   buildOption: (name: string, wood: number | string, have: number) =>
     `${name} — ${wood} ${wood === 1 ? 'plank' : 'planks'} (you have ${have})`,
@@ -387,6 +393,8 @@ export const en: Texts = {
     craft: '🧵 Craft…',
     radioOn: '📻 Turn the radio on',
     radioOff: '📻 Turn the radio off',
+    generatorOn: '⚡ Turn the generator on',
+    generatorOff: '⚡ Turn the generator off',
   },
   evac: {
     when: (day: number) => `🚁 The helicopter: day ${day}, 10:00 to 16:00`,
@@ -397,6 +405,11 @@ export const en: Texts = {
     base: 'only in the base',
     built: 'there is already one',
     none: 'needs a radio in storage (warehouses, gas stations and hamlets have them)',
+  },
+  generatorBlock: {
+    base: 'only in the base',
+    built: 'there is already one',
+    none: 'needs a generator in storage (hardware stores, warehouses and farms have them)',
   },
   buildDesc: {
     bed: 'A bed: sleep better than on the floor, and each one has their own',
@@ -418,6 +431,8 @@ export const en: Texts = {
     smashWindow: 'Smash a window to get in (makes noise)',
     radio:
       'The radio: with batteries and switched on, you will hear army broadcasts (and maybe a rescue); needs a radio in storage',
+    generator:
+      'The generator: with fuel and running, the sink gives water, fresh food lasts, the base is lit and the radio uses no batteries; it is noisy. Needs a generator in storage',
   } satisfies Record<BuildKind, string>,
   repairWood: '1–3',
   buildMenuHint: 'Click on the map to place; drag for a row of walls; click a plan to cancel it',
@@ -678,6 +693,11 @@ export const en: Texts = {
       text: () =>
         'They go off over the days (less in the cold). With a campfire, 🧵 Craft → Cook: 2 vegetables make a stew, which fills more and cheers up, but goes off sooner. Cans never go off: keep them for the winter.',
     },
+    generator: {
+      title: 'A generator',
+      text: () =>
+        'Set it up in the base (🔨 Build → Generator) and give it fuel (jerry cans from gas stations). While running, the sink gives water again, fresh food lasts, the base is lit at night and the radio uses no batteries; but it is noisy and burns a can every 6 hours: turn it on when needed (right click on it).',
+    },
     gun: {
       title: 'A firearm',
       text: () =>
@@ -745,6 +765,10 @@ export const en: Texts = {
       [
         '🩹 Wounds',
         'A wound bleeds until it is bandaged; without bandages, they bleed out. Whoever has Heal treats the others. A bite always infects and has no cure (on an arm or a leg, it can be amputated in time); a scratch, sometimes, and antibiotics cure it in time.',
+      ],
+      [
+        '⚡ Generator',
+        'Found in hardware stores, warehouses and farms, and set up in the base. With fuel and running, the sink gives water even after the cut, fresh food in storage lasts longer, the base is lit at night and the radio uses no batteries. It is noisy (draws zombies) and burns a jerry can every 6 hours: turn it on and off with a right click.',
       ],
       [
         '🔫 Firearms',
@@ -1409,6 +1433,8 @@ export const en: Texts = {
     shotgun: ['shotgun', 'shotguns'],
     ammo: ['bullet', 'bullets'],
     shells: ['shell', 'shells'],
+    generator: ['generator', 'generators'],
+    gasCan: ['jerry can', 'jerry cans'],
   } satisfies Record<ItemKind, [string, string]>,
   log: {
     found: (who: string, what: string, where: string) => `${who} found ${what} in ${where}`,
@@ -1900,6 +1926,7 @@ export const en: Texts = {
     tub: 'Tub built',
     barrel: 'Rain barrel built',
     radio: 'Radio built',
+    generator: 'Generator set up',
   } satisfies Record<BuildKind, string>,
   buildFail: {
     bed: 'build the bed',
@@ -1918,6 +1945,7 @@ export const en: Texts = {
     tub: 'build the tub',
     barrel: 'build the rain barrel',
     radio: 'set up the radio',
+    generator: 'set up the generator',
   } satisfies Record<BuildKind, string>,
   building: {
     bed: 'Building a bed',
@@ -1936,6 +1964,7 @@ export const en: Texts = {
     tub: 'Building a tub',
     barrel: 'Building a rain barrel',
     radio: 'Setting up the radio',
+    generator: 'Setting up the generator',
   } satisfies Record<BuildKind, string>,
   builds: {
     bed: 'a bed',
@@ -1954,6 +1983,7 @@ export const en: Texts = {
     tub: 'a tub',
     barrel: 'a rain barrel',
     radio: 'the radio',
+    generator: 'the generator',
   } satisfies Record<BuildKind, string>,
 
   bubbles: {

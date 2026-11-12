@@ -12,6 +12,7 @@ import {
 import { dayMean } from './season';
 import { isBag, type Inventory } from './items';
 import { logEvent } from './log';
+import { fridgeMult, generatorOf } from './power';
 import { nextFloat, type RngState } from './rng';
 import type { Survivor, World } from './types';
 
@@ -61,7 +62,10 @@ export function coldRot(w: World): number {
 export function spoilSystem(w: World): void {
   if (!spoilsNow(w.tick)) return;
   const m = coldRot(w);
-  const store = rot(w.storage.items, w.rng, m);
+  // E1: la nevera, según las horas del generador en marcha desde la mañana anterior.
+  const store = rot(w.storage.items, w.rng, m * fridgeMult(w));
+  const g = generatorOf(w);
+  if (g) g.powered = 0;
   for (const p of w.piles) rot(p.items, w.rng, m);
   for (const c of w.containers) rot(c.items, w.rng, m);
   for (const s of w.survivors) rotOn(s, w.rng, m);

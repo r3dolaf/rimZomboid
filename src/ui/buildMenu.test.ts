@@ -24,6 +24,7 @@ test('el menú Construir solo se ve con la herramienta y elige qué construir', 
     'Barreño · 4 🪵', // H5b
     'Barril de lluvia · 6 🪵', // V2
     'Radio · 2 🪵', // C1
+    'Generador · 2 🪵', // E1
     'Muro · 2 🪵',
     'Puerta · 4 🪵',
     'Reparar · 1–3 🪵',

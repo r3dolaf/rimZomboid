@@ -253,6 +253,8 @@ test('alijo en una casa ya saqueada: una despensa escondida que vuelve a estar p
       shotgun: 0,
       ammo: 0,
       shells: 0,
+      generator: 0,
+      gasCan: 0,
       pieces: [],
     }; // la madera no se toca: tiene que cuadrar
   }

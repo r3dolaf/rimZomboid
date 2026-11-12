@@ -33,6 +33,7 @@ export const TIPS = [
   'veg',
   'autumn',
   'gun', // D1
+  'generator', // E1
   'radio', // C1
   'evac',
 ] as const;
@@ -171,6 +172,8 @@ export function dueTip(w: World, ctx: TipContext, shown: readonly TipId[]): DueT
     autumn: () => (seasonOf(w.tick) === 'autumn' ? { id: 'autumn' } : null),
     // D1: la primera arma de fuego en el almacén.
     gun: () => (w.storage.items.pistol + w.storage.items.shotgun > 0 ? { id: 'gun' } : null),
+    // E1: el primer generador en el almacén.
+    generator: () => (w.storage.items.generator > 0 ? { id: 'generator' } : null),
     // C1: la primera radio en el almacén de la base (sin construir aún); el helicóptero anunciado.
     radio: () =>
       w.storage.items.radio > 0 && !w.furniture.some((f) => f.kind === 'radio')

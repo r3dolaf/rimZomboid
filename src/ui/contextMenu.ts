@@ -11,12 +11,14 @@ import { canPlace, treeMarked } from '../sim/build';
 import { getTile } from '../sim/map/grid';
 import { effectiveDesignated, houseMarked, issue, markable } from '../sim/orders';
 import { radioOf, radioOn } from '../sim/radio';
+import { generatorOf, generatorOn } from '../sim/power';
 import { Tile, type BuildKind, type Point, type World } from '../sim/types';
 import { buildingThe } from './describe';
 import './panels.css';
 
 /** Lo que no es un plano (U1 §7). */
-type OtherKind = 'cancel' | 'loot' | 'lootHouse' | 'viewHouse' | 'chop' | 'craft' | 'radio';
+type OtherKind =
+  'cancel' | 'loot' | 'lootHouse' | 'viewHouse' | 'chop' | 'craft' | 'radio' | 'generatorSwitch';
 
 export interface ContextOption {
   /** El plano que pone, o lo demás (`cancel`, `loot`…): para su `data-testid`, `ctx-<kind>`. */
@@ -83,6 +85,16 @@ export function contextOptions(w: World, p: Point, acts: ContextActions = {}): C
       kind: 'radio',
       label: on ? t.radioOff : t.radioOn,
       choose: () => issue(w, { type: 'setRadio', on: !on }),
+    });
+  }
+  // E1: el generador, encenderlo o apagarlo (con lo pedido en pausa).
+  const gen = generatorOf(w);
+  if (gen && gen.pos.x === p.x && gen.pos.y === p.y) {
+    const on = generatorOn(w);
+    out.push({
+      kind: 'generatorSwitch',
+      label: on ? t.generatorOff : t.generatorOn,
+      choose: () => issue(w, { type: 'setGenerator', on: !on }),
     });
   }
   // La mesa: Fabricar.

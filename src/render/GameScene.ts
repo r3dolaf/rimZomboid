@@ -51,7 +51,9 @@ import { canPlot, plotAt, plotPos } from '../sim/farm';
 import { isLitFire } from '../sim/furniture';
 import { outdoorTemp, seasonOf, type Season } from '../sim/season';
 import { pileAt } from '../sim/piles';
-import { isRaining, mainsOn } from '../sim/water';
+import { isRaining, tapOn } from '../sim/water';
+import { powered } from '../sim/power';
+import { getTile } from '../sim/map/grid';
 import { visibleTiles } from '../sim/vision';
 import { discoverSite } from '../sim/sites';
 import { hexToward } from '../sim/expeditions';
@@ -117,6 +119,7 @@ import {
 import {
   campfireFrame,
   radioFrame,
+  generatorFrame,
   cropFrame,
   itemCount,
   makePropAtlas,
@@ -150,6 +153,9 @@ const WALKING_MS = 200;
 /** Quien recibe un golpe se tiñe de rojo un momento. */
 const HIT_TINT = 0xff6060;
 const HIT_MS = 140;
+/** E1: las luces de la base con el generador: cada cuántas casillas y hasta dónde llegan. */
+const BASE_LIGHT_EVERY = 4;
+const BASE_LIGHT_RADIUS = 4.5;
 /** D1: el disparo: la línea hasta el zombi y el fogonazo, lo que duran y su color. */
 const SHOT_MS = 120;
 const MUZZLE_MS = 60;
@@ -1724,9 +1730,13 @@ export class GameScene extends Phaser.Scene {
       case 'barrel':
         return `barrel${waterLevel(f.water ?? 0, BARREL_LITERS)}`; // V2
       case 'sink':
-        return mainsOn(this.world) ? 'sinkWet' : 'sinkDry';
-      case 'radio': // C1: encendida y con carga, con sus ondas
-        return f.on && (f.fuel ?? 0) > 0 ? radioFrame(this.frame) : 'radioOff';
+        return tapOn(this.world) ? 'sinkWet' : 'sinkDry'; // E1: también con el generador
+      case 'radio': // C1: encendida y con carga (o con el generador, E1), con sus ondas
+        return f.on && ((f.fuel ?? 0) > 0 || powered(this.world))
+          ? radioFrame(this.frame)
+          : 'radioOff';
+      case 'generator': // E1: en marcha, con el piloto y el humo
+        return f.on && (f.fuel ?? 0) > 0 ? generatorFrame(this.frame) : 'generatorOff';
     }
   }
 
@@ -1925,6 +1935,14 @@ export class GameScene extends Phaser.Scene {
         const radius = (CAMPFIRE_RANGE + LIGHT_BEYOND) * flicker;
         lights.push({ x: f.pos.x + 0.5, y: f.pos.y + 0.5, radius });
       }
+    // E1: con el generador en marcha, la base, iluminada (una luz cada pocas casillas de su suelo).
+    if (sky > 0 && powered(w)) {
+      const r = w.base.rect;
+      for (let y = r.y + 1; y < r.y + r.h; y += BASE_LIGHT_EVERY)
+        for (let x = r.x + 1; x < r.x + r.w; x += BASE_LIGHT_EVERY)
+          if (getTile(w.grid, x, y) === Tile.Floor)
+            lights.push({ x: x + 0.5, y: y + 0.5, radius: BASE_LIGHT_RADIUS });
+    }
     if (lights.length === 0 && sky === this.lastSky) return;
     if (lights.length > 0) lightField(w.grid, lights, this.lightAmounts);
     else this.lightAmounts.fill(0);

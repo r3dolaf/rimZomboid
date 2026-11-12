@@ -7,7 +7,9 @@ import {
   VISION_DAY,
 } from './balance';
 import { darkness } from './clock';
+import { contains } from './geom';
 import { addMemory } from './mood';
+import { powered } from './power';
 import type { Furniture, Survivor, World } from './types';
 import { visionRadius } from './vision';
 
@@ -45,7 +47,12 @@ export function furnitureSystem(w: World): void {
   for (const s of w.survivors) if (byTheFire(w, s)) addMemory(s, 'byTheFire', w.tick);
 }
 
-/** Radio de visión de un superviviente: de noche, junto a una hoguera, el de día. */
+/**
+ * Radio de visión de un superviviente: de noche, junto a una hoguera o en la base con el generador
+ * en marcha (la luz, E1 §3), el de día.
+ */
 export function visionFor(w: World, s: Survivor): number {
-  return byTheFire(w, s) ? VISION_DAY : visionRadius(w.tick);
+  const lit =
+    powered(w) && contains(w.base.rect, { x: Math.floor(s.pos.x), y: Math.floor(s.pos.y) });
+  return lit || byTheFire(w, s) ? VISION_DAY : visionRadius(w.tick);
 }

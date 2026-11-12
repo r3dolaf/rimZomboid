@@ -6,6 +6,9 @@ import {
   CAMPFIRE_REFUEL_BELOW,
   CHARGE_PER_BATTERY,
   FUEL_PER_WOOD,
+  GEN_FUEL_MAX,
+  GEN_FUEL_PER_CAN,
+  GEN_REFUEL_BELOW,
   ITEM_WEIGHT_KG,
   RADIO_CHARGE_MAX,
   RADIO_RECHARGE_BELOW,
@@ -41,6 +44,13 @@ const FUELS = {
     max: RADIO_CHARGE_MAX,
     below: RADIO_RECHARGE_BELOW,
   },
+  // E1: el generador, con bidones de gasolina.
+  generator: {
+    item: 'gasCan',
+    per: GEN_FUEL_PER_CAN,
+    max: GEN_FUEL_MAX,
+    below: GEN_REFUEL_BELOW,
+  },
 } as const;
 type Fuel = (typeof FUELS)[keyof typeof FUELS];
 
@@ -48,7 +58,7 @@ type Fuel = (typeof FUELS)[keyof typeof FUELS];
 const fuelOf = (f: Furniture): Fuel | undefined =>
   f.fuel === undefined
     ? undefined
-    : f.kind === 'campfire' || f.kind === 'radio'
+    : f.kind === 'campfire' || f.kind === 'radio' || f.kind === 'generator'
       ? FUELS[f.kind]
       : undefined;
 

@@ -941,11 +941,11 @@ test.each([1, 2, 3])(
 
 test('con huerto se cosecha y se cocina', () => {
   if (DAYS < 15) return;
+  console.log('V1, en las 3 partidas con huerto:', farmTotals);
   expect(farmTotals.harvested, 'hortalizas cosechadas').toBeGreaterThan(0);
   expect(farmTotals.cooked, 'guisos').toBeGreaterThan(0);
   // V2: se bebe (del fregadero mientras hay agua corriente, y luego de lo que haya).
   expect(farmTotals.drank.sink, 'del fregadero').toBeGreaterThan(0);
-  console.log('V1, en las 3 partidas con huerto:', farmTotals);
 });
 
 /** V3: lo del invierno en la partida de un año. */

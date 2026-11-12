@@ -52,7 +52,9 @@ export function furnitureSystem(w: World): void {
  * en marcha (la luz, E1 §3), el de día.
  */
 export function visionFor(w: World, s: Survivor): number {
+  const v = visionRadius(w.tick);
+  if (v >= VISION_DAY) return v; // de día, sin mirar luces (se llama muy a menudo)
   const lit =
     powered(w) && contains(w.base.rect, { x: Math.floor(s.pos.x), y: Math.floor(s.pos.y) });
-  return lit || byTheFire(w, s) ? VISION_DAY : visionRadius(w.tick);
+  return lit || byTheFire(w, s) ? VISION_DAY : v;
 }

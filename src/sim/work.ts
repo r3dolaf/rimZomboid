@@ -12,7 +12,7 @@ import { contains } from './geom';
 import { buildJob, buildStillWorth } from './jobs/build';
 import { chopJob, chopStillWorth, returnAxeJob } from './jobs/chop';
 import { pryJob, pryStillWorth } from './jobs/pry';
-import { farmJob, farmStillWorth, sowJob } from './jobs/farm';
+import { farmJob, farmStillWorth, harvestJob, sowJob } from './jobs/farm';
 import { fuelJob, fuelStillWorth } from './jobs/fuel';
 import { craftJob, craftStillWorth } from './jobs/craft';
 import { deliverJob, haulJob, haulStillWorth } from './jobs/haul';
@@ -133,6 +133,9 @@ export function findWork(s: Survivor, w: World): Action | null {
     // Las semillas que lleva, al huerto (V1).
     const sow = may(s, 'farm') ? sowJob(s, w) : null;
     if (sow) return sow;
+    // Q1: lo maduro, aunque vaya cargado (si no, seguía saqueando y se pudría).
+    const harvest = may(s, 'farm') ? harvestJob(s, w) : null;
+    if (harvest) return harvest;
     return (loot ? (pryJob(s, w) ?? lootJob(s, w)) : null) ?? goUnload(w);
   }
   const back = returnAxeJob(s, w);

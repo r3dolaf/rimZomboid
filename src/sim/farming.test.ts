@@ -6,6 +6,7 @@ import { checkInvariants } from './invariants';
 import { emptyInventory } from './items';
 import { farmJob, harvestVeg } from './jobs/farm';
 import { step } from './step';
+import { findWork } from './work';
 import { addBase, emptyWorld } from './testing/fixtures';
 import type { World } from './types';
 
@@ -135,4 +136,21 @@ test('Q1: con un día frío (de media por debajo de SOW_MIN_TEMP) no siembra: la
   w.common.tempShift = null;
   expect(dayMean(w)).toBeGreaterThanOrEqual(SOW_MIN_TEMP); // verano
   expect(farmJob(s, w)).not.toBeNull();
+});
+
+test('Q1: lo maduro se cosecha aunque lleve cosas del saqueo (si no, se pudría mientras seguía saqueando)', () => {
+  const w = farm();
+  const s = w.survivors[0]!;
+  s.work.loot = true;
+  markPlot(w, 8, 6, true);
+  w.plots[0]!.crop = { grown: GROW_HOURS, ripe: 0, dry: 0 };
+  // Lleva algo y hay un mueble marcado al que seguiría yendo.
+  s.carrying.cloth = 1;
+  const c = w.containers[0];
+  if (c) c.designated = true;
+  const a = findWork(s, w);
+  expect(a).toMatchObject({ type: 'moveTo', then: { type: 'tend', what: 'harvest' } });
+  // Sin permiso para Cultivar, no.
+  s.work.farm = false;
+  expect(findWork(s, w)).not.toMatchObject({ then: { type: 'tend' } });
 });

@@ -113,6 +113,16 @@ export function sowJob(s: Survivor, w: World): Action | null {
   return p && goTend(w, p, 'sow');
 }
 
+/**
+ * Q1: cosechar lo maduro, que se pudre en unos días. Se hace aunque lleve cosas del saqueo (no hacen
+ * falta las manos: lo cosechado queda en un montón para Transportar).
+ */
+export function harvestJob(s: Survivor, w: World): Action | null {
+  if (w.plots.length === 0) return null;
+  const ripe = nearestPlot(s, w, 'harvest');
+  return ripe && goTend(w, ripe, 'harvest');
+}
+
 /** El trabajo de Cultivar que toca: cosechar, regar (o ir a por agua) y sembrar (o ir a por semillas). */
 export function farmJob(s: Survivor, w: World): Action | null {
   if (w.plots.length === 0) return null;

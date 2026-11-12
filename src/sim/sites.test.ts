@@ -7,6 +7,7 @@ import {
   SITE_HORDE_ZOMBIES,
   SITE_ZOMBIES_PER_DAY,
   SITE_RUMOR_PER_DAY,
+  SITE_ZOMBIE_CLEAR,
   TICKS_PER_DAY,
   ZOMBIE_NOTE_CHANCE,
 } from './balance';
@@ -20,7 +21,9 @@ import {
   sitesDailySystem,
 } from './sites';
 import { addWorldSites, emptyWorld } from './testing/fixtures';
-import { createWorld } from './world';
+import { isWalkable, isZombieWalkable, setTile } from './map/grid';
+import { Tile } from './types';
+import { createWorld, tileOf } from './world';
 
 test('mapas de carreteras y notas: al llegar al almacén descubren cada uno su sitio (H5c2: y su zona)', () => {
   const w = emptyWorld(10, 10);
@@ -85,6 +88,30 @@ test('al volver a un sitio, ha pasado el tiempo: más zombis (con tope) y otros 
   const now = site.zombies.length;
   catchUp(site, info, w.tick);
   expect(site.zombies.length).toBe(now);
+});
+
+test('los zombis de un sitio salen donde puede estar un zombi (no en una puerta, que la persona sí pisa)', () => {
+  const w = emptyWorld(10, 10);
+  addWorldSites(w, 6);
+  const info = discoverSite(w, { how: 'note', special: null })!;
+  const site = siteMap(w, info);
+  site.zombies = [];
+  // Lejos del campamento, casi todo puertas (una columna de cada cinco, hierba).
+  const camp = site.storage.tiles[0]!;
+  const { width, height } = site.grid;
+  for (let y = 0; y < height; y++)
+    for (let x = 0; x < width; x++) {
+      const far = Math.abs(camp.x - x) + Math.abs(camp.y - y) >= SITE_ZOMBIE_CLEAR;
+      if (far && isWalkable(site.grid, x, y))
+        setTile(site.grid, x, y, x % 5 ? Tile.Door : Tile.Grass);
+    }
+  w.tick += 3 * TICKS_PER_DAY;
+  catchUp(site, info, w.tick);
+  expect(site.zombies.length).toBeGreaterThan(0);
+  for (const z of site.zombies) {
+    const t = tileOf(z.pos);
+    expect(isZombieWalkable(site.grid, t.x, t.y), `zombi en (${t.x}, ${t.y})`).toBe(true);
+  }
 });
 
 test('cada día, un sitio sin gente puede quemarse (se pierde) o llenarse de zombis; los supervivientes dejan de esperar', () => {

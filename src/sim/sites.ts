@@ -48,7 +48,7 @@ import {
   fillHatchets,
   placeContainers,
 } from './loot';
-import { getTile, isWalkable, setTile } from './map/grid';
+import { getTile, isZombieWalkable, setTile } from './map/grid';
 import { addDecision } from './decisions';
 import { newStranger } from './systems/strangers';
 import { wornBags } from './bags';
@@ -342,13 +342,13 @@ export function siteZombiesAtStart(info: SiteInfo, level: ZombieLevel): number {
   return Math.round(n * ZOMBIE_LEVEL_MULT[level]); // con la opción Zombis, como en la base
 }
 
-/** `n` zombis en casillas al azar por las que se anda, lejos del campamento. */
+/** `n` zombis en casillas al azar que pisa un zombi (una puerta, no), lejos del campamento. */
 function addZombies(w: World, n: number): void {
   const camp = w.storage.tiles[0] ?? { x: 0, y: 0 };
   for (let i = 0, tries = 0; i < n && tries < 10_000; tries++) {
     const x = nextInt(w.zombieRng, 0, w.grid.width - 1);
     const y = nextInt(w.zombieRng, 0, w.grid.height - 1);
-    if (!isWalkable(w.grid, x, y)) continue;
+    if (!isZombieWalkable(w.grid, x, y)) continue;
     if (Math.abs(camp.x - x) + Math.abs(camp.y - y) < SITE_ZOMBIE_CLEAR) continue;
     w.zombies.push(newZombie(w, { x, y }));
     i++;

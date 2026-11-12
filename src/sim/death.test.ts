@@ -23,7 +23,8 @@ import { step } from './step';
 import { activitiesSystem } from './systems/activities';
 import { acceptStrangers, doorOutside, newStranger } from './systems/strangers';
 import { addBase, addSurvivor, emptyWorld, withoutZombies } from './testing/fixtures';
-import type { Survivor, World } from './types';
+import { isZombieWalkable, setTile } from './map/grid';
+import { Tile, type Survivor, type World } from './types';
 import { createWorld, tileOf } from './world';
 import { hordeSystem } from './zombies/hordes';
 import { newZombie, zombieMax } from './zombies/spawn';
@@ -203,6 +204,20 @@ test('infectado: a la hora se levanta como "Ana (zombi)"; lo que llevaba queda e
   expect(w.zombies[0]).toMatchObject({ name: 'Ana', pos: { x: 4.5, y: 5.5 } });
   expect(w.piles.find((p) => p.pos.x === 4 && p.pos.y === 5)?.items.food).toBe(3);
   expect(w.common.log.some((e) => e.kind === 'rose' && e.name === 'Ana')).toBe(true);
+  expect(checkInvariants(w)).toEqual([]);
+});
+
+test('muerto en una puerta: se levanta en la casilla de al lado que puede pisar (no encima de la puerta)', () => {
+  const { w, ana } = world();
+  ana.infection = { at: 0, deathAt: w.tick };
+  setTile(w.grid, 4, 5, Tile.Door);
+  killSurvivor(w, ana, 'infection');
+  w.tick += RISE_TICKS;
+  deathSystem(w);
+  expect(w.zombies).toHaveLength(1);
+  const z = w.zombies[0]!;
+  expect(isZombieWalkable(w.grid, Math.floor(z.pos.x), Math.floor(z.pos.y))).toBe(true);
+  expect(Math.abs(Math.floor(z.pos.x) - 4) + Math.abs(Math.floor(z.pos.y) - 5)).toBe(1);
   expect(checkInvariants(w)).toEqual([]);
 });
 

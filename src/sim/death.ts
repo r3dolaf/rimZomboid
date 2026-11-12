@@ -40,10 +40,12 @@ import type {
   Container,
   DeathCause,
   MemoryId,
+  Point,
   Returning,
   Survivor,
   World,
 } from './types';
+import { isZombieWalkable } from './map/grid';
 import { tileOf } from './world';
 import { newZombie } from './zombies/spawn';
 
@@ -400,6 +402,23 @@ export function mercyStep(w: World, s: Survivor): void {
   logEvent(w, { kind: 'killedForNothing', name: p.name });
 }
 
+/** Donde se levanta: su casilla o, si no la pisan los zombis (una puerta), la primera al lado. */
+function riseSpot(w: World, p: Point): Point {
+  if (isZombieWalkable(w.grid, p.x, p.y)) return p;
+  for (const [dx, dy] of [
+    [0, 1],
+    [0, -1],
+    [1, 0],
+    [-1, 0],
+    [1, 1],
+    [-1, 1],
+    [1, -1],
+    [-1, -1],
+  ] as const)
+    if (isZombieWalkable(w.grid, p.x + dx, p.y + dy)) return { x: p.x + dx, y: p.y + dy };
+  return p;
+}
+
 /** El cuerpo se levanta como zombi con su nombre; lo que llevaba queda en un montón. */
 function rise(w: World, c: Container): void {
   w.containers = w.containers.filter((x) => x !== c);
@@ -408,8 +427,9 @@ function rise(w: World, c: Container): void {
     searcher.action = { type: 'idle', ticksLeft: 0 };
     searcher.path = [];
   }
-  // Se levanta con la ropa que llevaba (H5b §7); lo demás se queda en el suelo.
-  const z = newZombie(w, c.pos, false);
+  // Se levanta con la ropa que llevaba (H5b §7); lo demás se queda en el suelo. Si murió en una
+  // puerta, en la casilla de al lado que pisan los zombis (encima de la puerta no puede estar).
+  const z = newZombie(w, riseSpot(w, c.pos), false);
   for (const g of garments(c.items.pieces))
     if (g.from === 'colonist' && wearable(z.worn, g)) z.worn.push(g);
   c.items.pieces = c.items.pieces.filter((g) => isBag(g) || !z.worn.includes(g));

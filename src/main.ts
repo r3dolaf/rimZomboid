@@ -36,6 +36,7 @@ import { mountCards } from './ui/cards';
 import { mountContextMenu } from './ui/contextMenu';
 import { mountCraftPanel } from './ui/craftPanel';
 import { mountEndScreen } from './ui/endScreen';
+import { createAchievementStore, mountAchievements } from './ui/achievements';
 import { mountExpeditionsPanel } from './ui/expeditionsPanel';
 import { siegeText } from './ui/describe';
 import { mountGroupPanel } from './ui/groupPanel';
@@ -239,6 +240,7 @@ function start(
       gamePanel.say(es.game.saveFailed);
     },
   });
+  const achievementStore = createAchievementStore(); // C3
   const gamePanel = mountGamePanel(ui, {
     open: gameOpen,
     seed,
@@ -264,6 +266,7 @@ function start(
       location.assign(loadHere());
     },
     sound: soundPrefs,
+    achievements: { store: achievementStore, cheated: () => world.common.cheated === true }, // C3
   });
   // M3 §3: al esconder la pestaña (otra app, pantalla apagada), se guarda: el móvil la puede cerrar
   // sin avisar.
@@ -355,6 +358,7 @@ function start(
     selection,
     perf: () => perf,
     onSkip(hours) {
+      world.common.cheated = true; // C3: saltar horas es una trampa (los logros no cuentan)
       for (let i = 0; i < hours * TICKS_PER_HOUR && !world.common.over; i++) stepGame(world);
     },
     sound: { play: (id) => sound.cue(id), force: (m) => sound.force(m) }, // S1: el muestrario
@@ -367,6 +371,15 @@ function start(
     onRestart: () =>
       location.assign(startUrl(location.search, randomSeed(), style, zombies, setupOf(world))),
     onTitle: () => location.assign(location.pathname),
+    // C3: lo que se comparte lleva el enlace a esta misma partida.
+    shareUrl: `${location.origin}${location.pathname}${startUrl('', seed, style, zombies, setupOf(world))}`,
+    achievements: achievementStore,
+  });
+  // C3: los logros (en el navegador), con su aviso y el sonido de lo bueno.
+  const achievements = mountAchievements(ui, {
+    world,
+    store: achievementStore,
+    onUnlock: () => sound.notice('good', 'achievement'),
   });
   // U1 §8: la Ayuda, por encima de todo (salvo el final).
   mountHelp(ui, {
@@ -525,6 +538,7 @@ function start(
       craftPanel.update();
       buildMenu.update();
       endScreen.update();
+      achievements.update(); // C3
     },
   };
   game.scene.add('game', GameScene, true, data);

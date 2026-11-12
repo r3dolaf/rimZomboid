@@ -71,6 +71,10 @@ Asentarse (huerto, agua y estaciones):
   ferreterías. Se llevan encima: en la ficha, Equipo → Llevar siempre. Disparan de lejos en modo
   combate o cuando están en apuros (varios zombis, heridos o en un asedio); con un zombi solo, a
   golpes. Cada disparo se oye desde muy lejos.
+- **Crónica y logros**: al acabar, la pantalla final cuenta la partida (quién murió, quién llegó, los
+  asedios, el rescate…) y se puede copiar como texto o guardar como imagen para compartirla, con el
+  enlace a la misma partida. Hay 20 logros que se guardan en el navegador (panel Partida); con las
+  trampas de depuración no cuentan.
 - **Estaciones**: el año dura 60 días y empieza en verano. En invierno no crece nada y hiela: hace
   falta ropa de abrigo y hogueras con leña (Transportar se la lleva). La estación y la temperatura
   están junto a las pestañas de mapa.

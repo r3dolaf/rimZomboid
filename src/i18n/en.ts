@@ -3,6 +3,7 @@ import { BIRTHDAY_CANS } from '../sim/balance';
 import type { Season } from '../sim/season';
 import type { MoodModifierId } from '../sim/mood';
 import type { ItemKind } from '../sim/items';
+import type { AchievementId } from '../ui/achievements';
 import type { RelationLabel } from '../sim/social';
 import type {
   SiteKind,
@@ -1127,6 +1128,50 @@ export const en: Texts = {
     harvested: (n: number) => `Harvested: ${n} ${n === 1 ? 'vegetable' : 'vegetables'}`,
     restart: 'New game',
     title: 'Back to the title screen',
+    chronicle: 'Chronicle',
+    chronicleLine: (day: number, text: string) => `Day ${day} · ${text}`,
+    achievements: 'Achievements this game',
+    cheated: 'Cheats used: achievements do not count',
+    copy: '📋 Copy the chronicle',
+    copied: 'Copied',
+    copyFailed: 'Could not copy',
+    image: '🖼️ Save image',
+    statsLine: (kills: number, sieges: number, harvested: number) =>
+      `${kills} zombies · ${sieges} ${sieges === 1 ? 'siege' : 'sieges'} · ${harvested} ${harvested === 1 ? 'vegetable' : 'vegetables'}`,
+    playIt: (url: string) => `Play this same game: ${url}`,
+  },
+  achievements: {
+    title: 'Achievements',
+    count: (n: number, of: number) => `🏆 Achievements ${n}/${of}`,
+    unlocked: 'Achievement',
+    unlockedMany: (n: number, names: string) => `${n} achievements: ${names}`,
+    fresh: 'new!',
+    cheated: 'Cheats have been used in this game: achievements do not count.',
+    items: {
+      firstNight: { name: 'First night', how: 'Reach day 2' },
+      week: { name: 'One week', how: 'Reach day 8' },
+      month: { name: 'One month', how: 'Reach day 31' },
+      spring: { name: 'Spring', how: 'Reach day 46 (get through the winter)' },
+      year: { name: 'One year', how: 'Reach day 61' },
+      rescued: { name: 'Rescued', how: 'Board the helicopter' },
+      allSaved: { name: 'No one left behind', how: 'Win without a single death' },
+      siege: { name: 'Siege repelled', how: 'Repel a siege' },
+      fortress: { name: 'Fortress', how: 'Repel 3 sieges' },
+      harvest: { name: 'First harvest', how: 'Harvest the garden' },
+      farmer: { name: 'Self-sufficient', how: 'Harvest 100 vegetables' },
+      hundred: { name: 'A hundred zombies', how: 'Kill 100 zombies' },
+      thousand: { name: 'A thousand zombies', how: 'Kill 1000 zombies' },
+      surgeon: { name: 'Surgeon', how: 'Amputate an arm or a leg' },
+      welcome: { name: 'Welcome', how: 'Have someone join the colony' },
+      family: { name: 'A family', how: 'Be 8 in the colony at once' },
+      couple: { name: 'Couple', how: 'Have two of them become a couple' },
+      lone: { name: 'Lone wolf', how: 'With the Alone start, reach day 15' },
+      radio: {
+        name: 'Loud and clear',
+        how: 'Learn over the radio where and when the helicopter comes',
+      },
+      firstShot: { name: 'First shot', how: 'Fire a gun' },
+    } satisfies Record<AchievementId, { name: string; how: string }>,
   },
   deathCauses: {
     blood: 'from blood loss',

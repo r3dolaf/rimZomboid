@@ -883,6 +883,10 @@ export interface Expedition {
 export interface Common {
   /** Registro de sucesos (los últimos LOG_MAX). */
   log: LogEntry[];
+  /** C3: la crónica, los momentos clave (los últimos CHRONICLE_MAX); sin ella, aún ninguno. */
+  chronicle?: LogEntry[];
+  /** C3: se ha usado algo de depuración (los logros no cuentan). */
+  cheated?: boolean;
   nextId: number;
   /** Hay tormenta mientras el tick sea menor que este. */
   stormUntil: number;

@@ -8,6 +8,7 @@ import { setupLine } from './describe';
 import type { Flag } from './flag';
 import { importInput } from './saveStore';
 import { DEFAULT_SETUP } from '../sim/setup';
+import { achievementsList, type AchievementStore } from './achievements';
 import './panels.css';
 
 export function mountGamePanel(
@@ -29,6 +30,8 @@ export function mountGamePanel(
     sound?: SoundPrefsStore;
     /** I1: elegir otro idioma (guarda la partida y recarga). */
     onLanguage?: (l: Lang) => void;
+    /** C3: los logros (lo conseguido en el navegador) y si en esta partida hay trampas. */
+    achievements?: { store: AchievementStore; cheated: () => boolean };
   },
 ): { update(): void; say(text: string): void } {
   const t = es.game;
@@ -94,6 +97,8 @@ export function mountGamePanel(
   if (opts.onLanguage) panel.append(langSwitch(opts.onLanguage)); // I1
   const sound = opts.sound ? soundSection(opts.sound) : null;
   if (sound) panel.append(sound.el);
+  const trophies = opts.achievements ? achievementsSection(opts.achievements) : null;
+  if (trophies) panel.append(trophies.el);
   root.append(panel);
   return {
     update() {
@@ -104,6 +109,7 @@ export function mountGamePanel(
       }
       load.disabled = !opts.hasSave();
       sound?.update();
+      trophies?.update();
     },
     say,
   };
@@ -149,6 +155,46 @@ function soundSection(store: SoundPrefsStore): { el: HTMLElement; update(): void
         if (s.input.value !== v && document.activeElement !== s.input) s.input.value = v;
       }
       if (muted.checked !== p.muted) muted.checked = p.muted;
+    },
+  };
+}
+
+/** C3: «🏆 Logros 5/20» y la lista (lo que falta, apagado, con cómo se consigue). */
+function achievementsSection(a: { store: AchievementStore; cheated: () => boolean }): {
+  el: HTMLElement;
+  update(): void;
+} {
+  const t = es.achievements;
+  const el = document.createElement('section');
+  el.className = 'achievements';
+  el.dataset.testid = 'game-achievements';
+  let shown = '';
+  return {
+    el,
+    update() {
+      const list = achievementsList(a.store);
+      const done = list.filter((x) => x.done).length;
+      const key = `${done}:${a.cheated()}`;
+      if (key === shown) return;
+      shown = key;
+      const h3 = document.createElement('h3');
+      h3.textContent = t.count(done, list.length);
+      const ul = document.createElement('ul');
+      for (const x of list) {
+        const li = document.createElement('li');
+        li.className = x.done ? 'done' : 'muted';
+        li.dataset.testid = `achievement-row-${x.id}`;
+        li.textContent = `${x.done ? '🏆' : '·'} ${x.name} — ${x.how}`;
+        ul.append(li);
+      }
+      el.replaceChildren(h3);
+      if (a.cheated()) {
+        const p = document.createElement('p');
+        p.className = 'muted';
+        p.textContent = t.cheated;
+        el.append(p);
+      }
+      el.append(ul);
     },
   };
 }

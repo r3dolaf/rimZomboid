@@ -5,6 +5,8 @@ import { emptyInventory, ITEM_KINDS } from '../sim/items';
 import type { World } from '../sim/types';
 import { formatItems, setupLine } from './describe';
 import { setupOf } from '../sim/setup';
+import { achieved, type AchievementStore } from './achievements';
+import { chronicleImage, chronicleLines, shareText } from './chronicle';
 import './start.css';
 
 /** Lo más saqueado: las 3 cosas de las que más se ha traído. */
@@ -25,10 +27,22 @@ function topLooted(w: World): string {
  */
 export function mountEndScreen(
   root: HTMLElement,
-  opts: { world: World; time: TimeController; onRestart(): void; onTitle(): void },
+  opts: {
+    world: World;
+    time: TimeController;
+    onRestart(): void;
+    onTitle(): void;
+    /** C3: el enlace para jugar la misma partida (en lo que se comparte). */
+    shareUrl?: string;
+    /** C3: lo conseguido (lo de esta vez, «¡nuevo!»). */
+    achievements?: AchievementStore;
+    now?: () => Date;
+  },
 ): { update(): void } {
   let shown = false;
   const t = es.end;
+  // C3: lo conseguido desde que se abrió la partida (o aún sin guardar) es nuevo.
+  const since = (opts.now?.() ?? new Date()).toISOString();
   return {
     update() {
       const w = opts.world;
@@ -50,6 +64,46 @@ export function mountEndScreen(
         const ul = document.createElement('ul');
         for (const i of items) ul.append(line('li', i));
         return ul;
+      };
+      const chronicle = () => {
+        const lines = chronicleLines(w);
+        if (lines.length === 0) return line('p', t.nothing);
+        const ul = document.createElement('ul');
+        ul.className = 'chronicle';
+        ul.dataset.testid = 'end-chronicle';
+        for (const l of lines) ul.append(line('li', t.chronicleLine(l.day, l.text)));
+        return ul;
+      };
+      const url = opts.shareUrl ?? location.href;
+      const shareRow = () => {
+        const box = document.createElement('div');
+        box.className = 'end-buttons end-share';
+        const status = line('p', '');
+        status.className = 'muted';
+        status.dataset.testid = 'end-share-status';
+        box.append(
+          button('end-copy', t.copy, () => {
+            copyText(shareText(w, url)).then(
+              (ok) => (status.textContent = ok ? t.copied : t.copyFailed),
+              () => (status.textContent = t.copyFailed),
+            );
+          }),
+          button('end-image', t.image, () => {
+            const canvas = chronicleImage(w, url);
+            if (!canvas) return;
+            canvas.toBlob((blob) => {
+              if (!blob) return;
+              const a = document.createElement('a');
+              a.href = URL.createObjectURL(blob);
+              a.download = `rimzomboid-${gameTime(w.common.over?.tick ?? w.tick).day}.png`;
+              a.click();
+              setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+            }, 'image/png');
+          }),
+        );
+        const wrap = document.createElement('div');
+        wrap.append(box, status);
+        return wrap;
       };
       const row = document.createElement('div');
       row.className = 'end-buttons';
@@ -84,10 +138,51 @@ export function mountEndScreen(
         line('p', t.sieges(w.common.stats.siegesRepelled)),
         line('p', t.looted(topLooted(w))),
         ...(w.common.stats.harvested > 0 ? [line('p', t.harvested(w.common.stats.harvested))] : []),
+        // C3: los logros de esta partida, la crónica y compartirla.
+        line('h2', t.achievements),
+        w.common.cheated
+          ? line('p', t.cheated)
+          : list(
+              achieved(w).map((id) => {
+                const name = `🏆 ${es.achievements.items[id].name}`;
+                const at = opts.achievements?.get()[id];
+                const fresh = opts.achievements && (at === undefined || at >= since);
+                return fresh ? `${name} · ${es.achievements.fresh}` : name;
+              }),
+            ),
+        line('h2', t.chronicle),
+        chronicle(),
+        shareRow(),
         row,
       );
       screen.append(panel);
       root.append(screen);
     },
   };
+}
+
+/** Copia un texto (con el portapapeles del navegador o, si no hay, a la antigua). */
+async function copyText(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // sin permiso: a la antigua
+  }
+  const area = document.createElement('textarea');
+  area.value = text;
+  area.style.position = 'fixed';
+  area.style.opacity = '0';
+  document.body.append(area);
+  area.select();
+  let ok = false;
+  try {
+    ok = document.execCommand('copy');
+  } catch {
+    ok = false;
+  }
+  area.remove();
+  return ok;
 }

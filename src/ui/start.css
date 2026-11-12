@@ -212,6 +212,22 @@
   font: inherit;
   cursor: pointer;
 }
+/* C3: la crónica, con barra si es larga; compartir, más pequeño. */
+.end ul.chronicle {
+  max-height: 32vh;
+  overflow-y: auto;
+  text-align: left;
+  font-size: 14px;
+  line-height: 1.45;
+  padding-right: 6px;
+}
+.end-share {
+  margin-top: 8px;
+}
+.end-share button {
+  padding: 6px 12px;
+  font-size: 14px;
+}
 
 /* H6b: seguir la partida guardada e importar una. */
 .start-continue {

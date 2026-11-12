@@ -321,6 +321,8 @@ export const VISION_DAY = 12;
 export const VISION_NIGHT = 6;
 export const VISION_EVERY_TICKS = 5;
 export const LOG_MAX = 100;
+/** C3: los momentos de la crónica que se guardan, como mucho. */
+export const CHRONICLE_MAX = 300;
 export const SEARCH_TICKS = 30; // registrar un contenedor: 6 minutos de juego
 export const UNLOAD_TICKS = 20;
 export const REFUSE_CHANCE = 0.5; // al límite, probabilidad de negarse a un trabajo

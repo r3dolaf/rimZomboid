@@ -21,6 +21,7 @@ export type DebugOrder = {
 };
 
 export function applyDebugOrder(w: World, o: DebugOrder): void {
+  w.common.cheated = true; // C3: con trampas, los logros no cuentan
   switch (o.action) {
     case 'reveal':
       w.seen.fill(1);

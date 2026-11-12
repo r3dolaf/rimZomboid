@@ -4,6 +4,7 @@ import { BIRTHDAY_CANS } from '../sim/balance';
 import type { Season } from '../sim/season';
 import type { MoodModifierId } from '../sim/mood';
 import type { ItemKind } from '../sim/items';
+import type { AchievementId } from '../ui/achievements';
 import type { RelationLabel } from '../sim/social';
 import type {
   SiteKind,
@@ -1207,6 +1208,49 @@ export const es = {
     harvested: (n: number) => `Cosechado: ${n} ${n === 1 ? 'hortaliza' : 'hortalizas'}`, // V1
     restart: 'Otra partida',
     title: 'Volver a la portada',
+    // C3: la crónica, los logros de esta partida y compartir.
+    chronicle: 'Crónica',
+    chronicleLine: (day: number, text: string) => `Día ${day} · ${text}`,
+    achievements: 'Logros de esta partida',
+    cheated: 'Con trampas: los logros no cuentan',
+    copy: '📋 Copiar la crónica',
+    copied: 'Copiada',
+    copyFailed: 'No se ha podido copiar',
+    image: '🖼️ Guardar imagen',
+    statsLine: (kills: number, sieges: number, harvested: number) =>
+      `${kills} zombis · ${sieges} ${sieges === 1 ? 'asedio' : 'asedios'} · ${harvested} ${harvested === 1 ? 'hortaliza' : 'hortalizas'}`,
+    playIt: (url: string) => `Juega esta misma partida: ${url}`,
+  },
+  /** C3: los logros (en el navegador, para todas las partidas). */
+  achievements: {
+    title: 'Logros',
+    count: (n: number, of: number) => `🏆 Logros ${n}/${of}`,
+    unlocked: 'Logro',
+    unlockedMany: (n: number, names: string) => `${n} logros: ${names}`,
+    fresh: '¡nuevo!',
+    cheated: 'En esta partida se han usado trampas: los logros no cuentan.',
+    items: {
+      firstNight: { name: 'Primera noche', how: 'Llegar al día 2' },
+      week: { name: 'Una semana', how: 'Llegar al día 8' },
+      month: { name: 'Un mes', how: 'Llegar al día 31' },
+      spring: { name: 'Primavera', how: 'Llegar al día 46 (pasar el invierno)' },
+      year: { name: 'Un año', how: 'Llegar al día 61' },
+      rescued: { name: 'Rescatados', how: 'Subir al helicóptero' },
+      allSaved: { name: 'Nadie se queda', how: 'Ganar sin ninguna muerte' },
+      siege: { name: 'Asedio rechazado', how: 'Rechazar un asedio' },
+      fortress: { name: 'Fortaleza', how: 'Rechazar 3 asedios' },
+      harvest: { name: 'Primera cosecha', how: 'Cosechar el huerto' },
+      farmer: { name: 'Autosuficientes', how: 'Cosechar 100 hortalizas' },
+      hundred: { name: 'Cien zombis', how: 'Matar 100 zombis' },
+      thousand: { name: 'Mil zombis', how: 'Matar 1000 zombis' },
+      surgeon: { name: 'Cirujano', how: 'Amputar un brazo o una pierna' },
+      welcome: { name: 'Bienvenido', how: 'Que alguien se una a la colonia' },
+      family: { name: 'Una familia', how: 'Ser 8 en la colonia a la vez' },
+      couple: { name: 'Pareja', how: 'Que dos se hagan pareja' },
+      lone: { name: 'Lobo solitario', how: 'Con el comienzo Solo, llegar al día 15' },
+      radio: { name: 'Al habla', how: 'Saber por la radio dónde y cuándo pasa el helicóptero' },
+      firstShot: { name: 'Primer disparo', how: 'Disparar un arma de fuego' },
+    } satisfies Record<AchievementId, { name: string; how: string }>,
   },
   /** De qué ha muerto (H5 §8): "Ana ha muerto desangrándose". */
   deathCauses: {

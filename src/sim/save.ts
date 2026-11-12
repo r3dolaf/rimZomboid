@@ -4,6 +4,7 @@
 import { CAMPFIRE_FUEL_START } from './balance';
 import { occupied } from './build';
 import { contains } from './geom';
+import { chronicleFromLog } from './chronicle';
 import { checkInvariants } from './invariants';
 import { ITEM_KINDS } from './items';
 import { baseSink } from './water';
@@ -84,6 +85,8 @@ export function loadGame(
       if (typeof m?.siteId !== 'number' || !m.world?.grid) return { error: 'broken' };
       m.world.common = c;
     }
+    // C3: las de antes, con la crónica de lo que haya en su registro.
+    if (!Array.isArray(c.chronicle as unknown)) c.chronicle = chronicleFromLog(c.log ?? []);
     // Las guardadas antes de H6c no recuerdan los nombres: valen los de quien hay o hubo.
     if (!Array.isArray(c.usedNames as unknown))
       c.usedNames = [

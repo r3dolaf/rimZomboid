@@ -1,4 +1,5 @@
-import { LOG_MAX } from './balance';
+import { CHRONICLE_MAX, LOG_MAX } from './balance';
+import { chronicled } from './chronicle';
 import type { Season } from './season';
 import type { Inventory, ItemKind } from './items';
 import type {
@@ -205,8 +206,13 @@ export type LogEntry = LogEvent & { tick: number; mapId?: number };
 
 export function logEvent(w: World, e: LogEvent): void {
   // De un sitio (H5c1), con su mapa; los de la base, sin marca.
-  w.common.log.push(
-    w.mapId === 0 ? { tick: w.tick, ...e } : { tick: w.tick, mapId: w.mapId, ...e },
-  );
+  const entry: LogEntry =
+    w.mapId === 0 ? { tick: w.tick, ...e } : { tick: w.tick, mapId: w.mapId, ...e };
+  w.common.log.push(entry);
   if (w.common.log.length > LOG_MAX) w.common.log.splice(0, w.common.log.length - LOG_MAX);
+  // C3: los momentos clave, también aparte.
+  const chronicle = (w.common.chronicle ??= []);
+  if (!chronicled(e, chronicle)) return;
+  chronicle.push(entry);
+  if (chronicle.length > CHRONICLE_MAX) chronicle.splice(0, chronicle.length - CHRONICLE_MAX);
 }

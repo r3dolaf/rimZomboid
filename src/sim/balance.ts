@@ -108,6 +108,8 @@ export const FUEL_PER_WOOD = 4;
 // El invierno (V3 §6): el huerto crece por encima de GROW_MIN_TEMP y la helada mata lo que crece;
 // la nieve llena la mitad; lo fresco se estropea menos con frío; los zombis helados van más lentos.
 export const GROW_MIN_TEMP = 5;
+/** Q1: no se siembra con el día por debajo de esto de media (la helada lo mataría y se gastan las semillas). */
+export const SOW_MIN_TEMP = 8;
 export const FROST_TEMP = -2;
 export const SNOW_FILL = 0.5;
 export const ROT_COLD = [
@@ -124,7 +126,7 @@ export const NEED_START_MIN = 60;
 export const NEED_START_MAX = 100;
 export const START_FOOD = 10; // ~3 días; el resto hay que saquearlo (H3)
 /** H6d: antibióticos en el almacén al empezar (sonda: con 2 se llega hacia el día 25; con 1, no). */
-export const START_ANTIBIOTICS = 2;
+export const START_ANTIBIOTICS = 4; // Q1 (antes 2)
 export const MOOD_BASE = 50;
 export const HUNGER_PER_DAY = 70;
 export const HUNGER_PER_TICK = HUNGER_PER_DAY / TICKS_PER_DAY;
@@ -814,7 +816,7 @@ export const ZOMBIE_THINK_TICKS = 5; // cada cuánto decide cada zombi (repartid
 export const ZOMBIE_REPATH_TICKS = 20; // al perseguir, cada cuánto rehace el camino
 export const LOSE_TRACK_TICKS = 50; // sin ver a su presa este tiempo, pierde el rastro
 export const ZOMBIE_REACH = 1.5; // casillas de centro a centro para golpear
-export const ZOMBIE_HIT_CHANCE = 0.25; // H5: desde que hay heridas (antes 0,4)
+export const ZOMBIE_HIT_CHANCE = 0.2; // Q1 (antes 0,25; con heridas, H5, 0,4): las peleas hundían la colonia
 export const HERD_RANGE = 10; // al vagar, se fija en los zombis a esta distancia
 export const HERD_CHANCE = 0.75; // de los paseos, cuántos van hacia el grupo
 export const WANDER_MIN = 3;
@@ -955,7 +957,7 @@ export const LOOT: Record<LootKind, Partial<Record<LootItem, LootAmount>>> = {
     bandage: [12, 18],
     needle: [1, 1],
     painkillers: [6, 10],
-    antibiotics: { chance: 0.3 }, // H6a: en el pueblo, alguno a veces
+    antibiotics: [1, 2], // Q1 (antes, el 30 % de las veces uno)
   },
   hardware: {
     bandage: [0, 2],

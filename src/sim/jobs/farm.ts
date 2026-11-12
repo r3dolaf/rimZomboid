@@ -2,6 +2,7 @@
 // sembrar lo vacío (con semillas del almacén).
 import {
   HARVEST_EXTRA_SEED,
+  SOW_MIN_TEMP,
   HARVEST_TICKS,
   HARVEST_VEG_BASE,
   HARVEST_VEG_PER_LEVEL,
@@ -20,6 +21,7 @@ import { nextFloat, pick } from '../rng';
 import { capacityKg, practice, workSpeed } from '../skills';
 import type { Action, Activity, Furniture, Plot, Survivor, TendKind, World } from '../types';
 import { tapOn } from '../water';
+import { dayMean } from '../season';
 import { tileOf } from '../world';
 import { standOnOrBeside } from './stand';
 
@@ -98,9 +100,15 @@ function nearestSource(
   return best;
 }
 
+/**
+ * Q1: ¿se siembra hoy? Con el día por debajo de SOW_MIN_TEMP de media, no: lo sembrado no crece y la
+ * helada lo mata (se volvía a sembrar y se gastaban todas las semillas antes de la primavera).
+ */
+const sowWeather = (w: World) => dayMean(w) >= SOW_MIN_TEMP;
+
 /** Sembrar con las semillas que lleva (también vuelve a ello quien va cargado de semillas). */
 export function sowJob(s: Survivor, w: World): Action | null {
-  if (s.carrying.seeds === 0 || w.plots.length === 0) return null;
+  if (s.carrying.seeds === 0 || w.plots.length === 0 || !sowWeather(w)) return null;
   const p = nearestPlot(s, w, 'sow');
   return p && goTend(w, p, 'sow');
 }
@@ -119,7 +127,7 @@ export function farmJob(s: Survivor, w: World): Action | null {
   }
   const sow = sowJob(s, w);
   if (sow) return sow;
-  if (w.storage.items.seeds > 0 && nearestPlot(s, w, 'sow'))
+  if (w.storage.items.seeds > 0 && sowWeather(w) && nearestPlot(s, w, 'sow'))
     return { type: 'moveTo', target: pick(w.rng, w.storage.tiles), then: { type: 'takeSeeds' } };
   return null;
 }

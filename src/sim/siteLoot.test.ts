@@ -57,8 +57,9 @@ test('en un pueblecito hay antibióticos; en la nave, armas; en la granja, mucha
   expect(checkInvariants(base)).toEqual([]);
 });
 
-test('en el pueblo de la base, casi ningún antibiótico', () => {
+test('en el pueblo de la base, pocos antibióticos (Q1: la farmacia, 1 o 2; antes, casi ninguno)', () => {
   let n = 0;
   for (let seed = 1; seed <= 6; seed++) n += total(createWorld(seed), 'antibiotics');
-  expect(n / 6).toBeLessThan(2);
+  expect(n / 6).toBeGreaterThanOrEqual(1);
+  expect(n / 6).toBeLessThan(4);
 });

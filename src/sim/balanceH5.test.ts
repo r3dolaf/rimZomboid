@@ -29,7 +29,7 @@ test('cifras del ajuste', () => {
     bite: { damage: 10, bleed: 5, stopsHours: null, healDays: 5, infect: 1 },
   });
   expect(BLOOD_REGEN).toEqual({ awake: 2, rest: 4, hospital: 6 });
-  expect([SCRATCH_CHANCE, MAUL_BITE_CHANCE, ZOMBIE_HIT_CHANCE]).toEqual([0.85, 0.05, 0.25]);
+  expect([SCRATCH_CHANCE, MAUL_BITE_CHANCE, ZOMBIE_HIT_CHANCE]).toEqual([0.85, 0.05, 0.2]); // Q1
   expect([DECIDE_MAX_THREATS, FLEE_HEALTH, DECIDE_MIN_BLOOD]).toEqual([1, MAUL_BELOW, 60]);
 });
 

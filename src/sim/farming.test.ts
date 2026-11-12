@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest';
-import { GROW_HOURS, WATER_CAN_LITERS, WATER_MOISTURE_HOURS } from './balance';
+import { GROW_HOURS, SOW_MIN_TEMP, WATER_CAN_LITERS, WATER_MOISTURE_HOURS } from './balance';
+import { dayMean } from './season';
 import { cropStage, markPlot } from './farm';
 import { checkInvariants } from './invariants';
 import { emptyInventory } from './items';
@@ -119,4 +120,19 @@ test('dos que cultivan no van a la misma parcela', () => {
   const tile = (x: typeof first) =>
     x?.type === 'moveTo' && x.then?.type === 'tend' ? x.then.tile : -1;
   expect(tile(first)).not.toBe(tile(second));
+});
+
+test('Q1: con un día frío (de media por debajo de SOW_MIN_TEMP) no siembra: la helada lo mataría y se gastan las semillas', () => {
+  const w = farm();
+  w.storage.items.seeds = 3;
+  markPlot(w, 8, 6, true);
+  const s = w.survivors[0]!;
+  w.common.tempShift = { value: -40, until: Number.MAX_SAFE_INTEGER }; // una ola de frío
+  expect(dayMean(w)).toBeLessThan(SOW_MIN_TEMP);
+  expect(farmJob(s, w)).toBeNull(); // ni va a por semillas
+  s.carrying.seeds = 2;
+  expect(farmJob(s, w)).toBeNull(); // ni siembra las que lleva
+  w.common.tempShift = null;
+  expect(dayMean(w)).toBeGreaterThanOrEqual(SOW_MIN_TEMP); // verano
+  expect(farmJob(s, w)).not.toBeNull();
 });

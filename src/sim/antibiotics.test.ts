@@ -181,9 +181,8 @@ test('quien llega con fiebre sin decidir vuelve a tener su aviso (para darle ant
   expect(checkInvariants(w)).toEqual([]);
 });
 
-test('se empieza con algunos antibióticos en el almacén (H6d)', () => {
-  expect(START_ANTIBIOTICS).toBeGreaterThanOrEqual(1);
-  expect(START_ANTIBIOTICS).toBeLessThanOrEqual(3);
+test('se empieza con algunos antibióticos en el almacén (H6d; Q1: 4)', () => {
+  expect(START_ANTIBIOTICS).toBe(4);
   for (const seed of [1, 2, 3])
     expect(createWorld(seed).storage.items.antibiotics).toBe(START_ANTIBIOTICS);
 });

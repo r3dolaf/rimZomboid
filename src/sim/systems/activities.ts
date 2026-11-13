@@ -2,7 +2,7 @@ import { crisisTick } from '../crisis';
 import { readFindings } from '../sites';
 import { takeInto, unloadAt } from '../bags';
 import { CHOP_NOISE_TICKS, NOISE, PRY_NOISE_TICKS } from '../balance';
-import { eatFrom, eatFromPack, hasFood } from '../food';
+import { ateFood, eatFrom, eatFromPack, hasFood, lastAte } from '../food';
 import { finishDrink } from '../drink';
 import { setTile } from '../map/grid';
 import { isNight } from '../clock';
@@ -31,11 +31,11 @@ export function activitiesSystem(w: World): void {
       // De lo que lleva, también de sus bolsas (H5b2 §3).
       // V1: lo primero que haya (guiso, hortalizas, latas); el guiso es comida caliente.
       const store = w.storage.items;
-      const ate = a.fromPack ? eatFromPack(s) : eatFrom(store);
+      const ate = a.fromPack ? eatFromPack(s, lastAte(s)) : eatFrom(store, lastAte(s));
       if (ate) {
         if (!a.fromPack && !hasFood(store)) logEvent(w, { kind: 'outOfFood' });
         s.needs.hunger = Math.min(100, s.needs.hunger + ate.restore);
-        addMemory(s, ate.kind === 'stewVeg' ? 'hotMeal' : 'ate', w.tick);
+        ateFood(w, s, ate.kind); // V4: lo recuerda, comida caliente o fresca, la sopa abriga
         if (nearTable(w, s)) addMemory(s, 'ateAtTable', w.tick);
       }
       s.action = { type: 'idle', ticksLeft: 0 };

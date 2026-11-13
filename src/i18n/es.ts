@@ -1931,6 +1931,9 @@ export const es = {
     storm: 'Tormenta',
     goodDay: 'Un buen día',
     hotMeal: 'Comida caliente', // V1
+    freshFood: 'Algo fresco', // V4
+    variedDiet: 'Come variado',
+    sameFood: 'Siempre lo mismo',
     lostArm: 'Perdió un brazo', // B1
     lostLeg: 'Perdió una pierna',
     sawAmputation: 'Una amputación',

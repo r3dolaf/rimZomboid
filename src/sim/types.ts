@@ -1,4 +1,5 @@
 // Tipos de datos de la simulación. Solo datos simples, para poder guardarlos con JSON.
+import type { FoodKind } from './food';
 import type { Inventory, ItemKind } from './items';
 import type { LogEntry } from './log';
 import type { Order } from './orders';
@@ -210,6 +211,7 @@ export type MemoryId =
   | 'storm'
   | 'goodDay' // H6c
   | 'hotMeal' // V1
+  | 'freshFood' // V4
   // La amputación (B1)
   | 'lostArm'
   | 'lostLeg'
@@ -458,6 +460,10 @@ export interface Survivor {
   waterCan?: number;
   /** Sensación térmica (V3 §3), en grados: la temperatura de donde está más lo que abriga su ropa. */
   feels?: number;
+  /** V4 §4: lo último que ha comido (las VARIETY.remember últimas veces, de la más antigua a la última). */
+  ate?: FoodKind[];
+  /** V4 §4: hasta cuándo le dura el calor de la sopa. */
+  warmUntil?: number;
   /** Cuándo se avisó de que tiene sed y no encuentra agua (V2), para no repetirlo. */
   noWaterAt?: number;
   /** Los brazos o piernas que ha perdido (B1: amputados), para siempre. */
@@ -923,6 +929,8 @@ export interface Common {
     looted: Inventory;
     joined: string[];
     harvested: number;
+    /** V4: lo que se ha comido en la partida (cada cosa una vez, para el logro Buen cocinero). */
+    eaten?: FoodKind[];
   };
   // Ropa (H5b)
   nextPieceId: number;

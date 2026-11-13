@@ -21,7 +21,7 @@ import { baseFloor } from '../base';
 import { armFactor, canWalk } from '../body';
 import { seenByColony } from '../danger';
 import { contains } from '../geom';
-import { bestFood, eatFromPack, hasFood, packFood } from '../food';
+import { ateFood, bestFood, eatFromPack, hasFood, lastAte, packFood } from '../food';
 import { weightOf, type ItemKind } from '../items';
 import { logEvent } from '../log';
 import { findPath, regionOf } from '../path/astar';
@@ -400,8 +400,9 @@ export function startFeedActivity(
     spend(s, 'waterBottle');
     p.needs.thirst = Math.min(100, p.needs.thirst + DRINK_RESTORE);
   } else if (p.needs.hunger < EAT_BELOW && packFood(s)) {
-    const ate = eatFromPack(s)!;
+    const ate = eatFromPack(s, lastAte(p))!;
     p.needs.hunger = Math.min(100, p.needs.hunger + ate.restore);
+    ateFood(w, p, ate.kind); // V4
   } else return idle;
   logEvent(w, { kind: 'fed', survivorId: s.id, otherId: p.id });
   return idle;

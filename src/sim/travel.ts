@@ -26,8 +26,8 @@ import { bloodTick } from './blood';
 import { gameTime } from './clock';
 import { piecesGone } from './clothes';
 import { exitTile } from './expeditions';
-import { outdoorTemp, warmthOf } from './season';
-import { eatFromPack, packFood, packFoodUnits } from './food';
+import { outdoorTemp, soupWarmth, warmthOf } from './season';
+import { ateFood, eatFromPack, lastAte, packFood, packFoodUnits } from './food';
 import { WEAPONS } from './jobs/weapons';
 import { logEvent } from './log';
 import { catchUp, reveal, siteMap } from './sites';
@@ -142,13 +142,16 @@ function travelerTick(base: World, t: Travel, s: Survivor, night: boolean): void
     const giver = packFood(s)
       ? s
       : t.members.reduce((a, b) => (packFoodUnits(b) > packFoodUnits(a) ? b : a));
-    const ate = eatFromPack(giver);
-    if (ate) n.hunger = clamp(n.hunger + ate.restore);
+    const ate = eatFromPack(giver, lastAte(s));
+    if (ate) {
+      n.hunger = clamp(n.hunger + ate.restore);
+      ateFood(base, s, ate.kind); // V4
+    }
   }
   // V2 §5: la sed; con agua al lado (un río, un lago) se bebe allí; si no, de sus botellas o de
   // las del compañero que más lleva.
   // V3: al aire libre, con lo que abrigue su ropa (y con calor, más sed).
-  s.feels = outdoorTemp(base) + warmthOf(s.worn);
+  s.feels = outdoorTemp(base) + warmthOf(s.worn) + soupWarmth(s, base.tick);
   const hot = s.feels > HOT_ABOVE ? HOT_THIRST : 1;
   n.thirst = clamp(n.thirst - THIRST_PER_TICK * (s.fever ? FEVER_THIRST : 1) * hot * more);
   if (n.thirst < DRINK_BELOW) {

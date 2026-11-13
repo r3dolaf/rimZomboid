@@ -176,6 +176,7 @@ export const MEMORY_EFFECTS = {
   storm: { value: -6, hours: 18 },
   goodDay: { value: 6, hours: 12 }, // H6c
   hotMeal: { value: 8, hours: 8 }, // V1: comer un guiso (en vez de «Ha comido»)
+  freshFood: { value: 6, hours: 8 }, // V4: una ensalada
   lostArm: { value: -20, hours: 240 }, // B1: perder un brazo o una pierna, y verlo
   lostLeg: { value: -20, hours: 240 },
   sawAmputation: { value: -4, hours: 24 },
@@ -195,6 +196,11 @@ export const MEMORY_EFFECTS = {
 } as const;
 export const EAT_BELOW = 35;
 export const EAT_RESTORE = 60;
+/** V4 §4: la sopa hace entrar en calor (grados de más en la sensación térmica, y cuántas horas). */
+export const SOUP_WARMTH = 8;
+export const SOUP_WARM_HOURS = 6;
+/** V4 §4: lo que recuerda de lo comido, cuántas cosas distintas animan y cuánto (o desaniman). */
+export const VARIETY = { remember: 6, distinct: 3, mood: 4 } as const;
 /**
  * V1 §1 y V4 §2–§3: lo que se estropea cada día, a las SPOIL_HOUR (la parte entera seguro, la
  * fracción a veces). La conserva y la lata, nunca.

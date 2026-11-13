@@ -25,6 +25,7 @@ import {
   TICKS_PER_HOUR,
   TIRED_BELOW,
   TIRED_MOOD,
+  VARIETY,
 } from './balance';
 import { clothesMood, type ClothesMoodId } from './clothes';
 import { contains } from './geom';
@@ -46,6 +47,8 @@ export type MoodModifierId =
   | 'pessimist'
   | 'scaredOutside'
   | 'hurt'
+  | 'variedDiet' // V4
+  | 'sameFood'
   | ClothesMoodId
   | MemoryId;
 
@@ -85,6 +88,11 @@ export function moodModifiers(s: Survivor, tick: number, base?: Rect): MoodModif
   if (base && s.traits.includes('coward') && !contains(base, tileOf(s.pos)))
     mods.push({ id: 'scaredOutside', value: SCARED_OUTSIDE_MOOD });
   mods.push(...clothesMood(s)); // H5b §5
+  // V4 §4: comer variado anima; siempre lo mismo, no.
+  const ate = s.ate ?? [];
+  if (new Set(ate).size >= VARIETY.distinct) mods.push({ id: 'variedDiet', value: VARIETY.mood });
+  else if (ate.length >= VARIETY.remember && new Set(ate).size === 1)
+    mods.push({ id: 'sameFood', value: -VARIETY.mood });
   for (const m of s.memories)
     if (m.expiresAt > tick && (m.value ?? MEMORY_EFFECTS[m.id].value) !== 0) {
       const mod: MoodModifier = {

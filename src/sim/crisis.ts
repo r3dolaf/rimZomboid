@@ -18,7 +18,7 @@ import {
 import { baseFloor } from './base';
 import { gameTime } from './clock';
 import { contains } from './geom';
-import { eatFrom, hasFood } from './food';
+import { ateFood, eatFrom, hasFood, lastAte } from './food';
 import { standBeside } from './jobs/stand';
 import { logEvent } from './log';
 import { isWalkable } from './map/grid';
@@ -125,8 +125,9 @@ export function startCrisis(
   if (kind === 'binge') {
     let food = 0;
     while (food < BINGE_FOOD) {
-      const ate = eatFrom(w.storage.items);
+      const ate = eatFrom(w.storage.items, lastAte(s));
       if (!ate) break;
+      ateFood(w, s, ate.kind); // V4
       food++;
     }
     s.needs.hunger = 100;

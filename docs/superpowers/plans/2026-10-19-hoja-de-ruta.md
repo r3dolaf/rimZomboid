@@ -137,6 +137,15 @@ sondas, hay que equilibrar bien»).
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
 | **Q1. Equilibrio grande** | Sonda de 72 partidas de 60 días (Equilibrado 36, Tranquilo 18, Caótico 18) jugadas como un jugador competente, 7 vueltas: los zombis aciertan menos (0,25 → 0,2), se empieza con 4 antibióticos y la farmacia del pueblo tiene 1–2, Equilibrado con menos zombis (35/65, uno cada 3 h; antes 40/80 cada 2 h, casi como el Caótico) y dos fallos arreglados (se sembraba con frío y la helada se comía todas las semillas; lo maduro se pudría mientras se saqueaba); spec `2026-11-12-q1-equilibrio-design.md` | Hecho  |
 
+## Colonos
+
+Que cada colono se note distinto (pedido por el usuario tras V4: «sigue con los rasgos de los
+colonos», con rasgos que cambian lo que hacen).
+
+| Paso                                    | Qué se hace                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Estado |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| **R1. Rasgos que cambian lo que hacen** | Once rasgos nuevos, en parejas que no se dan juntas: Nocturno (duerme de día), Mano verde (una hortaliza y una semilla más por cosecha), Cocinillas (cocina el doble de rápido y nunca le sale mal), Gourmet y Asceta (la comida le anima el doble, o nada), Buen tirador y Gatillo fácil (15 puntos más de acierto, o dispara antes y acierta 10 menos), Duro de pelar y Enfermizo (la infección tarda la mitad más en matarle, o una cuarta parte menos) y Friolero y Caluroso (siente 4 grados menos, o más); spec `2026-11-14-r1-rasgos-design.md` | Hecho  |
+
 ## Pendientes
 
 Hallazgos menores de las revisiones finales, aplazados. Se tienen en cuenta al planificar el hito indicado.

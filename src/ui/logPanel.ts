@@ -117,6 +117,7 @@ export const LOG_CATEGORY: Record<LogEvent['kind'], LogCategory> = {
   coldSnap: 'narrator', // V3
   heatWave: 'narrator',
   outOfFood: 'colony',
+  noSeeds: 'colony', // V4
   strangerArrived: 'colony',
   strangerAccepted: 'colony',
   strangerRejected: 'colony',

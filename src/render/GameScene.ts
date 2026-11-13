@@ -1215,7 +1215,7 @@ export class GameScene extends Phaser.Scene {
     const plot = seenHere && !f ? plotAt(w, h.x, h.y) : undefined;
     const text = f
       ? furnitureLabel(w, f)
-      : ((pile ? pileLabel(pile) : null) ?? (plot ? plotLabel(plot) : null));
+      : ((pile ? pileLabel(pile) : null) ?? (plot ? plotLabel(plot, w) : null));
     if (text === null || h === null) {
       this.waterLabel?.setVisible(false);
       return;
@@ -1597,8 +1597,8 @@ export class GameScene extends Phaser.Scene {
     }
     if (d.mode === 'farm') {
       if (click)
-        togglePlot(w, d.from.x, d.from.y, 'potato'); // V4: el selector, en el paso 7
-      else markPlotsIn(w, d.from, d.to, 'potato');
+        togglePlot(w, d.from.x, d.from.y, this.tool.cropKind); // V4: lo elegido
+      else markPlotsIn(w, d.from, d.to, this.tool.cropKind);
       return;
     }
     const kind = this.tool.buildKind;

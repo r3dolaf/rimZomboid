@@ -550,6 +550,31 @@
   font-size: 12px;
   opacity: 0.85;
 }
+/* V4: los dibujos de la comida y las semillas, en pequeño (en el selector del Huerto, el Almacén,
+   Fabricar y la ficha). */
+.item-icon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  vertical-align: middle;
+}
+.farm-menu button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.farm-menu .item-icon {
+  width: 24px;
+  height: 24px;
+}
+.storage-panel li .item-icon,
+.craft-panel .item-icon,
+.carry-icons .item-icon {
+  margin-right: 4px;
+}
+.carry-icons {
+  margin-left: 6px;
+}
 
 .work-panel {
   position: fixed;

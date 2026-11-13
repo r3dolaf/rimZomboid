@@ -12,7 +12,7 @@ import {
   WATER_MOISTURE_HOURS,
   WATER_TICKS,
 } from '../balance';
-import { cropStage, needsWater, plotPos } from '../farm';
+import { cropStage, needsWater, plotPos, sowWeather } from '../farm';
 import { emptyInventory, weightOf } from '../items';
 import { regionOf } from '../path/astar';
 import { dropPile } from '../piles';
@@ -29,7 +29,6 @@ import type {
   World,
 } from '../types';
 import { tapOn } from '../water';
-import { dayMean } from '../season';
 import { tileOf } from '../world';
 import { standOnOrBeside } from './stand';
 
@@ -114,13 +113,6 @@ function nearestSource(
   }
   return best;
 }
-
-/**
- * Q1 y V4 §2: ¿se siembra hoy ese cultivo? Con la media del día por debajo de lo suyo, no: no crece
- * y la helada lo mata (se volvía a sembrar y se gastaban todas las semillas). No adivinan el tiempo
- * que viene: solo miran el de hoy.
- */
-export const sowWeather = (w: World, kind: CropKind): boolean => dayMean(w) >= CROPS[kind].sowMin;
 
 /** Las semillas de lo que va en esa parcela. */
 const seedsOf = (p: Plot) => CROPS[p.kind].seeds;

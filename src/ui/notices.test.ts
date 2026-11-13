@@ -320,3 +320,10 @@ test('B1: ¿amputar? dice la parte; sin algo para cortar o sin vendas, el botón
   expect(cut.disabled).toBe(false);
   expect(cut.textContent).toBe('Amputar');
 });
+
+test('V4: «Faltan semillas de col» sale como aviso', async () => {
+  const { logText, noticeFor } = await import('./describe');
+  const e = { tick: 0, kind: 'noSeeds' as const, crop: 'cabbage' as const };
+  expect(noticeFor(e)?.title).toBe('Faltan semillas');
+  expect(logText(e, createWorld(1))).toBe('Faltan semillas de col para el huerto');
+});

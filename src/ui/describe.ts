@@ -214,14 +214,21 @@ export function furnitureLabel(w: World, f: Furniture): string | null {
   return null;
 }
 
-/** «Huerto: creciendo 60 % · húmedo 20 h», «… · seco», «Huerto: maduro» o «Huerto: sin sembrar» (V1). */
-export function plotLabel(p: Plot): string {
+/**
+ * «Col: creciendo 60 % · húmedo 20 h», «… · seco», «Col: para cosechar» o «Col: sin sembrar» (V1 y
+ * V4: lo que lleva o lo que se siembra en ella; vacía y sin sus semillas en el almacén, lo dice).
+ */
+export function plotLabel(p: Plot, w?: World): string {
   const t = es.plotLabels;
-  if (!p.crop) return t.empty;
+  const kind = p.crop?.kind ?? p.kind;
+  const name = es.items[kind][0];
+  const crop = name.charAt(0).toUpperCase() + name.slice(1);
+  if (!p.crop)
+    return w && w.storage.items[CROPS[p.kind].seeds] === 0 ? t.noSeeds(crop) : t.empty(crop);
   const hours = CROPS[p.crop.kind].hours;
-  if (p.crop.grown >= hours) return t.ripe;
+  if (p.crop.grown >= hours) return t.ripe(crop);
   const pct = Math.floor((100 * p.crop.grown) / hours);
-  return t.growing(pct, Math.round(p.moisture));
+  return t.growing(crop, pct, Math.round(p.moisture));
 }
 
 /** La terminación de un adjetivo para esa prenda, por su artículo: rota, roto, rotas, rotos. */
@@ -601,6 +608,9 @@ function logSentence(e: LogEntry, w: World, here: World): string {
     case 'outOfFood':
       text = l.outOfFood;
       break;
+    case 'noSeeds': // V4
+      text = l.noSeeds(es.items[CROPS[e.crop].seeds][1]);
+      break;
     case 'insult':
       text = l.insult(name(e.survivorId), name(e.otherId));
       break;
@@ -954,6 +964,8 @@ export interface NoticeInfo {
 export function noticeFor(e: LogEntry): NoticeInfo | null {
   const t = es.notices;
   switch (e.kind) {
+    case 'noSeeds': // V4: amarillo, sin pausa
+      return { tone: 'mixed', title: t.noSeeds, focusId: null };
     case 'jealousy':
       return { tone: 'bad', title: t.jealousy, focusId: e.survivorId };
     case 'clash':

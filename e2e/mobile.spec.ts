@@ -149,6 +149,26 @@ test.describe('móvil en horizontal (844 × 390)', () => {
     expect(errores).toEqual([]);
   });
 
+  test('V4: el selector del Huerto cabe entre la barra y las tarjetas, a la izquierda', async ({
+    page,
+  }) => {
+    const errores = await start(page);
+    const r = await room(page);
+    const width = await page.evaluate(() => innerWidth);
+    await page.getByTestId('hud-farm-tool').tap();
+    const menu = page.getByTestId('farm-menu');
+    await expect(menu).toBeVisible();
+    const b = (await menu.boundingBox())!;
+    inside(b, r, width);
+    expect(b.x).toBeLessThan(10);
+    await expect(page.getByTestId('farm-tomato').locator('svg')).toBeVisible();
+    await page.getByTestId('farm-tomato').tap();
+    await expect(page.getByTestId('farm-tomato')).toHaveClass(/selected/);
+    // Las herramientas siguen a la vista (no las tapa).
+    await expect(page.getByTestId('hud-farm-tool')).toBeInViewport();
+    expect(errores).toEqual([]);
+  });
+
   test('la portada se ve entera desde arriba y se puede bajar hasta Empezar', async ({ page }) => {
     await page.goto('/');
     const panel = page.locator('.start-panel');

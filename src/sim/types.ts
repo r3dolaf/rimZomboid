@@ -1025,6 +1025,8 @@ export interface World {
   chopMarks: number[];
   /** El huerto (V1): sus parcelas (solo en la base). */
   plots: Plot[];
+  /** V4 §2.2: los cultivos de los que ya se ha avisado que faltan semillas (para no repetirlo). */
+  noSeeds?: CropKind[];
   // Zombis (H4b)
   zombies: Zombie[];
   /** Su propio azar: añadir zombis no cambia lo que hacen los colonos con la misma semilla. */

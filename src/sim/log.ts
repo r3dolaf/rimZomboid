@@ -94,6 +94,7 @@ export type LogEvent =
   | { kind: 'vented'; survivorId: number }
   | { kind: 'collapsed'; survivorId: number }
   | { kind: 'outOfFood' }
+  | { kind: 'noSeeds'; crop: CropKind } // V4: una parcela vacía sin sus semillas
   | { kind: 'insult'; survivorId: number; otherId: number }
   | { kind: 'sharedFood'; survivorId: number; otherId: number }
   | { kind: 'fight'; survivorId: number; otherId: number }

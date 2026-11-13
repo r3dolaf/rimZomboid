@@ -122,7 +122,11 @@ test('con sus horas húmeda está madura (la patata, 10 días); sin cosechar, se
   expect(cropStage(p)).toBe('ripe');
   hours(w, 1);
   expect(p.crop).toBeNull();
-  expect(w.common.log.at(-1)).toMatchObject({ kind: 'cropsLost', dried: 0, rotted: 1 });
+  expect(w.common.log.find((e) => e.kind === 'cropsLost')).toMatchObject({
+    kind: 'cropsLost',
+    dried: 0,
+    rotted: 1,
+  });
 });
 
 test('tras 3 días sin humedad se seca y se pierde', () => {
@@ -134,7 +138,11 @@ test('tras 3 días sin humedad se seca y se pierde', () => {
   expect(w.plots.every((p) => cropStage(p) === 'growing')).toBe(true);
   hours(w, 1);
   expect(w.plots.every((p) => p.crop === null)).toBe(true);
-  expect(w.common.log.at(-1)).toMatchObject({ kind: 'cropsLost', dried: 2, rotted: 0 });
+  expect(w.common.log.find((e) => e.kind === 'cropsLost')).toMatchObject({
+    kind: 'cropsLost',
+    dried: 2,
+    rotted: 0,
+  });
 });
 
 test('pide agua lo sembrado que no está maduro y tiene menos de 6 h de humedad', () => {

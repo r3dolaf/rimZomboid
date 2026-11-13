@@ -107,7 +107,7 @@ test('V1: el huerto al pasar el ratón', async () => {
   const { plotLabel } = await import('./describe');
   const GROW_HOURS = (await import('../sim/balance')).CROPS.potato.hours;
   expect(plotLabel({ tile: 0, kind: 'potato', moisture: 0, crop: null })).toBe(
-    'Huerto: sin sembrar',
+    'Patata: sin sembrar',
   );
   expect(
     plotLabel({
@@ -116,7 +116,7 @@ test('V1: el huerto al pasar el ratón', async () => {
       moisture: 20,
       crop: { kind: 'potato', grown: GROW_HOURS * 0.6, ripe: 0, dry: 0 },
     }),
-  ).toBe('Huerto: creciendo 60 % · húmedo 20 h');
+  ).toBe('Patata: creciendo 60 % · húmedo 20 h');
   expect(
     plotLabel({
       tile: 0,
@@ -124,7 +124,7 @@ test('V1: el huerto al pasar el ratón', async () => {
       moisture: 0,
       crop: { kind: 'potato', grown: 1, ripe: 0, dry: 3 },
     }),
-  ).toBe('Huerto: creciendo 0 % · seco');
+  ).toBe('Patata: creciendo 0 % · seco');
   expect(
     plotLabel({
       tile: 0,
@@ -132,7 +132,17 @@ test('V1: el huerto al pasar el ratón', async () => {
       moisture: 5,
       crop: { kind: 'potato', grown: GROW_HOURS, ripe: 2, dry: 0 },
     }),
-  ).toBe('Huerto: maduro, para cosechar');
+  ).toBe('Patata: para cosechar');
+  // V4: lo de la parcela es su cultivo; vacía y sin semillas en el almacén, lo dice.
+  const w = (await import('../sim/world')).createWorld(3);
+  w.storage.items.seedsCabbage = 0;
+  expect(plotLabel({ tile: 0, kind: 'cabbage', moisture: 0, crop: null }, w)).toBe(
+    'Col: sin semillas',
+  );
+  w.storage.items.seedsCabbage = 1;
+  expect(plotLabel({ tile: 0, kind: 'cabbage', moisture: 0, crop: null }, w)).toBe(
+    'Col: sin sembrar',
+  );
 });
 
 test('V3: la estación y la temperatura, el abrigo en la ficha y 🥶 a quien está helado', async () => {

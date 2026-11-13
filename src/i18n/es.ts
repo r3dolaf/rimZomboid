@@ -16,6 +16,7 @@ import type {
   BubbleKind,
   BuildingKind,
   BuildKind,
+  CropKind,
   DeathCause,
   GarmentKind,
   Decision,
@@ -181,12 +182,23 @@ export const es = {
   craftNoTub: 'Hace falta un barreño',
   /** Al pasar el ratón por el barreño, una cisterna o un fregadero (H5b). */
   /** El huerto al pasar el ratón (V1). */
+  /** V1 y V4: «Col: creciendo 60 % · húmedo 20 h», «… · seco», «Col: para cosechar», «Col: sin sembrar». */
   plotLabels: {
-    empty: 'Huerto: sin sembrar',
-    ripe: 'Huerto: maduro, para cosechar',
-    growing: (pct: number, hours: number) =>
-      `Huerto: creciendo ${pct} % · ${hours > 0 ? `húmedo ${hours} h` : 'seco'}`,
+    empty: (crop: string) => `${crop}: sin sembrar`,
+    noSeeds: (crop: string) => `${crop}: sin semillas`,
+    ripe: (crop: string) => `${crop}: para cosechar`,
+    growing: (crop: string, pct: number, hours: number) =>
+      `${crop}: creciendo ${pct} % · ${hours > 0 ? `húmedo ${hours} h` : 'seco'}`,
   },
+  /** V4 §2.1: lo que dice cada semilla (pistas, sin cifras ni estaciones). */
+  seedHints: {
+    lettuce: 'Brota enseguida si no hace frío. Hay que comérsela pronto.',
+    tomato: 'Le gusta el sol más fuerte. Da mucho, si le da tiempo a madurar.',
+    potato: 'Tarda, pero se guarda casi para siempre. Mejor sembrarla con buen tiempo.',
+    cabbage: 'Aguanta el fresco y alguna helada. Lenta, pero no se rinde.',
+  } satisfies Record<CropKind, string>,
+  /** V4 §2.2: cada cultivo del selector del Huerto, con las semillas que hay: «Col · 2». */
+  farmChoice: (crop: string, seeds: number) => `${crop} · ${seeds}`,
   furnitureLabels: {
     tub: (l: number, max: number) => `Barreño: ${l} / ${max} litros`,
     barrel: (l: number, max: number) => `Barril de lluvia: ${l} / ${max} litros`, // V2
@@ -1321,6 +1333,7 @@ export const es = {
   /** Lados del mapa (0 norte, 1 sur, 2 oeste, 3 este). */
   sides: ['norte', 'sur', 'oeste', 'este'],
   notices: {
+    noSeeds: 'Faltan semillas', // V4
     infectionCured: 'Se le pasa la infección', // H6a
     roadZombies: 'Zombis en el camino', // H5c3
     roadJoined: 'Alguien se une por el camino',
@@ -1608,6 +1621,8 @@ export const es = {
     vented: (who: string) => `${who} se ha desahogado`,
     collapsed: (who: string) => `${who} se ha desplomado de sueño`,
     outOfFood: 'El almacén se ha quedado sin comida',
+    /** V4: «Faltan semillas de col para el huerto». */
+    noSeeds: (seeds: string) => `Faltan ${seeds} para el huerto`,
     insult: (who: string, other: string) => `${who} ha insultado a ${other}`,
     sharedFood: (who: string, other: string) => `${who} ha compartido su comida con ${other}`,
     fight: (who: string, other: string) => `${who} y ${other} se han peleado`,

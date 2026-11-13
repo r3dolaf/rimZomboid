@@ -185,3 +185,32 @@ test('marcar una parcela ya marcada con otro cultivo lo cambia; lo sembrado sigu
   markPlot(w, 9, 6, true);
   expect(w.plots[1]!.kind).toBe('potato'); // sin decir cuál, patata
 });
+
+test('sin semillas de lo que pide una parcela vacía, se avisa una vez (y otra si vuelve a faltar)', () => {
+  const w = farm();
+  markPlot(w, 8, 6, true, 'cabbage');
+  setTemp(w, 10);
+  setDayMean(w, 10);
+  farmSystem(w);
+  expect(w.common.log.filter((e) => e.kind === 'noSeeds')).toEqual([
+    expect.objectContaining({ kind: 'noSeeds', crop: 'cabbage' }),
+  ]);
+  w.tick += TICKS_PER_HOUR;
+  farmSystem(w);
+  expect(w.common.log.filter((e) => e.kind === 'noSeeds')).toHaveLength(1);
+  // Con semillas, deja de faltar; si vuelven a faltar, otro aviso.
+  w.storage.items.seedsCabbage = 1;
+  w.tick += TICKS_PER_HOUR;
+  farmSystem(w);
+  w.storage.items.seedsCabbage = 0;
+  w.tick += TICKS_PER_HOUR;
+  farmSystem(w);
+  expect(w.common.log.filter((e) => e.kind === 'noSeeds')).toHaveLength(2);
+  // Quien las lleva encima, cuenta.
+  const w2 = farm();
+  markPlot(w2, 8, 6, true, 'potato');
+  w2.survivors[0]!.carrying.seedsPotato = 1;
+  setDayMean(w2, 15);
+  farmSystem(w2);
+  expect(w2.common.log.some((e) => e.kind === 'noSeeds')).toBe(false);
+});

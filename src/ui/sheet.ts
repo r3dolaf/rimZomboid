@@ -1,5 +1,7 @@
 import { t as es } from '../i18n';
-import { weightOf } from '../sim/items';
+import { ITEM_KINDS, weightOf } from '../sim/items';
+import { ITEM_SPRITES } from '../render/itemArt';
+import { itemIcon } from './icons';
 import { moodModifiers, moodTarget } from '../sim/mood';
 import { draftToggle, effectiveDrafted } from '../game/command';
 import { canDraft } from '../sim/draft';
@@ -138,6 +140,11 @@ export function mountSheet(
 
   const carrying = document.createElement('p');
   carrying.className = 'carrying';
+  // V4: lo que lleva de comida y semillas, con su dibujo.
+  const carryIcons = document.createElement('span');
+  carryIcons.className = 'carry-icons';
+  carryIcons.dataset.testid = 'sheet-carry-icons';
+  let carryIconsShown = '';
 
   const top = document.createElement('div');
   const body = document.createElement('div');
@@ -337,7 +344,16 @@ export function mountSheet(
         es.decimal(weightOf(s.carrying)),
         kg(capacityKg(s)),
       );
-      if (carrying.textContent !== carryText) carrying.textContent = carryText;
+      if (carrying.textContent !== carryText) {
+        carrying.textContent = carryText;
+        carryIconsShown = ''; // se ha borrado con el texto
+      }
+      const iconKinds = ITEM_KINDS.filter((k) => s.carrying[k] > 0 && ITEM_SPRITES[k]);
+      if (iconKinds.join() !== carryIconsShown) {
+        carryIconsShown = iconKinds.join();
+        carryIcons.replaceChildren(...iconKinds.flatMap((k) => itemIcon(k) ?? []));
+        carrying.append(carryIcons);
+      }
       const drafted = effectiveDrafted(world, s);
       draft.classList.toggle('active', drafted);
       draft.disabled = !drafted && !canDraft(s);

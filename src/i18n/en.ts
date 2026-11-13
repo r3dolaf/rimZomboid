@@ -165,11 +165,19 @@ export const en: Texts = {
   },
   craftNoTub: 'Needs a tub',
   plotLabels: {
-    empty: 'Garden: not sown',
-    ripe: 'Garden: ripe, ready to harvest',
-    growing: (pct: number, hours: number) =>
-      `Garden: growing ${pct} % · ${hours > 0 ? `moist ${hours} h` : 'dry'}`,
+    empty: (crop: string) => `${crop}: not sown`,
+    noSeeds: (crop: string) => `${crop}: no seeds`,
+    ripe: (crop: string) => `${crop}: ready to harvest`,
+    growing: (crop: string, pct: number, hours: number) =>
+      `${crop}: growing ${pct} % · ${hours > 0 ? `moist ${hours} h` : 'dry'}`,
   },
+  seedHints: {
+    lettuce: 'Sprouts in no time if it is not cold. Eat it soon.',
+    tomato: 'Loves the strongest sun. Gives plenty, if it has time to ripen.',
+    potato: 'Slow, but keeps almost forever. Best sown in good weather.',
+    cabbage: 'Shrugs off the chill and a light frost. Slow, but it never gives up.',
+  },
+  farmChoice: (crop: string, seeds: number) => `${crop} · ${seeds}`,
   furnitureLabels: {
     tub: (l: number, max: number) => `Tub: ${l} / ${max} litres`,
     barrel: (l: number, max: number) => `Rain barrel: ${l} / ${max} litres`,
@@ -1231,6 +1239,7 @@ export const en: Texts = {
   wounds: { scratch: 'Scratch', cut: 'Cut', bite: 'Bite' } satisfies Record<WoundKind, string>,
   sides: ['north', 'south', 'west', 'east'],
   notices: {
+    noSeeds: 'Out of seeds',
     infectionCured: 'The infection is gone',
     roadZombies: 'Zombies on the road',
     roadJoined: 'Someone joins on the road',
@@ -1485,6 +1494,7 @@ export const en: Texts = {
     vented: (who: string) => `${who} has let it all out`,
     collapsed: (who: string) => `${who} has collapsed from exhaustion`,
     outOfFood: 'Storage has run out of food',
+    noSeeds: (seeds: string) => `No ${seeds} left for the garden`,
     insult: (who: string, other: string) => `${who} insulted ${other}`,
     sharedFood: (who: string, other: string) => `${who} shared their food with ${other}`,
     fight: (who: string, other: string) => `${who} and ${other} had a fight`,

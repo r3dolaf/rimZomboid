@@ -5,6 +5,7 @@ import { craftBlocker } from '../sim/jobs/craft';
 import { effectiveBills, issue } from '../sim/orders';
 import type { Bill, RecipeId, World } from '../sim/types';
 import { listNames } from './describe';
+import { itemIcon } from './icons';
 import type { Flag } from './flag';
 import './panels.css';
 
@@ -36,6 +37,12 @@ const STOCK: readonly ItemKind[] = [
 const count = (k: ItemKind, n: number) => `${n} ${es.items[k][n === 1 ? 0 : 1]}`;
 const entries = (part: Partial<Record<ItemKind, number>>) =>
   Object.entries(part) as [ItemKind, number][];
+
+/** V4: el dibujo de lo que da la receta, si tiene (los platos), o `null`. */
+const dishIcon = (id: RecipeId) => {
+  const out = entries(RECIPES[id].output)[0]?.[0];
+  return out ? itemIcon(out) : null;
+};
 
 /** «usa → da · dónde · tiempo» (H5c1 §8). */
 export function recipeLine(id: RecipeId): string {
@@ -169,6 +176,8 @@ export function mountCraftPanel(
       b.type = 'button';
       b.dataset.testid = `craft-add-${recipe}`;
       b.textContent = es.craftAdd(es.recipes[recipe].name);
+      const icon = dishIcon(recipe); // V4: el plato, con su dibujo
+      if (icon) row.append(icon);
       b.addEventListener('click', () => {
         issue(opts.world, { type: 'addBill', recipe });
         b.blur();
@@ -213,6 +222,8 @@ export function mountCraftPanel(
     const name = document.createElement('span');
     name.className = 'name';
     name.textContent = es.recipes[bill.recipe].name;
+    const icon = dishIcon(bill.recipe);
+    if (icon) name.prepend(icon);
     const mode = document.createElement('select');
     mode.dataset.testid = `bill-${id}-mode`;
     // Sobre prendas (H5b): "siempre que haya" o "veces"; lo demás, "hasta tener" o "veces".

@@ -1,5 +1,6 @@
 // El huerto (spec V1 §3): dónde va, marcar y desmarcar parcelas, y cómo crece lo sembrado.
 import {
+  CROP_KINDS,
   CROPS,
   RAIN_MOISTURE_HOURS,
   RIPE_ROT_HOURS,
@@ -11,7 +12,7 @@ import { occupied } from './build';
 import { logEvent } from './log';
 import { getTile, inBounds } from './map/grid';
 import { Tile, type CropKind, type Plot, type Point, type World } from './types';
-import { outdoorTemp } from './season';
+import { dayMean, outdoorTemp } from './season';
 import { isRaining } from './water';
 import { indoors } from './zombies/spawn';
 
@@ -21,6 +22,31 @@ export type CropStage = 'empty' | 'growing' | 'ripe';
 export function cropStage(p: Plot): CropStage {
   if (!p.crop) return 'empty';
   return p.crop.grown >= CROPS[p.crop.kind].hours ? 'ripe' : 'growing';
+}
+
+/**
+ * Q1 y V4 §2: ¿se siembra hoy ese cultivo? Con la media del día por debajo de lo suyo, no: no crece
+ * y la helada lo mata (se volvía a sembrar y se gastaban todas las semillas). No adivinan el tiempo
+ * que viene: solo miran el de hoy.
+ */
+export const sowWeather = (w: World, kind: CropKind): boolean => dayMean(w) >= CROPS[kind].sowMin;
+
+/**
+ * V4 §2.2: cada hora, si hay una parcela vacía de un cultivo que hoy se sembraría y no quedan sus
+ * semillas (ni en el almacén ni encima de nadie), se avisa una vez; si vuelven a faltar, otra.
+ */
+function noSeedsCheck(w: World): void {
+  const missing = CROP_KINDS.filter((k) => {
+    const seeds = CROPS[k].seeds;
+    return (
+      w.plots.some((p) => p.kind === k && !p.crop) &&
+      sowWeather(w, k) &&
+      w.storage.items[seeds] === 0 &&
+      w.survivors.every((s) => s.carrying[seeds] === 0)
+    );
+  });
+  for (const k of missing) if (!w.noSeeds?.includes(k)) logEvent(w, { kind: 'noSeeds', crop: k });
+  w.noSeeds = missing;
 }
 
 /** ¿Hay que regarla? Lo sembrado sin madurar con poca humedad. */
@@ -69,6 +95,7 @@ export function farmSystem(w: World): void {
   }
   if (dried + rotted > 0) logEvent(w, { kind: 'cropsLost', dried, rotted });
   if (frozen > 0) logEvent(w, { kind: 'cropsFrozen', n: frozen, crops: frozenKinds });
+  noSeedsCheck(w);
 }
 
 /** La parcela de esa casilla, o `undefined`. */

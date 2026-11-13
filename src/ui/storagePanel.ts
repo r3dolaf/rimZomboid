@@ -4,6 +4,7 @@ import { attachListHandlers, listEditor } from './bagsPane';
 import { ITEM_KINDS } from '../sim/items';
 import { bagName, formatItems, garmentText, listRows } from './describe';
 import { issue } from '../sim/orders';
+import { itemIcon } from './icons';
 import type { GarmentKind, World } from '../sim/types';
 import type { Flag } from './flag';
 import './panels.css';
@@ -43,6 +44,8 @@ export function mountStoragePanel(
     name.textContent = capital(es.items[k][1]);
     const n = document.createElement('span');
     n.className = 'count';
+    const icon = itemIcon(k); // V4: lo cosechado, las semillas y los platos, con su dibujo
+    if (icon) li.append(icon);
     li.append(name, n);
     list.append(li);
     return { k, n };

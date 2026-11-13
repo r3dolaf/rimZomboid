@@ -32,6 +32,7 @@ import { createWorld } from './sim/world';
 import { setupOf } from './sim/setup';
 import { allColonists, stepGame } from './sim/game';
 import { mountBuildMenu } from './ui/buildMenu';
+import { mountFarmMenu } from './ui/farmMenu';
 import { mountCards } from './ui/cards';
 import { mountContextMenu } from './ui/contextMenu';
 import { mountCraftPanel } from './ui/craftPanel';
@@ -298,6 +299,7 @@ function start(
   const workPanel = mountWorkPanel(ui, viewed(view, { open: workOpen }));
   const craftPanel = mountCraftPanel(ui, viewed(view, { open: craftOpen }));
   const buildMenu = mountBuildMenu(ui, viewed(view, { tool }));
+  const farmMenu = mountFarmMenu(ui, viewed(view, { tool })); // V4
   const noticeMenu = mountNoticeMenu(ui, { prefs, open: noticesOpen });
   const storagePanel = mountStoragePanel(ui, viewed(view, { open: storageOpen }));
   const outfitsPanel = mountOutfitsPanel(ui, { world, open: outfitsOpen });
@@ -537,6 +539,7 @@ function start(
       workPanel.update();
       craftPanel.update();
       buildMenu.update();
+      farmMenu.update();
       endScreen.update();
       achievements.update(); // C3
     },

@@ -56,3 +56,15 @@ test('arriba, el botón Almacén lo abre y lo cierra', async () => {
   b.click();
   expect(open.value).toBe(true);
 });
+
+test('V4: lo cosechado, las semillas y los platos, con su dibujo junto al nombre', () => {
+  const root = document.createElement('div');
+  const w = createWorld(2);
+  const open = createFlag();
+  open.set(true);
+  const panel = mountStoragePanel(root, { world: w, open });
+  panel.update();
+  for (const k of ['potato', 'seedsCabbage', 'stewPotato', 'preserves'])
+    expect(root.querySelector(`[data-testid="storage-${k}"] svg`), k).not.toBeNull();
+  expect(root.querySelector('[data-testid="storage-food"] svg')).toBeNull();
+});

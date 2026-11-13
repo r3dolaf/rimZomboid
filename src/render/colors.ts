@@ -131,6 +131,22 @@ export const PROP_COLORS: Record<string, number> = {
   N: 0x33240f,
   K: 0x9ccf5c,
   T: 0xe07a2a,
+  // V4: cada cultivo y sus platos: lechuga (verde amarillento), col (verde azulado), la flor y el
+  // tubérculo de la patata, la hoja oscura y el tomate (maduro y verde).
+  '1': 0xd2f09a,
+  '2': 0x93d152,
+  '3': 0x5c9c34,
+  '4': 0xdcece2,
+  '5': 0xa2c8b8,
+  '6': 0x62947f,
+  '7': 0x3d6a5c,
+  '8': 0xf3eef9,
+  '9': 0xcfa064,
+  '0': 0x8e6a3c,
+  '#': 0x2f5a2a,
+  '+': 0xe8463a,
+  '*': 0xa82a22,
+  '%': 0x86b84a,
 };
 /** V1: lo sembrado que lleva un día sin agua se ve mustio. */
 export const WILT_TINT = 0xd8c27a;

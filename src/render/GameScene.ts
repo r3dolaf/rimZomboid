@@ -121,6 +121,7 @@ import {
   radioFrame,
   generatorFrame,
   cropFrame,
+  potFrame,
   itemCount,
   makePropAtlas,
   pileFrames,
@@ -1723,7 +1724,9 @@ export class GameScene extends Phaser.Scene {
       case 'table':
         return 'table';
       case 'campfire':
-        return isLitFire(f) ? campfireFrame(this.frame) : 'campfireOut'; // V3: sin leña, apagada
+        // V3: sin leña, apagada; V4: con alguien cocinando, con la olla de su plato.
+        if (!isLitFire(f)) return 'campfireOut';
+        return potFrame(this.world, f, this.frame) ?? campfireFrame(this.frame);
       case 'tub':
         return `tub${waterLevel(f.water ?? 0, TUB_LITERS)}`;
       case 'cistern':

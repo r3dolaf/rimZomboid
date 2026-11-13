@@ -101,20 +101,86 @@ test('el almacén: cajas en un palé por cada 10 cosas o menos, sin pasar de los
   expect(stockedPallets(500, 4)).toBe(4);
 });
 
-test('V1: el huerto: tierra seca y mojada, y lo sembrado por tercios hasta madurar', async () => {
+test('V1 y V4: el huerto: tierra seca y mojada, y cada cultivo por tercios hasta madurar', async () => {
   const { cropFrame } = await import('./props');
-  const GROW_HOURS = (await import('../sim/balance')).CROPS.potato.hours;
-  for (const f of ['soilDry', 'soilWet', 'crop1', 'crop2', 'crop3', 'cropRipe'])
-    expect(PROP_SPRITES[f], f).toBeDefined();
-  const plot = (grown: number | null) => ({
+  const { CROPS, CROP_KINDS } = await import('../sim/balance');
+  for (const f of ['soilDry', 'soilWet']) expect(PROP_SPRITES[f], f).toBeDefined();
+  const valid = (rows: readonly string[]) =>
+    rows.length === 16 &&
+    rows.every((r) => r.length === 16 && [...r].every((c) => c === '.' || c in PROP_COLORS));
+  for (const k of CROP_KINDS)
+    for (const st of ['1', '2', '3', 'ripe']) {
+      const f = `crop-${k}-${st}`;
+      expect(PROP_SPRITES[f], f).toBeDefined();
+      expect(valid(PROP_SPRITES[f]!), f).toBe(true);
+    }
+  // Los cuatro maduros, distintos entre sí (y de los que crecen).
+  const ripe = CROP_KINDS.map((k) => PROP_SPRITES[`crop-${k}-ripe`]!.join(''));
+  expect(new Set(ripe).size).toBe(4);
+  const plot = (kind: 'potato' | 'cabbage', grown: number | null) => ({
     tile: 0,
-    kind: 'potato' as const,
+    kind,
     moisture: 0,
-    crop: grown === null ? null : { kind: 'potato' as const, grown, ripe: 0, dry: 0 },
+    crop: grown === null ? null : { kind, grown, ripe: 0, dry: 0 },
   });
-  expect(cropFrame(plot(null))).toBeNull();
-  expect(cropFrame(plot(0))).toBe('crop1');
-  expect(cropFrame(plot(GROW_HOURS / 2))).toBe('crop2');
-  expect(cropFrame(plot(GROW_HOURS - 1))).toBe('crop3');
-  expect(cropFrame(plot(GROW_HOURS))).toBe('cropRipe');
+  const H = CROPS.potato.hours;
+  expect(cropFrame(plot('potato', null))).toBeNull();
+  expect(cropFrame(plot('potato', 0))).toBe('crop-potato-1');
+  expect(cropFrame(plot('potato', H / 2))).toBe('crop-potato-2');
+  expect(cropFrame(plot('potato', H - 1))).toBe('crop-potato-3');
+  expect(cropFrame(plot('potato', H))).toBe('crop-potato-ripe');
+  expect(cropFrame(plot('cabbage', CROPS.cabbage.hours / 2))).toBe('crop-cabbage-2');
+});
+
+test('V4: un dibujo para cada objeto nuevo (lo cosechado, las semillas y los platos), de 16 × 16', async () => {
+  const { ITEM_SPRITES } = await import('./itemArt');
+  const kinds = [
+    'seedsLettuce',
+    'seedsTomato',
+    'seedsPotato',
+    'seedsCabbage',
+    'lettuce',
+    'tomato',
+    'potato',
+    'cabbage',
+    'stewVeg',
+    'stewPotato',
+    'soupCabbage',
+    'salad',
+    'preserves',
+  ] as const;
+  expect(Object.keys(ITEM_SPRITES).sort()).toEqual([...kinds].sort());
+  for (const k of kinds) {
+    const rows = ITEM_SPRITES[k]!;
+    expect(rows.length, k).toBe(16);
+    expect(
+      rows.every((r) => r.length === 16 && [...r].every((c) => c === '.' || c in PROP_COLORS)),
+      k,
+    ).toBe(true);
+  }
+  expect(new Set(kinds.map((k) => ITEM_SPRITES[k]!.join(''))).size).toBe(kinds.length);
+});
+
+test('V4: con alguien cocinando en la hoguera, una olla encima con el color de su plato', async () => {
+  const { potFrame } = await import('./props');
+  const { emptyWorld } = await import('../sim/testing/fixtures');
+  const w = emptyWorld(8, 8);
+  const fire = { id: 70, kind: 'campfire' as const, pos: { x: 4, y: 4 }, fuel: 10 };
+  w.furniture.push(fire);
+  expect(potFrame(w, fire, 0)).toBeNull();
+  w.survivors[0]!.action = { type: 'craft', billId: 1, tableId: 70, recipe: 'soup', ticksLeft: 50 };
+  const f = potFrame(w, fire, 0);
+  expect(f).toMatch(/^pot-soupCabbage-[0-2]$/);
+  expect(PROP_SPRITES[f!]).toBeDefined();
+  w.survivors[0]!.action = {
+    type: 'craft',
+    billId: 1,
+    tableId: 70,
+    recipe: 'bandages',
+    ticksLeft: 50,
+  };
+  expect(potFrame(w, fire, 0)).toBeNull(); // las vendas no van en olla
+  for (const dish of ['stewVeg', 'stewPotato', 'soupCabbage', 'preserves'])
+    for (const n of [0, 1, 2])
+      expect(PROP_SPRITES[`pot-${dish}-${n}`], `${dish} ${n}`).toBeDefined();
 });

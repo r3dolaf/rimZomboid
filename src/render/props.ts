@@ -1,7 +1,9 @@
-import { CROPS } from '../sim/balance';
+import { CROPS, RECIPES } from '../sim/balance';
 import { bagsIn } from '../sim/bags';
 import { ITEM_KINDS, type Inventory } from '../sim/items';
-import type { Plot } from '../sim/types';
+import type { Furniture, Plot, World } from '../sim/types';
+import { cropSprites } from './cropArt';
+import { POT_COLORS, potSprite } from './itemArt';
 import { PROP_COLORS } from './colors';
 
 /** Cada dibujo de mueble (A2): 16 de ancho y hasta 24 de alto; la casilla son las 16 filas de abajo. */
@@ -594,48 +596,34 @@ function soil(wet: boolean): string[] {
   return rows;
 }
 
-/** Las seis matas de una parcela, de brote (1) a grandes (3), y con fruto si está madura. */
-function crop(stage: 1 | 2 | 3, ripe: boolean): string[] {
-  const px: Pixels = new Map();
-  const centers: [number, number][] = [
-    [3, 4],
-    [8, 4],
-    [12, 4],
-    [3, 11],
-    [8, 11],
-    [12, 11],
-  ];
-  const r = [0, 0.7, 1.7, 2.7][stage]!;
-  for (const [cx, cy] of centers) {
-    for (let y = cy - 3; y <= cy + 1; y++)
-      for (let x = cx - 3; x <= cx + 3; x++) {
-        const d = Math.abs(x - cx) + Math.abs(y - cy) * 1.2;
-        if (d > r + 0.2 || x < 0 || x > 15 || y < 0 || y > 15) continue;
-        px.set(key(x, y), d < r * 0.4 && y <= cy ? 'K' : d > r - 0.6 ? 'Z' : 'z');
-      }
-    px.set(key(cx, cy + 1), 'Z'); // el tallo
-    if (ripe) {
-      px.set(key(cx - 1, cy), 'x');
-      px.set(key(cx + 1, cy - 1), 'T');
-      px.set(key(cx, cy + 1), 'X');
-    }
-  }
-  return rowsOf(px, 0);
-}
-
 PROP_SPRITES.soilDry = soil(false);
 PROP_SPRITES.soilWet = soil(true);
-PROP_SPRITES.crop1 = crop(1, false);
-PROP_SPRITES.crop2 = crop(2, false);
-PROP_SPRITES.crop3 = crop(3, false);
-PROP_SPRITES.cropRipe = crop(3, true);
+// V4 §6: cada cultivo en sus cuatro fases, y la hoguera con la olla de cada plato.
+Object.assign(PROP_SPRITES, cropSprites());
+for (const [dish, [base, shade]] of Object.entries(POT_COLORS))
+  for (let f = 0; f < 3; f++) PROP_SPRITES[`pot-${dish}-${f}`] = potSprite(base, shade, f);
 
-/** El dibujo de lo sembrado en una parcela: por tercios de lo que ha crecido, o maduro. */
+/** El dibujo de lo sembrado en una parcela: su cultivo, por tercios de lo que ha crecido, o maduro. */
 export function cropFrame(p: Plot): string | null {
   if (!p.crop) return null;
-  const hours = CROPS[p.crop.kind].hours;
-  if (p.crop.grown >= hours) return 'cropRipe';
-  return `crop${Math.min(3, 1 + Math.floor((3 * p.crop.grown) / hours))}`;
+  const { kind, grown } = p.crop;
+  const hours = CROPS[kind].hours;
+  if (grown >= hours) return `crop-${kind}-ripe`;
+  return `crop-${kind}-${Math.min(3, 1 + Math.floor((3 * grown) / hours))}`;
+}
+
+/**
+ * V4 §6: si alguien está haciendo en esa hoguera una receta de olla, la hoguera con la olla de ese
+ * plato (la llama, como la de `campfireFrame`); si no, `null`.
+ */
+export function potFrame(w: World, f: Furniture, frame: number): string | null {
+  for (const s of w.survivors) {
+    const a = s.action;
+    if (a.type !== 'craft' || a.tableId !== f.id) continue;
+    const dish = Object.keys(RECIPES[a.recipe].output)[0];
+    if (dish && dish in POT_COLORS) return `pot-${dish}-${Math.floor(frame / CAMPFIRE_FRAMES) % 3}`;
+  }
+  return null;
 }
 
 /** Hace un lienzo con todos los dibujos en fila y dice dónde empieza cada uno. */

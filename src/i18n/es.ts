@@ -785,12 +785,12 @@ export const es = {
     farm: {
       title: 'Planta un huerto',
       text: (touch: boolean) =>
-        `Las latas se acaban. Con 🌱 Huerto${touch ? '' : ' (G)'}, marca casillas de hierba cerca de la base: quien tenga Cultivar siembra con las semillas del almacén, riega y cosecha. Crece en unos 7 días con la tierra húmeda; si se seca 3 días, se pierde.`,
+        `Las latas se acaban. Con 🌱 Huerto${touch ? '' : ' (G)'}, elige arriba qué sembrar (cada semilla dice algo de cómo es) y marca casillas de hierba cerca de la base: quien tenga Cultivar siembra con las semillas del almacén, riega y cosecha. Con la tierra húmeda crece en unos días; si se seca 3 días, se pierde.`,
     },
     veg: {
       title: 'Las primeras hortalizas',
       text: () =>
-        'Se estropean con los días (con frío, menos). Con una hoguera, 🧵 Fabricar → Cocinar: 2 hortalizas hacen un guiso, que llena más y anima, pero se estropea antes. Las latas no se estropean: guárdalas para el invierno.',
+        'Se estropean con los días (con frío, menos), cada una a su ritmo. Con una hoguera, 🧵 Fabricar → Cocina: guisos, sopa y conservas (la ensalada, en la mesa), que llenan más y animan. Comer variado anima; siempre lo mismo, no. Las latas y las conservas no se estropean: guárdalas para el invierno.',
     },
     // E1
     generator: {
@@ -803,6 +803,11 @@ export const es = {
       title: 'Un arma de fuego',
       text: () =>
         'Para que alguien la lleve: en su ficha, Equipo → Llevar siempre, añade la pistola (o la escopeta) y su munición. Dispara de lejos cuando está en apuros (varios zombis, herido o en un asedio) o en modo combate; con un zombi solo, a golpes. Cada disparo se oye desde muy lejos y atrae a más zombis.',
+    },
+    winterCrops: {
+      title: 'Antes de que hiele',
+      text: () =>
+        'Lo que aguanta el invierno se siembra antes de que hiele. Lee lo que dice cada semilla en el selector del Huerto.',
     },
     autumn: {
       title: 'Llega el otoño',
@@ -843,7 +848,7 @@ export const es = {
       ],
       [
         '🌱 Huerto y cocina',
-        'Con 🌱 Huerto se marcan casillas de hierba: quien tenga Cultivar siembra, riega y cosecha (unos 7 días con la tierra húmeda). Las hortalizas, y los guisos que se cocinan con ellas en la hoguera, se estropean; las latas, no.',
+        'Con 🌱 Huerto se elige qué sembrar (lechuga, tomate, patata o col: cada semilla da una pista de cómo es) y se marcan casillas de hierba; quien tenga Cultivar siembra, riega y cosecha. No siembran lo que ese día mataría el frío, pero no adivinan el tiempo que viene. En la hoguera se cocina guiso de verduras, guiso de patatas, sopa de col (abriga) y conserva de tomate (no se estropea); en la mesa, ensalada. Lo fresco se estropea; las latas y las conservas, no. Comer variado anima.',
       ],
       [
         '❄️ Estaciones y frío',
@@ -1305,6 +1310,10 @@ export const es = {
       fortress: { name: 'Fortaleza', how: 'Rechazar 3 asedios' },
       harvest: { name: 'Primera cosecha', how: 'Cosechar el huerto' },
       farmer: { name: 'Autosuficientes', how: 'Cosechar 100 hortalizas' },
+      goodCook: {
+        name: 'Buen cocinero', // V4
+        how: 'Comer los cinco platos: guisos de verduras y de patatas, sopa, ensalada y conserva',
+      },
       hundred: { name: 'Cien zombis', how: 'Matar 100 zombis' },
       thousand: { name: 'Mil zombis', how: 'Matar 1000 zombis' },
       surgeon: { name: 'Cirujano', how: 'Amputar un brazo o una pierna' },
@@ -1724,7 +1733,11 @@ export const es = {
       return text.charAt(0).toUpperCase() + text.slice(1);
     },
     /** V3: «La helada ha matado 3 cultivos». */
-    cropsFrozen: (n: number) => `La helada ha matado ${n} ${n === 1 ? 'cultivo' : 'cultivos'}`,
+    /** V3 y V4: «Se han helado 3 cultivos: lechuga y col» (lo de antes, sin cuáles). */
+    cropsFrozen: (n: number, crops?: string[]) =>
+      crops && crops.length > 0
+        ? `Se ${n === 1 ? 'ha helado 1 cultivo' : `han helado ${n} cultivos`}: ${list(crops)}`
+        : `La helada ha matado ${n} ${n === 1 ? 'cultivo' : 'cultivos'}`,
     rain: 'Llueve',
     /** «una granja hacia el norte, a 4 horas» (con lo especial delante, si lo es). */
     siteFound: (how: string, what: string, who?: string) =>

@@ -411,3 +411,10 @@ test('en pantalla ancha empieza desplegado, como siempre', () => {
   mountLog(root, { world: createWorld(2) });
   expect(root.querySelector('[data-testid="log"]')!.classList.contains('collapsed')).toBe(false);
 });
+
+test('V4: el registro dice qué cultivos se han helado (y lo de antes, como antes)', async () => {
+  const { es } = await import('../i18n/es');
+  expect(es.log.cropsFrozen(1, ['col'])).toBe('Se ha helado 1 cultivo: col');
+  expect(es.log.cropsFrozen(3, ['lechuga', 'col'])).toBe('Se han helado 3 cultivos: lechuga y col');
+  expect(es.log.cropsFrozen(2)).toBe('La helada ha matado 2 cultivos');
+});

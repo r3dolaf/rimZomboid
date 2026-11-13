@@ -885,7 +885,10 @@ function logSentence(e: LogEntry, w: World, here: World): string {
       text = l.cropsLost(e.dried, e.rotted);
       break;
     case 'cropsFrozen': // V3
-      text = l.cropsFrozen(e.n);
+      text = l.cropsFrozen(
+        e.n,
+        e.crops?.map((k) => es.items[k][0]),
+      );
       break;
     case 'rain':
       text = l.rain;

@@ -716,12 +716,12 @@ export const en: Texts = {
     farm: {
       title: 'Plant a garden',
       text: (touch: boolean) =>
-        `Cans run out. With 🌱 Garden${touch ? '' : ' (G)'}, mark grass tiles near the base: whoever has Farm sows with the seeds in storage, waters and harvests. It grows in about 7 days with damp soil; if it stays dry for 3 days, it is lost.`,
+        `Cans run out. With 🌱 Garden${touch ? '' : ' (G)'}, choose what to sow at the top (each seed tells you something about it) and mark grass tiles near the base: whoever has Farm sows with the seeds in storage, waters and harvests. With damp soil it grows in a few days; if it stays dry for 3 days, it is lost.`,
     },
     veg: {
       title: 'The first vegetables',
       text: () =>
-        'They go off over the days (less in the cold). With a campfire, 🧵 Craft → Cook: 2 vegetables make a stew, which fills more and cheers up, but goes off sooner. Cans never go off: keep them for the winter.',
+        'They go off over the days (less in the cold), each at its own pace. With a campfire, 🧵 Craft → Kitchen: stews, soup and preserves (the salad, at the table), which fill more and cheer up. A varied diet cheers up; the same food every day does not. Cans and preserves never go off: keep them for the winter.',
     },
     generator: {
       title: 'A generator',
@@ -732,6 +732,11 @@ export const en: Texts = {
       title: 'A firearm',
       text: () =>
         'For someone to carry it: on their sheet, Gear → Always carry, add the pistol (or the shotgun) and its ammo. They shoot from afar when in trouble (several zombies, hurt or in a siege) or in draft mode; against a lone zombie, they fight hand to hand. Every shot is heard from very far away and draws more zombies.',
+    },
+    winterCrops: {
+      title: 'Before the frost',
+      text: () =>
+        'What can stand the winter is sown before the frost. Read what each seed says in the Garden picker.',
     },
     autumn: {
       title: 'Autumn is here',
@@ -770,7 +775,7 @@ export const en: Texts = {
       ],
       [
         '🌱 Garden and cooking',
-        'With 🌱 Garden you mark grass tiles: whoever has Farm sows, waters and harvests (about 7 days with damp soil). Vegetables, and the stews cooked with them at the campfire, go off; cans do not.',
+        'With 🌱 Garden you choose what to sow (lettuce, tomato, potato or cabbage: each seed gives a hint of what it is like) and mark grass tiles; whoever has Farm sows, waters and harvests. They will not sow what the cold would kill that day, but they cannot foresee the weather. At the campfire you cook vegetable stew, potato stew, cabbage soup (warms you up) and tomato preserve (never goes off); at the table, salad. Fresh food goes off; cans and preserves do not. A varied diet cheers up.',
       ],
       [
         '❄️ Seasons and cold',
@@ -1213,6 +1218,10 @@ export const en: Texts = {
       fortress: { name: 'Fortress', how: 'Repel 3 sieges' },
       harvest: { name: 'First harvest', how: 'Harvest the garden' },
       farmer: { name: 'Self-sufficient', how: 'Harvest 100 vegetables' },
+      goodCook: {
+        name: 'Good cook',
+        how: 'Eat all five dishes: vegetable and potato stew, soup, salad and preserve',
+      },
       hundred: { name: 'A hundred zombies', how: 'Kill 100 zombies' },
       thousand: { name: 'A thousand zombies', how: 'Kill 1000 zombies' },
       surgeon: { name: 'Surgeon', how: 'Amputate an arm or a leg' },
@@ -1587,7 +1596,10 @@ export const en: Texts = {
       ].filter((x) => x !== '');
       return cap(parts.join(' and '));
     },
-    cropsFrozen: (n: number) => `The frost killed ${n_(n, 'crop', 'crops')}`,
+    cropsFrozen: (n: number, crops?: string[]) =>
+      crops && crops.length > 0
+        ? `${cap(n_(n, 'crop', 'crops'))} froze: ${list(crops)}`
+        : `The frost killed ${n_(n, 'crop', 'crops')}`,
     rain: "It's raining",
     siteFound: (how: string, what: string, who?: string) =>
       ({

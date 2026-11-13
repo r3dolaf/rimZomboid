@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest';
+import { es } from '../i18n/es';
 import { COLD_BELOW, SEASON_DAYS, TICKS_PER_DAY, TICKS_PER_HOUR } from '../sim/balance';
 import { setTile } from '../sim/map/grid';
 import { emptyInventory } from '../sim/items';
@@ -159,4 +160,20 @@ test('D1: el consejo del arma de fuego, con la primera en el almacén', () => {
   expect(dueTip(w, calm, [...MANY])).toBeNull();
   w.storage.items.shotgun = 1;
   expect(dueTip(w, calm, [...MANY])).toEqual({ id: 'gun' });
+});
+
+test('V4: en otoño, con huerto, «lo que aguanta el invierno se siembra antes de que hiele» (sin decir cuál)', () => {
+  const w = createWorld(5);
+  w.storage.items.food = 20;
+  w.storage.items.seedsPotato = 0;
+  w.storage.items.seedsLettuce = 0;
+  const seen = [...MANY, 'water', 'cold', 'crisis', 'farm', 'veg', 'autumn'] as const;
+  w.tick = (SEASON_DAYS - 1) * TICKS_PER_DAY; // el día 15, aún en verano
+  w.plots.push({ tile: 1, kind: 'potato', crop: null, moisture: 0 });
+  expect(dueTip(w, calm, [...seen])).toBeNull();
+  w.tick = SEASON_DAYS * TICKS_PER_DAY; // el día 16, otoño
+  expect(dueTip(w, calm, [...seen])).toEqual({ id: 'winterCrops' });
+  w.plots = [];
+  expect(dueTip(w, calm, [...seen])).toBeNull(); // sin huerto, no
+  expect(es.tips.winterCrops.text()).not.toMatch(/col|lechuga|patata|tomate/i);
 });

@@ -19,6 +19,7 @@ export const ACHIEVEMENTS = [
   'fortress',
   'harvest',
   'farmer',
+  'goodCook', // V4
   'hundred',
   'thousand',
   'surgeon',
@@ -48,6 +49,11 @@ const CHECKS: Record<AchievementId, (w: World) => boolean> = {
   fortress: (w) => w.common.stats.siegesRepelled >= 3,
   harvest: (w) => w.common.stats.harvested >= 1,
   farmer: (w) => w.common.stats.harvested >= 100,
+  // V4: los cinco platos, comidos en la partida.
+  goodCook: (w) =>
+    (['stewVeg', 'stewPotato', 'soupCabbage', 'salad', 'preserves'] as const).every((k) =>
+      (w.common.stats.eaten ?? []).includes(k),
+    ),
   hundred: (w) => w.common.stats.kills >= 100,
   thousand: (w) => w.common.stats.kills >= 1000,
   surgeon: (w) => inChronicle(w, 'amputated'),

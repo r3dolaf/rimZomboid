@@ -129,3 +129,11 @@ test('varios a la vez, en un solo aviso; al acabar la partida, sin aviso (pero s
   expect(root2.querySelectorAll('.achievement-toast')).toHaveLength(0);
   expect(Object.keys(store.get()).sort()).toEqual(['firstNight', 'month', 'week']);
 });
+
+test('V4: Buen cocinero, con los cinco platos comidos en la partida (con cuatro, no)', () => {
+  const w = createWorld(3);
+  w.common.stats.eaten = ['stewVeg', 'stewPotato', 'soupCabbage', 'salad', 'food'];
+  expect(achieved(w)).not.toContain('goodCook');
+  w.common.stats.eaten.push('preserves');
+  expect(achieved(w)).toContain('goodCook');
+});

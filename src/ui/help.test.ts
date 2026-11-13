@@ -99,3 +99,31 @@ test('U1 §8: abajo, ver otra vez los primeros pasos y mostrar consejos', () => 
   expect(onGuide).toHaveBeenCalledTimes(1);
   expect(open.value).toBe(false);
 });
+
+test('V4: la Ayuda cuenta los cuatro cultivos, cómo se elige y las cinco recetas (en los dos idiomas)', async () => {
+  const { es } = await import('../i18n/es');
+  const { en } = await import('../i18n/en');
+  const farm = (t: typeof es) => t.help.basics.find(([title]) => title.includes('🌱'))![1];
+  for (const word of [
+    'lechuga',
+    'tomate',
+    'patata',
+    'col',
+    'guiso de patatas',
+    'sopa',
+    'ensalada',
+    'conserva',
+  ])
+    expect(farm(es).toLowerCase(), word).toContain(word);
+  for (const word of [
+    'lettuce',
+    'tomato',
+    'potato',
+    'cabbage',
+    'potato stew',
+    'soup',
+    'salad',
+    'preserve',
+  ])
+    expect(farm(en as unknown as typeof es).toLowerCase(), word).toContain(word);
+});

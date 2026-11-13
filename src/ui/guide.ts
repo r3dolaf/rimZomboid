@@ -40,6 +40,7 @@ export const TIPS = [
   'farm',
   'veg',
   'autumn',
+  'winterCrops', // V4
   'gun', // D1
   'generator', // E1
   'radio', // C1
@@ -180,6 +181,9 @@ export function dueTip(w: World, ctx: TipContext, shown: readonly TipId[]): DueT
         : null,
     veg: () => (VEG.some((k) => w.storage.items[k] > 0) ? { id: 'veg' } : null),
     autumn: () => (seasonOf(w.tick) === 'autumn' ? { id: 'autumn' } : null),
+    // V4: en otoño, con huerto: lo que aguanta el invierno (sin decir cuál).
+    winterCrops: () =>
+      seasonOf(w.tick) === 'autumn' && w.plots.length > 0 ? { id: 'winterCrops' } : null,
     // D1: la primera arma de fuego en el almacén.
     gun: () => (w.storage.items.pistol + w.storage.items.shotgun > 0 ? { id: 'gun' } : null),
     // E1: el primer generador en el almacén.

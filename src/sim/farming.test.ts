@@ -105,6 +105,7 @@ test('sin permiso para Cultivar, no hace nada en el huerto', () => {
 test('dos que cultivan no van a la misma parcela', () => {
   const w = farm();
   w.storage.items.seedsPotato = 0;
+  w.storage.items.seedsLettuce = 0;
   const [a] = w.survivors;
   a!.carrying.seedsPotato = 2;
   markPlot(w, 8, 6, true);

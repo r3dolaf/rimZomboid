@@ -1378,7 +1378,19 @@ export const SEEDS_LOOT: Partial<Record<LootKind, LootAmount>> = {
 };
 /** En los sitios del mapa del mundo, la granja da más (como su comida, H6a). */
 export const SITE_SEEDS_LOOT: Partial<Record<LootKind, LootAmount>> = { farm: [6, 12] };
-export const START_SEEDS = 6; // V4: de patata (Task 5 las reparte)
+/** V4 §5: al empezar, patata y lechuga; el tomate y la col hay que encontrarlos. */
+export const START_SEEDS = { seedsPotato: 3, seedsLettuce: 3 } as const;
+/**
+ * V4 §5: de qué cultivos son las semillas del botín de cada sitio (cada una, uno al azar de su
+ * lista): las granjas y las ferreterías, de los cuatro; el súper y las casas (huertos de casa),
+ * lechuga y tomate.
+ */
+export const SEED_KINDS: Partial<Record<LootKind, readonly CropKind[]>> = {
+  farm: ['lettuce', 'tomato', 'potato', 'cabbage'],
+  hardware: ['lettuce', 'tomato', 'potato', 'cabbage'],
+  supermarket: ['lettuce', 'tomato'],
+  house: ['tomato', 'lettuce'],
+};
 // La radio y las pilas (C1 §1), con su propio azar: el resto del botín no cambia.
 export const RADIO_SALT = 0x7ad10;
 /** La radio, solo en los sitios del mapa del mundo: probabilidad de que el sitio tenga una. */

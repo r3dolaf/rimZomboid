@@ -5,6 +5,7 @@ import {
   BUILDINGS,
   LOOT,
   LOOT_GARMENTS,
+  SEED_KINDS,
   START_SEEDS,
   THREAD_PER_SPOOL,
   type LootItem,
@@ -262,14 +263,41 @@ test('retales de vaquero y tiras de cuero en la tienda de ropa, en los armarios'
   expect(leather).toBeGreaterThan(0);
 });
 
-test('V1: semillas en granjas, ferreterías, supermercados y algunas casas; 6 en el almacén', () => {
+test('V1 y V4: semillas en granjas, ferreterías, supermercados y algunas casas; al empezar, patata y lechuga', () => {
+  expect(START_SEEDS).toEqual({ seedsPotato: 3, seedsLettuce: 3 });
   const w = createWorld(7);
+  const allSeeds = (c: Container) =>
+    c.items.seedsLettuce + c.items.seedsTomato + c.items.seedsPotato + c.items.seedsCabbage;
   const seedsIn = (kind: string) =>
     w.containers
       .filter((c) => w.houses.find((h) => h.id === c.houseId)?.kind === kind)
-      .reduce((n, c) => n + c.items.seedsPotato, 0);
-  const total = w.containers.reduce((n, c) => n + c.items.seedsPotato, 0);
-  expect(total).toBeGreaterThan(0);
+      .reduce((n, c) => n + allSeeds(c), 0);
+  expect(w.containers.reduce((n, c) => n + allSeeds(c), 0)).toBeGreaterThan(0);
   expect(seedsIn('police') + seedsIn('pharmacy') + seedsIn('clothes')).toBe(0);
-  expect(w.storage.items.seedsPotato).toBe(START_SEEDS);
+  const s = w.storage.items;
+  expect([s.seedsPotato, s.seedsLettuce, s.seedsTomato, s.seedsCabbage]).toEqual([3, 3, 0, 0]);
+});
+
+test('V4: cada semilla del botín es de un cultivo del sitio: las granjas, de los cuatro; el súper, lechuga y tomate', () => {
+  expect(SEED_KINDS.farm).toEqual(['lettuce', 'tomato', 'potato', 'cabbage']);
+  expect(SEED_KINDS.hardware).toEqual(['lettuce', 'tomato', 'potato', 'cabbage']);
+  expect(SEED_KINDS.supermarket).toEqual(['lettuce', 'tomato']);
+  expect(SEED_KINDS.house).toEqual(['tomato', 'lettuce']);
+  const byKind = { farm: new Set<string>(), supermarket: new Set<string>() };
+  for (let seed = 1; seed <= 20; seed++) {
+    const w = createWorld(seed);
+    for (const c of w.containers) {
+      const kind = w.houses.find((h) => h.id === c.houseId)?.kind;
+      if (kind !== 'farm' && kind !== 'supermarket') continue;
+      for (const k of ['seedsLettuce', 'seedsTomato', 'seedsPotato', 'seedsCabbage'] as const)
+        if (c.items[k] > 0) byKind[kind].add(k);
+    }
+  }
+  expect([...byKind.farm].sort()).toEqual([
+    'seedsCabbage',
+    'seedsLettuce',
+    'seedsPotato',
+    'seedsTomato',
+  ]);
+  expect([...byKind.supermarket].sort()).toEqual(['seedsLettuce', 'seedsTomato']);
 });

@@ -4,6 +4,9 @@ import {
   LOOT_BAGS,
   LOOT_GARMENTS,
   SEEDS_LOOT,
+  SEED_KINDS,
+  CROP_KINDS,
+  CROPS,
   SITE_SEEDS_LOOT,
   BATTERY_LOOT,
   GUN_LOOT,
@@ -273,7 +276,11 @@ export function fillSeeds(
     if (cs.length === 0 || amount === undefined) continue;
     const n = roll(rng, amount);
     const pool = placesFor(cs, 'seedsPotato');
-    for (let k = 0; k < n; k++) pool[nextInt(rng, 0, pool.length - 1)]!.items.seedsPotato++;
+    const kinds = SEED_KINDS[h.kind] ?? CROP_KINDS; // V4: de qué cultivo es cada una
+    for (let k = 0; k < n; k++) {
+      const c = pool[nextInt(rng, 0, pool.length - 1)]!;
+      c.items[CROPS[kinds[nextInt(rng, 0, kinds.length - 1)]!].seeds]++;
+    }
   }
 }
 

@@ -130,6 +130,7 @@ test('U2: el corte del agua, el frío, el otoño y la crisis', () => {
   const w = createWorld(5);
   w.storage.items.food = 20;
   w.storage.items.seedsPotato = 0;
+  w.storage.items.seedsLettuce = 0;
   w.tick = 2 * TICKS_PER_HOUR;
   w.waterCutAt = w.tick + 1;
   expect(dueTip(w, calm, [...MANY])).toBeNull();
@@ -153,6 +154,7 @@ test('D1: el consejo del arma de fuego, con la primera en el almacén', () => {
   const w = createWorld(5);
   w.storage.items.food = 20;
   w.storage.items.seedsPotato = 0;
+  w.storage.items.seedsLettuce = 0;
   w.tick = 2 * TICKS_PER_HOUR;
   expect(dueTip(w, calm, [...MANY])).toBeNull();
   w.storage.items.shotgun = 1;

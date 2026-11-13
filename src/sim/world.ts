@@ -196,7 +196,7 @@ export function createWorld(
           ...emptyInventory(),
           food: START_FOOD,
           antibiotics: START_ANTIBIOTICS,
-          seedsPotato: START_SEEDS, // V1 (V4: de patata)
+          ...START_SEEDS, // V1 (V4: patata y lechuga)
           waterBottle: START_WATER_BOTTLES, // V2
         },
   };

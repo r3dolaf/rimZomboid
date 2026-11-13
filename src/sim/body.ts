@@ -13,6 +13,8 @@ import {
   PAINKILLER_PAIN,
   TICKS_PER_HOUR,
   WOUNDS,
+  SICKLY_INFECTION_MULT,
+  TOUGH_INFECTION_MULT,
 } from './balance';
 import { offerAmputation } from './amputation';
 import { infectChance } from './setup';
@@ -111,9 +113,15 @@ function infect(w: World, s: Survivor, kind: WoundKind, part: BodyPart): void {
   if (s.infection && kind === 'bite') s.infection.bite = true;
   if (s.infection || chance === 0 || (chance < 1 && nextFloat(w.zombieRng) >= chance)) return;
   const hours = nextInt(w.zombieRng, INFECTION_DEATH_HOURS_MIN, INFECTION_DEATH_HOURS_MAX);
+  // R1: a Duro de pelar le avanza más despacio; al Enfermizo, más deprisa.
+  const mult = s.traits.includes('tough')
+    ? TOUGH_INFECTION_MULT
+    : s.traits.includes('sickly')
+      ? SICKLY_INFECTION_MULT
+      : 1;
   s.infection = {
     at: w.tick,
-    deathAt: w.tick + hours * TICKS_PER_HOUR,
+    deathAt: w.tick + Math.round(hours * mult * TICKS_PER_HOUR),
     bite: kind === 'bite',
     part, // B1: amputar esa parte la cura
   };

@@ -5,7 +5,7 @@ import { CHOP_NOISE_TICKS, NOISE, PRY_NOISE_TICKS } from '../balance';
 import { ateFood, eatFrom, eatFromPack, hasFood, lastAte } from '../food';
 import { finishDrink } from '../drink';
 import { setTile } from '../map/grid';
-import { isNight } from '../clock';
+import { sleepTime } from '../traits';
 import { finishConsoling } from '../consoling';
 import { nearTable } from '../furniture';
 import { workOnBlueprint } from '../jobs/build';
@@ -45,8 +45,8 @@ export function activitiesSystem(w: World): void {
       finishDrink(w, s, a);
       s.action = { type: 'idle', ticksLeft: 0 };
     } else if (a.type === 'sleep') {
-      // Con el sueño lleno se levanta, pero nunca de noche.
-      if (s.needs.sleep < 100 || isNight(w.tick)) continue;
+      // Con el sueño lleno se levanta, pero nunca de noche (R1: al Nocturno, nunca de día).
+      if (s.needs.sleep < 100 || sleepTime(s, w.tick)) continue;
       addMemory(s, a.inBed ? 'sleptInBed' : 'sleptOnFloor', w.tick);
       // Si su pareja sigue durmiendo, han dormido juntos: los dos lo recuerdan.
       const p = w.survivors.find((x) => x.id === s.partnerId);

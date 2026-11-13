@@ -1,5 +1,10 @@
+import { isNight } from './clock';
 import { nextInt, pick, type RngState } from './rng';
-import type { TraitId } from './types';
+import type { Survivor, TraitId } from './types';
+
+/** R1: ¿es su hora de dormir? La noche; al Nocturno, el día. */
+export const sleepTime = (s: Survivor, tick: number): boolean =>
+  s.traits.includes('nightOwl') ? !isNight(tick) : isNight(tick);
 
 export const TRAITS: readonly TraitId[] = [
   'brave',
@@ -22,6 +27,18 @@ export const TRAITS: readonly TraitId[] = [
   'vain',
   'slob',
   'practical',
+  // R1: los que cambian lo que hacen
+  'nightOwl',
+  'greenThumb',
+  'cook',
+  'gourmet',
+  'ascetic',
+  'sharpshooter',
+  'triggerHappy',
+  'tough',
+  'sickly',
+  'chilly',
+  'warmBlooded',
 ];
 
 /** Parejas que no pueden darse juntas. */
@@ -33,6 +50,10 @@ export const INCOMPATIBLE: readonly (readonly [TraitId, TraitId])[] = [
   ['fastLearner', 'slowLearner'],
   ['pleasant', 'unpleasant'],
   ['vain', 'slob'],
+  ['gourmet', 'ascetic'], // R1
+  ['sharpshooter', 'triggerHappy'],
+  ['tough', 'sickly'],
+  ['chilly', 'warmBlooded'],
 ];
 
 function compatible(a: TraitId, b: TraitId): boolean {

@@ -1838,6 +1838,14 @@ export const GUNS: Record<
 export const SHOTGUN_SPLASH = 1.5;
 /** Como poco, esto de acertar (de lejos o con los brazos mal). */
 export const GUN_MIN_HIT = 0.2;
+/** R1: Buen tirador acierta esto más; Gatillo fácil, esto menos. */
+export const SHARPSHOOTER_AIM = 0.15;
+export const TRIGGER_HAPPY_AIM = 0.1;
+/** R1: la infección de Duro de pelar tarda esto más en matar; la del Enfermizo, esto. */
+export const TOUGH_INFECTION_MULT = 1.5;
+export const SICKLY_INFECTION_MULT = 0.75;
+/** R1: grados que siente de más el Caluroso (y de menos el Friolero). */
+export const TRAIT_WARMTH = 4;
 /** Sin modo combate, se dispara «en apuros» (§2): viendo tantos zombis o más… */
 export const GUN_TROUBLE_THREATS = 3; // sonda: con 2 se gastaba toda la munición los primeros días
 /** …con la salud o la sangre por debajo de lo de Decidir (DECIDE_MIN_HEALTH y DECIDE_MIN_BLOOD), o

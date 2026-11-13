@@ -16,7 +16,7 @@ import { baseFloor } from './base';
 import { hasFood, packFood } from './food';
 import { drinkSomething, stillDrinkable, warnNoWater } from './drink';
 import { warmUpDecision } from './season';
-import { isNight } from './clock';
+import { sleepTime } from './traits';
 import { findConsoleTarget, inCrisis as crisisNow, stillConsoling } from './consoling';
 import { dangerDecision, zombieInSight } from './danger';
 import { logEvent } from './log';
@@ -156,7 +156,7 @@ function rest(s: Survivor, w: World): Action | null {
 }
 
 function wantsToSleep(s: Survivor, w: World): boolean {
-  const limit = isNight(w.tick) ? SLEEP_AT_NIGHT_BELOW : SLEEP_ANYTIME_BELOW;
+  const limit = sleepTime(s, w.tick) ? SLEEP_AT_NIGHT_BELOW : SLEEP_ANYTIME_BELOW; // R1: Nocturno
   // Viendo un zombi tan cerca que le despertaría, no se acuesta.
   return s.needs.sleep < limit && !zombieInSight(w, s, WAKE_RANGE);
 }

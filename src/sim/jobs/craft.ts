@@ -51,6 +51,17 @@ function hasTool(s: Survivor, w: World, r: Recipe): boolean {
   return r.tool === 'knife' && (s.equipped === 'knife' || s.carrying.knife > 0);
 }
 
+/** V4 y R1: las recetas de la cocina (las que el Cocinillas hace el doble de rápido y bien). */
+const KITCHEN: ReadonlySet<Recipe> = new Set(
+  (['cook', 'cookPotato', 'soup', 'salad', 'preserve'] as const).map((id) => RECIPES[id]),
+);
+
+/** Lo que tarda en hacerla, según su habilidad (R1: el Cocinillas, la cocina, en la mitad). */
+export function craftTicks(s: Survivor, r: Recipe): number {
+  const cook = s.traits.includes('cook') && KITCHEN.has(r) ? 2 : 1;
+  return Math.round(r.ticks / workSpeed(s, 'craft') / cook);
+}
+
 /** De mejor a peor (H5b §3). */
 const MATERIALS: readonly Material[] = ['leather', 'denim', 'cloth'];
 
@@ -319,7 +330,7 @@ export function startCraftActivity(
     return idle;
   const { pieceId, material } = activity;
   if (pieceId !== undefined && !s.carrying.pieces.some((p) => p.id === pieceId)) return idle;
-  const ticksLeft = Math.round(r.ticks / workSpeed(s, 'craft'));
+  const ticksLeft = craftTicks(s, r);
   return {
     type: 'craft',
     billId: b.id,
@@ -374,7 +385,10 @@ export function finishCraft(
   for (const [k, n] of used) s.carrying[k] -= n;
   s.carrying.bucket += buckets;
   if (tub) tub.water = (tub.water ?? 0) - r.water!;
-  const chance = r.safe ? 0 : buildFailChance(s.skills.craft.level, s.traits.includes('clumsy'));
+  const neverFails = r.safe || (s.traits.includes('cook') && KITCHEN.has(r)); // R1: Cocinillas
+  const chance = neverFails
+    ? 0
+    : buildFailChance(s.skills.craft.level, s.traits.includes('clumsy'));
   if (chance > 0 && nextFloat(w.rng) < chance) {
     const lost = emptyInventory();
     for (const [k, n] of used) {

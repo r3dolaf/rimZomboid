@@ -259,8 +259,10 @@ export function tendStep(w: World, s: Survivor, a: Tending): boolean {
     p.moisture = Math.max(p.moisture, WATER_MOISTURE_HOURS);
   } else {
     const kind = p.crop!.kind;
-    const veg = harvestCount(kind, s.skills.farm.level, nextFloat(w.rng));
-    const seeds = CROPS[kind].seedsBack + (nextFloat(w.rng) < HARVEST_EXTRA_SEED ? 1 : 0);
+    // R1: con Mano verde, una hortaliza y una semilla más.
+    const green = s.traits.includes('greenThumb') ? 1 : 0;
+    const veg = harvestCount(kind, s.skills.farm.level, nextFloat(w.rng)) + green;
+    const seeds = CROPS[kind].seedsBack + (nextFloat(w.rng) < HARVEST_EXTRA_SEED ? 1 : 0) + green;
     p.crop = null;
     w.common.stats.harvested += veg; // para el resumen final
     const pile = emptyInventory();

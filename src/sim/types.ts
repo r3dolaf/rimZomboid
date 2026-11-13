@@ -93,7 +93,19 @@ export type TraitId =
   // Estilo (H5b §5)
   | 'vain'
   | 'slob'
-  | 'practical';
+  | 'practical'
+  // R1: los que cambian lo que hacen
+  | 'nightOwl'
+  | 'greenThumb'
+  | 'cook'
+  | 'gourmet'
+  | 'ascetic'
+  | 'sharpshooter'
+  | 'triggerHappy'
+  | 'tough'
+  | 'sickly'
+  | 'chilly'
+  | 'warmBlooded';
 
 /** Partes del cuerpo (H5 §2.1). */
 export type BodyPart = 'head' | 'torso' | 'leftArm' | 'rightArm' | 'leftLeg' | 'rightLeg';

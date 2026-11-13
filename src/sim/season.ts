@@ -23,6 +23,7 @@ import {
   TICKS_PER_HOUR,
   YEAR_DAYS,
   SOUP_WARMTH,
+  TRAIT_WARMTH,
 } from './balance';
 import { gameTime } from './clock';
 import { logEvent } from './log';
@@ -123,16 +124,24 @@ export function warmthOf(worn: readonly Garment[]): number {
   );
 }
 
-/** V4 §4: el calor de la sopa, mientras le dure. */
-export const soupWarmth = (s: Survivor, tick: number): number =>
-  (s.warmUntil ?? 0) > tick ? SOUP_WARMTH : 0;
+/**
+ * V4 §4: el calor de la sopa, mientras le dure; R1: y el de su rasgo (el Caluroso siente más, el
+ * Friolero menos).
+ */
+export const extraWarmth = (s: Survivor, tick: number): number =>
+  ((s.warmUntil ?? 0) > tick ? SOUP_WARMTH : 0) +
+  (s.traits.includes('warmBlooded')
+    ? TRAIT_WARMTH
+    : s.traits.includes('chilly')
+      ? -TRAIT_WARMTH
+      : 0);
 
 /** Cada pocos ticks, la sensación térmica de cada colono del mapa. */
 export function feelsSystem(w: World): void {
   if (w.tick % FEELS_EVERY_TICKS !== 0 || w.survivors.length === 0) return;
   const outside = outdoorTemp(w);
   for (const s of w.survivors)
-    s.feels = tempAt(w, tileOf(s.pos), outside) + warmthOf(s.worn) + soupWarmth(s, w.tick);
+    s.feels = tempAt(w, tileOf(s.pos), outside) + warmthOf(s.worn) + extraWarmth(s, w.tick);
 }
 
 /**

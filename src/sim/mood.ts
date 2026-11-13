@@ -89,21 +89,41 @@ export function moodModifiers(s: Survivor, tick: number, base?: Rect): MoodModif
     mods.push({ id: 'scaredOutside', value: SCARED_OUTSIDE_MOOD });
   mods.push(...clothesMood(s)); // H5b §5
   // V4 §4: comer variado anima; siempre lo mismo, no.
-  const ate = s.ate ?? [];
-  if (new Set(ate).size >= VARIETY.distinct) mods.push({ id: 'variedDiet', value: VARIETY.mood });
+  // R1: al Gourmet, el doble; al Asceta, nada.
+  const ate = s.traits.includes('ascetic') ? [] : (s.ate ?? []);
+  const taste = s.traits.includes('gourmet') ? 2 : 1;
+  if (new Set(ate).size >= VARIETY.distinct)
+    mods.push({ id: 'variedDiet', value: VARIETY.mood * taste });
   else if (ate.length >= VARIETY.remember && new Set(ate).size === 1)
-    mods.push({ id: 'sameFood', value: -VARIETY.mood });
+    mods.push({ id: 'sameFood', value: -VARIETY.mood * taste });
   for (const m of s.memories)
-    if (m.expiresAt > tick && (m.value ?? MEMORY_EFFECTS[m.id].value) !== 0) {
+    if (m.expiresAt > tick && memoryValue(s, m) !== 0) {
       const mod: MoodModifier = {
         id: m.id,
-        value: m.value ?? MEMORY_EFFECTS[m.id].value,
+        value: memoryValue(s, m),
         expiresAt: m.expiresAt,
       };
       if (m.otherId !== undefined) mod.otherId = m.otherId;
       mods.push(mod);
     }
   return mods;
+}
+
+/** R1: lo que el Asceta no nota (la comida y dormir en el suelo) y lo que al Gourmet le cuenta más. */
+const ASCETIC_IGNORES: ReadonlySet<MemoryId> = new Set([
+  'hotMeal',
+  'freshFood',
+  'ateAtTable',
+  'sleptOnFloor',
+]);
+const GOURMET_LIKES: ReadonlySet<MemoryId> = new Set(['hotMeal', 'freshFood']);
+
+/** Lo que le pesa un recuerdo, con sus rasgos. */
+function memoryValue(s: Survivor, m: Memory): number {
+  const v = m.value ?? MEMORY_EFFECTS[m.id].value;
+  if (s.traits.includes('ascetic') && ASCETIC_IGNORES.has(m.id)) return 0;
+  if (s.traits.includes('gourmet') && GOURMET_LIKES.has(m.id)) return v * 1.5;
+  return v;
 }
 
 /** Hacia dónde se mueve el ánimo: 50 más los motivos, entre 0 y 100. */

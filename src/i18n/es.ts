@@ -1903,6 +1903,36 @@ export const es = {
       name: 'Práctico',
       desc: 'No le importa la ropa rota, sucia, con sangre ni de muertos; elige por la protección.',
     },
+    // R1: los que cambian lo que hacen
+    nightOwl: { name: 'Nocturno', desc: 'Duerme de día y está despierto de noche.' },
+    greenThumb: {
+      name: 'Mano verde',
+      desc: 'Cada cosecha suya da una hortaliza y una semilla más.',
+    },
+    cook: { name: 'Cocinillas', desc: 'Cocina el doble de rápido y nunca le sale mal.' },
+    gourmet: {
+      name: 'Gourmet',
+      desc: 'Comer variado le anima el doble y siempre lo mismo le hunde el doble; la comida caliente y la fresca, la mitad más.',
+    },
+    ascetic: {
+      name: 'Asceta',
+      desc: 'La comida no le cambia el ánimo, ni dormir en el suelo.',
+    },
+    sharpshooter: { name: 'Buen tirador', desc: 'Con armas de fuego acierta bastante más.' },
+    triggerHappy: {
+      name: 'Gatillo fácil',
+      desc: 'Dispara en cuanto un zombi le amenaza y acierta menos: gasta más balas y hace más ruido.',
+    },
+    tough: {
+      name: 'Duro de pelar',
+      desc: 'La infección le avanza más despacio: más tiempo para curarle.',
+    },
+    sickly: { name: 'Enfermizo', desc: 'La infección le avanza más deprisa.' },
+    chilly: { name: 'Friolero', desc: 'Siente más el frío (4 grados menos).' },
+    warmBlooded: {
+      name: 'Caluroso',
+      desc: 'Aguanta mejor el frío y peor el calor (4 grados más).',
+    },
   } satisfies Record<TraitId, { name: string; desc: string }>,
 
   modifiers: {

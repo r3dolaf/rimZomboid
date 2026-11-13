@@ -203,12 +203,17 @@ test('en partidas reales las crisis llegan a terminar con "Se desahogó"', () =>
   expect(vented).toBeGreaterThan(0);
 }, 60_000); // tres partidas de 20 días en el mapa del pueblo (H4f)
 
-test('escenario: a las 23:00 del día 1 los tres duermen en su cama', () => {
+test('escenario: a las 23:00 del día 1 los tres duermen en su cama (salvo el Nocturno, R1)', () => {
   for (let seed = 1; seed <= 5; seed++) {
     const w = withoutZombies(createWorld(seed));
     runUntil(w, () => false, at(23));
-    for (const s of w.survivors)
+    for (const s of w.survivors) {
+      if (s.traits.includes('nightOwl')) {
+        expect(s.action.type, `semilla ${seed}: ${s.name}`).not.toBe('sleep');
+        continue;
+      }
       expect(s.action, `semilla ${seed}: ${s.name}`).toEqual({ type: 'sleep', inBed: true });
+    }
   }
 });
 

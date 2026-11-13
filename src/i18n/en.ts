@@ -1746,6 +1746,32 @@ export const en: Texts = {
       name: 'Practical',
       desc: "Doesn't mind torn, dirty, bloodstained or dead people's clothes; chooses by protection.",
     },
+    nightOwl: { name: 'Night owl', desc: 'Sleeps by day and stays up at night.' },
+    greenThumb: {
+      name: 'Green thumb',
+      desc: 'Each harvest gives one more vegetable and one more seed.',
+    },
+    cook: { name: 'Natural cook', desc: 'Cooks twice as fast and never botches it.' },
+    gourmet: {
+      name: 'Gourmet',
+      desc: 'A varied diet cheers twice as much and the same food every day hurts twice as much; hot and fresh food, half again as much.',
+    },
+    ascetic: {
+      name: 'Ascetic',
+      desc: 'Food does not change their mood, nor does sleeping on the floor.',
+    },
+    sharpshooter: { name: 'Sharpshooter', desc: 'Much more accurate with firearms.' },
+    triggerHappy: {
+      name: 'Trigger-happy',
+      desc: 'Shoots as soon as a zombie threatens and hits less: more bullets and more noise.',
+    },
+    tough: { name: 'Tough', desc: 'Infection spreads more slowly: more time to cure them.' },
+    sickly: { name: 'Sickly', desc: 'Infection spreads faster.' },
+    chilly: { name: 'Feels the cold', desc: 'Feels the cold more (4 degrees less).' },
+    warmBlooded: {
+      name: 'Warm-blooded',
+      desc: 'Handles the cold better and the heat worse (4 degrees more).',
+    },
   } satisfies Record<TraitId, { name: string; desc: string }>,
 
   modifiers: {

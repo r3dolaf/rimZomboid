@@ -89,6 +89,18 @@ test('nueve rasgos nuevos, en parejas que no se dan juntas', () => {
     'vain',
     'slob',
     'practical',
+    // R1
+    'nightOwl',
+    'greenThumb',
+    'cook',
+    'gourmet',
+    'ascetic',
+    'sharpshooter',
+    'triggerHappy',
+    'tough',
+    'sickly',
+    'chilly',
+    'warmBlooded',
   ]);
   expect(INCOMPATIBLE).toEqual([
     ['brave', 'coward'],
@@ -98,6 +110,10 @@ test('nueve rasgos nuevos, en parejas que no se dan juntas', () => {
     ['fastLearner', 'slowLearner'],
     ['pleasant', 'unpleasant'],
     ['vain', 'slob'], // H5b
+    ['gourmet', 'ascetic'], // R1
+    ['sharpshooter', 'triggerHappy'],
+    ['tough', 'sickly'],
+    ['chilly', 'warmBlooded'],
   ]);
 });
 

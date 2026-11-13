@@ -5,6 +5,8 @@ import {
   DECIDE_MIN_HEALTH,
   GUN_MIN_HIT,
   GUN_TROUBLE_THREATS,
+  SHARPSHOOTER_AIM,
+  TRIGGER_HAPPY_AIM,
   GUNS,
   HEAD_HIT_CHANCE,
   SHOTGUN_SPLASH,
@@ -56,12 +58,25 @@ const siegeOn = (w: World) => w.hordes.some((h) => h.kind === 'siege' && !h.done
 export function shootsNow(w: World, s: Survivor): boolean {
   if (s.drafted) return true;
   if (s.health < DECIDE_MIN_HEALTH || s.blood < DECIDE_MIN_BLOOD || siegeOn(w)) return true;
-  return threatsOf(w, s).length >= GUN_TROUBLE_THREATS;
+  // R1: el de Gatillo fácil, en cuanto uno le amenaza.
+  const need = s.traits.includes('triggerHappy') ? 1 : GUN_TROUBLE_THREATS;
+  return threatsOf(w, s).length >= need;
 }
+
+/** R1: lo que suma o resta su rasgo a la puntería con armas de fuego. */
+const aimBonus = (s: Survivor): number =>
+  s.traits.includes('sharpshooter')
+    ? SHARPSHOOTER_AIM
+    : s.traits.includes('triggerHappy')
+      ? -TRIGGER_HAPPY_AIM
+      : 0;
 
 /** Lo que acierta a `d` casillas: como un golpe, menos con la distancia; como poco, GUN_MIN_HIT. */
 export function gunHitChance(s: Survivor, gun: Gun, d: number): number {
-  return Math.max(GUN_MIN_HIT, hitChance(s.skills.fight.level, s) - GUNS[gun].falloff * d);
+  return Math.max(
+    GUN_MIN_HIT,
+    hitChance(s.skills.fight.level, s) - GUNS[gun].falloff * d + aimBonus(s),
+  );
 }
 
 /** Una tirada contra `z`: si acierta, el daño (a la cabeza, doble). */

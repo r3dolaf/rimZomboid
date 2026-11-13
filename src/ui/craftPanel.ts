@@ -11,7 +11,7 @@ import './panels.css';
 /** Las recetas por grupos (H5c1 §8). */
 const GROUPS: readonly { title: keyof typeof es.craftGroups; recipes: readonly RecipeId[] }[] = [
   { title: 'heal', recipes: ['bandages'] },
-  { title: 'kitchen', recipes: ['cook'] }, // V1
+  { title: 'kitchen', recipes: ['cook', 'cookPotato', 'soup', 'salad', 'preserve'] }, // V1 y V4
   { title: 'cloth', recipes: ['curtains', 'unpick'] },
   // H5b: sobre prendas
   { title: 'clothes', recipes: ['mend', 'pad', 'unpickGarment', 'wash'] },
@@ -43,6 +43,8 @@ export function recipeLine(id: RecipeId): string {
   const uses = [
     ...(r.piece ? [es.craftPiece[r.piece]] : []),
     ...entries(r.input).map(([k, n]) => count(k, n)),
+    ...(r.anyVeg ? [es.craftAnyVeg(r.anyVeg)] : []), // V4
+    ...(r.liquid ? [es.craftLiquid(r.liquid)] : []),
     ...(r.material ? [es.craftMaterial(r.material)] : []),
     ...(r.water ? [es.craftWater(r.water)] : []),
   ];
@@ -75,6 +77,10 @@ function whyNot(w: World, id: RecipeId): string | null {
       return t.tool[b.tool];
     case 'input':
       return t.input(count(b.item, b.missing), b.missing);
+    case 'anyVeg': // V4
+      return t.anyVeg(b.missing);
+    case 'liquid':
+      return t.liquid;
     case 'material':
       return t.material;
     case 'piece':

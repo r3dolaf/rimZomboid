@@ -78,8 +78,20 @@ test('Fabricar por grupos: cada receta dice «usa → da · dónde · tiempo»',
   const groups = [...root.querySelectorAll('.craft-group h3')].map((h) => h.textContent);
   expect(groups).toEqual(['Curar', 'Cocina', 'Tela y cortinas', 'Ropa', 'Bolsas']);
   expect(q('craft-line-cook').textContent).toBe(
-    '2 patatas → 1 guiso de verduras · hoguera · 30 min',
-  ); // V1
+    '2 hortalizas cualesquiera → 1 guiso de verduras · hoguera · 30 min',
+  ); // V1 y V4
+  expect(q('craft-line-cookPotato').textContent).toBe(
+    '2 patatas y 1 hortaliza cualquiera → 1 guiso de patatas · hoguera · 45 min',
+  );
+  expect(q('craft-line-soup').textContent).toBe(
+    '1 col y agua (1 botella o 1 cubo) → 1 sopa de col · hoguera · 30 min',
+  );
+  expect(q('craft-line-salad').textContent).toBe(
+    '1 lechuga y 1 tomate → 1 ensalada · mesa · 10 min',
+  );
+  expect(q('craft-line-preserve').textContent).toBe(
+    '3 tomates → 1 conserva de tomate · hoguera · 1 h',
+  );
   expect(q('craft-add-curtains').textContent).toBe('+ Coser cortinas');
   expect(q('craft-line-bandages').textContent).toBe('1 tela → 2 vendas · mesa · 15 min');
   expect(q('craft-line-curtains').textContent).toBe(
@@ -165,4 +177,20 @@ test('los pedidos dicen su modo: «Hacer 5 veces», «Hasta tener 10 vendas», �
   expect(mode(3)).toBe('Hasta tener 2 bolsas de tela');
   expect(mode(4)).toBe('Siempre que haya');
   expect(q('bill-1-done').textContent).toBe('hechos 2/5');
+});
+
+test('V4: en la cocina dice qué falta: hortalizas cualesquiera (sin contar las fijas) y agua', () => {
+  const { world, panel, q } = craft();
+  world.furniture.push({ id: 99, kind: 'campfire', pos: { x: 1, y: 1 } });
+  world.storage.items.potato = 2;
+  world.storage.items.cabbage = 0;
+  world.storage.items.waterBottle = 0;
+  world.storage.items.waterBucket = 0;
+  panel.update();
+  expect(q('craft-why-cookPotato').textContent).toBe('Falta 1 hortaliza');
+  expect(q('craft-why-cook').hidden).toBe(true); // 2 patatas valen para el de verduras
+  world.storage.items.cabbage = 1;
+  panel.update();
+  expect(q('craft-why-cookPotato').hidden).toBe(true);
+  expect(q('craft-why-soup').textContent).toBe('Falta agua: una botella o un cubo con agua');
 });

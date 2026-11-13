@@ -1085,8 +1085,12 @@ export type RecipeId =
   | 'wash'
   // La bolsa de tela (H5b2 §6)
   | 'sewBag'
-  // En la hoguera (V1 §5)
-  | 'cook';
+  // En la hoguera (V1 §5; V4 §3: guiso de verduras) y las recetas de V4
+  | 'cook'
+  | 'cookPotato'
+  | 'soup'
+  | 'salad'
+  | 'preserve';
 
 /**
  * Un pedido: `count`, hacer N veces (`done` lleva la cuenta); `until`, hasta tener N en el almacén;

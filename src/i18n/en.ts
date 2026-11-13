@@ -240,10 +240,34 @@ export const en: Texts = {
       fail: 'sew the cloth bag',
     },
     cook: {
-      name: 'Cook',
-      doing: 'Cooking a stew',
-      done: 'cooked a stew',
-      fail: 'cook the stew',
+      name: 'Vegetable stew',
+      doing: 'Cooking a vegetable stew',
+      done: 'cooked a vegetable stew',
+      fail: 'cook the vegetable stew',
+    },
+    cookPotato: {
+      name: 'Potato stew',
+      doing: 'Cooking a potato stew',
+      done: 'cooked a potato stew',
+      fail: 'cook the potato stew',
+    },
+    soup: {
+      name: 'Cabbage soup',
+      doing: 'Making cabbage soup',
+      done: 'made a cabbage soup',
+      fail: 'make the cabbage soup',
+    },
+    salad: {
+      name: 'Salad',
+      doing: 'Making a salad',
+      done: 'made a salad',
+      fail: 'make the salad',
+    },
+    preserve: {
+      name: 'Tomato preserve',
+      doing: 'Making tomato preserve',
+      done: 'put up a jar of tomato preserve',
+      fail: 'make the tomato preserve',
     },
   } satisfies Record<RecipeId, { name: string; doing: string; done: string; fail: string }>,
   materials: {
@@ -279,6 +303,9 @@ export const en: Texts = {
   },
   craftMaterial: (n: number) => `${n} cloth, denim or leather`,
   craftWater: (liters: number) => `${liters} litres of water`,
+  craftAnyVeg: (n: number) => (n === 1 ? '1 vegetable of any kind' : `${n} vegetables of any kind`),
+  craftLiquid: (n: number) =>
+    n === 1 ? 'water (1 bottle or 1 bucket)' : `water (${n} bottles or buckets)`,
   craftGives: {
     mend: 'the mended garment',
     pad: 'the padded garment',
@@ -302,6 +329,8 @@ export const en: Texts = {
     fire: 'The campfire is out: it needs firewood',
     tool: { needle: 'Missing a needle', knife: 'Missing a knife' },
     input: (what: string) => `Missing ${what}`,
+    anyVeg: (n: number) => `Missing ${n === 1 ? '1 vegetable' : `${n} vegetables`}`,
+    liquid: 'Missing water: a bottle or a bucket of water',
     material: 'Missing cloth, denim or leather',
     piece: {
       holed: 'No clothes with holes in storage',

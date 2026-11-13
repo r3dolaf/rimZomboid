@@ -262,10 +262,35 @@ export const es = {
       fail: 'coser la bolsa de tela',
     },
     cook: {
-      name: 'Cocinar', // V1
-      doing: 'Cocinando un guiso',
-      done: 'ha cocinado un guiso',
-      fail: 'cocinar el guiso',
+      name: 'Guiso de verduras', // V1 (V4: el guiso de siempre)
+      doing: 'Cocinando un guiso de verduras',
+      done: 'ha cocinado un guiso de verduras',
+      fail: 'cocinar el guiso de verduras',
+    },
+    // V4 §3
+    cookPotato: {
+      name: 'Guiso de patatas',
+      doing: 'Cocinando un guiso de patatas',
+      done: 'ha cocinado un guiso de patatas',
+      fail: 'cocinar el guiso de patatas',
+    },
+    soup: {
+      name: 'Sopa de col',
+      doing: 'Haciendo una sopa de col',
+      done: 'ha hecho una sopa de col',
+      fail: 'hacer la sopa de col',
+    },
+    salad: {
+      name: 'Ensalada',
+      doing: 'Preparando una ensalada',
+      done: 'ha preparado una ensalada',
+      fail: 'preparar la ensalada',
+    },
+    preserve: {
+      name: 'Conserva de tomate',
+      doing: 'Haciendo conserva de tomate',
+      done: 'ha hecho un tarro de conserva de tomate',
+      fail: 'hacer la conserva de tomate',
     },
   } satisfies Record<RecipeId, { name: string; doing: string; done: string; fail: string }>,
   /** Materiales que se pierden al fallar (sin plural): "−2 de tela". */
@@ -304,6 +329,10 @@ export const es = {
   },
   craftMaterial: (n: number) => `${n} tela, retal o tira`,
   craftWater: (liters: number) => `${liters} litros de agua`,
+  /** V4: «2 hortalizas cualesquiera», «1 hortaliza cualquiera» y el agua de beber. */
+  craftAnyVeg: (n: number) => (n === 1 ? '1 hortaliza cualquiera' : `${n} hortalizas cualesquiera`),
+  craftLiquid: (n: number) =>
+    n === 1 ? 'agua (1 botella o 1 cubo)' : `agua (${n} botellas o cubos)`,
   craftGives: {
     mend: 'la prenda remendada',
     pad: 'la prenda reforzada',
@@ -329,6 +358,9 @@ export const es = {
     fire: 'La hoguera está apagada: hace falta leña', // V3
     tool: { needle: 'Falta una aguja', knife: 'Falta un cuchillo' },
     input: (what: string, n: number) => `${n === 1 ? 'Falta' : 'Faltan'} ${what}`,
+    /** V4: las hortalizas «cualquiera» y el agua de la sopa. */
+    anyVeg: (n: number) => `${n === 1 ? 'Falta 1 hortaliza' : `Faltan ${n} hortalizas`}`,
+    liquid: 'Falta agua: una botella o un cubo con agua',
     material: 'Falta tela, retal o tira',
     piece: {
       holed: 'No hay ropa con agujeros en el almacén',

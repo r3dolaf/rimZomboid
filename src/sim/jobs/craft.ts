@@ -5,6 +5,7 @@ import {
   HIT_WEIGHTS,
   ITEM_WEIGHT_KG,
   RECIPES,
+  VEG,
   type Recipe,
 } from '../balance';
 import { bagsIn, garments, newBag } from '../bags';
@@ -57,10 +58,50 @@ const MATERIALS: readonly Material[] = ['leather', 'denim', 'cloth'];
 export const bestMaterial = (from: Record<ItemKind, number>): Material | null =>
   MATERIALS.find((m) => from[m] > 0) ?? null;
 
+/**
+ * V4 §3: las hortalizas «cualquiera» que gastaría la receta de `from` (una por cada una, de lo que
+ * antes se estropea a lo que menos, sin tocar las fijas de `input`), o `null` si no llegan.
+ */
+export function vegFor(r: Recipe, from: Record<ItemKind, number>): ItemKind[] | null {
+  const want = r.anyVeg ?? 0;
+  const out: ItemKind[] = [];
+  for (const k of VEG) {
+    const free = from[k] - (r.input[k] ?? 0);
+    for (let i = 0; i < free && out.length < want; i++) out.push(k);
+  }
+  return out.length === want ? out : null;
+}
+
+/** Cuántas hortalizas «cualquiera» hay en `from` (sin las fijas). */
+const vegFree = (r: Recipe, from: Record<ItemKind, number>) =>
+  VEG.reduce((n, k) => n + Math.max(0, from[k] - (r.input[k] ?? 0)), 0);
+
+/** V4 §3: de dónde sale el agua de la receta: botellas o, si no hay, cubos con agua; o `null`. */
+export function liquidFor(
+  r: Recipe,
+  from: Record<ItemKind, number>,
+): 'waterBottle' | 'waterBucket' | null {
+  const n = r.liquid ?? 0;
+  if (n === 0) return null;
+  if (from.waterBottle >= n) return 'waterBottle';
+  return from.waterBucket >= n ? 'waterBucket' : null;
+}
+
 /** ¿Hay en `from` todo lo que gasta la receta (y, si lleva material, alguno)? */
 const hasInputs = (r: Recipe, from: Record<ItemKind, number>) =>
   entries(r.input).every(([k, n]) => from[k] >= n) &&
-  (r.material === undefined || MATERIALS.some((m) => from[m] >= r.material!));
+  (r.material === undefined || MATERIALS.some((m) => from[m] >= r.material!)) &&
+  (r.anyVeg === undefined || vegFor(r, from) !== null) &&
+  (r.liquid === undefined || liquidFor(r, from) !== null);
+
+/** Todo lo que gasta la receta de `from`: lo de `input`, las hortalizas «cualquiera» y el agua. */
+function spendFrom(r: Recipe, from: Record<ItemKind, number>): [ItemKind, number][] {
+  const out = new Map<ItemKind, number>(entries(r.input));
+  for (const k of vegFor(r, from) ?? []) out.set(k, (out.get(k) ?? 0) + 1);
+  const liquid = liquidFor(r, from);
+  if (liquid) out.set(liquid, (out.get(liquid) ?? 0) + r.liquid!);
+  return [...out];
+}
 
 /** De esas zonas, la que más golpes recibe (a igualdad, la primera). */
 function mostHit(zones: readonly BodyPart[]): BodyPart | null {
@@ -105,6 +146,8 @@ export type CraftBlock =
   | { kind: 'fire' } // V3: la hoguera, sin leña
   | { kind: 'tool'; tool: 'needle' | 'knife' }
   | { kind: 'input'; item: ItemKind; missing: number }
+  | { kind: 'anyVeg'; missing: number } // V4
+  | { kind: 'liquid' }
   | { kind: 'material' }
   | { kind: 'piece'; piece: NonNullable<Recipe['piece']> };
 
@@ -123,6 +166,9 @@ export function craftBlocker(w: World, r: Recipe): CraftBlock | null {
   for (const [item, n] of entries(r.input))
     if (w.storage.items[item] < n)
       return { kind: 'input', item, missing: n - w.storage.items[item] };
+  if (r.anyVeg !== undefined && vegFor(r, w.storage.items) === null)
+    return { kind: 'anyVeg', missing: r.anyVeg - vegFree(r, w.storage.items) };
+  if (r.liquid !== undefined && liquidFor(r, w.storage.items) === null) return { kind: 'liquid' };
   if (r.material !== undefined && !MATERIALS.some((m) => w.storage.items[m] >= r.material!))
     return { kind: 'material' };
   if (r.piece !== undefined && !pieceFor(w, r)) return { kind: 'piece', piece: r.piece };
@@ -235,14 +281,15 @@ export function startCraftActivity(
     const g = pieceFor(w, r);
     if (r.piece !== undefined && !g) return idle;
     const mat = r.material !== undefined ? bestMaterial(w.storage.items) : null;
+    const take = spendFrom(r, w.storage.items);
     const kg =
-      entries(r.input).reduce((acc, [k, n]) => acc + n * ITEM_WEIGHT_KG[k], 0) +
+      take.reduce((acc, [k, n]) => acc + n * ITEM_WEIGHT_KG[k], 0) +
       (mat ? r.material! * ITEM_WEIGHT_KG[mat] : 0) +
       (g ? pieceKg(g) : 0);
     if (weightOf(s.carrying) + kg > capacityKg(s) + 1e-9) return idle;
     const path = findPath(w.grid, tileOf(s.pos), t.stand);
     if (!path) return idle;
-    for (const [k, n] of entries(r.input)) {
+    for (const [k, n] of take) {
       w.storage.items[k] -= n;
       s.carrying[k] += n;
     }
@@ -312,7 +359,9 @@ export function finishCraft(
   // Sobre prendas (H5b §3): la que lleva y el material que se llevó.
   const g = garments(s.carrying.pieces).find((p) => p.id === a.pieceId);
   if (r.piece !== undefined && !g) return;
-  const used = entries(r.input);
+  const used = spendFrom(r, s.carrying);
+  // V4: el agua de un cubo se gasta y el cubo vuelve (salga bien o mal).
+  const buckets = used.find(([k]) => k === 'waterBucket')?.[1] ?? 0;
   if (r.material !== undefined) {
     const mat = a.material && s.carrying[a.material] >= r.material ? a.material : null;
     if (!mat) return;
@@ -323,6 +372,7 @@ export function finishCraft(
   const tub = r.water !== undefined ? w.furniture.find((f) => f.id === a.tableId) : undefined;
   if (r.water !== undefined && (!tub || (tub.water ?? 0) < r.water)) return;
   for (const [k, n] of used) s.carrying[k] -= n;
+  s.carrying.bucket += buckets;
   if (tub) tub.water = (tub.water ?? 0) - r.water!;
   const chance = r.safe ? 0 : buildFailChance(s.skills.craft.level, s.traits.includes('clumsy'));
   if (chance > 0 && nextFloat(w.rng) < chance) {
@@ -330,6 +380,7 @@ export function finishCraft(
     for (const [k, n] of used) {
       lost[k] = Math.ceil(n / 2);
       s.carrying[k] += n - lost[k];
+      if (k === 'waterBucket') s.carrying.bucket -= n - lost[k]; // esos, aún con agua
     }
     logEvent(w, { kind: 'craftFailed', survivorId: s.id, recipe: a.recipe, lost, ...garment });
     return;

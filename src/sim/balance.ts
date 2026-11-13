@@ -596,6 +596,10 @@ export interface Recipe {
    */
   station?: 'table' | 'tub' | 'campfire';
   water?: number;
+  /** V4 §3: hortalizas cualesquiera, además de las de `input` (primero lo que antes se estropea). */
+  anyVeg?: number;
+  /** V4 §3: agua de beber: botellas o, si no hay, cubos con agua (que vuelven vacíos). */
+  liquid?: number;
   /** No falla nunca (lavar). */
   safe?: boolean;
   /** Lo que hace es una bolsa (H5b2 §6): sale como pieza. */
@@ -662,12 +666,45 @@ export const RECIPES: Record<RecipeId, Recipe> = {
     output: {},
     ticks: TICKS_PER_HOUR,
     makes: 'clothBag',
-  }, // V1 §5: 2 hortalizas, un guiso, en la hoguera.
+  }, // V1 §5 y V4 §3: el guiso de verduras, con 2 hortalizas cualesquiera, en la hoguera.
   cook: {
-    input: { potato: 2 },
+    input: {},
+    anyVeg: 2,
     tool: null,
     output: { stewVeg: 1 },
     ticks: 0.5 * TICKS_PER_HOUR,
+    station: 'campfire',
+  },
+  // V4 §3: el guiso de patatas (el que más llena), la sopa de col (abriga), la ensalada (en la mesa)
+  // y la conserva de tomate (no se estropea).
+  cookPotato: {
+    input: { potato: 2 },
+    anyVeg: 1,
+    tool: null,
+    output: { stewPotato: 1 },
+    ticks: 0.75 * TICKS_PER_HOUR,
+    station: 'campfire',
+  },
+  soup: {
+    input: { cabbage: 1 },
+    liquid: 1,
+    tool: null,
+    output: { soupCabbage: 1 },
+    ticks: 0.5 * TICKS_PER_HOUR,
+    station: 'campfire',
+  },
+  salad: {
+    input: { lettuce: 1, tomato: 1 },
+    tool: null,
+    output: { salad: 1 },
+    ticks: TICKS_PER_HOUR / 6,
+    station: 'table',
+  },
+  preserve: {
+    input: { tomato: 3 },
+    tool: null,
+    output: { preserves: 1 },
+    ticks: TICKS_PER_HOUR,
     station: 'campfire',
   },
 };

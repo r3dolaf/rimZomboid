@@ -60,7 +60,7 @@ Sustituyen a la «hortaliza». Cada uno tiene sus semillas (objeto aparte) y lo 
 | Lechuga | 8 °C o más              | 5 °C      | por debajo de −2  | 4 días  | 2               | 25 %               | 25              | 0,3 kg |
 | Tomate  | 14 °C o más             | 12 °C     | por debajo de −2  | 8 días  | 5               | 12 %               | 20              | 0,2 kg |
 | Patata  | 8 °C o más              | 5 °C      | por debajo de −2  | 10 días | 4               | 2 %                | 40              | 0,3 kg |
-| Col     | 3 °C o más              | 2 °C      | por debajo de −6  | 9 días  | 3               | 5 %                | 35              | 1 kg   |
+| Col     | 2 °C o más              | 0 °C      | por debajo de −10 | 9 días  | 3               | 5 %                | 35              | 1 kg   |
 
 - Las cifras son de partida: se ajustan con la sonda (§10). «Se siembra con el día a» es la media del
   día (como la regla de Q1, ahora por cultivo): los colonos no siembran algo con un frío que
@@ -136,7 +136,7 @@ N» en el panel de Fabricar).
 
 - Las semillas pesan lo de hoy (20 g), todas igual.
 
-- **Al empezar**: semillas de patata y de lechuga (las 6 de hoy, 3 y 3), nada más; tomate y col hay
+- **Al empezar**: 6 patatas de siembra y 3 semillas de lechuga (tras la sonda; antes, 3 y 3), nada más; tomate y col hay
   que encontrarlos.
 - **Botín** (con el azar propio de las semillas, como hoy): las mismas cantidades de SEEDS_LOOT
   repartidas por cultivo según el sitio: granja y ferretería, las cuatro; supermercado, lechuga y
@@ -195,6 +195,36 @@ patata, como hoy). Objetivos:
 - Competente: Equilibrado llega al día 60 un 25–35 % (Q1 se quedó en 17 %), y en Tranquilo el hambre
   deja de ser la mitad de las muertes.
 - Descuidado: no peor que hoy (Q1).
+
+### 10.1 Resultado
+
+Cuatro vueltas (144 partidas de 60 días cada una: Equilibrado 36, Tranquilo 18 y Caótico 18, por
+jugador; la sonda, en `probe/balance.test.ts`, no se publica). La sonda cuenta además lo que se
+seca, se pudre o se hiela, los avisos de semillas y los platos hechos.
+
+- **Vuelta 1** (como el diseño): más difícil que Q1, sobre todo por el hambre. Quien no toca el
+  selector solo tenía 3 patatas de siembra (antes, 6 semillas); la col se helaba casi cada noche de
+  invierno con −6; y en la sonda el guiso de verduras iba el primero de los pedidos y se llevaba las
+  hortalizas de los otros platos (un jugador lo pondría el último).
+- **Vuelta 2**: 6 patatas de siembra y 3 de lechuga; la col, de invierno (se siembra desde 2,
+  crece desde 0 y aguanta hasta −10); la sonda, con el guiso de verduras el último.
+- **Vuelta 3**: la patata y el tomate dejan 2 semillas (antes 1), y otra a veces: con 1, faltaban
+  semillas (unos 8 avisos por partida; ahora, unos 6).
+- **Vuelta 4**: 2 semillas de tomate al empezar (para que el competente haga conservas): sin efecto
+  claro (las conservas, de 0,5 a 0,5–1,3 por partida); no se queda.
+
+| Narrador    | Q1 (mediana / al día 60) | Descuidado (vueltas 2–3) | Competente (vueltas 2–4) |
+| ----------- | ------------------------ | ------------------------ | ------------------------ |
+| Equilibrado | 46 / 17 %                | 44 / 11–13 %             | 42–50 / 8–16 %           |
+| Tranquilo   | 61 / 67 %                | 49–58 / 27–38 %          | 53–61 / 33–61 %          |
+| Caótico     | 28,5 / 6 %               | 22 / 0 %                 | 24–28 / 0 %              |
+
+Entre vueltas con las mismas cifras, lo que llega al final varía más de 20 puntos en Tranquilo (18
+partidas): las diferencias de menos de eso son ruido. Lo que queda: el competente no llega al 25–35 %
+en Equilibrado (ahí mata sobre todo la infección, un 40 %, y la sed, un 20 %; el hambre, un 20–25 %),
+y en Tranquilo el hambre de primavera sigue siendo la mitad de las muertes: la conserva casi no se
+hace (el tomate sale del botín) y entrar al invierno con comida para unos 15–25 días no basta hasta
+la primera cosecha de primavera. Ninguno de los dos se arregla bien con más cifras del huerto.
 
 ## 11. Lo que decide quien lo construye
 

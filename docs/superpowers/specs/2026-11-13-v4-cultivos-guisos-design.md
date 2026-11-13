@@ -78,7 +78,8 @@ La descripción de cada semilla (al tocarla en el almacén y en el selector) da 
 estaciones:
 
 - **Lechuga**: «Brota enseguida si no hace frío. Hay que comérsela pronto.»
-- **Tomate**: «Le gusta el sol de pleno verano. Da mucho, si le da tiempo a madurar.»
+- **Tomate**: «Le gusta el sol más fuerte. Da mucho, si le da tiempo a madurar.» (sin decir la
+  estación, como pide el antiobjetivo)
 - **Patata**: «Tarda, pero se guarda casi para siempre. Sembrar con buen tiempo.»
 - **Col**: «Aguanta el fresco y alguna helada. Lenta, pero no se rinde.»
 

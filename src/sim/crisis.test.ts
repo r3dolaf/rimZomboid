@@ -65,8 +65,8 @@ test('los pesos: Glotón, más atracones; Desagradable, más rabia; Cobarde, má
   expect(share('flee', s, w)).toBe(0);
   s.traits = [];
   w.storage.items.food = 0;
-  w.storage.items.veg = 0;
-  w.storage.items.meal = 0;
+  w.storage.items.potato = 0;
+  w.storage.items.stewVeg = 0;
   expect(share('binge', s, w)).toBe(0);
 });
 

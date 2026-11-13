@@ -40,7 +40,7 @@ test('Construir: hace falta un generador en el almacén y uno solo', () => {
 test('el consejo, con el primer generador en el almacén', () => {
   const w = createWorld(3);
   w.storage.items.food = 20;
-  w.storage.items.seeds = 0;
+  w.storage.items.seedsPotato = 0;
   w.tick = 2 * TICKS_PER_HOUR;
   const seen = ['pause', 'night', 'zombies', 'bleeding', 'bite', 'food', 'mood', 'siege'] as const;
   expect(dueTip(w, { pausedByNotice: false, zombiesSeen: 0 }, [...seen])).toBeNull();

@@ -104,7 +104,10 @@ test('cada cosa va a su mueble (comida a la nevera, vendas al botiquín, tela al
     hatchet: ['crate'], // H5b2
     roadMap: ['counter'], // H5c1
     note: ['wardrobe'],
-    seeds: ['crate'], // V1
+    seedsLettuce: ['crate'], // V1 y V4
+    seedsTomato: ['crate'],
+    seedsPotato: ['crate'],
+    seedsCabbage: ['crate'],
     radio: ['crate'], // C1
     battery: ['crate'],
     pistol: ['locker'], // D1
@@ -264,9 +267,9 @@ test('V1: semillas en granjas, ferreterías, supermercados y algunas casas; 6 en
   const seedsIn = (kind: string) =>
     w.containers
       .filter((c) => w.houses.find((h) => h.id === c.houseId)?.kind === kind)
-      .reduce((n, c) => n + c.items.seeds, 0);
-  const total = w.containers.reduce((n, c) => n + c.items.seeds, 0);
+      .reduce((n, c) => n + c.items.seedsPotato, 0);
+  const total = w.containers.reduce((n, c) => n + c.items.seedsPotato, 0);
   expect(total).toBeGreaterThan(0);
   expect(seedsIn('police') + seedsIn('pharmacy') + seedsIn('clothes')).toBe(0);
-  expect(w.storage.items.seeds).toBe(START_SEEDS);
+  expect(w.storage.items.seedsPotato).toBe(START_SEEDS);
 });

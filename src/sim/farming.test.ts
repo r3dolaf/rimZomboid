@@ -27,24 +27,24 @@ function run(w: World, ticks: number, until: () => boolean = () => false): void 
 
 test('con semillas en el almacén, va a por ellas y siembra el huerto', () => {
   const w = farm();
-  w.storage.items.seeds = 3;
+  w.storage.items.seedsPotato = 3;
   markPlot(w, 8, 6, true);
   markPlot(w, 9, 6, true);
   run(w, 2000, () => w.plots.every((p) => p.crop !== null));
   expect(w.plots.every((p) => cropStage(p) === 'growing')).toBe(true);
-  expect(w.storage.items.seeds + w.survivors[0]!.carrying.seeds).toBe(1);
+  expect(w.storage.items.seedsPotato + w.survivors[0]!.carrying.seedsPotato).toBe(1);
   expect(w.survivors[0]!.skills.farm.xp).toBeGreaterThan(0);
   expect(checkInvariants(w)).toEqual([]);
 });
 
 test('vuelve con las semillas que le sobran al almacén', () => {
   const w = farm();
-  w.survivors[0]!.carrying.seeds = 3; // coge solo las que va a sembrar; aquí lleva de más
+  w.survivors[0]!.carrying.seedsPotato = 3; // coge solo las que va a sembrar; aquí lleva de más
   markPlot(w, 8, 6, true);
-  run(w, 3000, () => w.storage.items.seeds === 2);
+  run(w, 3000, () => w.storage.items.seedsPotato === 2);
   expect(w.plots[0]!.crop).not.toBeNull();
-  expect(w.storage.items.seeds).toBe(2);
-  expect(w.survivors[0]!.carrying.seeds).toBe(0);
+  expect(w.storage.items.seedsPotato).toBe(2);
+  expect(w.survivors[0]!.carrying.seedsPotato).toBe(0);
 });
 
 test('riega lo seco con agua del barreño (4 litros por viaje, 1 por parcela)', () => {
@@ -52,7 +52,7 @@ test('riega lo seco con agua del barreño (4 litros por viaje, 1 por parcela)', 
   w.furniture.push({ id: 90, kind: 'tub', pos: { x: 6, y: 2 }, water: 10 });
   markPlot(w, 8, 6, true);
   markPlot(w, 9, 6, true);
-  for (const p of w.plots) p.crop = { grown: 5, ripe: 0, dry: 0 };
+  for (const p of w.plots) p.crop = { kind: 'potato', grown: 5, ripe: 0, dry: 0 };
   run(w, 2000, () => w.plots.every((p) => p.moisture > 0));
   expect(w.plots.map((p) => p.moisture)).toEqual([WATER_MOISTURE_HOURS, WATER_MOISTURE_HOURS]);
   expect(w.furniture[0]!.water).toBe(10 - WATER_CAN_LITERS);
@@ -63,7 +63,7 @@ test('sin agua en ninguna fuente no puede regar (ni lo intenta)', () => {
   const w = farm();
   w.furniture.push({ id: 90, kind: 'tub', pos: { x: 6, y: 2 }, water: 0 });
   markPlot(w, 8, 6, true);
-  w.plots[0]!.crop = { grown: 5, ripe: 0, dry: 0 };
+  w.plots[0]!.crop = { kind: 'potato', grown: 5, ripe: 0, dry: 0 };
   expect(farmJob(w.survivors[0]!, w)).toBeNull();
 });
 
@@ -72,12 +72,12 @@ test('cosecha lo maduro: deja en la parcela un montón de hortalizas y semillas,
   const s = w.survivors[0]!;
   s.work.haul = true;
   markPlot(w, 8, 6, true);
-  w.plots[0]!.crop = { grown: GROW_HOURS, ripe: 3, dry: 0 };
-  run(w, 3000, () => w.storage.items.veg > 0);
+  w.plots[0]!.crop = { kind: 'potato', grown: GROW_HOURS, ripe: 3, dry: 0 };
+  run(w, 3000, () => w.storage.items.potato > 0);
   expect(w.plots[0]!.crop).toBeNull();
-  expect(w.storage.items.veg).toBeGreaterThanOrEqual(4); // con Cultivar 5
-  expect(w.common.stats.harvested).toBe(w.storage.items.veg); // para el resumen final
-  expect(w.storage.items.seeds).toBeGreaterThanOrEqual(1);
+  expect(w.storage.items.potato).toBeGreaterThanOrEqual(4); // con Cultivar 5
+  expect(w.common.stats.harvested).toBe(w.storage.items.potato); // para el resumen final
+  expect(w.storage.items.seedsPotato).toBeGreaterThanOrEqual(1);
   expect(checkInvariants(w)).toEqual([]);
 });
 
@@ -92,18 +92,18 @@ test('la cosecha según Cultivar: 3 con 0, 4 con 5, 5 con 10 y la fracción a ve
 test('sin permiso para Cultivar, no hace nada en el huerto', () => {
   const w = farm();
   w.survivors[0]!.work.farm = false;
-  w.storage.items.seeds = 3;
+  w.storage.items.seedsPotato = 3;
   markPlot(w, 8, 6, true);
   run(w, 1500);
   expect(w.plots[0]!.crop).toBeNull();
-  expect(w.storage.items.seeds).toBe(3);
+  expect(w.storage.items.seedsPotato).toBe(3);
 });
 
 test('dos que cultivan no van a la misma parcela', () => {
   const w = farm();
-  w.storage.items.seeds = 0;
+  w.storage.items.seedsPotato = 0;
   const [a] = w.survivors;
-  a!.carrying.seeds = 2;
+  a!.carrying.seedsPotato = 2;
   markPlot(w, 8, 6, true);
   markPlot(w, 12, 9, true);
   const first = farmJob(a!, w);
@@ -125,13 +125,13 @@ test('dos que cultivan no van a la misma parcela', () => {
 
 test('Q1: con un día frío (de media por debajo de SOW_MIN_TEMP) no siembra: la helada lo mataría y se gastan las semillas', () => {
   const w = farm();
-  w.storage.items.seeds = 3;
+  w.storage.items.seedsPotato = 3;
   markPlot(w, 8, 6, true);
   const s = w.survivors[0]!;
   w.common.tempShift = { value: -40, until: Number.MAX_SAFE_INTEGER }; // una ola de frío
   expect(dayMean(w)).toBeLessThan(SOW_MIN_TEMP);
   expect(farmJob(s, w)).toBeNull(); // ni va a por semillas
-  s.carrying.seeds = 2;
+  s.carrying.seedsPotato = 2;
   expect(farmJob(s, w)).toBeNull(); // ni siembra las que lleva
   w.common.tempShift = null;
   expect(dayMean(w)).toBeGreaterThanOrEqual(SOW_MIN_TEMP); // verano
@@ -143,7 +143,7 @@ test('Q1: lo maduro se cosecha aunque lleve cosas del saqueo (si no, se pudría 
   const s = w.survivors[0]!;
   s.work.loot = true;
   markPlot(w, 8, 6, true);
-  w.plots[0]!.crop = { grown: GROW_HOURS, ripe: 0, dry: 0 };
+  w.plots[0]!.crop = { kind: 'potato', grown: GROW_HOURS, ripe: 0, dry: 0 };
   // Lleva algo y hay un mueble marcado al que seguiría yendo.
   s.carrying.cloth = 1;
   const c = w.containers[0];

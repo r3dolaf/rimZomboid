@@ -62,14 +62,7 @@ export const en: Texts = {
     `Water: ${n_(liters, 'litre', 'litres')} in tubs and barrels and ${n_(bottles, 'bottle', 'bottles')}${
       mains ? ' · running water' : ' · no running water'
     }`,
-  hudFoodTitle: (cans: number, veg: number, meals: number) =>
-    `Food: ${list(
-      [
-        n_(cans, 'can', 'cans'),
-        veg > 0 ? n_(veg, 'vegetable', 'vegetables') : '',
-        meals > 0 ? n_(meals, 'stew', 'stews') : '',
-      ].filter((x) => x !== ''),
-    )}`,
+  hudFoodTitle: (parts: string[]) => `Food: ${list(parts)}`,
   bandages: (n: number) => `🩹 ${n}`,
   painkillers: (n: number) => `💊 ${n}`,
   hudTitles: {
@@ -1424,9 +1417,19 @@ export const en: Texts = {
     hatchet: ['hatchet', 'hatchets'],
     roadMap: ['road map', 'road maps'],
     note: ['note', 'notes'],
-    seeds: ['seed', 'seeds'],
-    veg: ['vegetable', 'vegetables'],
-    meal: ['stew', 'stews'],
+    seedsLettuce: ['lettuce seed', 'lettuce seeds'],
+    seedsTomato: ['tomato seed', 'tomato seeds'],
+    seedsPotato: ['seed potato', 'seed potatoes'],
+    seedsCabbage: ['cabbage seed', 'cabbage seeds'],
+    lettuce: ['lettuce', 'lettuces'],
+    tomato: ['tomato', 'tomatoes'],
+    potato: ['potato', 'potatoes'],
+    cabbage: ['cabbage', 'cabbages'],
+    stewVeg: ['vegetable stew', 'vegetable stews'],
+    stewPotato: ['potato stew', 'potato stews'],
+    soupCabbage: ['cabbage soup', 'cabbage soups'],
+    salad: ['salad', 'salads'],
+    preserves: ['jar of tomato preserve', 'jars of tomato preserve'],
     radio: ['radio', 'radios'],
     battery: ['battery', 'batteries'],
     pistol: ['pistol', 'pistols'],
@@ -1536,13 +1539,8 @@ export const en: Texts = {
         winter: "Winter begins: nothing grows and it's cold",
         spring: 'Spring begins',
       })[season],
-    spoiled: (veg: number, meal: number) => {
-      const parts = [
-        veg > 0 ? n_(veg, 'vegetable', 'vegetables') : '',
-        meal > 0 ? n_(meal, 'stew', 'stews') : '',
-      ].filter((x) => x !== '');
-      return `${cap(list(parts))} ${veg + meal === 1 ? 'has' : 'have'} gone off in storage`;
-    },
+    spoiled: (parts: string[], total: number) =>
+      `${cap(list(parts))} ${total === 1 ? 'has' : 'have'} gone off in storage`,
     cropsLost: (dried: number, rotted: number) => {
       const parts = [
         dried > 0 ? `${n_(dried, 'crop', 'crops')} dried up` : '',

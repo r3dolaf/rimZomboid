@@ -1,18 +1,49 @@
 // Comida (spec V1 §1 y §5): lo que quita cada una, en qué orden se come y comerla.
-import { EAT_RESTORE, MEAL_RESTORE, VEG_RESTORE } from './balance';
+import { EAT_RESTORE } from './balance';
 import { has, spend } from './bags';
 import type { ItemKind } from './items';
 import type { Survivor } from './types';
 
-export type FoodKind = 'meal' | 'veg' | 'food';
+export type FoodKind =
+  | 'salad'
+  | 'stewVeg'
+  | 'stewPotato'
+  | 'soupCabbage'
+  | 'lettuce'
+  | 'tomato'
+  | 'cabbage'
+  | 'potato'
+  | 'preserves'
+  | 'food';
 
-/** En el orden en que se come: lo que se estropea antes, primero (la lata no se estropea). */
-export const FOODS: readonly FoodKind[] = ['meal', 'veg', 'food'];
+/**
+ * En el orden en que se come (V4 §4): lo que antes se estropea, primero; los platos antes que lo
+ * crudo, y la conserva y la lata (que no se estropean) al final.
+ */
+export const FOODS: readonly FoodKind[] = [
+  'salad',
+  'stewVeg',
+  'stewPotato',
+  'soupCabbage',
+  'lettuce',
+  'tomato',
+  'cabbage',
+  'potato',
+  'preserves',
+  'food',
+];
 
-/** Lo que quita de hambre cada una. */
+/** Lo que quita de hambre cada una (V4 §2–§3; la lata, EAT_RESTORE). */
 export const FOOD_RESTORE: Record<FoodKind, number> = {
-  meal: MEAL_RESTORE,
-  veg: VEG_RESTORE,
+  salad: 50,
+  stewVeg: 80,
+  stewPotato: 100,
+  soupCabbage: 60,
+  lettuce: 25,
+  tomato: 20,
+  cabbage: 35,
+  potato: 40,
+  preserves: 60,
   food: EAT_RESTORE,
 };
 

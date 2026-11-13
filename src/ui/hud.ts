@@ -1,7 +1,9 @@
 import { SLEEP_SPEED, type Speed, type TimeController } from '../game/timeController';
 import { t as es } from '../i18n';
 import type { GameTime } from '../sim/clock';
+import { FOODS } from '../sim/food';
 import type { Inventory } from '../sim/items';
+import { countParts } from './describe';
 import type { NarratorStyle } from '../sim/types';
 import type { Fullscreen } from './fullscreen';
 import type { Tool } from './tool';
@@ -386,10 +388,16 @@ export function mountHud(
       if (weather.hidden === storm) weather.hidden = !storm;
       const text = formatDayTime(t);
       if (time.textContent !== text) time.textContent = text;
-      // V1: latas, hortalizas y guisos (el desglose, al pasar el ratón).
-      const foodText = es.food(stock.food + stock.veg + stock.meal);
+      // V1 y V4: todo lo que se come (el desglose, al pasar el ratón; las latas, siempre).
+      const foodText = es.food(FOODS.reduce((n, k) => n + stock[k], 0));
       if (food.textContent !== foodText) food.textContent = foodText;
-      const foodTitle = es.hudFoodTitle(stock.food, stock.veg, stock.meal);
+      const foodTitle = es.hudFoodTitle([
+        `${stock.food} ${es.items.food[stock.food === 1 ? 0 : 1]}`,
+        ...countParts(
+          stock,
+          FOODS.filter((k) => k !== 'food'),
+        ),
+      ]);
       if (food.title !== foodTitle) food.title = foodTitle;
       if (water.hidden !== !waterNow) water.hidden = !waterNow;
       if (waterNow) {

@@ -108,8 +108,9 @@ test('V1: el huerto: tierra seca y mojada, y lo sembrado por tercios hasta madur
     expect(PROP_SPRITES[f], f).toBeDefined();
   const plot = (grown: number | null) => ({
     tile: 0,
+    kind: 'potato' as const,
     moisture: 0,
-    crop: grown === null ? null : { grown, ripe: 0, dry: 0 },
+    crop: grown === null ? null : { kind: 'potato' as const, grown, ripe: 0, dry: 0 },
   });
   expect(cropFrame(plot(null))).toBeNull();
   expect(cropFrame(plot(0))).toBe('crop1');

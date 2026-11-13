@@ -108,7 +108,7 @@ const sowWeather = (w: World) => dayMean(w) >= SOW_MIN_TEMP;
 
 /** Sembrar con las semillas que lleva (también vuelve a ello quien va cargado de semillas). */
 export function sowJob(s: Survivor, w: World): Action | null {
-  if (s.carrying.seeds === 0 || w.plots.length === 0 || !sowWeather(w)) return null;
+  if (s.carrying.seedsPotato === 0 || w.plots.length === 0 || !sowWeather(w)) return null;
   const p = nearestPlot(s, w, 'sow');
   return p && goTend(w, p, 'sow');
 }
@@ -137,7 +137,7 @@ export function farmJob(s: Survivor, w: World): Action | null {
   }
   const sow = sowJob(s, w);
   if (sow) return sow;
-  if (w.storage.items.seeds > 0 && sowWeather(w) && nearestPlot(s, w, 'sow'))
+  if (w.storage.items.seedsPotato > 0 && sowWeather(w) && nearestPlot(s, w, 'sow'))
     return { type: 'moveTo', target: pick(w.rng, w.storage.tiles), then: { type: 'takeSeeds' } };
   return null;
 }
@@ -147,7 +147,7 @@ export function farmStillWorth(s: Survivor, w: World): boolean {
   if (!s.work.farm) return false;
   const a = s.action;
   const t = a.type === 'moveTo' ? a.then : a;
-  if (t?.type === 'takeSeeds') return w.storage.items.seeds > 0;
+  if (t?.type === 'takeSeeds') return w.storage.items.seedsPotato > 0;
   if (t?.type === 'fillCan') {
     const f = w.furniture.find((x) => x.id === t.sourceId);
     return f !== undefined && gives(w, f) && can(s) < WATER_CAN_LITERS;
@@ -155,7 +155,7 @@ export function farmStillWorth(s: Survivor, w: World): boolean {
   if (t?.type !== 'tend') return false;
   const p = w.plots.find((x) => x.tile === t.tile);
   if (!p || !WANTS[t.what](p)) return false;
-  if (t.what === 'sow') return s.carrying.seeds > 0;
+  if (t.what === 'sow') return s.carrying.seedsPotato > 0;
   if (t.what === 'water') return can(s) >= 1;
   return true;
 }
@@ -163,8 +163,10 @@ export function farmStillWorth(s: Survivor, w: World): boolean {
 /** Cuántas semillas coge: las que vaya a sembrar (hasta SOW_TAKE_MAX) y le quepan. */
 function seedsToTake(s: Survivor, w: World): number {
   const empty = w.plots.filter((p) => cropStage(p) === 'empty').length;
-  const fit = Math.floor((capacityKg(s) - weightOf(s.carrying)) / ITEM_WEIGHT_KG.seeds + 1e-9);
-  return Math.max(0, Math.min(w.storage.items.seeds, SOW_TAKE_MAX, empty, fit));
+  const fit = Math.floor(
+    (capacityKg(s) - weightOf(s.carrying)) / ITEM_WEIGHT_KG.seedsPotato + 1e-9,
+  );
+  return Math.max(0, Math.min(w.storage.items.seedsPotato, SOW_TAKE_MAX, empty, fit));
 }
 
 /** Al llegar: coge semillas, coge agua o empieza a trabajar la parcela. */
@@ -172,8 +174,8 @@ export function startFarmActivity(s: Survivor, w: World, activity: FarmActivity)
   const idle: Action = { type: 'idle', ticksLeft: 0 };
   if (activity.type === 'takeSeeds') {
     const n = seedsToTake(s, w);
-    w.storage.items.seeds -= n;
-    s.carrying.seeds += n;
+    w.storage.items.seedsPotato -= n;
+    s.carrying.seedsPotato += n;
     return idle;
   }
   if (activity.type === 'fillCan') {
@@ -194,7 +196,9 @@ export function startFarmActivity(s: Survivor, w: World, activity: FarmActivity)
 }
 
 const farmStillWorthTend = (s: Survivor, p: Plot, what: TendKind) =>
-  WANTS[what](p) && (what !== 'sow' || s.carrying.seeds > 0) && (what !== 'water' || can(s) >= 1);
+  WANTS[what](p) &&
+  (what !== 'sow' || s.carrying.seedsPotato > 0) &&
+  (what !== 'water' || can(s) >= 1);
 
 /** Hortalizas de una cosecha con su nivel: la parte entera y la fracción con su probabilidad. */
 export function harvestVeg(level: number, roll: number): number {
@@ -210,8 +214,8 @@ export function tendStep(w: World, s: Survivor, a: Tending): boolean {
   const p = w.plots.find((x) => x.tile === a.tile);
   if (!p || !farmStillWorthTend(s, p, a.what)) return true;
   if (a.what === 'sow') {
-    s.carrying.seeds--;
-    p.crop = { grown: 0, ripe: 0, dry: 0 };
+    s.carrying.seedsPotato--;
+    p.crop = { kind: p.kind, grown: 0, ripe: 0, dry: 0 };
   } else if (a.what === 'water') {
     s.waterCan = can(s) - 1;
     p.moisture = Math.max(p.moisture, WATER_MOISTURE_HOURS);
@@ -220,7 +224,7 @@ export function tendStep(w: World, s: Survivor, a: Tending): boolean {
     const seeds = 1 + (nextFloat(w.rng) < HARVEST_EXTRA_SEED ? 1 : 0);
     p.crop = null;
     w.common.stats.harvested += veg; // para el resumen final
-    dropPile(w, plotPos(w, p), { ...emptyInventory(), veg, seeds });
+    dropPile(w, plotPos(w, p), { ...emptyInventory(), potato: veg, seedsPotato: seeds });
   }
   return true;
 }

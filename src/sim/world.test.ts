@@ -78,7 +78,7 @@ test('almacén de 2 casillas junto a la puerta, con 10 latas, los antibióticos 
     ...emptyInventory(),
     food: 10,
     antibiotics: START_ANTIBIOTICS,
-    seeds: START_SEEDS,
+    seedsPotato: START_SEEDS,
     waterBottle: START_WATER_BOTTLES, // V2
   });
 });

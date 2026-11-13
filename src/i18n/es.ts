@@ -65,15 +65,8 @@ export const es = {
     `Agua: ${liters} ${liters === 1 ? 'litro' : 'litros'} en barreños y barriles y ${bottles} ${
       bottles === 1 ? 'botella' : 'botellas'
     }${mains ? ' · hay agua corriente' : ' · sin agua corriente'}`,
-  /** V1: «Comida: 10 latas, 4 hortalizas y 2 guisos». */
-  hudFoodTitle: (cans: number, veg: number, meals: number) =>
-    `Comida: ${list(
-      [
-        `${cans} ${cans === 1 ? 'lata' : 'latas'}`,
-        veg > 0 ? `${veg} ${veg === 1 ? 'hortaliza' : 'hortalizas'}` : '',
-        meals > 0 ? `${meals} ${meals === 1 ? 'guiso' : 'guisos'}` : '',
-      ].filter((x) => x !== ''),
-    )}`,
+  /** V1 y V4: «Comida: 10 latas, 4 patatas y 2 guisos de verduras» (cada parte ya contada). */
+  hudFoodTitle: (parts: string[]) => `Comida: ${list(parts)}`,
   bandages: (n: number) => `🩹 ${n}`,
   painkillers: (n: number) => `💊 ${n}`,
   hudTitles: {
@@ -1542,9 +1535,20 @@ export const es = {
     hatchet: ['hachuela', 'hachuelas'], // H5b2
     roadMap: ['mapa de carreteras', 'mapas de carreteras'], // H5c1
     note: ['nota', 'notas'],
-    seeds: ['semilla', 'semillas'], // V1
-    veg: ['hortaliza', 'hortalizas'],
-    meal: ['guiso', 'guisos'],
+    // V1 y V4: semillas, lo cosechado y los platos.
+    seedsLettuce: ['semilla de lechuga', 'semillas de lechuga'],
+    seedsTomato: ['semilla de tomate', 'semillas de tomate'],
+    seedsPotato: ['patata de siembra', 'patatas de siembra'],
+    seedsCabbage: ['semilla de col', 'semillas de col'],
+    lettuce: ['lechuga', 'lechugas'],
+    tomato: ['tomate', 'tomates'],
+    potato: ['patata', 'patatas'],
+    cabbage: ['col', 'coles'],
+    stewVeg: ['guiso de verduras', 'guisos de verduras'],
+    stewPotato: ['guiso de patatas', 'guisos de patatas'],
+    soupCabbage: ['sopa de col', 'sopas de col'],
+    salad: ['ensalada', 'ensaladas'],
+    preserves: ['conserva de tomate', 'conservas de tomate'],
     radio: ['radio', 'radios'], // C1
     battery: ['pila', 'pilas'],
     pistol: ['pistola', 'pistolas'], // D1
@@ -1658,15 +1662,9 @@ export const es = {
         winter: 'Empieza el invierno: no crece nada y hace frío',
         spring: 'Empieza la primavera',
       })[season],
-    /** V1: «Se han estropeado 3 hortalizas y 1 guiso en el almacén». */
-    spoiled: (veg: number, meal: number) => {
-      const parts = [
-        veg > 0 ? `${veg} ${veg === 1 ? 'hortaliza' : 'hortalizas'}` : '',
-        meal > 0 ? `${meal} ${meal === 1 ? 'guiso' : 'guisos'}` : '',
-      ].filter((x) => x !== '');
-      const one = veg + meal === 1;
-      return `Se ${one ? 'ha' : 'han'} estropeado ${list(parts)} en el almacén`;
-    },
+    /** V1 y V4: «Se han estropeado 3 lechugas y 1 guiso de patatas en el almacén». */
+    spoiled: (parts: string[], total: number) =>
+      `Se ${total === 1 ? 'ha' : 'han'} estropeado ${list(parts)} en el almacén`,
     /** V1: «Se han secado 2 cultivos» y «Se ha podrido 1 cultivo sin cosechar». */
     cropsLost: (dried: number, rotted: number) => {
       const n = (k: number) => `${k} ${k === 1 ? 'cultivo' : 'cultivos'}`;

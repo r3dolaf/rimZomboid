@@ -65,9 +65,19 @@ async function giveBag(page: Page, kind: string, where: 'back' | 'storage'): Pro
         'hatchet',
         'roadMap',
         'note',
-        'seeds', // V1
-        'veg',
-        'meal',
+        'seedsLettuce',
+        'seedsTomato',
+        'seedsPotato',
+        'seedsCabbage',
+        'lettuce',
+        'tomato',
+        'potato',
+        'cabbage',
+        'stewVeg',
+        'stewPotato',
+        'soupCabbage',
+        'salad',
+        'preserves',
         'radio', // C1
         'battery',
         'pistol', // D1

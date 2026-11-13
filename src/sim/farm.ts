@@ -100,7 +100,7 @@ export function markPlot(w: World, x: number, y: number, on: boolean): void {
     w.plots = w.plots.filter((p) => p.tile !== i);
     return;
   }
-  if (canPlot(w, { x, y })) w.plots.push({ tile: i, crop: null, moisture: 0 });
+  if (canPlot(w, { x, y })) w.plots.push({ tile: i, kind: 'potato', crop: null, moisture: 0 });
 }
 
 /** ¿Está marcada (contando las órdenes pendientes)? */

@@ -72,7 +72,10 @@ const HOME: Record<LootItem, readonly ContainerKind[]> = {
   hatchet: ['crate'],
   roadMap: ['counter'], // H5c1
   note: ['wardrobe'],
-  seeds: ['crate'], // V1
+  seedsLettuce: ['crate'], // V1 y V4
+  seedsTomato: ['crate'],
+  seedsPotato: ['crate'],
+  seedsCabbage: ['crate'],
   radio: ['crate'], // C1
   battery: ['crate'],
   pistol: ['locker'], // D1
@@ -269,8 +272,8 @@ export function fillSeeds(
     const amount = (site ? SITE_SEEDS_LOOT[h.kind] : undefined) ?? SEEDS_LOOT[h.kind];
     if (cs.length === 0 || amount === undefined) continue;
     const n = roll(rng, amount);
-    const pool = placesFor(cs, 'seeds');
-    for (let k = 0; k < n; k++) pool[nextInt(rng, 0, pool.length - 1)]!.items.seeds++;
+    const pool = placesFor(cs, 'seedsPotato');
+    for (let k = 0; k < n; k++) pool[nextInt(rng, 0, pool.length - 1)]!.items.seedsPotato++;
   }
 }
 

@@ -10,7 +10,7 @@ import {
   TICKS_PER_HOUR,
 } from './balance';
 import { dayMean } from './season';
-import { isBag, type Inventory } from './items';
+import { isBag, type Inventory, type ItemKind } from './items';
 import { logEvent } from './log';
 import { fridgeMult, generatorOf } from './power';
 import { nextFloat, type RngState } from './rng';
@@ -29,19 +29,25 @@ function lost(n: number, perDay: number, rng: RngState): number {
   return whole + (nextFloat(rng) < exact - whole ? 1 : 0);
 }
 
+/** Lo perdido de cada cosa (solo lo que se ha perdido algo). */
+export type Spoiled = Partial<Record<ItemKind, number>>;
+
 /** Estropea lo fresco de `inv` y de las bolsas que haya dentro; devuelve lo perdido. */
-export function rot(inv: Inventory, rng: RngState, mult = 1): Record<'veg' | 'meal', number> {
-  const out = { veg: 0, meal: 0 };
+export function rot(inv: Inventory, rng: RngState, mult = 1): Spoiled {
+  const out: Spoiled = {};
+  const add = (k: ItemKind, n: number) => {
+    if (n > 0) out[k] = (out[k] ?? 0) + n;
+  };
   for (const k of KINDS) {
     if (inv[k] === 0) continue;
     const n = lost(inv[k], ROT_PER_DAY[k] * mult, rng);
     inv[k] -= n;
-    out[k] += n;
+    add(k, n);
   }
   for (const p of inv.pieces) {
     if (!isBag(p)) continue;
     const inner = rot(p.items, rng, mult);
-    for (const k of KINDS) out[k] += inner[k];
+    for (const k of KINDS) add(k, inner[k] ?? 0);
   }
   return out;
 }
@@ -72,5 +78,5 @@ export function spoilSystem(w: World): void {
   for (const s of w.stranger?.survivors ?? []) rotOn(s, w.rng, m);
   if (w.mapId === 0)
     for (const t of w.common.expedition.travels) for (const s of t.members) rotOn(s, w.rng, m);
-  if (store.veg + store.meal > 0) logEvent(w, { kind: 'spoiled', ...store });
+  if (Object.keys(store).length > 0) logEvent(w, { kind: 'spoiled', items: store });
 }

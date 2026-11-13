@@ -636,7 +636,12 @@ export type BuildKind =
  * Lo sembrado en una parcela (spec V1 §3), en horas: las que ha crecido con humedad, las que lleva
  * madura y las seguidas sin humedad.
  */
+/** V4 §2: los cultivos. */
+export type CropKind = 'lettuce' | 'tomato' | 'potato' | 'cabbage';
+
 export interface Crop {
+  /** V4: lo sembrado. */
+  kind: CropKind;
   grown: number;
   ripe: number;
   dry: number;
@@ -645,6 +650,8 @@ export interface Crop {
 /** Una parcela del huerto (V1 §3): su casilla (índice y·ancho + x), lo sembrado y sus horas de humedad. */
 export interface Plot {
   tile: number;
+  /** V4 §2.2: lo que se siembra en ella (lo elige el jugador). */
+  kind: CropKind;
   crop: Crop | null;
   moisture: number;
 }

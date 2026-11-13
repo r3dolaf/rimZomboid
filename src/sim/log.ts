@@ -77,7 +77,7 @@ export type LogEvent =
   | { kind: 'noWater'; survivorId: number }
   | { kind: 'season'; season: Season } // V3
   // V1: lo que se ha estropeado hoy en el almacén.
-  | { kind: 'spoiled'; veg: number; meal: number }
+  | { kind: 'spoiled'; items: Partial<Record<ItemKind, number>> } // V4: por objeto
   // V1: cultivos perdidos esta hora, secos y podridos sin cosechar.
   | { kind: 'cropsLost'; dried: number; rotted: number }
   // V3: los que ha matado la helada.

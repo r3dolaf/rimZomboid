@@ -29,10 +29,20 @@ export type ItemKind =
   // H5c1: un mapa de carreteras y una nota descubren un sitio
   | 'roadMap'
   | 'note'
-  // V1: semillas, hortalizas y guisos (las dos últimas se estropean)
-  | 'seeds'
-  | 'veg'
-  | 'meal'
+  // V1 y V4: las semillas de cada cultivo, lo cosechado y los platos (lo fresco se estropea)
+  | 'seedsLettuce'
+  | 'seedsTomato'
+  | 'seedsPotato'
+  | 'seedsCabbage'
+  | 'lettuce'
+  | 'tomato'
+  | 'potato'
+  | 'cabbage'
+  | 'stewVeg'
+  | 'stewPotato'
+  | 'soupCabbage'
+  | 'salad'
+  | 'preserves'
   // C1: la radio (para construirla en la base) y las pilas que le dan carga
   | 'radio'
   | 'battery'
@@ -69,9 +79,19 @@ export const ITEM_KINDS: readonly ItemKind[] = [
   'hatchet',
   'roadMap',
   'note',
-  'seeds', // V1
-  'veg',
-  'meal',
+  'seedsLettuce', // V1 y V4
+  'seedsTomato',
+  'seedsPotato',
+  'seedsCabbage',
+  'lettuce',
+  'tomato',
+  'potato',
+  'cabbage',
+  'stewVeg',
+  'stewPotato',
+  'soupCabbage',
+  'salad',
+  'preserves',
   'radio', // C1
   'battery',
   'pistol', // D1
@@ -113,9 +133,19 @@ export function emptyInventory(): Inventory {
     hatchet: 0,
     roadMap: 0,
     note: 0,
-    seeds: 0, // V1
-    veg: 0,
-    meal: 0,
+    seedsLettuce: 0, // V1 y V4
+    seedsTomato: 0,
+    seedsPotato: 0,
+    seedsCabbage: 0,
+    lettuce: 0,
+    tomato: 0,
+    potato: 0,
+    cabbage: 0,
+    stewVeg: 0,
+    stewPotato: 0,
+    soupCabbage: 0,
+    salad: 0,
+    preserves: 0,
     radio: 0, // C1
     battery: 0,
     pistol: 0, // D1

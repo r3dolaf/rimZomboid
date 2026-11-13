@@ -21,7 +21,7 @@ function garden(): World {
   const w = addBase(emptyWorld(12, 10), { x: 0, y: 0, w: 4, h: 4 });
   w.seen.fill(1);
   markPlot(w, 8, 6, true);
-  w.plots[0]!.crop = { grown: 10, ripe: 0, dry: 0 };
+  w.plots[0]!.crop = { kind: 'potato', grown: 10, ripe: 0, dry: 0 };
   w.plots[0]!.moisture = 20;
   w.tick = dayStart(3) + 10 * TICKS_PER_HOUR;
   return w;
@@ -31,7 +31,7 @@ test('por debajo de 5 grados lo sembrado no crece (ni se seca)', () => {
   const w = garden();
   setTemp(w, 3);
   farmSystem(w);
-  expect(w.plots[0]!.crop).toEqual({ grown: 10, ripe: 0, dry: 0 });
+  expect(w.plots[0]!.crop).toEqual({ kind: 'potato', grown: 10, ripe: 0, dry: 0 });
   setTemp(w, 12);
   farmSystem(w);
   expect(w.plots[0]!.crop!.grown).toBe(11);

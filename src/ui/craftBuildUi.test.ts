@@ -77,7 +77,9 @@ test('Fabricar por grupos: cada receta dice «usa → da · dónde · tiempo»',
   const { root, q } = craft();
   const groups = [...root.querySelectorAll('.craft-group h3')].map((h) => h.textContent);
   expect(groups).toEqual(['Curar', 'Cocina', 'Tela y cortinas', 'Ropa', 'Bolsas']);
-  expect(q('craft-line-cook').textContent).toBe('2 hortalizas → 1 guiso · hoguera · 30 min'); // V1
+  expect(q('craft-line-cook').textContent).toBe(
+    '2 patatas → 1 guiso de verduras · hoguera · 30 min',
+  ); // V1
   expect(q('craft-add-curtains').textContent).toBe('+ Coser cortinas');
   expect(q('craft-line-bandages').textContent).toBe('1 tela → 2 vendas · mesa · 15 min');
   expect(q('craft-line-curtains').textContent).toBe(

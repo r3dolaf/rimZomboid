@@ -12,41 +12,41 @@ const DAWN = TICKS_PER_DAY - (START_HOUR - SPOIL_HOUR) * TICKS_PER_HOUR;
 
 test('cada montón pierde su parte: la entera seguro y la fracción a veces', () => {
   const rng = createRng(1);
-  const inv = { ...emptyInventory(), veg: 20, meal: 10, food: 7 };
+  const inv = { ...emptyInventory(), lettuce: 20, stewVeg: 10, food: 7 };
   rot(inv, rng);
-  expect(inv.veg).toBe(18); // 10 %
-  expect(inv.meal).toBe(7); // 30 %
+  expect(inv.lettuce).toBe(15); // 25 %
+  expect(inv.stewVeg).toBe(7); // 30 %
   expect(inv.food).toBe(7); // las latas no se estropean
-  // Con 1 hortaliza, se pierde una de cada diez veces (más o menos).
+  // Con 1 lechuga, se pierde una de cada cuatro veces (más o menos).
   let lost = 0;
   for (let i = 0; i < 1000; i++) {
-    const one = { ...emptyInventory(), veg: 1 };
+    const one = { ...emptyInventory(), lettuce: 1 };
     rot(one, rng);
-    lost += 1 - one.veg;
+    lost += 1 - one.lettuce;
   }
-  expect(lost).toBeGreaterThan(60);
-  expect(lost).toBeLessThan(140);
+  expect(lost).toBeGreaterThan(200);
+  expect(lost).toBeLessThan(300);
 });
 
 test('se estropea a las 06:00, en todo el mapa (almacén, montones, encima, bolsas) y se avisa', () => {
   const w = emptyWorld(4, 4);
   const s = w.survivors[0]!;
-  w.storage.items = { ...emptyInventory(), veg: 10, meal: 10 };
-  w.piles.push({ id: 50, pos: { x: 2, y: 2 }, items: { ...emptyInventory(), veg: 10 } });
-  s.carrying.meal = 10;
+  w.storage.items = { ...emptyInventory(), lettuce: 10, stewVeg: 10 };
+  w.piles.push({ id: 50, pos: { x: 2, y: 2 }, items: { ...emptyInventory(), lettuce: 10 } });
+  s.carrying.stewVeg = 10;
   const bag = newBag(w.common, 'schoolBag');
-  bag.items.veg = 10;
+  bag.items.lettuce = 10;
   s.bags.back = bag;
   w.tick = DAWN - 1;
   spoilSystem(w);
-  expect(w.storage.items.veg).toBe(10); // aún no
+  expect(w.storage.items.lettuce).toBe(10); // aún no
   w.tick = DAWN;
   spoilSystem(w);
-  expect(w.storage.items).toMatchObject({ veg: 9, meal: 7 });
-  expect(w.piles[0]!.items.veg).toBe(9);
-  expect(s.carrying.meal).toBe(7);
-  expect(bag.items.veg).toBe(9);
-  expect(w.common.log.at(-1)).toMatchObject({ kind: 'spoiled', veg: 1, meal: 3 });
+  expect(w.storage.items).toMatchObject({ lettuce: 8, stewVeg: 7 });
+  expect(w.piles[0]!.items.lettuce).toBe(8);
+  expect(s.carrying.stewVeg).toBe(7);
+  expect(bag.items.lettuce).toBe(8);
+  expect(w.common.log.at(-1)).toMatchObject({ kind: 'spoiled', items: { lettuce: 2, stewVeg: 3 } });
 });
 
 test('sin nada fresco no se avisa ni se tira del azar', () => {
@@ -59,6 +59,36 @@ test('sin nada fresco no se avisa ni se tira del azar', () => {
 });
 
 test('el registro dice lo que se ha estropeado', () => {
-  expect(es.log.spoiled(3, 1)).toBe('Se han estropeado 3 hortalizas y 1 guiso en el almacén');
-  expect(es.log.spoiled(0, 1)).toBe('Se ha estropeado 1 guiso en el almacén');
+  expect(es.log.spoiled(['3 lechugas', '1 guiso de patatas'], 4)).toBe(
+    'Se han estropeado 3 lechugas y 1 guiso de patatas en el almacén',
+  );
+  expect(es.log.spoiled(['1 guiso de verduras'], 1)).toBe(
+    'Se ha estropeado 1 guiso de verduras en el almacén',
+  );
+});
+
+test('V4: cada cosa se estropea a su ritmo; la conserva y la lata, nunca', () => {
+  const rng = createRng(1);
+  const inv = {
+    ...emptyInventory(),
+    lettuce: 100,
+    tomato: 100,
+    potato: 100,
+    cabbage: 100,
+    stewVeg: 100,
+    salad: 100,
+    preserves: 100,
+    food: 100,
+  };
+  const lost = rot(inv, rng);
+  expect(lost).toEqual({
+    lettuce: 25,
+    tomato: 12,
+    potato: 2,
+    cabbage: 5,
+    stewVeg: 30,
+    salad: 50,
+  });
+  expect(inv.preserves).toBe(100);
+  expect(inv.food).toBe(100);
 });

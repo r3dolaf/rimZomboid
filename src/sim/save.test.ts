@@ -6,9 +6,19 @@ import { canGo } from './expeditions';
 import { stepGame } from './game';
 import { checkInvariants } from './invariants';
 import { issue } from './orders';
-import { discoverSite } from './sites';
+import { newBag } from './bags';
+import { canPlot, markPlot } from './farm';
+import { discoverSite, siteMap } from './sites';
+import { addWorldSites } from './testing/fixtures';
 import { loadGame, saveGame, SAVE_VERSION, type SaveMeta } from './save';
 import type { World } from './types';
+
+/** Una casilla donde se puede poner una parcela. */
+function plotSpot(w: World): [number, number, boolean] {
+  for (let y = 0; y < w.grid.height; y++)
+    for (let x = 0; x < w.grid.width; x++) if (canPlot(w, { x, y })) return [x, y, true];
+  throw new Error('sin sitio para una parcela');
+}
 import { createWorld } from './world';
 
 const meta: SaveMeta = {
@@ -100,9 +110,8 @@ function asVersion1(text: string): string {
     if (Array.isArray(x)) return x.forEach(strip);
     const o = x as Record<string, unknown>;
     if (Array.isArray(o.pieces) && typeof o.food === 'number') {
-      delete o.seeds;
-      delete o.veg;
-      delete o.meal;
+      for (const k of Object.keys(o))
+        if (/^(seeds|lettuce|tomato|potato|cabbage|stew|soup|salad|preserves)/.test(k)) delete o[k];
     }
     for (const k of ['work', 'priorities', 'skills'])
       if (typeof o[k] === 'object' && o[k] !== null) delete (o[k] as Record<string, unknown>).farm;
@@ -125,13 +134,13 @@ test('V1: una partida de la versión 1 se sigue cargando, con lo nuevo a 0 y Cul
   const lw = loaded.world;
   expect(lw.plots).toEqual([]);
   expect(lw.common.stats.harvested).toBe(0);
-  expect(lw.storage.items.seeds).toBe(0);
-  expect(lw.storage.items.meal).toBe(0);
+  expect(lw.storage.items.seedsPotato).toBe(0);
+  expect(lw.storage.items.stewVeg).toBe(0);
   for (const s of lw.survivors) {
     expect(s.work.farm).toBe(true);
     expect(s.priorities.farm).toBe(3);
     expect(s.skills.farm).toEqual({ level: 0, xp: 0 });
-    expect(s.carrying.veg).toBe(0);
+    expect(s.carrying.potato).toBe(0);
   }
   expect(checkInvariants(lw)).toEqual([]);
   for (let i = 0; i < 600; i++) stepGame(lw); // y se sigue jugando
@@ -257,7 +266,6 @@ test('D1: una partida de la versión 5 se sigue cargando, con armas y munición 
 });
 
 test('E1: una partida de la versión 6 se sigue cargando, con generadores y bidones a 0', () => {
-  expect(SAVE_VERSION).toBe(7);
   const w = createWorld(7);
   const file = JSON.parse(saveGame(w, meta)) as { version: number; world: World };
   file.version = 6;
@@ -278,5 +286,70 @@ test('E1: una partida de la versión 6 se sigue cargando, con generadores y bido
   expect(lw.storage.items.generator).toBe(0);
   expect(lw.storage.items.gasCan).toBe(0);
   expect(lw.survivors.every((s) => s.carrying.gasCan === 0)).toBe(true);
+  expect(checkInvariants(lw)).toEqual([]);
+});
+
+test('V4: una partida de la versión 7 carga con patatas, semillas de patata y guisos de verduras', () => {
+  expect(SAVE_VERSION).toBe(8);
+  const w = createWorld(7);
+  addWorldSites(w, 3);
+  siteMap(w, discoverSite(w, { how: 'note', special: null })!);
+  const s = w.survivors[0]!;
+  s.bags.back = newBag(w, 'clothBag');
+  markPlot(w, ...plotSpot(w));
+  w.plots[0]!.crop = { kind: 'potato', grown: 30, ripe: 0, dry: 0 };
+  w.bills.push({ id: 99, recipe: 'cook', mode: 'until', target: 5, done: 0 });
+  const file = JSON.parse(saveGame(w, meta)) as { version: number; world: World };
+  file.version = 7;
+  // Como era: «veg», «seeds» y «meal» en todo lo que guarda cosas; parcelas sin cultivo.
+  const back = (x: unknown): void => {
+    if (typeof x !== 'object' || x === null) return;
+    if (Array.isArray(x)) return x.forEach(back);
+    const o = x as Record<string, unknown>;
+    if (Array.isArray(o.pieces) && typeof o.food === 'number') {
+      for (const k of Object.keys(o))
+        if (
+          k !== 'food' &&
+          k !== 'pieces' &&
+          /^(seeds|lettuce|tomato|potato|cabbage|stew|soup|salad|preserves)/.test(k)
+        )
+          delete o[k];
+      o.veg = 3;
+      o.seeds = 2;
+      o.meal = 1;
+    }
+    Object.values(o).forEach(back);
+  };
+  back(file.world);
+  const plot = file.world.plots[0] as unknown as Record<string, unknown>;
+  delete plot.kind;
+  delete (plot.crop as Record<string, unknown>).kind;
+  file.world.common.log.push({ tick: 5, kind: 'spoiled', veg: 2, meal: 1 } as never);
+  const loaded = loadGame(JSON.stringify(file));
+  if ('error' in loaded) throw new Error(loaded.error);
+  const lw = loaded.world;
+  const lsite = lw.siteMaps[0]!.world;
+  for (const inv of [
+    lw.storage.items,
+    lw.survivors[0]!.carrying,
+    lw.survivors[0]!.bags.back!.items,
+    lsite.storage.items,
+    ...lsite.containers.map((c) => c.items),
+  ]) {
+    expect(inv.potato).toBe(3);
+    expect(inv.seedsPotato).toBe(2);
+    expect(inv.stewVeg).toBe(1);
+    expect('veg' in inv || 'seeds' in inv || 'meal' in inv).toBe(false);
+  }
+  expect(lw.plots[0]!.kind).toBe('potato');
+  expect(lw.plots[0]!.crop).toEqual({ kind: 'potato', grown: 30, ripe: 0, dry: 0 });
+  expect(lw.bills.find((b) => b.id === 99)?.recipe).toBe('cook');
+  expect(lw.common.log.at(-1)).toEqual({
+    tick: 5,
+    kind: 'spoiled',
+    items: { potato: 2, stewVeg: 1 },
+  });
+  expect(checkInvariants(lw)).toEqual([]);
+  for (let i = 0; i < 300; i++) stepGame(lw);
   expect(checkInvariants(lw)).toEqual([]);
 });

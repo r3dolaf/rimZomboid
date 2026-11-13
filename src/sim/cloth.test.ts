@@ -43,9 +43,19 @@ test('objetos nuevos: tela, cortinas, hilo (por usos), aguja, palanca y machete,
     'hatchet', // H5b2
     'roadMap', // H5c1
     'note',
-    'seeds', // V1
-    'veg',
-    'meal',
+    'seedsLettuce',
+    'seedsTomato',
+    'seedsPotato',
+    'seedsCabbage',
+    'lettuce',
+    'tomato',
+    'potato',
+    'cabbage',
+    'stewVeg',
+    'stewPotato',
+    'soupCabbage',
+    'salad',
+    'preserves',
     'radio', // C1
     'battery',
     'pistol', // D1

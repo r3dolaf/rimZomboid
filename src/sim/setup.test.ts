@@ -51,7 +51,7 @@ test('con lo puesto: el almacén vacío, sin cuchillo ni vendas encima', () => {
   const w = createWorld(3, 'balanced', 'normal', with_({ scenario: 'bare' }));
   expect(w.survivors).toHaveLength(3);
   const s = w.storage.items;
-  expect([s.food, s.waterBottle, s.antibiotics, s.seeds]).toEqual([0, 0, 0, 0]);
+  expect([s.food, s.waterBottle, s.antibiotics, s.seedsPotato]).toEqual([0, 0, 0, 0]);
   for (const p of w.survivors) {
     expect(p.equipped).toBeNull();
     expect(p.carrying.bandage).toBe(0);

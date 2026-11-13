@@ -142,14 +142,14 @@ test('la nevera, de verdad: con 24 horas en marcha se estropean menos hortalizas
     for (let seed = 1; seed <= 40; seed++) {
       const w = base();
       w.rng = createRng(seed);
-      w.storage.items.veg = 100;
+      w.storage.items.potato = 100;
       if (withGen) {
         gen(w, 24);
         generatorOf(w)!.powered = 24;
       }
       for (w.tick = 0; !spoilsNow(w.tick); w.tick++);
       spoilSystem(w);
-      total += 100 - w.storage.items.veg;
+      total += 100 - w.storage.items.potato;
       if (withGen) expect(generatorOf(w)!.powered).toBe(0);
     }
     return total;

@@ -491,6 +491,17 @@ export function formatModifier(
   return text;
 }
 
+/** V4: «3 lechugas», «1 guiso de patatas»…: cada cosa con su número, en ese orden (sin las que no hay). */
+export function countParts(
+  counts: Partial<Record<ItemKind, number>>,
+  order: readonly ItemKind[] = ITEM_KINDS,
+): string[] {
+  return order.flatMap((k) => {
+    const n = counts[k] ?? 0;
+    return n > 0 ? [`${n} ${es.items[k][n === 1 ? 0 : 1]}`] : [];
+  });
+}
+
 /** "4 latas, 1 venda y 2 bates", o "nada". */
 export function formatItems(inv: Inventory, order: readonly ItemKind[] = ITEM_KINDS): string {
   const parts = order
@@ -854,7 +865,10 @@ function logSentence(e: LogEntry, w: World, here: World): string {
       text = l.season(e.season);
       break;
     case 'spoiled': // V1
-      text = l.spoiled(e.veg, e.meal);
+      text = l.spoiled(
+        countParts(e.items),
+        Object.values(e.items).reduce((a, n) => a + (n ?? 0), 0),
+      );
       break;
     case 'cropsLost': // V1
       text = l.cropsLost(e.dried, e.rotted);

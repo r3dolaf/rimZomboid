@@ -26,7 +26,11 @@ const STOCK: readonly ItemKind[] = [
   'thread',
   'curtains',
   'needle',
-  'veg', // V1: para cocinar
+  // V1 y V4: para cocinar.
+  'lettuce',
+  'tomato',
+  'potato',
+  'cabbage',
 ];
 
 const count = (k: ItemKind, n: number) => `${n} ${es.items[k][n === 1 ? 0 : 1]}`;

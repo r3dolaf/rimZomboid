@@ -15,7 +15,7 @@ function kitchen(): World {
   w.grid.tiles.fill(Tile.Floor);
   w.narrator.nextEventAt = 1e9;
   w.storage.tiles = [{ x: 1, y: 1 }];
-  w.storage.items.veg = 5;
+  w.storage.items.potato = 5;
   const s = w.survivors[0]!;
   s.pos = { x: 1.5, y: 2.5 };
   for (const k of Object.keys(s.work) as (keyof typeof s.work)[]) s.work[k] = k === 'craft';
@@ -27,9 +27,9 @@ function kitchen(): World {
 
 test('Cocinar: 2 hortalizas, un guiso, media hora en la hoguera', () => {
   expect(RECIPES.cook).toEqual({
-    input: { veg: 2 },
+    input: { potato: 2 },
     tool: null,
-    output: { meal: 1 },
+    output: { stewVeg: 1 },
     ticks: 0.5 * TICKS_PER_HOUR,
     station: 'campfire',
   });
@@ -43,8 +43,8 @@ test('sin hoguera no se puede; con ella, cocina los guisos pedidos y los lleva a
   issue(w, { type: 'addBill', recipe: 'cook' });
   ordersSystem(w);
   issue(w, { type: 'setBill', billId: w.bills[0]!.id, mode: 'count', target: 2 });
-  for (let i = 0; i < 3 * TICKS_PER_HOUR && w.storage.items.meal < 2; i++) step(w);
-  expect(w.storage.items.meal).toBe(2);
-  expect(w.storage.items.veg).toBe(1);
+  for (let i = 0; i < 3 * TICKS_PER_HOUR && w.storage.items.stewVeg < 2; i++) step(w);
+  expect(w.storage.items.stewVeg).toBe(2);
+  expect(w.storage.items.potato).toBe(1);
   expect(checkInvariants(w)).toEqual([]);
 });

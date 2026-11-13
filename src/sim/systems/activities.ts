@@ -35,7 +35,7 @@ export function activitiesSystem(w: World): void {
       if (ate) {
         if (!a.fromPack && !hasFood(store)) logEvent(w, { kind: 'outOfFood' });
         s.needs.hunger = Math.min(100, s.needs.hunger + ate.restore);
-        addMemory(s, ate.kind === 'meal' ? 'hotMeal' : 'ate', w.tick);
+        addMemory(s, ate.kind === 'stewVeg' ? 'hotMeal' : 'ate', w.tick);
         if (nearTable(w, s)) addMemory(s, 'ateAtTable', w.tick);
       }
       s.action = { type: 'idle', ticksLeft: 0 };

@@ -930,7 +930,8 @@ test.each([1, 2, 3])(
         for (const e of w.common.log.slice(last ? w.common.log.lastIndexOf(last) + 1 : 0)) {
           if (e.kind === 'crafted' && e.recipe === 'cook') farmTotals.cooked++;
           if (e.kind === 'cropsLost') farmTotals.lost += e.dried + e.rotted;
-          if (e.kind === 'spoiled') farmTotals.spoiled += e.veg + e.meal;
+          if (e.kind === 'spoiled')
+            farmTotals.spoiled += Object.values(e.items).reduce((a, n) => a + (n ?? 0), 0);
         }
       }
     expect(ms / (w.tick || 1), 'ms por tick').toBeLessThan(1.5);

@@ -1,6 +1,14 @@
 // U1 §9: los primeros pasos y los consejos, sin pantalla: qué paso toca y qué consejo salta, mirando
 // el mundo y lo que ha hecho el jugador en la interfaz. La tarjeta que los enseña está en coach.ts.
-import { COLD_BELOW, START_HOUR, TICKS_PER_DAY, TICKS_PER_HOUR } from '../sim/balance';
+import {
+  COLD_BELOW,
+  CROP_KINDS,
+  CROPS,
+  START_HOUR,
+  TICKS_PER_DAY,
+  TICKS_PER_HOUR,
+  VEG,
+} from '../sim/balance';
 import { markedTrees } from '../sim/build';
 import { darkness } from '../sim/clock';
 import { inCrisis } from '../sim/consoling';
@@ -165,10 +173,12 @@ export function dueTip(w: World, ctx: TipContext, shown: readonly TipId[]): DueT
       return who ? { id: 'cold', who } : null;
     },
     farm: () =>
-      w.tick >= FARM_TIP_AT && w.storage.items.seeds > 0 && w.plots.length === 0
+      w.tick >= FARM_TIP_AT &&
+      CROP_KINDS.some((k) => w.storage.items[CROPS[k].seeds] > 0) &&
+      w.plots.length === 0
         ? { id: 'farm' }
         : null,
-    veg: () => (w.storage.items.veg > 0 ? { id: 'veg' } : null),
+    veg: () => (VEG.some((k) => w.storage.items[k] > 0) ? { id: 'veg' } : null),
     autumn: () => (seasonOf(w.tick) === 'autumn' ? { id: 'autumn' } : null),
     // D1: la primera arma de fuego en el almacén.
     gun: () => (w.storage.items.pistol + w.storage.items.shotgun > 0 ? { id: 'gun' } : null),

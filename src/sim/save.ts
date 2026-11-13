@@ -14,7 +14,7 @@ import type { NarratorStyle, World, ZombieLevel } from './types';
  * Cambia con cada cambio de forma de la partida. Las de versiones anteriores se ponen al día al
  * cargarlas (`migrate`); las de una versión desconocida no se cargan.
  */
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 
 /** Lo que se enseña de una partida guardada. */
 export interface SaveMeta {
@@ -79,6 +79,7 @@ export function loadGame(
     if (file.version < 5) toV5(world);
     if (file.version < 6) toV6(world);
     if (file.version < 7) toV7(world);
+    if (file.version < 8) toV8(world);
     const c = world.common;
     if (!c?.expedition || !c.atlas || !world.grid || !Array.isArray(world.siteMaps))
       return { error: 'broken' };
@@ -196,4 +197,44 @@ function toV6(world: World): void {
 /** De la versión 6 a la 7 (E1, el generador): generadores y bidones a 0 en todo lo que guarda cosas. */
 function toV7(world: World): void {
   walk(world, fillStacks);
+}
+
+/** V4: lo de antes, a lo más parecido de ahora. */
+const RENAMED = [
+  ['veg', 'potato'],
+  ['seeds', 'seedsPotato'],
+  ['meal', 'stewVeg'],
+] as const;
+
+/**
+ * De la versión 7 a la 8 (V4, cultivos y guisos): la hortaliza, las semillas y el guiso pasan a
+ * patata, patatas de siembra y guiso de verduras en todo lo que cuenta cosas (lo que guarda cosas,
+ * las listas de las bolsas, lo que se lleva siempre, lo de los viajes y el registro); lo sembrado y
+ * las parcelas, de patata.
+ */
+function toV8(world: World): void {
+  walk(world, (o) => {
+    if (o.kind === 'spoiled' && !isObject(o.items)) {
+      o.items = { potato: o.veg, stewVeg: o.meal };
+      for (const [k, n] of Object.entries(o.items as Json)) if (!n) delete (o.items as Json)[k];
+      delete o.veg;
+      delete o.meal;
+      return;
+    }
+    for (const [from, to] of RENAMED) {
+      if (typeof o[from] !== 'number') continue;
+      o[to] = (typeof o[to] === 'number' ? o[to] : 0) + o[from];
+      delete o[from];
+    }
+    fillStacks(o);
+  });
+  const maps = [
+    world,
+    ...(Array.isArray(world.siteMaps) ? world.siteMaps.map((m) => m.world) : []),
+  ];
+  for (const m of maps)
+    for (const p of Array.isArray(m?.plots) ? m.plots : []) {
+      p.kind ??= 'potato';
+      if (p.crop) p.crop.kind ??= 'potato';
+    }
 }

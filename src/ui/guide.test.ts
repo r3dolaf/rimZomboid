@@ -106,30 +106,30 @@ const MANY = ['pause', 'night', 'zombies', 'bleeding', 'bite', 'food', 'mood', '
 test('U2: «poca comida» cuenta las hortalizas y los guisos, no solo las latas', () => {
   const w = createWorld(5);
   w.storage.items = emptyInventory();
-  w.storage.items.meal = 10;
+  w.storage.items.stewVeg = 10;
   expect(dueTip(w, calm, [])).toBeNull();
-  w.storage.items.meal = 0;
+  w.storage.items.stewVeg = 0;
   expect(dueTip(w, calm, [])).toEqual({ id: 'food' });
 });
 
 test('U2: el huerto, desde el día 2 con semillas y sin huerto; las primeras hortalizas', () => {
   const w = createWorld(5);
   w.storage.items.food = 20;
-  w.storage.items.seeds = 6;
+  w.storage.items.seedsPotato = 6;
   w.tick = 2 * TICKS_PER_HOUR; // día 1, a las 10
   expect(dueTip(w, calm, [...MANY])).toBeNull();
   w.tick = 20 * TICKS_PER_HOUR; // día 2, a las 4
   expect(dueTip(w, calm, [...MANY])).toEqual({ id: 'farm' });
-  w.plots.push({ tile: 1, crop: null, moisture: 0 });
+  w.plots.push({ tile: 1, kind: 'potato', crop: null, moisture: 0 });
   expect(dueTip(w, calm, [...MANY])).toBeNull();
-  w.storage.items.veg = 3;
+  w.storage.items.potato = 3;
   expect(dueTip(w, calm, [...MANY])).toEqual({ id: 'veg' });
 });
 
 test('U2: el corte del agua, el frío, el otoño y la crisis', () => {
   const w = createWorld(5);
   w.storage.items.food = 20;
-  w.storage.items.seeds = 0;
+  w.storage.items.seedsPotato = 0;
   w.tick = 2 * TICKS_PER_HOUR;
   w.waterCutAt = w.tick + 1;
   expect(dueTip(w, calm, [...MANY])).toBeNull();
@@ -152,7 +152,7 @@ test('U2: el corte del agua, el frío, el otoño y la crisis', () => {
 test('D1: el consejo del arma de fuego, con la primera en el almacén', () => {
   const w = createWorld(5);
   w.storage.items.food = 20;
-  w.storage.items.seeds = 0;
+  w.storage.items.seedsPotato = 0;
   w.tick = 2 * TICKS_PER_HOUR;
   expect(dueTip(w, calm, [...MANY])).toBeNull();
   w.storage.items.shotgun = 1;

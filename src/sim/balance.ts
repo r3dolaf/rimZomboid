@@ -9,6 +9,7 @@ import {
   type BodyPart,
   type BuildKind,
   type GarmentKind,
+  type CropKind,
   type Gun,
   type Layer,
   type Material,
@@ -198,11 +199,76 @@ export const MEMORY_EFFECTS = {
 } as const;
 export const EAT_BELOW = 35;
 export const EAT_RESTORE = 60;
-// Huerto y cocina (spec V1 §1): lo que quitan las hortalizas y el guiso (la lata, EAT_RESTORE).
-export const VEG_RESTORE = 35;
-export const MEAL_RESTORE = 80;
-/** V1 §1: lo que se estropea cada día, a las SPOIL_HOUR (la parte entera seguro, la fracción a veces). */
-export const ROT_PER_DAY = { veg: 0.1, meal: 0.3 } as const;
+/**
+ * V1 §1 y V4 §2–§3: lo que se estropea cada día, a las SPOIL_HOUR (la parte entera seguro, la
+ * fracción a veces). La conserva y la lata, nunca.
+ */
+export const ROT_PER_DAY = {
+  lettuce: 0.25,
+  tomato: 0.12,
+  potato: 0.02,
+  cabbage: 0.05,
+  stewVeg: 0.3,
+  stewPotato: 0.3,
+  soupCabbage: 0.3,
+  salad: 0.5,
+} as const;
+/** V4 §2: los cultivos (lo que se cosecha de cada uno es su hortaliza). */
+export const CROP_KINDS: readonly CropKind[] = ['lettuce', 'tomato', 'potato', 'cabbage'];
+/**
+ * V4 §2: cada cultivo: sus semillas y lo que da; con qué media del día se siembra (los colonos no
+ * siembran lo que ese día mataría el frío); por debajo de qué se para; con qué helada se muere;
+ * cuántas horas tarda; y cuánto da con Cultivar 0 (×(1 + nivel/15)).
+ */
+export interface CropSpec {
+  seeds: 'seedsLettuce' | 'seedsTomato' | 'seedsPotato' | 'seedsCabbage';
+  produce: CropKind;
+  sowMin: number;
+  growMin: number;
+  frost: number;
+  hours: number;
+  yieldBase: number;
+}
+export const CROPS: Record<CropKind, CropSpec> = {
+  lettuce: {
+    seeds: 'seedsLettuce',
+    produce: 'lettuce',
+    sowMin: 8,
+    growMin: 5,
+    frost: -2,
+    hours: 4 * 24,
+    yieldBase: 2,
+  },
+  tomato: {
+    seeds: 'seedsTomato',
+    produce: 'tomato',
+    sowMin: 14,
+    growMin: 12,
+    frost: -2,
+    hours: 8 * 24,
+    yieldBase: 5,
+  },
+  potato: {
+    seeds: 'seedsPotato',
+    produce: 'potato',
+    sowMin: 8,
+    growMin: 5,
+    frost: -2,
+    hours: 10 * 24,
+    yieldBase: 4,
+  },
+  cabbage: {
+    seeds: 'seedsCabbage',
+    produce: 'cabbage',
+    sowMin: 3,
+    growMin: 2,
+    frost: -6,
+    hours: 9 * 24,
+    yieldBase: 3,
+  },
+};
+/** V4: lo crudo, de lo que antes se estropea a lo que menos (las recetas «cualquiera» lo gastan así). */
+export const VEG: readonly CropKind[] = ['lettuce', 'tomato', 'cabbage', 'potato'];
 export const SPOIL_HOUR = 6;
 // El huerto (spec V1 §3), en horas: crecer con humedad, la que deja la lluvia y regar, secarse sin
 // ella y pudrirse lo maduro sin cosechar.
@@ -306,9 +372,20 @@ export const ITEM_WEIGHT_KG = {
   hatchet: 1, // H5b2
   roadMap: 0.05, // H5c1
   note: 0.05,
-  seeds: 0.02, // V1
-  veg: 0.5,
-  meal: 0.6,
+  // V4: semillas, lo cosechado y los platos.
+  seedsLettuce: 0.02,
+  seedsTomato: 0.02,
+  seedsPotato: 0.02,
+  seedsCabbage: 0.02,
+  lettuce: 0.3,
+  tomato: 0.2,
+  potato: 0.3,
+  cabbage: 1,
+  stewVeg: 0.6,
+  stewPotato: 0.6,
+  soupCabbage: 0.6,
+  salad: 0.6,
+  preserves: 0.5,
   radio: 1.5, // C1
   battery: 0.1,
   pistol: 1, // D1
@@ -594,9 +671,9 @@ export const RECIPES: Record<RecipeId, Recipe> = {
     makes: 'clothBag',
   }, // V1 §5: 2 hortalizas, un guiso, en la hoguera.
   cook: {
-    input: { veg: 2 },
+    input: { potato: 2 },
     tool: null,
-    output: { meal: 1 },
+    output: { stewVeg: 1 },
     ticks: 0.5 * TICKS_PER_HOUR,
     station: 'campfire',
   },
@@ -917,7 +994,10 @@ export type LootItem =
   | 'bucket'
   | 'roadMap' // H5c1
   | 'note'
-  | 'seeds' // V1 (se reparten aparte: SEEDS_LOOT)
+  | 'seedsLettuce' // V1 y V4 (se reparten aparte: SEEDS_LOOT)
+  | 'seedsTomato'
+  | 'seedsPotato'
+  | 'seedsCabbage'
   | 'radio' // C1 (aparte: SITE_RADIO y BATTERY_LOOT)
   | 'battery'
   | 'generator' // E1 (aparte: POWER_LOOT)
@@ -1262,7 +1342,7 @@ export const SEEDS_LOOT: Partial<Record<LootKind, LootAmount>> = {
 };
 /** En los sitios del mapa del mundo, la granja da más (como su comida, H6a). */
 export const SITE_SEEDS_LOOT: Partial<Record<LootKind, LootAmount>> = { farm: [6, 12] };
-export const START_SEEDS = 6;
+export const START_SEEDS = 6; // V4: de patata (Task 5 las reparte)
 // La radio y las pilas (C1 §1), con su propio azar: el resto del botín no cambia.
 export const RADIO_SALT = 0x7ad10;
 /** La radio, solo en los sitios del mapa del mundo: probabilidad de que el sitio tenga una. */

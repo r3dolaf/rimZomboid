@@ -39,9 +39,9 @@ test('marcar y desmarcar parcelas; desmarcar pierde lo sembrado; no se repiten',
   const w = field();
   markPlot(w, 6, 6, true);
   markPlot(w, 6, 6, true);
-  expect(w.plots).toEqual([{ tile: 66, crop: null, moisture: 0 }]);
+  expect(w.plots).toEqual([{ tile: 66, kind: 'potato', crop: null, moisture: 0 }]);
   expect(canPlot(w, { x: 6, y: 6 })).toBe(false); // ya es huerto
-  w.plots[0]!.crop = { grown: 10, ripe: 0, dry: 0 };
+  w.plots[0]!.crop = { kind: 'potato', grown: 10, ripe: 0, dry: 0 };
   markPlot(w, 6, 6, false);
   expect(w.plots).toEqual([]);
   markPlot(w, 1, 1, true); // en la base, no
@@ -77,7 +77,7 @@ test('las invariantes vigilan el huerto', async () => {
   markPlot(w, 6, 6, true);
   expect(checkInvariants(w)).toEqual([]);
   w.plots.push({ ...w.plots[0]! });
-  w.plots[0]!.crop = { grown: 3, ripe: 2, dry: 0 };
+  w.plots[0]!.crop = { kind: 'potato', grown: 3, ripe: 2, dry: 0 };
   setTile(w.grid, 6, 6, Tile.Road);
   const problems = checkInvariants(w).join(' | ');
   expect(problems).toContain('repetida');
@@ -98,9 +98,9 @@ test('crece solo con humedad; la lluvia la deja en 48 h', () => {
   const w = field();
   markPlot(w, 6, 6, true);
   const p = w.plots[0]!;
-  p.crop = { grown: 0, ripe: 0, dry: 0 };
+  p.crop = { kind: 'potato', grown: 0, ripe: 0, dry: 0 };
   hours(w, 5);
-  expect(p.crop).toEqual({ grown: 0, ripe: 0, dry: 5 });
+  expect(p.crop).toEqual({ kind: 'potato', grown: 0, ripe: 0, dry: 5 });
   w.common.rainUntil = w.tick + 2 * HOUR + 1; // llueve las 2 horas siguientes
   hours(w, 2);
   expect(p.moisture).toBe(RAIN_MOISTURE_HOURS - 1);
@@ -114,7 +114,7 @@ test('a los 7 días húmeda está madura; sin cosechar, se pudre a los 4 días',
   const w = field();
   markPlot(w, 6, 6, true);
   const p = w.plots[0]!;
-  p.crop = { grown: GROW_HOURS - 1, ripe: 0, dry: 0 };
+  p.crop = { kind: 'potato', grown: GROW_HOURS - 1, ripe: 0, dry: 0 };
   p.moisture = 10;
   hours(w, 1);
   expect(cropStage(p)).toBe('ripe');
@@ -129,7 +129,7 @@ test('tras 3 días sin humedad se seca y se pierde', () => {
   const w = field();
   markPlot(w, 6, 6, true);
   markPlot(w, 7, 6, true);
-  for (const p of w.plots) p.crop = { grown: 20, ripe: 0, dry: 0 };
+  for (const p of w.plots) p.crop = { kind: 'potato', grown: 20, ripe: 0, dry: 0 };
   hours(w, WITHER_DRY_HOURS - 1);
   expect(w.plots.every((p) => cropStage(p) === 'growing')).toBe(true);
   hours(w, 1);
@@ -142,12 +142,12 @@ test('pide agua lo sembrado que no está maduro y tiene menos de 6 h de humedad'
   markPlot(w, 6, 6, true);
   const p = w.plots[0]!;
   expect(needsWater(p)).toBe(false); // vacía
-  p.crop = { grown: 3, ripe: 0, dry: 0 };
+  p.crop = { kind: 'potato', grown: 3, ripe: 0, dry: 0 };
   p.moisture = 6;
   expect(needsWater(p)).toBe(false);
   p.moisture = 5;
   expect(needsWater(p)).toBe(true);
-  p.crop = { grown: GROW_HOURS, ripe: 1, dry: 0 };
+  p.crop = { kind: 'potato', grown: GROW_HOURS, ripe: 1, dry: 0 };
   expect(needsWater(p)).toBe(false);
 });
 

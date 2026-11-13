@@ -41,7 +41,7 @@ test('apagada no anima ni deja cocinar', () => {
   w.tick = 14 * TICKS_PER_HOUR; // 22:00 (junto al fuego solo cuenta a oscuras)
   expect(byTheFire(w, s)).toBe(false);
   expect(craftBlocker(w, RECIPES.cook)).toEqual({ kind: 'fire' });
-  w.storage.items.veg = 2;
+  w.storage.items.potato = 2;
   w.furniture[0]!.fuel = 3;
   expect(byTheFire(w, s)).toBe(true);
   expect(craftBlocker(w, RECIPES.cook)).toBeNull();

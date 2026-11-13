@@ -106,16 +106,33 @@ test('ir a un cuerpo dice "Va a registrar un cuerpo", no la casa -1 (H4d)', () =
 test('V1: el huerto al pasar el ratón', async () => {
   const { plotLabel } = await import('./describe');
   const { GROW_HOURS } = await import('../sim/balance');
-  expect(plotLabel({ tile: 0, moisture: 0, crop: null })).toBe('Huerto: sin sembrar');
+  expect(plotLabel({ tile: 0, kind: 'potato', moisture: 0, crop: null })).toBe(
+    'Huerto: sin sembrar',
+  );
   expect(
-    plotLabel({ tile: 0, moisture: 20, crop: { grown: GROW_HOURS * 0.6, ripe: 0, dry: 0 } }),
+    plotLabel({
+      tile: 0,
+      kind: 'potato',
+      moisture: 20,
+      crop: { kind: 'potato', grown: GROW_HOURS * 0.6, ripe: 0, dry: 0 },
+    }),
   ).toBe('Huerto: creciendo 60 % · húmedo 20 h');
-  expect(plotLabel({ tile: 0, moisture: 0, crop: { grown: 1, ripe: 0, dry: 3 } })).toBe(
-    'Huerto: creciendo 0 % · seco',
-  );
-  expect(plotLabel({ tile: 0, moisture: 5, crop: { grown: GROW_HOURS, ripe: 2, dry: 0 } })).toBe(
-    'Huerto: maduro, para cosechar',
-  );
+  expect(
+    plotLabel({
+      tile: 0,
+      kind: 'potato',
+      moisture: 0,
+      crop: { kind: 'potato', grown: 1, ripe: 0, dry: 3 },
+    }),
+  ).toBe('Huerto: creciendo 0 % · seco');
+  expect(
+    plotLabel({
+      tile: 0,
+      kind: 'potato',
+      moisture: 5,
+      crop: { kind: 'potato', grown: GROW_HOURS, ripe: 2, dry: 0 },
+    }),
+  ).toBe('Huerto: maduro, para cosechar');
 });
 
 test('V3: la estación y la temperatura, el abrigo en la ficha y 🥶 a quien está helado', async () => {

@@ -1,7 +1,7 @@
 # V4 — Cultivos y guisos
 
 Fecha: 2026-11-13
-Estado: pendiente de aprobación (decidido con el usuario: los cultivos y guisos «de juego», con su
+Estado: aprobado («Aprobado, adelante»; decidido con el usuario: los cultivos y guisos «de juego», con su
 dibujo cada uno; siembra elegida por el jugador, sin automático; las semillas dan pistas, no cifras;
 una sola habilidad, Cultivar; los guisos, en el mapa y en los paneles). Bocetos:
 https://claude.ai/artifact/G3LQBUX4jRnKwoxkX1ucmf

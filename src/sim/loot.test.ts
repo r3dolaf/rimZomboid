@@ -264,7 +264,7 @@ test('retales de vaquero y tiras de cuero en la tienda de ropa, en los armarios'
 });
 
 test('V1 y V4: semillas en granjas, ferreterías, supermercados y algunas casas; al empezar, patata y lechuga', () => {
-  expect(START_SEEDS).toEqual({ seedsPotato: 3, seedsLettuce: 3 });
+  expect(START_SEEDS).toEqual({ seedsPotato: 6, seedsLettuce: 3 });
   const w = createWorld(7);
   const allSeeds = (c: Container) =>
     c.items.seedsLettuce + c.items.seedsTomato + c.items.seedsPotato + c.items.seedsCabbage;
@@ -275,7 +275,7 @@ test('V1 y V4: semillas en granjas, ferreterías, supermercados y algunas casas;
   expect(w.containers.reduce((n, c) => n + allSeeds(c), 0)).toBeGreaterThan(0);
   expect(seedsIn('police') + seedsIn('pharmacy') + seedsIn('clothes')).toBe(0);
   const s = w.storage.items;
-  expect([s.seedsPotato, s.seedsLettuce, s.seedsTomato, s.seedsCabbage]).toEqual([3, 3, 0, 0]);
+  expect([s.seedsPotato, s.seedsLettuce, s.seedsTomato, s.seedsCabbage]).toEqual([6, 3, 0, 0]);
 });
 
 test('V4: cada semilla del botín es de un cultivo del sitio: las granjas, de los cuatro; el súper, lechuga y tomate', () => {

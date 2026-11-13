@@ -77,7 +77,7 @@ test('con 3 grados la col crece y la lechuga se para', () => {
   expect(q.crop!.grown).toBe(10);
 });
 
-test('a −4 la lechuga se hiela y la col no; a −7, también la col; el registro dice cuál', () => {
+test('a −4 la lechuga se hiela y la col no; a −11, también la col; el registro dice cuál', () => {
   const w = farm();
   sown(w, 'lettuce', 10);
   setTemp(w, -4);
@@ -89,7 +89,7 @@ test('a −4 la lechuga se hiela y la col no; a −7, también la col; el regist
   setTemp(w2, -4);
   farmSystem(w2);
   expect(q.crop).not.toBeNull();
-  setTemp(w2, -7);
+  setTemp(w2, -11);
   farmSystem(w2);
   expect(q.crop).toBeNull();
 });

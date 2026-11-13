@@ -252,7 +252,7 @@ export const CROPS: Record<CropKind, CropSpec> = {
     frost: -2,
     hours: 8 * 24,
     yieldBase: 5,
-    seedsBack: 1,
+    seedsBack: 2,
   },
   potato: {
     seeds: 'seedsPotato',
@@ -262,14 +262,14 @@ export const CROPS: Record<CropKind, CropSpec> = {
     frost: -2,
     hours: 10 * 24,
     yieldBase: 4,
-    seedsBack: 1,
+    seedsBack: 2, // se guardan unas cuantas para sembrar (sonda: con 1, faltaban semillas)
   },
   cabbage: {
     seeds: 'seedsCabbage',
     produce: 'cabbage',
-    sowMin: 3,
-    growMin: 2,
-    frost: -6,
+    sowMin: 2, // la de invierno (sonda: con −6 se helaba casi cada noche de invierno)
+    growMin: 0,
+    frost: -10,
     hours: 9 * 24,
     yieldBase: 3,
     seedsBack: 1,
@@ -1385,7 +1385,7 @@ export const SEEDS_LOOT: Partial<Record<LootKind, LootAmount>> = {
 /** En los sitios del mapa del mundo, la granja da más (como su comida, H6a). */
 export const SITE_SEEDS_LOOT: Partial<Record<LootKind, LootAmount>> = { farm: [6, 12] };
 /** V4 §5: al empezar, patata y lechuga; el tomate y la col hay que encontrarlos. */
-export const START_SEEDS = { seedsPotato: 3, seedsLettuce: 3 } as const;
+export const START_SEEDS = { seedsPotato: 6, seedsLettuce: 3 } as const; // V4: sonda (antes 3 y 3)
 /**
  * V4 §5: de qué cultivos son las semillas del botín de cada sitio (cada una, uno al azar de su
  * lista): las granjas y las ferreterías, de los cuatro; el súper y las casas (huertos de casa),

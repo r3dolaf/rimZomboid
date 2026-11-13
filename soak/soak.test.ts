@@ -20,12 +20,13 @@ import { hasCargo } from '../src/sim/jobs/medical';
 import { issue } from '../src/sim/orders';
 import { createRng, nextInt } from '../src/sim/rng';
 import { canPlace } from '../src/sim/build';
-import { canPlot, markPlot } from '../src/sim/farm';
+import { canPlot, cropStage, markPlot } from '../src/sim/farm';
 import { contains } from '../src/sim/geom';
 import { WEAPONS } from '../src/sim/jobs/weapons';
 import {
   Tile,
   type BuildKind,
+  type CropKind,
   type Decision,
   type EventId,
   type NarratorStyle,
@@ -949,6 +950,103 @@ test('con huerto se cosecha y se cocina', () => {
   expect(farmTotals.cooked, 'guisos').toBeGreaterThan(0);
   // V2: se bebe (del fregadero mientras hay agua corriente, y luego de lo que haya).
   expect(farmTotals.drank.sink, 'del fregadero').toBeGreaterThan(0);
+});
+
+/** V4: los cuatro cultivos y las cinco recetas, en 2 partidas. */
+const cropTotals = {
+  harvested: { lettuce: 0, tomato: 0, potato: 0, cabbage: 0 } as Record<CropKind, number>,
+  made: { cook: 0, cookPotato: 0, soup: 0, salad: 0, preserve: 0 } as Record<string, number>,
+  noSeeds: 0,
+};
+
+/**
+ * V4: lo que se siembra en cada parcela según el día, como un jugador sensato: el tomate, al
+ * principio del verano (si no, no madura); luego lechuga y patata; antes del frío, col.
+ */
+function cropPlan(day: number, i: number): CropKind {
+  if (day >= 14) return i < 2 ? 'potato' : 'cabbage';
+  if (day >= 7) return i < 2 ? 'lettuce' : 'potato';
+  return (
+    ['lettuce', 'lettuce', 'potato', 'potato', 'tomato', 'tomato', 'tomato', 'potato'] as const
+  )[i % 8]!;
+}
+
+test.each([1, 2])(
+  `V4: semilla %i, ${DAYS} días con los cuatro cultivos y las cinco recetas — sin romper nada`,
+  (seed) => {
+    const w = createWorld(seed, 'balanced', 'few');
+    for (const h of w.houses) issue(w, { type: 'designateHouse', houseId: h.id, on: true });
+    plantGarden(w, 8);
+    // Como si se hubieran encontrado: semillas de tomate y col.
+    w.storage.items.seedsTomato = 8;
+    w.storage.items.seedsCabbage = 8;
+    const near = (kind: BuildKind) =>
+      w.storage.tiles
+        .flatMap((t) => [-2, -1, 1, 2].map((d) => ({ x: t.x + d, y: t.y - 2 })))
+        .find((p) => canPlace(w, kind, p));
+    const fire = near('campfire');
+    if (fire) w.furniture.push({ id: w.common.nextId++, kind: 'campfire', pos: fire, fuel: 24 });
+    if (!w.furniture.some((f) => f.kind === 'table')) {
+      const t = near('table');
+      if (t) w.furniture.push({ id: w.common.nextId++, kind: 'table', pos: t });
+    }
+    // El de verduras (con cualquier hortaliza), el último: si no, se lo lleva todo (como haría un
+    // jugador con las flechas de los pedidos).
+    const recipes = ['salad', 'soup', 'cookPotato', 'preserve', 'cook'] as const;
+    for (const recipe of recipes) issue(w, { type: 'addBill', recipe });
+    const r = createRng(37);
+    let ms = 0;
+    for (let day = 1; day <= DAYS && !w.common.over; day++) {
+      w.plots.forEach((p, i) => {
+        // Lo sembrado se deja crecer: se cambia lo que va en la parcela cuando queda libre.
+        const want = cropPlan(day, i);
+        if (p.kind !== want && p.crop === null) {
+          const at = { x: p.tile % w.grid.width, y: Math.floor(p.tile / w.grid.width) };
+          issue(w, { type: 'markPlot', x: at.x, y: at.y, on: true, crop: want });
+        }
+      });
+      if (day === 20) w.storage.items.waterBottle += 4; // para la sopa
+      // La hoguera, con leña (como si Transportar se la llevara): aquí se prueba la cocina.
+      for (const f of w.furniture) if (f.kind === 'campfire') f.fuel = 24;
+      for (let i = 0; i < TICKS_PER_DAY; i++) {
+        const d = w.decisions[0];
+        if (d && !w.orders.some((o) => o.type === 'decide'))
+          issue(w, { type: 'decide', decisionId: d.id, option: sensible(w, r, d) });
+        for (const b of w.bills)
+          if (b.mode !== 'until')
+            issue(w, { type: 'setBill', billId: b.id, mode: 'until', target: 2 });
+        const ripe = new Map(
+          w.plots.filter((p) => cropStage(p) === 'ripe').map((p) => [p.tile, p.crop!.kind]),
+        );
+        const last = w.common.log.at(-1);
+        const t0 = performance.now();
+        stepGame(w);
+        ms += performance.now() - t0;
+        const problems = checkInvariants(w);
+        if (problems.length > 0) expect(problems, `tick ${w.tick}`).toEqual([]);
+        const fresh = w.common.log.slice(last ? w.common.log.lastIndexOf(last) + 1 : 0);
+        const rotted = fresh.some((e) => e.kind === 'cropsLost' && e.rotted > 0);
+        for (const [tile, kind] of ripe)
+          if (!rotted && !w.plots.find((p) => p.tile === tile)?.crop) cropTotals.harvested[kind]++;
+        for (const e of fresh) {
+          if (e.kind === 'crafted')
+            cropTotals.made[e.recipe] = (cropTotals.made[e.recipe] ?? 0) + 1;
+          if (e.kind === 'noSeeds') cropTotals.noSeeds++;
+        }
+      }
+    }
+    expect(ms / (w.tick || 1), 'ms por tick').toBeLessThan(1.5);
+  },
+  900_000,
+);
+
+test('V4: se cosecha de los cuatro cultivos y se hacen los cinco platos', () => {
+  if (DAYS < 30) return;
+  console.log('V4, en las 2 partidas con los cuatro cultivos:', cropTotals);
+  for (const [kind, n] of Object.entries(cropTotals.harvested))
+    expect(n, `cosechas de ${kind}`).toBeGreaterThan(0);
+  for (const recipe of ['cook', 'cookPotato', 'soup', 'salad', 'preserve'])
+    expect(cropTotals.made[recipe] ?? 0, recipe).toBeGreaterThan(0);
 });
 
 /** V3: lo del invierno en la partida de un año. */

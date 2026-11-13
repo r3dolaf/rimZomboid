@@ -220,7 +220,7 @@ export const CROP_KINDS: readonly CropKind[] = ['lettuce', 'tomato', 'potato', '
 /**
  * V4 §2: cada cultivo: sus semillas y lo que da; con qué media del día se siembra (los colonos no
  * siembran lo que ese día mataría el frío); por debajo de qué se para; con qué helada se muere;
- * cuántas horas tarda; y cuánto da con Cultivar 0 (×(1 + nivel/15)).
+ * cuántas horas tarda; cuánto da con Cultivar 0 (×(1 + nivel/15)) y cuántas semillas deja.
  */
 export interface CropSpec {
   seeds: 'seedsLettuce' | 'seedsTomato' | 'seedsPotato' | 'seedsCabbage';
@@ -230,6 +230,8 @@ export interface CropSpec {
   frost: number;
   hours: number;
   yieldBase: number;
+  /** Semillas que deja cada cosecha (y otra con HARVEST_EXTRA_SEED). */
+  seedsBack: number;
 }
 export const CROPS: Record<CropKind, CropSpec> = {
   lettuce: {
@@ -240,6 +242,7 @@ export const CROPS: Record<CropKind, CropSpec> = {
     frost: -2,
     hours: 4 * 24,
     yieldBase: 2,
+    seedsBack: 1,
   },
   tomato: {
     seeds: 'seedsTomato',
@@ -249,6 +252,7 @@ export const CROPS: Record<CropKind, CropSpec> = {
     frost: -2,
     hours: 8 * 24,
     yieldBase: 5,
+    seedsBack: 1,
   },
   potato: {
     seeds: 'seedsPotato',
@@ -258,6 +262,7 @@ export const CROPS: Record<CropKind, CropSpec> = {
     frost: -2,
     hours: 10 * 24,
     yieldBase: 4,
+    seedsBack: 1,
   },
   cabbage: {
     seeds: 'seedsCabbage',
@@ -267,6 +272,7 @@ export const CROPS: Record<CropKind, CropSpec> = {
     frost: -6,
     hours: 9 * 24,
     yieldBase: 3,
+    seedsBack: 1,
   },
 };
 /** V4: lo crudo, de lo que antes se estropea a lo que menos (las recetas «cualquiera» lo gastan así). */

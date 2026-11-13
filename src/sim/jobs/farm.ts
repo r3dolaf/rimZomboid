@@ -260,7 +260,7 @@ export function tendStep(w: World, s: Survivor, a: Tending): boolean {
   } else {
     const kind = p.crop!.kind;
     const veg = harvestCount(kind, s.skills.farm.level, nextFloat(w.rng));
-    const seeds = 1 + (nextFloat(w.rng) < HARVEST_EXTRA_SEED ? 1 : 0);
+    const seeds = CROPS[kind].seedsBack + (nextFloat(w.rng) < HARVEST_EXTRA_SEED ? 1 : 0);
     p.crop = null;
     w.common.stats.harvested += veg; // para el resumen final
     const pile = emptyInventory();

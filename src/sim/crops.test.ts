@@ -130,7 +130,7 @@ test('lo que da cada cosecha: su base por (1 + nivel/15), la fracción a veces',
   expect(harvestCount('potato', 5, 0)).toBe(6); // y sí
 });
 
-test('al cosechar queda su hortaliza y 1 o 2 de sus semillas', () => {
+test('al cosechar queda su hortaliza y sus semillas (las de su cultivo, y a veces una más)', () => {
   const w = farm();
   const p = sown(w, 'tomato', CROPS.tomato.hours);
   const s = w.survivors[0]!;
@@ -140,8 +140,9 @@ test('al cosechar queda su hortaliza y 1 o 2 de sus semillas', () => {
   tendStep(w, s, a);
   const pile = w.piles[0]!.items;
   expect(pile.tomato).toBeGreaterThanOrEqual(5);
-  expect(pile.seedsTomato).toBeGreaterThanOrEqual(1);
-  expect(pile.seedsTomato).toBeLessThanOrEqual(2);
+  expect(CROPS.tomato.seedsBack).toBeTypeOf('number');
+  expect(pile.seedsTomato).toBeGreaterThanOrEqual(CROPS.tomato.seedsBack);
+  expect(pile.seedsTomato).toBeLessThanOrEqual(CROPS.tomato.seedsBack + 1);
   expect(pile.potato + pile.seedsPotato).toBe(0);
 });
 

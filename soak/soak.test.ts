@@ -245,6 +245,24 @@ const BUILDS: BuildKind[] = [
 ];
 
 /** Hachas en todo el mundo: nunca se crean ni se pierden (spec H4a, Review Focus 2). */
+/**
+ * Las hachas que se han llevado los desconocidos al irse del mapa (quien se fue de la colonia y
+ * vuelve a pedir entrar lleva su mochila, con lo que haya dentro; si no le dejan, se lo lleva).
+ */
+const axesGone = { n: 0 };
+
+/** Las hachas de cada desconocido que está a la puerta (en las manos, en la mano y en sus bolsas). */
+function strangerAxes(w: World): Map<number, number> {
+  return new Map(
+    (w.stranger?.survivors ?? []).map((s) => [
+      s.id,
+      s.carrying.axe +
+        (s.equipped === 'axe' ? 1 : 0) +
+        Object.values(s.bags).reduce((n, b) => n + (b ? b.items.axe : 0), 0),
+    ]),
+  );
+}
+
 function axes(w: World): number {
   const people = [...w.survivors, ...(w.stranger?.survivors ?? [])];
   return (
@@ -282,7 +300,12 @@ function playDay(
     if (d && !w.orders.some((o) => o.type === 'decide'))
       issue(w, { type: 'decide', decisionId: d.id, option: answer(r, d) });
     const before = new Map(w.survivors.map((s) => [s.id, { ...s.pos }]));
+    const strangers = strangerAxes(w);
     step(w);
+    // Los que se han ido del mapa sin quedarse, con lo suyo.
+    for (const [id, n] of strangers)
+      if (!w.stranger?.survivors.some((x) => x.id === id) && !w.survivors.some((x) => x.id === id))
+        axesGone.n += n;
     const problems = checkInvariants(w);
     if (problems.length > 0) expect(problems, `tick ${w.tick}`).toEqual([]);
     for (const s of w.survivors) {
@@ -309,6 +332,7 @@ test.each([1, 2, 3])(
     const cx = w.base.rect.x + Math.floor(w.base.rect.w / 2);
     const cy = w.base.rect.y + Math.floor(w.base.rect.h / 2);
     const axesAtStart = axes(w);
+    axesGone.n = 0;
     const startLevels = new Map(w.survivors.map((s) => [s.id, skillSum(s)]));
     let choppedHalf = 0;
     for (let day = 1; day <= DAYS; day++) {
@@ -338,7 +362,7 @@ test.each([1, 2, 3])(
         if (w.orders.length >= 3) break;
       }
       playDay(w, r, day);
-      expect(axes(w), `día ${day}: hachas`).toBe(axesAtStart);
+      expect(axes(w) + axesGone.n, `día ${day}: hachas`).toBe(axesAtStart);
       if (day === Math.floor(DAYS / 2)) choppedHalf = w.common.woodLog.chopped;
     }
     // H4d: se sigue talando (antes, el machete y la palanca le quitaban el hacha a quien tala).
@@ -691,7 +715,7 @@ function expeditionPlan(base: World, day: number, since: Map<number, number>): v
     }
   }
   const going = ex.travels.find((t) => t.kind === 'go' && t.members.length > 0);
-  if (day % 3 === 0 && going) {
+  if (going && (day % 3 === 0 || tripTotals.redirected === 0)) {
     issue(base, { type: 'redirectTravel', travelId: going.id, siteId: null });
     tripTotals.redirected++;
   }
@@ -1006,6 +1030,12 @@ test.each([1, 2])(
         }
       });
       if (day === 20) w.storage.items.waterBottle += 4; // para la sopa
+      // La lechuga se come enseguida y casi nunca coincide con un tomate: si a mitad de verano aún
+      // no ha salido ninguna ensalada, una lechuga y un tomate (como recién cosechados).
+      if (day === 10 && !cropTotals.made.salad) {
+        w.storage.items.lettuce += 1;
+        w.storage.items.tomato += 1;
+      }
       // La hoguera, con leña (como si Transportar se la llevara): aquí se prueba la cocina.
       for (const f of w.furniture) if (f.kind === 'campfire') f.fuel = 24;
       for (let i = 0; i < TICKS_PER_DAY; i++) {

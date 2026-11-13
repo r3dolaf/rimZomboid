@@ -106,12 +106,8 @@ export const CAMPFIRE_FUEL_START = 12;
 export const CAMPFIRE_FUEL_MAX = 24;
 export const CAMPFIRE_REFUEL_BELOW = 8;
 export const FUEL_PER_WOOD = 4;
-// El invierno (V3 §6): el huerto crece por encima de GROW_MIN_TEMP y la helada mata lo que crece;
-// la nieve llena la mitad; lo fresco se estropea menos con frío; los zombis helados van más lentos.
-export const GROW_MIN_TEMP = 5;
-/** Q1: no se siembra con el día por debajo de esto de media (la helada lo mataría y se gastan las semillas). */
-export const SOW_MIN_TEMP = 8;
-export const FROST_TEMP = -2;
+// El invierno (V3 §6): la nieve llena la mitad; lo fresco se estropea menos con frío; los zombis
+// helados van más lentos. (El frío del huerto, de cada cultivo: CROPS.)
 export const SNOW_FILL = 0.5;
 export const ROT_COLD = [
   { below: 5, mult: 0.25 },
@@ -270,22 +266,19 @@ export const CROPS: Record<CropKind, CropSpec> = {
 /** V4: lo crudo, de lo que antes se estropea a lo que menos (las recetas «cualquiera» lo gastan así). */
 export const VEG: readonly CropKind[] = ['lettuce', 'tomato', 'cabbage', 'potato'];
 export const SPOIL_HOUR = 6;
-// El huerto (spec V1 §3), en horas: crecer con humedad, la que deja la lluvia y regar, secarse sin
-// ella y pudrirse lo maduro sin cosechar.
-export const GROW_HOURS = 7 * 24;
+// El huerto (spec V1 §3), en horas: la humedad que deja la lluvia y regar, secarse sin ella y
+// pudrirse lo maduro sin cosechar (lo que tarda en crecer, de cada cultivo: CROPS).
 export const RAIN_MOISTURE_HOURS = 48;
 export const WATER_MOISTURE_HOURS = 36;
 export const WITHER_DRY_HOURS = 3 * 24;
 export const RIPE_ROT_HOURS = 4 * 24;
 /** Se riega lo que tiene menos de estas horas de humedad (así no llega a secarse). */
 export const WATER_BELOW_HOURS = 6;
-// Cultivar (V1 §4): lo que se tarda con Cultivar 5, lo que da la cosecha y lo que se coge.
+// Cultivar (V1 §4): lo que se tarda con Cultivar 5, lo que da la cosecha y lo que se coge (lo que
+// da cada cultivo: CROPS).
 export const SOW_TICKS = 25; // 5 minutos
 export const WATER_TICKS = 15; // 3 minutos
 export const HARVEST_TICKS = 50; // 10 minutos
-/** Hortalizas por parcela: 3 con Cultivar 0, 4 con 5 y 5 con 10 (la fracción, a veces). */
-export const HARVEST_VEG_BASE = 3;
-export const HARVEST_VEG_PER_LEVEL = 0.2;
 /** Semillas por parcela: 1 y otra con esta probabilidad. */
 export const HARVEST_EXTRA_SEED = 0.5;
 export const SOW_TAKE_MAX = 10;

@@ -1,10 +1,17 @@
 // Herramientas Talar y Construir: qué órdenes da cada clic o arrastre, teniendo en cuenta las aún
 // pendientes (con el juego en pausa, la orden no se aplica hasta el siguiente tick).
 import { canPlace, hasCurtains, markedTrees, repairKindAt, treeMarked } from '../sim/build';
-import { canPlot, plotMarked } from '../sim/farm';
+import { canPlot, plotKindAt } from '../sim/farm';
 import { getTile } from '../sim/map/grid';
 import { issue } from '../sim/orders';
-import { Tile, type Blueprint, type BuildKind, type Point, type World } from '../sim/types';
+import {
+  Tile,
+  type Blueprint,
+  type BuildKind,
+  type CropKind,
+  type Point,
+  type World,
+} from '../sim/types';
 
 const seenTree = (w: World, x: number, y: number) =>
   w.seen[y * w.grid.width + x] === 1 && getTile(w.grid, x, y) === Tile.Tree;
@@ -23,18 +30,25 @@ export function markTreesIn(w: World, a: Point, b: Point): void {
         issue(w, { type: 'markTree', x, y, on: true });
 }
 
-/** Clic con Huerto (V1): marca la parcela si se puede, o la desmarca si ya lo está. */
-export function togglePlot(w: World, x: number, y: number): void {
-  if (plotMarked(w, x, y)) issue(w, { type: 'markPlot', x, y, on: false });
-  else if (canPlot(w, { x, y })) issue(w, { type: 'markPlot', x, y, on: true });
+/**
+ * Clic con Huerto (V1 y V4 §2.2): marca la parcela con ese cultivo si se puede; si ya lo está con
+ * el mismo, la desmarca; con otro, lo cambia.
+ */
+export function togglePlot(w: World, x: number, y: number, crop: CropKind): void {
+  const now = plotKindAt(w, x, y);
+  if (now === crop) issue(w, { type: 'markPlot', x, y, on: false });
+  else if (now !== null || canPlot(w, { x, y }))
+    issue(w, { type: 'markPlot', x, y, on: true, crop });
 }
 
-/** Arrastrar con Huerto: marca todas las casillas del rectángulo donde se pueda. */
-export function markPlotsIn(w: World, a: Point, b: Point): void {
+/** Arrastrar con Huerto: marca (o cambia a ese cultivo) todo el rectángulo; nunca desmarca. */
+export function markPlotsIn(w: World, a: Point, b: Point, crop: CropKind): void {
   for (let y = Math.min(a.y, b.y); y <= Math.max(a.y, b.y); y++)
-    for (let x = Math.min(a.x, b.x); x <= Math.max(a.x, b.x); x++)
-      if (!plotMarked(w, x, y) && canPlot(w, { x, y }))
-        issue(w, { type: 'markPlot', x, y, on: true });
+    for (let x = Math.min(a.x, b.x); x <= Math.max(a.x, b.x); x++) {
+      const now = plotKindAt(w, x, y);
+      if (now === crop || (now === null && !canPlot(w, { x, y }))) continue;
+      issue(w, { type: 'markPlot', x, y, on: true, crop });
+    }
 }
 
 const cancelling = (w: World) =>

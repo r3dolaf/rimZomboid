@@ -105,7 +105,7 @@ test('ir a un cuerpo dice "Va a registrar un cuerpo", no la casa -1 (H4d)', () =
 
 test('V1: el huerto al pasar el ratón', async () => {
   const { plotLabel } = await import('./describe');
-  const { GROW_HOURS } = await import('../sim/balance');
+  const GROW_HOURS = (await import('../sim/balance')).CROPS.potato.hours;
   expect(plotLabel({ tile: 0, kind: 'potato', moisture: 0, crop: null })).toBe(
     'Huerto: sin sembrar',
   );

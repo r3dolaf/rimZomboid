@@ -9,7 +9,7 @@ import {
   DIRTY_HOURS,
   FREEZING_BELOW,
   HOT_ABOVE,
-  GROW_HOURS,
+  CROPS,
   LONELY_BELOW,
   MOOD_CRISIS,
   MOOD_EDGE,
@@ -218,8 +218,9 @@ export function furnitureLabel(w: World, f: Furniture): string | null {
 export function plotLabel(p: Plot): string {
   const t = es.plotLabels;
   if (!p.crop) return t.empty;
-  if (p.crop.grown >= GROW_HOURS) return t.ripe;
-  const pct = Math.floor((100 * p.crop.grown) / GROW_HOURS);
+  const hours = CROPS[p.crop.kind].hours;
+  if (p.crop.grown >= hours) return t.ripe;
+  const pct = Math.floor((100 * p.crop.grown) / hours);
   return t.growing(pct, Math.round(p.moisture));
 }
 

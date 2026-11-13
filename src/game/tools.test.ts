@@ -127,18 +127,45 @@ test('V1: clic con Huerto marca o desmarca la parcela (contando lo pendiente); a
   const w = emptyWorld(8, 8);
   w.base = { id: 0, kind: 'base', rect: { x: 0, y: 0, w: 2, h: 2 }, door: { x: 1, y: 1 } };
   w.seen.fill(1);
-  togglePlot(w, 4, 4);
+  togglePlot(w, 4, 4, 'potato');
   expect(plotMarked(w, 4, 4)).toBe(true);
-  togglePlot(w, 4, 4); // en pausa: lo deshace
+  togglePlot(w, 4, 4, 'potato'); // en pausa: lo deshace
   expect(plotMarked(w, 4, 4)).toBe(false);
   ordersSystem(w);
   expect(w.plots).toEqual([]);
-  markPlotsIn(w, { x: 5, y: 6 }, { x: 3, y: 5 });
+  markPlotsIn(w, { x: 5, y: 6 }, { x: 3, y: 5 }, 'potato');
   ordersSystem(w);
   expect(w.plots).toHaveLength(6);
-  togglePlot(w, 3, 5);
+  togglePlot(w, 3, 5, 'potato');
   ordersSystem(w);
   expect(w.plots).toHaveLength(5);
-  markPlotsIn(w, { x: 0, y: 0 }, { x: 1, y: 1 }); // en la base, no
+  markPlotsIn(w, { x: 0, y: 0 }, { x: 1, y: 1 }, 'potato'); // en la base, no
   expect(w.orders).toEqual([]);
+});
+
+test('V4: con Huerto se marca el cultivo elegido; tocar con el mismo desmarca, con otro lo cambia; arrastrar nunca desmarca', async () => {
+  const { togglePlot, markPlotsIn } = await import('./tools');
+  const { plotKindAt, plotMarked } = await import('../sim/farm');
+  const w = emptyWorld(8, 8);
+  w.base = { id: 0, kind: 'base', rect: { x: 0, y: 0, w: 2, h: 2 }, door: { x: 1, y: 1 } };
+  w.seen.fill(1);
+  togglePlot(w, 4, 4, 'cabbage');
+  expect(plotKindAt(w, 4, 4)).toBe('cabbage'); // contando lo pendiente
+  ordersSystem(w);
+  expect(w.plots.map((p) => p.kind)).toEqual(['cabbage']);
+  togglePlot(w, 4, 4, 'tomato');
+  ordersSystem(w);
+  expect(w.plots.map((p) => p.kind)).toEqual(['tomato']);
+  togglePlot(w, 4, 4, 'tomato');
+  ordersSystem(w);
+  expect(plotMarked(w, 4, 4)).toBe(false);
+  togglePlot(w, 4, 4, 'lettuce');
+  ordersSystem(w);
+  markPlotsIn(w, { x: 3, y: 4 }, { x: 5, y: 4 }, 'lettuce');
+  ordersSystem(w);
+  expect(w.plots.map((p) => p.kind)).toEqual(['lettuce', 'lettuce', 'lettuce']);
+  markPlotsIn(w, { x: 3, y: 4 }, { x: 5, y: 4 }, 'potato');
+  ordersSystem(w);
+  expect(w.plots.map((p) => p.kind)).toEqual(['potato', 'potato', 'potato']);
+  expect(plotKindAt(w, 6, 6)).toBeNull();
 });

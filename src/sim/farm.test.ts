@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import {
-  GROW_HOURS,
+  CROPS,
   RAIN_MOISTURE_HOURS,
   RIPE_ROT_HOURS,
   TICKS_PER_HOUR,
@@ -110,11 +110,11 @@ test('crece solo con humedad; la lluvia la deja en 48 h', () => {
   expect(p.moisture).toBe(RAIN_MOISTURE_HOURS - 11);
 });
 
-test('a los 7 días húmeda está madura; sin cosechar, se pudre a los 4 días', () => {
+test('con sus horas húmeda está madura (la patata, 10 días); sin cosechar, se pudre a los 4 días', () => {
   const w = field();
   markPlot(w, 6, 6, true);
   const p = w.plots[0]!;
-  p.crop = { kind: 'potato', grown: GROW_HOURS - 1, ripe: 0, dry: 0 };
+  p.crop = { kind: 'potato', grown: CROPS.potato.hours - 1, ripe: 0, dry: 0 };
   p.moisture = 10;
   hours(w, 1);
   expect(cropStage(p)).toBe('ripe');
@@ -147,7 +147,7 @@ test('pide agua lo sembrado que no está maduro y tiene menos de 6 h de humedad'
   expect(needsWater(p)).toBe(false);
   p.moisture = 5;
   expect(needsWater(p)).toBe(true);
-  p.crop = { kind: 'potato', grown: GROW_HOURS, ripe: 1, dry: 0 };
+  p.crop = { kind: 'potato', grown: CROPS.potato.hours, ripe: 1, dry: 0 };
   expect(needsWater(p)).toBe(false);
 });
 

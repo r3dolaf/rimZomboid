@@ -1,4 +1,4 @@
-import { GROW_HOURS } from '../sim/balance';
+import { CROPS } from '../sim/balance';
 import { bagsIn } from '../sim/bags';
 import { ITEM_KINDS, type Inventory } from '../sim/items';
 import type { Plot } from '../sim/types';
@@ -633,8 +633,9 @@ PROP_SPRITES.cropRipe = crop(3, true);
 /** El dibujo de lo sembrado en una parcela: por tercios de lo que ha crecido, o maduro. */
 export function cropFrame(p: Plot): string | null {
   if (!p.crop) return null;
-  if (p.crop.grown >= GROW_HOURS) return 'cropRipe';
-  return `crop${Math.min(3, 1 + Math.floor((3 * p.crop.grown) / GROW_HOURS))}`;
+  const hours = CROPS[p.crop.kind].hours;
+  if (p.crop.grown >= hours) return 'cropRipe';
+  return `crop${Math.min(3, 1 + Math.floor((3 * p.crop.grown) / hours))}`;
 }
 
 /** Hace un lienzo con todos los dibujos en fila y dice dónde empieza cada uno. */

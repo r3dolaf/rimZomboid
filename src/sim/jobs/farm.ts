@@ -1,11 +1,10 @@
 // Cultivar (spec V1 §4): cosechar lo maduro, regar lo seco (con agua de la fuente más cercana) y
 // sembrar lo vacío (con semillas del almacén).
 import {
+  CROP_KINDS,
+  CROPS,
   HARVEST_EXTRA_SEED,
-  SOW_MIN_TEMP,
   HARVEST_TICKS,
-  HARVEST_VEG_BASE,
-  HARVEST_VEG_PER_LEVEL,
   ITEM_WEIGHT_KG,
   SOW_TAKE_MAX,
   SOW_TICKS,
@@ -19,7 +18,16 @@ import { regionOf } from '../path/astar';
 import { dropPile } from '../piles';
 import { nextFloat, pick } from '../rng';
 import { capacityKg, practice, workSpeed } from '../skills';
-import type { Action, Activity, Furniture, Plot, Survivor, TendKind, World } from '../types';
+import type {
+  Action,
+  Activity,
+  CropKind,
+  Furniture,
+  Plot,
+  Survivor,
+  TendKind,
+  World,
+} from '../types';
 import { tapOn } from '../water';
 import { dayMean } from '../season';
 import { tileOf } from '../world';
@@ -51,15 +59,22 @@ export function farmTarget(s: Survivor): number | null {
 
 const can = (s: Survivor) => s.waterCan ?? 0;
 
-/** La parcela más cercana que pide eso, a la que llega y que no va a trabajar otro. */
-function nearestPlot(s: Survivor, w: World, what: TendKind): Plot | null {
+/**
+ * La parcela más cercana que pide eso (y cumple `ok`), a la que llega y que no va a trabajar otro.
+ */
+function nearestPlot(
+  s: Survivor,
+  w: World,
+  what: TendKind,
+  ok: (p: Plot) => boolean = () => true,
+): Plot | null {
   const claimed = new Set(w.survivors.filter((o) => o !== s).map(farmTarget));
   const at = tileOf(s.pos);
   const region = regionOf(w.grid, at.x, at.y);
   let best: Plot | null = null;
   let bestD = Infinity;
   for (const p of w.plots) {
-    if (!WANTS[what](p) || claimed.has(p.tile)) continue;
+    if (!WANTS[what](p) || claimed.has(p.tile) || !ok(p)) continue;
     const q = plotPos(w, p);
     const d = (q.x - at.x) ** 2 + (q.y - at.y) ** 2;
     if (d >= bestD || regionOf(w.grid, q.x, q.y) !== region) continue;
@@ -101,15 +116,28 @@ function nearestSource(
 }
 
 /**
- * Q1: ¿se siembra hoy? Con el día por debajo de SOW_MIN_TEMP de media, no: lo sembrado no crece y la
- * helada lo mata (se volvía a sembrar y se gastaban todas las semillas antes de la primavera).
+ * Q1 y V4 §2: ¿se siembra hoy ese cultivo? Con la media del día por debajo de lo suyo, no: no crece
+ * y la helada lo mata (se volvía a sembrar y se gastaban todas las semillas). No adivinan el tiempo
+ * que viene: solo miran el de hoy.
  */
-const sowWeather = (w: World) => dayMean(w) >= SOW_MIN_TEMP;
+export const sowWeather = (w: World, kind: CropKind): boolean => dayMean(w) >= CROPS[kind].sowMin;
+
+/** Las semillas de lo que va en esa parcela. */
+const seedsOf = (p: Plot) => CROPS[p.kind].seeds;
+
+/** ¿La sembraría hoy con lo que lleva? */
+const canSow = (s: Survivor, w: World, p: Plot) =>
+  s.carrying[seedsOf(p)] > 0 && sowWeather(w, p.kind);
+
+/** ¿Hay en el almacén semillas para ella y se siembra hoy? */
+const seedsInStore = (w: World, p: Plot) =>
+  w.storage.items[seedsOf(p)] > 0 && sowWeather(w, p.kind);
 
 /** Sembrar con las semillas que lleva (también vuelve a ello quien va cargado de semillas). */
 export function sowJob(s: Survivor, w: World): Action | null {
-  if (s.carrying.seedsPotato === 0 || w.plots.length === 0 || !sowWeather(w)) return null;
-  const p = nearestPlot(s, w, 'sow');
+  if (w.plots.length === 0 || CROP_KINDS.every((k) => s.carrying[CROPS[k].seeds] === 0))
+    return null;
+  const p = nearestPlot(s, w, 'sow', (q) => canSow(s, w, q));
   return p && goTend(w, p, 'sow');
 }
 
@@ -137,7 +165,7 @@ export function farmJob(s: Survivor, w: World): Action | null {
   }
   const sow = sowJob(s, w);
   if (sow) return sow;
-  if (w.storage.items.seedsPotato > 0 && sowWeather(w) && nearestPlot(s, w, 'sow'))
+  if (nearestPlot(s, w, 'sow', (p) => seedsInStore(w, p)))
     return { type: 'moveTo', target: pick(w.rng, w.storage.tiles), then: { type: 'takeSeeds' } };
   return null;
 }
@@ -147,7 +175,7 @@ export function farmStillWorth(s: Survivor, w: World): boolean {
   if (!s.work.farm) return false;
   const a = s.action;
   const t = a.type === 'moveTo' ? a.then : a;
-  if (t?.type === 'takeSeeds') return w.storage.items.seedsPotato > 0;
+  if (t?.type === 'takeSeeds') return w.plots.some((p) => WANTS.sow(p) && seedsInStore(w, p));
   if (t?.type === 'fillCan') {
     const f = w.furniture.find((x) => x.id === t.sourceId);
     return f !== undefined && gives(w, f) && can(s) < WATER_CAN_LITERS;
@@ -155,27 +183,40 @@ export function farmStillWorth(s: Survivor, w: World): boolean {
   if (t?.type !== 'tend') return false;
   const p = w.plots.find((x) => x.tile === t.tile);
   if (!p || !WANTS[t.what](p)) return false;
-  if (t.what === 'sow') return s.carrying.seedsPotato > 0;
+  if (t.what === 'sow') return canSow(s, w, p);
   if (t.what === 'water') return can(s) >= 1;
   return true;
 }
 
-/** Cuántas semillas coge: las que vaya a sembrar (hasta SOW_TAKE_MAX) y le quepan. */
-function seedsToTake(s: Survivor, w: World): number {
-  const empty = w.plots.filter((p) => cropStage(p) === 'empty').length;
+/**
+ * Cuántas coge de cada una: las de las parcelas vacías que se siembran hoy (hasta SOW_TAKE_MAX en
+ * total) y le quepan (todas pesan igual).
+ */
+function seedsToTake(s: Survivor, w: World): Partial<Record<CropKind, number>> {
   const fit = Math.floor(
     (capacityKg(s) - weightOf(s.carrying)) / ITEM_WEIGHT_KG.seedsPotato + 1e-9,
   );
-  return Math.max(0, Math.min(w.storage.items.seedsPotato, SOW_TAKE_MAX, empty, fit));
+  let left = Math.max(0, Math.min(SOW_TAKE_MAX, fit));
+  const out: Partial<Record<CropKind, number>> = {};
+  for (const k of CROP_KINDS) {
+    const empty = w.plots.filter(
+      (p) => p.kind === k && cropStage(p) === 'empty' && sowWeather(w, k),
+    ).length;
+    const n = Math.min(empty, w.storage.items[CROPS[k].seeds], left);
+    if (n > 0) out[k] = n;
+    left -= n;
+  }
+  return out;
 }
 
 /** Al llegar: coge semillas, coge agua o empieza a trabajar la parcela. */
 export function startFarmActivity(s: Survivor, w: World, activity: FarmActivity): Action {
   const idle: Action = { type: 'idle', ticksLeft: 0 };
   if (activity.type === 'takeSeeds') {
-    const n = seedsToTake(s, w);
-    w.storage.items.seedsPotato -= n;
-    s.carrying.seedsPotato += n;
+    for (const [k, n] of Object.entries(seedsToTake(s, w)) as [CropKind, number][]) {
+      w.storage.items[CROPS[k].seeds] -= n;
+      s.carrying[CROPS[k].seeds] += n;
+    }
     return idle;
   }
   if (activity.type === 'fillCan') {
@@ -189,20 +230,25 @@ export function startFarmActivity(s: Survivor, w: World, activity: FarmActivity)
   }
   const p = w.plots.find((x) => x.tile === activity.tile);
   const here = tileOf(s.pos);
-  if (!p || here.y * w.grid.width + here.x !== p.tile || !farmStillWorthTend(s, p, activity.what))
+  if (
+    !p ||
+    here.y * w.grid.width + here.x !== p.tile ||
+    !farmStillWorthTend(s, w, p, activity.what)
+  )
     return idle;
   const ticksLeft = Math.max(1, Math.round(TICKS[activity.what] / workSpeed(s, 'farm')));
   return { type: 'tend', tile: p.tile, what: activity.what, ticksLeft };
 }
 
-const farmStillWorthTend = (s: Survivor, p: Plot, what: TendKind) =>
-  WANTS[what](p) &&
-  (what !== 'sow' || s.carrying.seedsPotato > 0) &&
-  (what !== 'water' || can(s) >= 1);
+const farmStillWorthTend = (s: Survivor, w: World, p: Plot, what: TendKind) =>
+  WANTS[what](p) && (what !== 'sow' || canSow(s, w, p)) && (what !== 'water' || can(s) >= 1);
 
-/** Hortalizas de una cosecha con su nivel: la parte entera y la fracción con su probabilidad. */
-export function harvestVeg(level: number, roll: number): number {
-  const exact = HARVEST_VEG_BASE + HARVEST_VEG_PER_LEVEL * level;
+/**
+ * V4 §2: lo que da una cosecha de ese cultivo con su nivel, su base por (1 + nivel/15): la parte
+ * entera y la fracción con su probabilidad.
+ */
+export function harvestCount(kind: CropKind, level: number, roll: number): number {
+  const exact = CROPS[kind].yieldBase * (1 + level / 15);
   const whole = Math.floor(exact + 1e-9);
   return whole + (roll < exact - whole - 1e-9 ? 1 : 0);
 }
@@ -212,19 +258,23 @@ export function tendStep(w: World, s: Survivor, a: Tending): boolean {
   practice(w, s, 'farm', 1);
   if (--a.ticksLeft > 0) return false;
   const p = w.plots.find((x) => x.tile === a.tile);
-  if (!p || !farmStillWorthTend(s, p, a.what)) return true;
+  if (!p || !farmStillWorthTend(s, w, p, a.what)) return true;
   if (a.what === 'sow') {
-    s.carrying.seedsPotato--;
+    s.carrying[seedsOf(p)]--;
     p.crop = { kind: p.kind, grown: 0, ripe: 0, dry: 0 };
   } else if (a.what === 'water') {
     s.waterCan = can(s) - 1;
     p.moisture = Math.max(p.moisture, WATER_MOISTURE_HOURS);
   } else {
-    const veg = harvestVeg(s.skills.farm.level, nextFloat(w.rng));
+    const kind = p.crop!.kind;
+    const veg = harvestCount(kind, s.skills.farm.level, nextFloat(w.rng));
     const seeds = 1 + (nextFloat(w.rng) < HARVEST_EXTRA_SEED ? 1 : 0);
     p.crop = null;
     w.common.stats.harvested += veg; // para el resumen final
-    dropPile(w, plotPos(w, p), { ...emptyInventory(), potato: veg, seedsPotato: seeds });
+    const pile = emptyInventory();
+    pile[CROPS[kind].produce] = veg;
+    pile[CROPS[kind].seeds] = seeds;
+    dropPile(w, plotPos(w, p), pile);
   }
   return true;
 }

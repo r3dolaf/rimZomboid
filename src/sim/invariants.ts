@@ -13,7 +13,7 @@ import {
   SKILL_MAX,
   ZOMBIE_HEALTH,
   BAGS,
-  GROW_HOURS,
+  CROPS,
   RAIN_MOISTURE_HOURS,
   RIPE_ROT_HOURS,
   WITHER_DRY_HOURS,
@@ -475,9 +475,15 @@ function checkPlots(w: World, problems: string[]): void {
     if (!inRange(p.moisture, RAIN_MOISTURE_HOURS)) problems.push(`${at}: humedad ${p.moisture}`);
     const c = p.crop;
     if (!c) continue;
-    if (!inRange(c.grown, GROW_HOURS) || !inRange(c.ripe, RIPE_ROT_HOURS))
+    const hours = CROPS[c.kind]?.hours;
+    if (hours === undefined) {
+      problems.push(`${at}: cultivo desconocido ${c.kind}`);
+      continue;
+    }
+    if (!(p.kind in CROPS)) problems.push(`${at}: cultivo elegido desconocido ${p.kind}`);
+    if (!inRange(c.grown, hours) || !inRange(c.ripe, RIPE_ROT_HOURS))
       problems.push(`${at}: crecido ${c.grown} h, madura ${c.ripe} h`);
-    if (!inRange(c.dry, WITHER_DRY_HOURS) || (c.ripe > 0 && c.grown < GROW_HOURS))
+    if (!inRange(c.dry, WITHER_DRY_HOURS) || (c.ripe > 0 && c.grown < hours))
       problems.push(`${at}: seca ${c.dry} h, madura ${c.ripe} h sin haber crecido`);
   }
 }

@@ -103,7 +103,7 @@ test('el almacén: cajas en un palé por cada 10 cosas o menos, sin pasar de los
 
 test('V1: el huerto: tierra seca y mojada, y lo sembrado por tercios hasta madurar', async () => {
   const { cropFrame } = await import('./props');
-  const { GROW_HOURS } = await import('../sim/balance');
+  const GROW_HOURS = (await import('../sim/balance')).CROPS.potato.hours;
   for (const f of ['soilDry', 'soilWet', 'crop1', 'crop2', 'crop3', 'cropRipe'])
     expect(PROP_SPRITES[f], f).toBeDefined();
   const plot = (grown: number | null) => ({

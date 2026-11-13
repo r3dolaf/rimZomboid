@@ -1,10 +1,13 @@
 import { expect, test } from 'vitest';
-import { GROW_HOURS, SOW_MIN_TEMP, WATER_CAN_LITERS, WATER_MOISTURE_HOURS } from './balance';
+import { CROPS, WATER_CAN_LITERS, WATER_MOISTURE_HOURS } from './balance';
+
+const GROW_HOURS = CROPS.potato.hours;
+const SOW_MIN_TEMP = CROPS.potato.sowMin;
 import { dayMean } from './season';
 import { cropStage, markPlot } from './farm';
 import { checkInvariants } from './invariants';
 import { emptyInventory } from './items';
-import { farmJob, harvestVeg } from './jobs/farm';
+import { farmJob, harvestCount } from './jobs/farm';
 import { step } from './step';
 import { findWork } from './work';
 import { addBase, emptyWorld } from './testing/fixtures';
@@ -81,12 +84,12 @@ test('cosecha lo maduro: deja en la parcela un montón de hortalizas y semillas,
   expect(checkInvariants(w)).toEqual([]);
 });
 
-test('la cosecha según Cultivar: 3 con 0, 4 con 5, 5 con 10 y la fracción a veces', () => {
-  expect(harvestVeg(0, 0)).toBe(3);
-  expect(harvestVeg(5, 0.99)).toBe(4);
-  expect(harvestVeg(10, 0.99)).toBe(5);
-  expect(harvestVeg(2, 0.3)).toBe(4); // 3,4: con 0,3 < 0,4, una más
-  expect(harvestVeg(2, 0.5)).toBe(3);
+test('la cosecha de patatas según Cultivar: 4 con 0, 5,3 con 5, 6,7 con 10 y la fracción a veces', () => {
+  expect(harvestCount('potato', 0, 0)).toBe(4);
+  expect(harvestCount('potato', 5, 0.99)).toBe(5);
+  expect(harvestCount('potato', 10, 0.99)).toBe(6);
+  expect(harvestCount('potato', 10, 0.5)).toBe(7); // 6,67: con 0,5 < 0,67, una más
+  expect(harvestCount('potato', 3, 0.9)).toBe(4); // 4,8
 });
 
 test('sin permiso para Cultivar, no hace nada en el huerto', () => {

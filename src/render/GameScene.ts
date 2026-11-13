@@ -1595,8 +1595,9 @@ export class GameScene extends Phaser.Scene {
       return;
     }
     if (d.mode === 'farm') {
-      if (click) togglePlot(w, d.from.x, d.from.y);
-      else markPlotsIn(w, d.from, d.to);
+      if (click)
+        togglePlot(w, d.from.x, d.from.y, 'potato'); // V4: el selector, en el paso 7
+      else markPlotsIn(w, d.from, d.to, 'potato');
       return;
     }
     const kind = this.tool.buildKind;

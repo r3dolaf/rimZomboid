@@ -17,6 +17,7 @@ import type {
   Bill,
   BuildKind,
   Container,
+  CropKind,
   GarmentKind,
   RecipeId,
   Stance,
@@ -38,7 +39,7 @@ export type Order =
   // Talar y construir (H4a)
   | { type: 'markTree'; x: number; y: number; on: boolean }
   // El huerto (V1)
-  | { type: 'markPlot'; x: number; y: number; on: boolean }
+  | { type: 'markPlot'; x: number; y: number; on: boolean; crop?: CropKind } // V4: sin cultivo, patata
   // La radio (C1): encenderla o apagarla.
   | { type: 'setRadio'; on: boolean }
   // E1: encender o apagar el generador.
@@ -212,7 +213,7 @@ export function ordersSystem(w: World): void {
         markTree(w, o.x, o.y, o.on);
         break;
       case 'markPlot':
-        markPlot(w, o.x, o.y, o.on);
+        markPlot(w, o.x, o.y, o.on, o.crop);
         break;
       case 'setGenerator':
         setGenerator(w, o.on);

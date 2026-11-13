@@ -4,6 +4,7 @@ import type { Season } from './season';
 import type { Inventory, ItemKind } from './items';
 import type {
   CrisisKind,
+  CropKind,
   SiteInfo,
   BagKind,
   BodyPart,
@@ -81,7 +82,7 @@ export type LogEvent =
   // V1: cultivos perdidos esta hora, secos y podridos sin cosechar.
   | { kind: 'cropsLost'; dried: number; rotted: number }
   // V3: los que ha matado la helada.
-  | { kind: 'cropsFrozen'; n: number }
+  | { kind: 'cropsFrozen'; n: number; crops?: CropKind[] } // V4: cuáles (las de antes, sin)
   | { kind: 'rain' }
   | { kind: 'found'; survivorId: number; houseId: number; items: Inventory }
   | { kind: 'emptyContainer'; survivorId: number; houseId: number }

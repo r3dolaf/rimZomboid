@@ -985,9 +985,12 @@ const cropTotals = {
 
 /**
  * V4: lo que se siembra en cada parcela según el día, como un jugador sensato: el tomate, al
- * principio del verano (si no, no madura); luego lechuga y patata; antes del frío, col.
+ * principio del verano (si no, no madura); luego lechuga y patata; antes del frío, col. Y una
+ * parcela de col desde el principio, para la sopa: la de antes del frío, si el tomate tarda en
+ * dejar sitio, madura al final del mes (o la partida acaba antes).
  */
 function cropPlan(day: number, i: number): CropKind {
+  if (i % 8 === 7) return 'cabbage';
   if (day >= 14) return i < 2 ? 'potato' : 'cabbage';
   if (day >= 7) return i < 2 ? 'lettuce' : 'potato';
   return (

@@ -159,7 +159,7 @@ function soundSection(store: SoundPrefsStore): { el: HTMLElement; update(): void
   };
 }
 
-/** C3: «🏆 Logros 5/20» y la lista (lo que falta, apagado, con cómo se consigue). */
+/** C3: «🏆 Logros 5/21» y la lista (lo que falta, apagado, con cómo se consigue). */
 function achievementsSection(a: { store: AchievementStore; cheated: () => boolean }): {
   el: HTMLElement;
   update(): void;

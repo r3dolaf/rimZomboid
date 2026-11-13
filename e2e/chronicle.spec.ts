@@ -29,7 +29,7 @@ test('un logro (aviso y en Partida) y la crónica en la pantalla final: copiar y
   });
   await expect(page.getByTestId('achievement-hundred')).toHaveText('🏆 Logro: Cien zombis');
   await page.getByTestId('hud-game').click();
-  await expect(page.getByTestId('game-achievements')).toContainText('🏆 Logros 1/20');
+  await expect(page.getByTestId('game-achievements')).toContainText('🏆 Logros 1/21');
   await expect(page.getByTestId('achievement-row-hundred')).toHaveClass(/done/);
 
   // La colonia cae: la crónica, con lo que se ha apuntado.
